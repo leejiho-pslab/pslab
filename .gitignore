@@ -1,0 +1,11 @@
+# Node deps / build output for bundled understand-anything plugin
+.claude/plugins/**/node_modules/
+.claude/plugins/**/dist/
+.claude/plugins/**/.turbo/
+
+# understand-anything generated artifacts
+.understand-anything/
+
+# Python caches from bundled skill scripts
+**/__pycache__/
+*.pyc
