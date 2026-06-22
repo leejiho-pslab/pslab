@@ -16,6 +16,12 @@ import { InstagramPlugin } from './plugins/instagram.js';
 import { ThreadsPlugin } from './plugins/threads.js';
 import { LinkedInPlugin } from './plugins/linkedin.js';
 import { isDryRun, loadAllCredentials } from './core/config.js';
+import { MarketResearch, type ResearchProvider } from './core/research.js';
+import { Council } from './core/council.js';
+import { AlertHub } from './core/alerts.js';
+import { Orchestrator } from './core/orchestrator.js';
+import { ClientStore } from './core/client.js';
+import type { CycleRecord } from './core/orchestrator.js';
 
 export * from './core/types.js';
 export { PluginRegistry } from './core/registry.js';
@@ -25,6 +31,33 @@ export { Analytics } from './core/analytics.js';
 export { ContentPipeline } from './core/content.js';
 export { BasePlugin } from './core/plugin.js';
 export type { SnsPlugin, PluginContext } from './core/plugin.js';
+
+// 자동화 강화 계층 (설계도 둥근 벨트)
+export { MarketResearch } from './core/research.js';
+export type {
+  ResearchResult,
+  ResearchProvider,
+  TopicCandidate,
+  CompetitorRef,
+} from './core/research.js';
+export { ReviewGate } from './core/review.js';
+export type { ReviewMode, ReviewPolicy, ReviewDecision } from './core/review.js';
+export { Council } from './core/council.js';
+export type { Direction, Advisor, CouncilContext } from './core/council.js';
+export { CapabilityRegistry } from './core/capabilities.js';
+export type { Capability, CapabilitySource } from './core/capabilities.js';
+export { AlertHub, ConsoleAlertSink } from './core/alerts.js';
+export type { Alert, AlertSink } from './core/alerts.js';
+export { Orchestrator } from './core/orchestrator.js';
+export type { CycleRecord, OrchestratorDeps } from './core/orchestrator.js';
+export {
+  loadClient,
+  loadClients,
+  validateClientConfig,
+  normalizeClientConfig,
+  ClientStore,
+} from './core/client.js';
+export type { ClientConfig } from './core/client.js';
 
 /** 기본 제공 플러그인 팩토리 목록 */
 export function defaultPlugins(ctx: PluginContext): SnsPlugin[] {
@@ -74,4 +107,46 @@ export async function bootstrap(options: CreateAppOptions = {}): Promise<App> {
   const app = createApp(options);
   await app.registry.connectAll(loadAllCredentials());
   return app;
+}
+
+export interface Autopilot {
+  app: App;
+  research: MarketResearch;
+  council: Council;
+  alerts: AlertHub;
+  store: ClientStore<CycleRecord>;
+  orchestrator: Orchestrator;
+}
+
+export interface AutopilotOptions extends CreateAppOptions {
+  /** 사이클 이력을 저장할 베이스 디렉터리 (클라이언트별 하위 폴더로 격리) */
+  dataDir?: string;
+  /** 실제 조사 데이터 소스 (없으면 결정론적 mock) */
+  researchProvider?: ResearchProvider;
+  /** 기존 App을 재사용 (없으면 새로 만든다) */
+  app?: App;
+}
+
+/**
+ * 둥근 벨트(오케스트레이터)까지 한 번에 조립한다.
+ * createApp 위에 시장조사·회의·검수·알림·격리저장소를 얹은 자동 운영 세트.
+ */
+export function createAutopilot(options: AutopilotOptions = {}): Autopilot {
+  const app = options.app ?? createApp(options);
+  const research = new MarketResearch(options.researchProvider);
+  const council = new Council();
+  const alerts = new AlertHub();
+  const store = new ClientStore<CycleRecord>(options.dataDir ?? './data/clients');
+
+  const orchestrator = new Orchestrator({
+    content: app.content,
+    publisher: app.publisher,
+    analytics: app.analytics,
+    research,
+    council,
+    store,
+    alerts,
+  });
+
+  return { app, research, council, alerts, store, orchestrator };
 }

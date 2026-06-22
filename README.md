@@ -116,6 +116,55 @@ const content = new ContentPipeline({
 
 프로바이더를 주입하지 않으면 결정론적 템플릿 폴백을 사용하므로 키 없이도 전체 흐름이 동작합니다.
 
+## 오토파일럿 (자동 강화 계층)
+
+설계도(`docs/설계도.md`)의 "끝이 처음으로 이어지는 둥근 벨트"를 구현한 상위 계층.
+한 클라이언트에 대해 **시장조사 → 제작 → 검수 → 발행 → 성적표 → AI 회의 → 강화**를
+한 사이클로 묶어 돌린다. 모든 모듈은 자격 증명 없이 mock으로 동작한다.
+
+```bash
+npm run autopilot                # 둥근 벨트 데모 (사이클 2회 + 강화)
+npm run dev -- clients           # 등록된 클라이언트(설정표) 목록
+npm run dev -- cycle --client demo-cafe   # 한 클라이언트 1사이클 실행
+```
+
+| 모듈 | 설계도 작업소 | 역할 |
+|------|---------------|------|
+| `MarketResearch` | 1. 시장 조사실 | 경쟁사·트렌드 모니터링, 과거 반응으로 소재 강화 |
+| `ContentPipeline` + `CapabilityRegistry` | 2. 제작 공장 | 글/미디어 생성 + 제작 도구 자가 업그레이드 |
+| `ReviewGate` | 3. 검수 스위치 | `manual`→`rules`→`auto` 단계 전환 |
+| `Publisher` | 4. 발송 센터 | 멀티채널 동시 발행 |
+| `Analytics` | 5. 성적표실 | 성과 집계 (경쟁사 비교) |
+| `Council` | 6. AI 회의실 | 분야별 AI 토론으로 다음 방향 합의 |
+| `Orchestrator` | 둥근 벨트 | 위를 한 사이클로 묶고 이력을 강화 신호로 환류 |
+| `ClientConfig` / `ClientStore` | 공장 복제 | 설정표 1장으로 클라이언트 추가, 격리 저장 |
+| `AlertHub` | 고장 알림벨 | 실패·승인 대기 알림 |
+
+```ts
+import { createApp, createAutopilot, loadClients } from 'pslab-sns';
+
+const app = await /* bootstrap or createApp */ createApp({ dryRun: true });
+const auto = createAutopilot({ app, dataDir: './data/clients' });
+
+for (const client of loadClients('./clients')) {
+  const rec = await auto.orchestrator.runCycle(client);   // 한 바퀴
+  console.log(rec.topic, rec.published, rec.direction.rationale);
+}
+```
+
+### 검수 스위치 (95% → 100% 자동)
+
+```ts
+import { ReviewGate } from 'pslab-sns';
+const gate = new ReviewGate({ mode: 'manual', bannedWords: ['최저가'] });
+// 신뢰가 쌓이면 단계적으로 전환
+gate.setMode('rules');   // 규칙 자동 검사
+gate.setMode('auto');    // 100% 자동 (금지어 등 안전장치는 유지)
+```
+
+> 클라이언트 설정표는 `clients/*.json` (예시: `clients/demo-cafe.example.json`).
+> 실제 설정표(자격/내부 정보 포함)는 `.gitignore`로 커밋에서 제외된다.
+
 ## 라이선스
 
 MIT

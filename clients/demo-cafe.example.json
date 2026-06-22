@@ -1,0 +1,16 @@
+{
+  "id": "demo-cafe",
+  "name": "데모 디저트카페",
+  "industry": "디저트 카페 / 지역 맛집",
+  "keywords": ["신메뉴", "딸기케이크", "시즌음료", "디저트맛집", "카페추천"],
+  "competitors": [
+    { "handle": "rival.cafe", "platform": "instagram", "note": "근처 경쟁 카페" },
+    { "handle": "topdessert", "platform": "instagram", "note": "전국구 디저트 계정" }
+  ],
+  "brandTone": "친근하고 따뜻하게, 이모지 적당히",
+  "bannedWords": ["최저가", "공짜"],
+  "targets": ["instagram", "threads", "naver-blog"],
+  "scheduleTimes": ["11:00", "19:00"],
+  "reviewMode": "manual",
+  "reportTo": "owner@example.com"
+}

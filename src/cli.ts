@@ -16,11 +16,12 @@
  *   --title "..."                     제목 (블로그/유튜브)
  *   --video <path> / --image <path>   미디어 첨부
  */
-import { bootstrap, Analytics } from './index.js';
+import { bootstrap, Analytics, createAutopilot } from './index.js';
 import type { App } from './index.js';
 import type { PlatformId, PostContent } from './core/types.js';
 import { ContentPipeline } from './core/content.js';
 import type { ContentBrief } from './core/content.js';
+import { loadClients } from './core/client.js';
 
 type Args = Record<string, string | boolean>;
 
@@ -160,6 +161,46 @@ async function cmdReport(app: App, args: Args): Promise<void> {
   console.log('\n' + Analytics.format(report));
 }
 
+async function cmdClients(args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const clients = loadClients(dir);
+  console.log(`\n🏭 클라이언트 (${dir}) — ${clients.length}곳\n`);
+  for (const c of clients) {
+    console.log(
+      `  • ${c.name} (${c.id}) — ${c.industry} | 검수:${c.reviewMode} | 채널:${c.targets.join(',')}`,
+    );
+  }
+  if (clients.length === 0) {
+    console.log('  (설정표 없음) clients/ 폴더에 *.json 설정표를 추가하세요. 예시: clients/demo-cafe.example.json');
+  }
+}
+
+async function cmdCycle(app: App, args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const only = typeof args.client === 'string' ? args.client : undefined;
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  if (clients.length === 0) {
+    console.error(`실행할 클라이언트가 없습니다 (dir=${dir}${only ? `, client=${only}` : ''}).`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const auto = createAutopilot({ app, dataDir });
+  for (const client of clients) {
+    console.log(`\n▶ 사이클 — ${client.name} (${client.id})`);
+    const rec = await auto.orchestrator.runCycle(client);
+    console.log(`  주제: ${rec.topic} (${rec.suggestedFormat})`);
+    console.log(`  검수: ${rec.review.reviewer} → ${rec.review.approved ? '승인' : rec.review.pending ? '사람 대기' : '보류'}`);
+    if (rec.publishSummary) {
+      console.log(`  발행: ${rec.publishSummary.ok}/${rec.publishSummary.total} 채널 성공`);
+    }
+    console.log(`  참여율: ${(rec.avgEngagementRate * 100).toFixed(1)}%`);
+    console.log(`  다음 방향: ${rec.direction.rationale}`);
+  }
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -171,10 +212,14 @@ function printHelp(): void {
       '  publish               생성 후 즉시 멀티채널 발행',
       '  schedule --at <ISO>   예약 발행 등록',
       '  report                성과 리포트 (데모)',
+      '  clients               등록된 클라이언트(설정표) 목록',
+      '  cycle [--client id]   오토파일럿 한 사이클 실행 (조사→제작→검수→발행→회의)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
+      '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
       '',
       '예) pslab publish --topic "신제품 출시" --targets instagram,threads --image hero.png',
+      '예) pslab cycle --client demo-cafe',
     ].join('\n'),
   );
 }
@@ -204,6 +249,12 @@ async function main(): Promise<void> {
       break;
     case 'report':
       await cmdReport(app, args);
+      break;
+    case 'clients':
+      await cmdClients(args);
+      break;
+    case 'cycle':
+      await cmdCycle(app, args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);
