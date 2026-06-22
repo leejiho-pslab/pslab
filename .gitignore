@@ -9,3 +9,9 @@
 # Python caches from bundled skill scripts
 **/__pycache__/
 *.pyc
+
+# pslab-sns app
+/node_modules/
+/dist/
+.env
+*.tsbuildinfo
