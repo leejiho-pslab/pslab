@@ -7,6 +7,7 @@ import type {
   CompetitorTrendRow,
   Creative,
   CreativeFatigue,
+  CreativeOverview,
   DailyDetailResponse,
   DailyResponse,
   MetricsConfig,
@@ -52,6 +53,8 @@ export const api = {
     get<{ date: string | null; sort: string; creatives: Creative[] }>(
       `/api/creatives?top_n=${topN}&sort=${sort}${date ? `&date=${date}` : ""}`,
     ),
+  creativesOverview: (from: string, to: string, sort = "roas") =>
+    get<CreativeOverview>(`/api/creatives/overview?from=${from}&to=${to}&sort=${sort}`),
   creativesFatigue: (date?: string) =>
     get<{ date: string | null; items: CreativeFatigue[] }>(`/api/creatives/fatigue${q(date)}`),
 

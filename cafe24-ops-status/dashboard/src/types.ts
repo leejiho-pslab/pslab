@@ -140,6 +140,32 @@ export interface Creative {
   cvr: number | null;
 }
 
+export interface CreativeSummary {
+  creative_count: number;
+  channels: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ad_cost: number;
+  ad_sales: number;
+  roas: number | null;
+  ctr: number | null;
+  cvr: number | null;
+}
+
+export interface CreativeByChannel {
+  channel: string;
+  creatives: Creative[];
+}
+
+export interface CreativeOverview {
+  from: string;
+  to: string;
+  summary: CreativeSummary;
+  creatives: Creative[];
+  by_channel: CreativeByChannel[];
+}
+
 export interface CreativeFatigue {
   creative_id: string;
   name: string;

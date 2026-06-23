@@ -37,11 +37,52 @@ def _derive(cid: str, e: dict) -> dict:
     }
 
 
-def creatives_ranked(store, date: str, top_n: int = 10, sort: str = "roas") -> list[dict]:
+def creatives_ranked_range(
+    store, date_from: str, date_to: str, top_n: int = 50, sort: str = "roas"
+) -> list[dict]:
     sort = sort if sort in SORTABLE else "roas"
-    items = [_derive(cid, e) for cid, e in _by_creative(store, date, date).items()]
+    items = [_derive(cid, e) for cid, e in _by_creative(store, date_from, date_to).items()]
     items.sort(key=lambda x: (x.get(sort) if x.get(sort) is not None else -1), reverse=True)
     return items[:top_n]
+
+
+def creatives_ranked(store, date: str, top_n: int = 10, sort: str = "roas") -> list[dict]:
+    return creatives_ranked_range(store, date, date, top_n, sort)
+
+
+def creatives_summary_range(store, date_from: str, date_to: str) -> dict:
+    items = [_derive(cid, e) for cid, e in _by_creative(store, date_from, date_to).items()]
+    impr = sum(i["impressions"] for i in items)
+    clicks = sum(i["clicks"] for i in items)
+    conv = sum(i["conversions"] for i in items)
+    cost = sum(i["ad_cost"] for i in items)
+    sales = sum(i["ad_sales"] for i in items)
+    return {
+        "creative_count": len(items),
+        "channels": len({i["channel"] for i in items}),
+        "impressions": impr, "clicks": clicks, "conversions": conv,
+        "ad_cost": cost, "ad_sales": sales,
+        "roas": round(sales / cost, 2) if cost else None,
+        "ctr": round(clicks / impr * 100, 2) if impr else None,
+        "cvr": round(conv / clicks * 100, 2) if clicks else None,
+    }
+
+
+def creatives_by_channel_range(store, date_from: str, date_to: str, sort: str = "roas") -> list[dict]:
+    items = creatives_ranked_range(store, date_from, date_to, top_n=10**6, sort=sort)
+    by_ch: dict[str, list] = {}
+    for it in items:
+        by_ch.setdefault(it["channel"], []).append(it)
+    return [{"channel": ch, "creatives": lst} for ch, lst in by_ch.items()]
+
+
+def creative_overview(store, date_from: str, date_to: str, sort: str = "roas") -> dict:
+    return {
+        "from": date_from, "to": date_to,
+        "summary": creatives_summary_range(store, date_from, date_to),
+        "creatives": creatives_ranked_range(store, date_from, date_to, top_n=10**6, sort=sort),
+        "by_channel": creatives_by_channel_range(store, date_from, date_to, sort=sort),
+    }
 
 
 def _roas(store, cid: str, dfrom: str, dto: str) -> float | None:

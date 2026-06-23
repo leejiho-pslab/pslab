@@ -1,6 +1,7 @@
 from cafe24_ops.config import load_config
 from cafe24_ops.etl.creative_metrics import (
     creative_fatigue,
+    creative_overview,
     creative_trend,
     creatives_ranked,
 )
@@ -35,6 +36,19 @@ def test_creative_fatigue_has_flag(tmp_path):
         items = creative_fatigue(store, "2026-06-17", window=3)
         assert len(items) == 6
         assert all("fatigued" in x and "change_pct" in x for x in items)
+    finally:
+        store.close()
+
+
+def test_creative_overview_range(tmp_path):
+    cfg, store = _store(tmp_path)
+    try:
+        o = creative_overview(store, "2026-06-11", "2026-06-17")
+        assert o["summary"]["creative_count"] == 6
+        assert o["summary"]["impressions"] > 0
+        # 채널별 그룹의 소재 합 == 전체 라이브 소재 수
+        grouped = sum(len(g["creatives"]) for g in o["by_channel"])
+        assert grouped == len(o["creatives"]) == 6
     finally:
         store.close()
 

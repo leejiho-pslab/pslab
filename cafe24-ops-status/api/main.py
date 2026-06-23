@@ -34,6 +34,7 @@ from cafe24_ops.etl.compare import period_comparison  # noqa: E402
 from cafe24_ops.etl.competitor_metrics import competitor_snapshot, competitor_trend  # noqa: E402
 from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_fatigue,
+    creative_overview,
     creative_trend,
     creatives_ranked,
 )
@@ -234,6 +235,19 @@ def creatives_ep(
         target = _resolve_date(store, date)
         items = creatives_ranked(store, target, top_n, sort) if target else []
         return {"date": target, "sort": sort, "creatives": items}
+    finally:
+        store.close()
+
+
+@app.get("/api/creatives/overview")
+def creatives_overview_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    sort: str = Query(default="roas"),
+) -> dict:
+    store = _store()
+    try:
+        return creative_overview(store, date_from, date_to, sort)
     finally:
         store.close()
 

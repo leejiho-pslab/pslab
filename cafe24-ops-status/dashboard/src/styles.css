@@ -166,6 +166,21 @@ body {
 .tc-metrics { display: flex; gap: 18px; font-size: 13px; color: var(--sub); }
 .tc-metrics b { color: var(--ink); font-size: 16px; margin-left: 4px; }
 
+/* 소재 썸네일 / 카드 */
+.thumb {
+  border-radius: 9px; color: #fff; font-weight: 800; flex: none;
+  display: flex; align-items: center; justify-content: center; letter-spacing: -0.5px;
+}
+.creative-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.creative-card {
+  display: flex; gap: 12px; align-items: center;
+  background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 10px;
+}
+.cc-body { min-width: 0; }
+.cc-name { font-weight: 600; font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cc-metrics { display: flex; gap: 12px; margin-top: 4px; font-size: 11.5px; color: var(--sub); }
+.cc-metrics b { color: var(--ink); }
+
 /* 경쟁사 카드 */
 .comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
 .comp-card { margin-bottom: 0; }
