@@ -11,3 +11,5 @@ store/
 dashboard/node_modules/
 dashboard/dist/
 *.tsbuildinfo
+dashboard/.env.local
+dashboard/.env.*.local
