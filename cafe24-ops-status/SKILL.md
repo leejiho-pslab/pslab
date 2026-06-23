@@ -52,8 +52,13 @@ pytest
 cp config/secrets.env.example config/secrets.env   # 값 채우기
 #   CAFE24_MALL_ID / CAFE24_ACCESS_TOKEN / CAFE24_REFRESH_TOKEN
 #   CAFE24_CLIENT_ID / CAFE24_CLIENT_SECRET (토큰 자동 갱신용)
+
+python scripts/smoke_live.py --check               # 자격증명·연결 점검(쓰기 없음)
+python scripts/smoke_live.py --date 2026-06-17     # 1일 실수집 스모크
 python scripts/run_all.py --mode live --date 2026-06-17
 ```
+
+자세한 절차/트러블슈팅: [`SMOKE.md`](SMOKE.md)
 
 ## 지표 수정 (수정 자유도)
 
