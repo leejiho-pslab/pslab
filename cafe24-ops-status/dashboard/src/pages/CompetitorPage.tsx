@@ -1,20 +1,47 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { daysBefore } from "../util";
-import type { Competitor, CompetitorTrendRow } from "../types";
+import type {
+  BestChange,
+  Competitor,
+  CompetitorCreatives,
+  NaverSearchItem,
+  NaverTrend,
+} from "../types";
+import { RangePicker } from "../components/RangePicker";
+import { CategoryBar } from "../components/CategoryBar";
+import { MultiLineChart } from "../components/MultiLineChart";
+
+const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
 
 export function CompetitorPage({ date }: { date: string }) {
+  const [from, setFrom] = useState(() => daysBefore(date, 6));
+  const [to, setTo] = useState(date);
   const [comps, setComps] = useState<Competitor[]>([]);
-  const [trend, setTrend] = useState<CompetitorTrendRow[]>([]);
+  const [search, setSearch] = useState<NaverSearchItem[]>([]);
+  const [trend, setTrend] = useState<NaverTrend>({ competitors: [], rows: [] });
+  const [ads, setAds] = useState<CompetitorCreatives[]>([]);
+  const [changes, setChanges] = useState<BestChange[]>([]);
 
   useEffect(() => {
-    if (!date) return;
-    api.competitors(date).then((r) => setComps(r.competitors));
-    api.competitorsTrend(daysBefore(date, 13), date).then((r) => setTrend(r.rows));
+    setFrom(daysBefore(date, 6));
+    setTo(date);
   }, [date]);
+  useEffect(() => {
+    api.competitors(to).then((r) => setComps(r.competitors));
+    api.competitorsNaver(from, to).then((r) => {
+      setSearch(r.search);
+      setTrend(r.trend);
+    });
+    api.competitorsCreatives(to).then((r) => setAds(r.competitors));
+    api.competitorsBestChanges(to).then((r) => setChanges(r.items));
+  }, [from, to]);
 
   return (
     <>
+      <RangePicker base={date} from={from} to={to} onChange={(f, t) => { setFrom(f); setTo(t); }} />
+
+      {/* 경쟁사 개요 카드 */}
       <div className="comp-grid">
         {comps.map((c) => (
           <div className="card comp-card" key={c.name}>
@@ -39,44 +66,71 @@ export function CompetitorPage({ date }: { date: string }) {
         ))}
       </div>
 
-      <CompetitorTrend rows={trend} />
-    </>
-  );
-}
-
-// 경쟁사 전체 활동 추세 (신규 후기 / 프로모션)
-function CompetitorTrend({ rows }: { rows: CompetitorTrendRow[] }) {
-  if (rows.length === 0)
-    return (
-      <div className="card">
-        <h2>경쟁사 활동 추세</h2>
-        <p className="muted">데이터 없음</p>
+      {/* 네이버 검색량 + 트렌드 */}
+      <div className="two-col">
+        <CategoryBar
+          title="네이버 검색량 현황"
+          unit="number"
+          items={search.map((s) => ({ key: s.competitor, value: s.volume }))}
+        />
+        <MultiLineChart title="네이버 트렌드 흐름" series={trend.competitors} rows={trend.rows} />
       </div>
-    );
-  const W = 760;
-  const H = 200;
-  const pad = { l: 8, r: 8, t: 14, b: 22 };
-  const iw = W - pad.l - pad.r;
-  const ih = H - pad.t - pad.b;
-  const maxR = Math.max(...rows.map((r) => r.new_reviews), 1);
-  const x = (i: number) => pad.l + (rows.length === 1 ? iw / 2 : (i / (rows.length - 1)) * iw);
-  const y = (v: number) => pad.t + ih - (v / maxR) * ih;
-  const line = rows.map((r, i) => `${x(i)},${y(r.new_reviews)}`).join(" ");
 
-  return (
-    <div className="card">
-      <h2>경쟁사 활동 추세 (전체 신규 후기)</h2>
-      <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img">
-        <polyline points={line} fill="none" stroke="#f43f5e" strokeWidth={2} />
-        {rows.map((r, i) => (
-          <circle key={r.date} cx={x(i)} cy={y(r.new_reviews)} r={2.5} fill="#f43f5e" />
+      {/* 경쟁사 광고 소재 */}
+      <h2 className="section-title">경쟁사 광고 소재 (메타 · 구글)</h2>
+      <div className="comp-grid">
+        {ads.map((c) => (
+          <div className="card comp-card" key={c.name}>
+            <h2>{c.name}</h2>
+            <div className="ad-creatives">
+              {c.creatives.map((a, i) => (
+                <div className="ad-creative" key={i}>
+                  <span className={`plat-badge ${a.platform}`}>{PLAT_LABEL[a.platform] ?? a.platform}</span>
+                  <span className="ad-title">{a.title}</span>
+                </div>
+              ))}
+              {c.creatives.length === 0 && <p className="muted">노출 중인 광고 없음</p>}
+            </div>
+          </div>
         ))}
-        {rows.map((r, i) => (
-          <text key={r.date} x={x(i)} y={H - 6} className="axis" textAnchor="middle">
-            {r.date.slice(8)}
-          </text>
+      </div>
+
+      {/* 베스트 상품 카테고리 분석 */}
+      <h2 className="section-title">베스트 상품 변화 분석 (전일 대비)</h2>
+      <div className="comp-grid">
+        {changes.map((c) => (
+          <div className="card comp-card" key={c.name}>
+            <h2>{c.name}</h2>
+            <div className="change-block">
+              <span className="muted">🆕 신규 진입</span>
+              <div className="chips">
+                {c.new_entries.length ? (
+                  c.new_entries.map((p) => <span className="chip new" key={p}>{p}</span>)
+                ) : (
+                  <span className="muted small">없음</span>
+                )}
+              </div>
+            </div>
+            <div className="change-block">
+              <span className="muted">↕ 순위 변동</span>
+              <div className="rank-changes">
+                {c.rank_changes.length ? (
+                  c.rank_changes.map((r) => (
+                    <div className="rank-row" key={r.product}>
+                      <span>{r.product}</span>
+                      <span className={r.delta > 0 ? "delta up" : "delta down"}>
+                        {r.prev_rank}위 → {r.cur_rank}위 {r.delta > 0 ? "▲" : "▼"}{Math.abs(r.delta)}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <span className="muted small">변동 없음</span>
+                )}
+              </div>
+            </div>
+          </div>
         ))}
-      </svg>
-    </div>
+      </div>
+    </>
   );
 }

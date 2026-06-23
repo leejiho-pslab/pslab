@@ -193,6 +193,23 @@ body {
 .comp-stats b { font-size: 18px; }
 .comp-best .chips { margin-top: 6px; }
 
+/* 경쟁사 광고 소재 */
+.ad-creatives { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.ad-creative { display: flex; align-items: center; gap: 8px; }
+.plat-badge { font-size: 11px; font-weight: 700; color: #fff; border-radius: 6px; padding: 3px 8px; flex: none; }
+.plat-badge.meta { background: #1877f2; }
+.plat-badge.google { background: #ea4335; }
+.ad-title { font-size: 13px; }
+
+/* 베스트 변화 분석 */
+.change-block { margin-top: 10px; }
+.change-block .chips { margin-top: 5px; }
+.chip.new { background: #dcfce7; color: #166534; border-color: #86efac; }
+.muted.small { font-size: 12px; }
+.rank-changes { margin-top: 5px; display: flex; flex-direction: column; gap: 4px; }
+.rank-row { display: flex; justify-content: space-between; font-size: 12.5px; }
+.rank-row .delta { font-weight: 600; }
+
 @media (max-width: 900px) {
   .kpi-grid, .kpi-grid.kpi-4 { grid-template-columns: repeat(2, 1fr); }
   .group-grid { grid-template-columns: repeat(2, 1fr); }

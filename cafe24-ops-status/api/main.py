@@ -31,7 +31,14 @@ from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_trend,
 )
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
-from cafe24_ops.etl.competitor_metrics import competitor_snapshot, competitor_trend  # noqa: E402
+from cafe24_ops.etl.competitor_metrics import (  # noqa: E402
+    bestseller_changes,
+    competitor_ad_creatives,
+    competitor_snapshot,
+    competitor_trend,
+    naver_search,
+    naver_trend,
+)
 from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_fatigue,
     creative_overview,
@@ -294,6 +301,38 @@ def competitors_trend_ep(
     store = _store()
     try:
         return {"from": date_from, "to": date_to, "rows": competitor_trend(store, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/competitors/naver")
+def competitors_naver_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return {"search": naver_search(store, date_to), "trend": naver_trend(store, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/competitors/creatives")
+def competitors_creatives_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, "competitors": competitor_ad_creatives(store, target) if target else []}
+    finally:
+        store.close()
+
+
+@app.get("/api/competitors/best-changes")
+def competitors_best_changes_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, "items": bestseller_changes(store, target) if target else []}
     finally:
         store.close()
 

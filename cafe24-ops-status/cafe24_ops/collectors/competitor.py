@@ -14,6 +14,11 @@ MOCK_PRODUCTS = [
     "베이직 후디", "리커버리 슬리퍼", "트래블 파우치", "윈드브레이커",
     "넥쿠션", "조거 팬츠", "에코백", "캡 모자",
 ]
+MOCK_AD_TITLES = [
+    "여름 시즌오프 최대 50%", "신상 입고 기념 쿠폰팩", "리뷰 이벤트 적립",
+    "베스트 단독 특가", "오늘만 무료배송", "신규회원 10% 할인",
+]
+AD_PLATFORMS = ["meta", "google"]
 
 
 def _rng(key: str) -> random.Random:
@@ -38,11 +43,20 @@ class CompetitorCollector(BaseCollector):
             for metric, value in scalars.items():
                 records.append({"date": date, "source": self.source, "metric": metric,
                                 "value": value, "dims": {"competitor": name}})
-            # 베스트 상품 TOP3
+            # 네이버 검색량
+            records.append({"date": date, "source": self.source, "metric": "naver_search_volume",
+                            "value": float(r.randint(500, 15_000)), "dims": {"competitor": name}})
+            # 베스트 상품 TOP3 (일자별로 변동 → 신규 진입/순위 변동 분석용)
             for rank, product in enumerate(r.sample(MOCK_PRODUCTS, 3), start=1):
                 records.append({"date": date, "source": self.source, "metric": "bestseller",
                                 "value": float(rank),
                                 "dims": {"competitor": name, "product": product}})
+            # 광고 소재 (메타/구글 등 공개 영역)
+            for platform in r.sample(AD_PLATFORMS, r.randint(1, len(AD_PLATFORMS))):
+                title = r.choice(MOCK_AD_TITLES)
+                records.append({"date": date, "source": self.source, "metric": "ad_creative",
+                                "value": float(r.randint(10_000, 200_000)),
+                                "dims": {"competitor": name, "platform": platform, "title": title}})
         return records
 
     def collect_live(self, date: str) -> list[dict]:

@@ -3,8 +3,12 @@ import type {
   AdsOverview,
   AdsSummary,
   AdsTrendRow,
+  BestChange,
   Competitor,
+  CompetitorCreatives,
   CompetitorTrendRow,
+  NaverSearchItem,
+  NaverTrend,
   Creative,
   CreativeFatigue,
   CreativeOverview,
@@ -63,4 +67,14 @@ export const api = {
     get<{ date: string | null; competitors: Competitor[] }>(`/api/competitors${q(date)}`),
   competitorsTrend: (from: string, to: string) =>
     get<{ rows: CompetitorTrendRow[] }>(`/api/competitors/trend?from=${from}&to=${to}`),
+  competitorsNaver: (from: string, to: string) =>
+    get<{ search: NaverSearchItem[]; trend: NaverTrend }>(
+      `/api/competitors/naver?from=${from}&to=${to}`,
+    ),
+  competitorsCreatives: (date?: string) =>
+    get<{ date: string | null; competitors: CompetitorCreatives[] }>(
+      `/api/competitors/creatives${q(date)}`,
+    ),
+  competitorsBestChanges: (date?: string) =>
+    get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
 };

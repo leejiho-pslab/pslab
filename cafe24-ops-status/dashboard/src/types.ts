@@ -192,3 +192,37 @@ export interface CompetitorTrendRow {
   new_reviews: number;
   ad_count: number;
 }
+
+export interface NaverSearchItem {
+  competitor: string;
+  volume: number;
+}
+
+export interface NaverTrend {
+  competitors: string[];
+  rows: Array<Record<string, number | string>>;
+}
+
+export interface CompetitorAd {
+  platform: string;
+  title: string;
+  impressions: number;
+}
+
+export interface CompetitorCreatives {
+  name: string;
+  creatives: CompetitorAd[];
+}
+
+export interface RankChange {
+  product: string;
+  prev_rank: number;
+  cur_rank: number;
+  delta: number;
+}
+
+export interface BestChange {
+  name: string;
+  new_entries: string[];
+  rank_changes: RankChange[];
+}
