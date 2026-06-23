@@ -1,0 +1,62 @@
+name: cafe24 daily collect
+
+# 데일리(매일 1회) 카페24 데이터 수집 — Phase 4 자동화
+# 주의: 스케줄은 기본 브랜치에서만 동작한다. 자격증명은 repo Secrets 로 주입한다.
+#   필요한 Secrets: CAFE24_MALL_ID, CAFE24_ACCESS_TOKEN, CAFE24_REFRESH_TOKEN,
+#                   CAFE24_CLIENT_ID, CAFE24_CLIENT_SECRET, (선택) SLACK_WEBHOOK_URL
+# 영구 저장이 필요하면 store/ 를 관리형 DB(Postgres 등)로 교체할 것. (현재는 러너 임시 저장)
+
+on:
+  schedule:
+    - cron: "10 22 * * *" # 07:10 KST (UTC+9)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "수집 기준일 (YYYY-MM-DD, 비우면 어제)"
+        required: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Guard — 자격증명 없으면 스킵
+        id: guard
+        env:
+          TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "CAFE24_ACCESS_TOKEN 미설정 — 수집 스킵"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run daily pipeline (live)
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          CAFE24_OPS_MODE: live
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+        run: |
+          DATE_ARG=""
+          if [ -n "${{ github.event.inputs.date }}" ]; then DATE_ARG="--date ${{ github.event.inputs.date }}"; fi
+          python scripts/run_all.py --mode live $DATE_ARG
+
+      - name: Alerts (optional Slack)
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python scripts/notify.py

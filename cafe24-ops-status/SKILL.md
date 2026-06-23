@@ -10,14 +10,24 @@ description: 카페24 자사몰 통합 자동화 운영현황 대시보드. 데�
 
 설계도면: [`docs/afe24-ops-dashboard/`](../../docs/afe24-ops-dashboard/) (저장소 루트 기준)
 
-## 현재 상태 — Phase 1 (카페24 실연동 + React 어드민 대시보드)
+## 현재 상태 — 4대 대시보드 + 자동화 골격 완성
 
-수집 → 정규화 → 집계 → 저장 → API → React 대시보드 전체가 동작한다.
+수집 → 정규화 → 집계 → 저장 → API → React(4탭) 전체가 동작한다.
 
+- **4대 대시보드**: 카페24 어드민 / 광고 / 광고 히스토리(소재) / 경쟁사 모니터링
 - `mock` 모드(기본): 샘플 데이터, 같은 날짜는 항상 같은 값 (연동 전 전체 흐름 검증용)
-- `live` 모드: 카페24 Admin API(주문)로 매출/주문수/객단가 실수집
-  (`config/secrets.env` 에 자격증명 필요 — `secrets.env.example` 참고)
-- React 어드민 대시보드: 요약 KPI · 기간 비교 · 일별 매출 추이 · 일별 지표표
+- `live` 모드: 카페24 Admin API(주문→매출/주문수/객단가, +방문자/전환/가입) 실수집
+  (광고/소재/경쟁사 live 연동은 Phase 2~3 에서 채울 자리 — 현재 mock)
+- **자동화**: GitHub Actions 데일리 워크플로(`.github/workflows/cafe24-daily-collect.yml`),
+  알림(`scripts/notify.py`, 이상치/Top소재/경쟁사 변화 → 선택적 Slack)
+
+### 주요 API
+```
+/api/config/metrics · /api/summary · /api/period-comparison · /api/daily · /api/daily-detail · /api/trend
+/api/ads/summary · /api/ads/channels · /api/ads/trend
+/api/creatives · /api/creatives/fatigue · /api/creatives/trend
+/api/competitors · /api/competitors/trend
+```
 
 ## 빠른 시작
 
