@@ -10,10 +10,14 @@ description: 카페24 자사몰 통합 자동화 운영현황 대시보드. 데�
 
 설계도면: [`docs/afe24-ops-dashboard/`](../../docs/afe24-ops-dashboard/) (저장소 루트 기준)
 
-## 현재 상태 — Phase 0 (동작하는 빈 파이프라인)
+## 현재 상태 — Phase 1 (카페24 실연동 + React 어드민 대시보드)
 
-수집 → 정규화 → 집계 → 저장 → API 의 전체 골격이 동작한다.
-실제 API 연동 전이라 기본 모드는 `mock`(샘플 데이터)이며, 같은 날짜는 항상 같은 값을 만든다.
+수집 → 정규화 → 집계 → 저장 → API → React 대시보드 전체가 동작한다.
+
+- `mock` 모드(기본): 샘플 데이터, 같은 날짜는 항상 같은 값 (연동 전 전체 흐름 검증용)
+- `live` 모드: 카페24 Admin API(주문)로 매출/주문수/객단가 실수집
+  (`config/secrets.env` 에 자격증명 필요 — `secrets.env.example` 참고)
+- React 어드민 대시보드: 요약 KPI · 기간 비교 · 일별 매출 추이 · 일별 지표표
 
 ## 빠른 시작
 
@@ -30,12 +34,25 @@ python scripts/run_all.py --days 7 --date 2026-06-17
 # 2) API 서버 (React 대시보드가 호출)
 uvicorn api.main:app --reload
 #  GET /health
-#  GET /api/config/metrics   ← 지표 정의(metrics.yaml)
+#  GET /api/config/metrics       ← 지표 정의(metrics.yaml)
 #  GET /api/summary?date=YYYY-MM-DD
+#  GET /api/period-comparison?date=YYYY-MM-DD
 #  GET /api/daily?from=...&to=...
 
-# 3) 테스트
+# 3) React 대시보드
+cd dashboard && npm install && npm run dev   # http://localhost:5173
+
+# 4) 테스트
 pytest
+```
+
+## live 모드 (카페24 실연동)
+
+```bash
+cp config/secrets.env.example config/secrets.env   # 값 채우기
+#   CAFE24_MALL_ID / CAFE24_ACCESS_TOKEN / CAFE24_REFRESH_TOKEN
+#   CAFE24_CLIENT_ID / CAFE24_CLIENT_SECRET (토큰 자동 갱신용)
+python scripts/run_all.py --mode live --date 2026-06-17
 ```
 
 ## 지표 수정 (수정 자유도)

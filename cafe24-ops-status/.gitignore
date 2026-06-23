@@ -10,3 +10,4 @@ store/
 # React
 dashboard/node_modules/
 dashboard/dist/
+*.tsbuildinfo
