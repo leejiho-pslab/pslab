@@ -26,6 +26,11 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
 )
 from cafe24_ops.etl.ads_metrics import ads_by_channel, ads_summary, ads_trend  # noqa: E402
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
+from cafe24_ops.etl.creative_metrics import (  # noqa: E402
+    creative_fatigue,
+    creative_trend,
+    creatives_ranked,
+)
 from cafe24_ops.store import Store  # noqa: E402
 
 
@@ -194,6 +199,45 @@ def ads_trend_ep(
     store = _store()
     try:
         return {"from": date_from, "to": date_to, "rows": ads_trend(store, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/creatives")
+def creatives_ep(
+    date: str | None = Query(default=None),
+    top_n: int = Query(default=10),
+    sort: str = Query(default="roas"),
+) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        items = creatives_ranked(store, target, top_n, sort) if target else []
+        return {"date": target, "sort": sort, "creatives": items}
+    finally:
+        store.close()
+
+
+@app.get("/api/creatives/fatigue")
+def creatives_fatigue_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, "items": creative_fatigue(store, target) if target else []}
+    finally:
+        store.close()
+
+
+@app.get("/api/creatives/trend")
+def creatives_trend_ep(
+    creative_id: str = Query(...),
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return {"creative_id": creative_id,
+                "rows": creative_trend(store, creative_id, date_from, date_to)}
     finally:
         store.close()
 
