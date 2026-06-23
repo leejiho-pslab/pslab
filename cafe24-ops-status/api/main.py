@@ -26,6 +26,7 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
 )
 from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_by_channel,
+    ads_channel_trend,
     ads_overview,
     ads_summary,
     ads_trend,
@@ -215,6 +216,18 @@ def ads_overview_ep(
     store = _store()
     try:
         return ads_overview(store, sel_from, sel_to, cmp_from, cmp_to)
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/channel-trend")
+def ads_channel_trend_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return ads_channel_trend(store, date_from, date_to)
     finally:
         store.close()
 

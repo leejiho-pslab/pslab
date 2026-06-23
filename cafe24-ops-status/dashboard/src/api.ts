@@ -1,5 +1,6 @@
 import type {
   AdsChannel,
+  AdsChannelTrend,
   AdsOverview,
   AdsSummary,
   AdsTrendRow,
@@ -51,6 +52,8 @@ export const api = {
     get<AdsOverview>(
       `/api/ads/overview?from=${r.selFrom}&to=${r.selTo}&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}`,
     ),
+  adsChannelTrend: (from: string, to: string) =>
+    get<AdsChannelTrend>(`/api/ads/channel-trend?from=${from}&to=${to}`),
 
   // 광고 히스토리(소재)
   creatives: (date?: string, topN = 10, sort = "roas") =>

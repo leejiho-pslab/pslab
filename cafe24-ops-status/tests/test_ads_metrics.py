@@ -1,6 +1,7 @@
 from cafe24_ops.config import load_config
 from cafe24_ops.etl.ads_metrics import (
     ads_by_channel,
+    ads_channel_trend,
     ads_overview,
     ads_summary,
     ads_trend,
@@ -56,6 +57,18 @@ def test_ads_summary_share_vs_gross(tmp_path):
         assert s["gross_sales"] == gross
         assert abs(s["ad_share"] - round(s["ad_sales"] / gross * 100, 2)) < 0.01
         assert s["channels"] == 4
+    finally:
+        store.close()
+
+
+def test_ads_channel_trend_per_channel_series(tmp_path):
+    cfg, store = _store(tmp_path, days=range(4, 18))
+    try:
+        t = ads_channel_trend(store, "2026-06-04", "2026-06-17")
+        assert set(t["channels"]) == {"meta", "google", "naver", "kakao"}
+        rows = t["trend"]["google"]
+        assert len(rows) == 14  # 일자별 행
+        assert {"date", "ad_cost", "roas", "impressions", "clicks", "ctr", "cvr"} <= set(rows[0])
     finally:
         store.close()
 

@@ -125,6 +125,11 @@ export interface AdsTrendRow {
   roas: number | null;
 }
 
+export interface AdsChannelTrend {
+  channels: string[];
+  trend: Record<string, AdsTrendRow[]>;
+}
+
 // ── 광고 히스토리(소재) ────────────────────────────────────────
 export interface Creative {
   creative_id: string;

@@ -77,7 +77,17 @@ body {
 .ch-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .ch-metrics > div { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
 .ch-metrics span { display: block; color: var(--sub); font-size: 11px; }
-.ch-metrics b { font-size: 14.5px; }
+.ch-metrics b { display: block; font-size: 14.5px; margin-top: 2px; }
+.ch-metrics.six { grid-template-columns: repeat(6, 1fr); }
+.mini-delta { display: block; font-size: 11px; font-weight: 600; font-style: normal; margin-top: 2px; }
+.mini-delta.up { color: var(--up); }
+.mini-delta.down { color: var(--down); }
+.mini-delta.flat { color: var(--sub); }
+
+/* 채널 상세 카드 — 내부 차트는 카드 래퍼 제거 */
+.ch-detail { margin-bottom: 16px; }
+.ch-detail .card { border: none; background: transparent; padding: 0; margin: 14px 0 0; }
+.ch-detail .card h2 { font-size: 13px; color: var(--sub); margin-bottom: 6px; }
 
 .card {
   background: #fff; border: 1px solid var(--line); border-radius: 12px;

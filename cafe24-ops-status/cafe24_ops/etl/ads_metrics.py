@@ -96,6 +96,33 @@ def ads_by_channel(store, date: str) -> list[dict]:
     return ads_channels_range(store, date, date)
 
 
+def ads_channel_trend(store, date_from: str, date_to: str) -> dict:
+    """채널 × 일자 추이 (항상 30일 등 고정 윈도우로 흐름을 보여주기 위함)."""
+    agg: dict[str, dict[str, dict]] = {}
+    for r in store.get_facts(date_from, date_to, source="ads"):
+        ch = r["dims"].get("channel")
+        if not ch:
+            continue
+        day = agg.setdefault(ch, {}).setdefault(r["date"], {})
+        day[r["metric"]] = day.get(r["metric"], 0.0) + float(r["value"])
+    trend: dict[str, list] = {}
+    for ch, by_date in agg.items():
+        rows = []
+        for d in sorted(by_date):
+            m = by_date[d]
+            cost, sales = m.get("ad_cost", 0.0), m.get("ad_sales", 0.0)
+            impr, clicks, conv = m.get("impressions", 0.0), m.get("clicks", 0.0), m.get("conversions", 0.0)
+            rows.append({
+                "date": d, "ad_cost": cost, "ad_sales": sales,
+                "roas": round(sales / cost, 2) if cost else None,
+                "impressions": impr, "clicks": clicks,
+                "ctr": round(clicks / impr * 100, 2) if impr else None,
+                "cvr": round(conv / clicks * 100, 2) if clicks else None,
+            })
+        trend[ch] = rows
+    return {"channels": sorted(trend), "trend": trend}
+
+
 def ads_summary(store, date: str) -> dict:
     channels = ads_by_channel(store, date)
     cost = sum(c["ad_cost"] for c in channels)

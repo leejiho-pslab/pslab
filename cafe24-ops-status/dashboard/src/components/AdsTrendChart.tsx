@@ -1,17 +1,25 @@
 import type { AdsTrendRow } from "../types";
 
 // 일별 광고비(막대) + ROAS(선)
-export function AdsTrendChart({ rows }: { rows: AdsTrendRow[] }) {
+export function AdsTrendChart({
+  rows,
+  title = "일별 광고비 · ROAS 추이",
+  height = 220,
+}: {
+  rows: AdsTrendRow[];
+  title?: string;
+  height?: number;
+}) {
   if (rows.length === 0)
     return (
       <div className="card">
-        <h2>일별 광고비 · ROAS 추이</h2>
+        <h2>{title}</h2>
         <p className="muted">데이터 없음</p>
       </div>
     );
 
   const W = 760;
-  const H = 220;
+  const H = height;
   const pad = { l: 8, r: 8, t: 14, b: 22 };
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
@@ -26,7 +34,7 @@ export function AdsTrendChart({ rows }: { rows: AdsTrendRow[] }) {
 
   return (
     <div className="card">
-      <h2>일별 광고비 · ROAS 추이</h2>
+      <h2>{title}</h2>
       <svg viewBox={`0 0 ${W} ${H}`} className="chart" role="img">
         {rows.map((r, i) => (
           <rect key={r.date} x={bx(i)} y={yCost(r.ad_cost)} width={barW}
