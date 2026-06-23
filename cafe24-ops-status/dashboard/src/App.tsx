@@ -1,43 +1,27 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
-import type {
-  DailyDetailResponse,
-  DailyRow,
-  MetricsConfig,
-  PeriodRow,
-  SummaryCard,
-  TrendRow,
-} from "./types";
-import { SummaryCards } from "./components/SummaryCards";
-import { PeriodTable } from "./components/PeriodTable";
-import { DailyTable } from "./components/DailyTable";
-import { SalesChart } from "./components/SalesChart";
-import { DeviceDonut } from "./components/DeviceDonut";
-import { CategoryBar } from "./components/CategoryBar";
-import { BestTable } from "./components/BestTable";
-import { CRMCards } from "./components/CRMCards";
-import { NewReturningChart } from "./components/NewReturningChart";
-import { AdCostChart } from "./components/AdCostChart";
-import { PlannedGroups } from "./components/PlannedGroups";
+import type { MetricsConfig } from "./types";
+import { Cafe24Page } from "./pages/Cafe24Page";
+import { AdsPage } from "./pages/AdsPage";
+import { CreativePage } from "./pages/CreativePage";
+import { CompetitorPage } from "./pages/CompetitorPage";
 
-function daysBefore(date: string, n: number): string {
-  const d = new Date(date + "T00:00:00");
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-}
+const TABS = [
+  { id: "cafe24", label: "카페24 어드민" },
+  { id: "ads", label: "광고" },
+  { id: "creative", label: "광고 히스토리" },
+  { id: "competitor", label: "경쟁사 모니터링" },
+] as const;
+
+type TabId = (typeof TABS)[number]["id"];
 
 export default function App() {
   const [config, setConfig] = useState<MetricsConfig | null>(null);
   const [dates, setDates] = useState<string[]>([]);
   const [date, setDate] = useState<string>("");
-  const [cards, setCards] = useState<SummaryCard[]>([]);
-  const [period, setPeriod] = useState<PeriodRow[]>([]);
-  const [daily, setDaily] = useState<DailyRow[]>([]);
-  const [detail, setDetail] = useState<DailyDetailResponse | null>(null);
-  const [trend, setTrend] = useState<TrendRow[]>([]);
+  const [tab, setTab] = useState<TabId>("cafe24");
   const [error, setError] = useState<string>("");
 
-  // 초기 로드: 설정 + 날짜 목록
   useEffect(() => {
     Promise.all([api.metricsConfig(), api.dates()])
       .then(([cfg, ds]) => {
@@ -48,35 +32,14 @@ export default function App() {
       .catch((e) => setError(String(e)));
   }, []);
 
-  // 선택 날짜 변경 시 지표 로드
-  useEffect(() => {
-    if (!date) return;
-    const from = daysBefore(date, 13);
-    Promise.all([
-      api.summary(date),
-      api.periodComparison(date),
-      api.daily(from, date),
-      api.dailyDetail(date),
-      api.trend(from, date),
-    ])
-      .then(([s, p, d, dd, tr]) => {
-        setCards(s.cards);
-        setPeriod(p.rows);
-        setDaily(d.rows);
-        setDetail(dd);
-        setTrend(tr.rows);
-      })
-      .catch((e) => setError(String(e)));
-  }, [date]);
-
   if (error)
     return (
       <div className="app">
         <div className="card error">
           <b>API 연결 오류:</b> {error}
           <p className="muted">
-            FastAPI 서버를 먼저 실행하세요: <code>uvicorn api.main:app --reload</code> 그리고{" "}
-            <code>python scripts/run_all.py --days 14</code> 로 데이터를 적재하세요.
+            백엔드를 먼저 실행하세요: <code>python scripts/run_all.py --days 14</code> 후{" "}
+            <code>uvicorn api.main:app --reload</code>
           </p>
         </div>
       </div>
@@ -90,43 +53,34 @@ export default function App() {
         <div>
           <h1>keek 운영 대시보드</h1>
           <span className="sub">
-            카페24 어드민 · 데일리 수집 ({config.collection.granularity}, {config.collection.run_at})
+            자사몰 통합 자동화 · 데일리 수집 ({config.collection.granularity}, {config.collection.run_at})
           </span>
         </div>
         <div className="date-picker">
           <label>조회일</label>
           <select value={date} onChange={(e) => setDate(e.target.value)}>
             {dates.map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
+              <option key={d} value={d}>{d}</option>
             ))}
           </select>
         </div>
       </header>
 
-      <SummaryCards cards={cards} />
-      <PeriodTable rows={period} />
-      <SalesChart rows={daily} />
+      <nav className="tabs">
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
+      </nav>
 
-      <div className="two-col">
-        <NewReturningChart rows={trend} />
-        <AdCostChart rows={trend} />
-      </div>
-      <div className="two-col">
-        <DeviceDonut items={detail?.device ?? []} />
-        <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
-      </div>
-      <div className="two-col">
-        <BestTable items={detail?.best ?? []} />
-        <CRMCards crm={detail?.crm ?? {}} />
-      </div>
-
-      <DailyTable rows={daily} metrics={config.summary_cards} />
-      <PlannedGroups config={config} />
+      {tab === "cafe24" && <Cafe24Page date={date} config={config} />}
+      {tab === "ads" && <AdsPage date={date} />}
+      {tab === "creative" && <CreativePage date={date} />}
+      {tab === "competitor" && <CompetitorPage date={date} />}
 
       <footer className="foot">
-        Phase 1 · 카페24 Admin API 연동 + React 어드민 대시보드 — 지표 정의는 metrics.yaml 기반
+        자사몰 통합 자동화 대시보드 · 지표 정의는 metrics.yaml 기반 · 데이터 mock/live 전환 가능
       </footer>
     </div>
   );

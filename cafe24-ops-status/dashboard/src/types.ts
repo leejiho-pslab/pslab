@@ -71,3 +71,74 @@ export interface TrendResponse {
   to: string;
   rows: TrendRow[];
 }
+
+// ── 광고 대시보드 ──────────────────────────────────────────────
+export interface AdsSummary {
+  date: string | null;
+  ad_cost: number;
+  ad_sales: number;
+  roas: number | null;
+  ad_share: number | null;
+  gross_sales: number | null;
+  channels: number;
+}
+
+export interface AdsChannel {
+  channel: string;
+  ad_cost: number;
+  ad_sales: number;
+  conversions: number;
+  roas: number | null;
+  ctr: number | null;
+  cpc: number | null;
+  cpa: number | null;
+}
+
+export interface AdsTrendRow {
+  date: string;
+  ad_cost: number;
+  ad_sales: number;
+  roas: number | null;
+}
+
+// ── 광고 히스토리(소재) ────────────────────────────────────────
+export interface Creative {
+  creative_id: string;
+  name: string;
+  channel: string;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ad_cost: number;
+  ad_sales: number;
+  ctr: number | null;
+  roas: number | null;
+  cvr: number | null;
+}
+
+export interface CreativeFatigue {
+  creative_id: string;
+  name: string;
+  channel: string;
+  recent_roas: number | null;
+  prior_roas: number | null;
+  change_pct: number | null;
+  fatigued: boolean;
+}
+
+// ── 경쟁사 모니터링 ────────────────────────────────────────────
+export interface Competitor {
+  name: string;
+  active_promotions: number | null;
+  new_reviews: number | null;
+  avg_rating: number | null;
+  ad_count: number | null;
+  best_products: string[];
+}
+
+export interface CompetitorTrendRow {
+  date: string;
+  active_promotions: number;
+  new_reviews: number;
+  ad_count: number;
+}

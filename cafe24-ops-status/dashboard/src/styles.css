@@ -28,9 +28,18 @@ body {
   border-radius: 8px; padding: 7px 10px; font-size: 14px;
 }
 
+/* 탭 네비게이션 */
+.tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.tabs button {
+  background: #fff; border: 1px solid var(--line); color: var(--sub);
+  border-radius: 10px; padding: 9px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.tabs button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
 .kpi-grid {
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px;
 }
+.kpi-grid.kpi-4 { grid-template-columns: repeat(4, 1fr); }
 .kpi-card {
   background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--blue);
   border-radius: 10px; padding: 14px;
@@ -108,9 +117,39 @@ body {
 .crm-label { color: var(--sub); font-size: 12.5px; }
 .crm-value { font-size: 22px; font-weight: 700; margin-top: 4px; }
 
+/* 카드 헤더 + 정렬 탭 (소재) */
+.card-head { display: flex; justify-content: space-between; align-items: center; }
+.card-head h2 { margin-bottom: 0; }
+.sort-tabs { font-size: 12px; color: var(--sub); display: flex; align-items: center; gap: 5px; }
+.sort-tabs button {
+  background: #f1f5f9; border: 1px solid var(--line); border-radius: 7px;
+  padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--sub);
+}
+.sort-tabs button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* 소재 하이라이트 */
+.card.highlight { border-color: var(--blue); background: #f5f9ff; }
+.top-creative { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.tc-name { font-size: 18px; font-weight: 700; }
+.tc-metrics { display: flex; gap: 18px; font-size: 13px; color: var(--sub); }
+.tc-metrics b { color: var(--ink); font-size: 16px; margin-left: 4px; }
+
+/* 경쟁사 카드 */
+.comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 16px; }
+.comp-card { margin-bottom: 0; }
+.comp-head { display: flex; justify-content: space-between; align-items: center; }
+.comp-head h2 { margin-bottom: 0; }
+.rating { color: #f59e0b; font-weight: 700; font-size: 15px; }
+.comp-stats { display: flex; gap: 10px; margin: 14px 0; }
+.comp-stats > div { flex: 1; background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
+.comp-stats span { display: block; color: var(--sub); font-size: 11.5px; }
+.comp-stats b { font-size: 18px; }
+.comp-best .chips { margin-top: 6px; }
+
 @media (max-width: 900px) {
-  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .kpi-grid.kpi-4 { grid-template-columns: repeat(2, 1fr); }
   .group-grid { grid-template-columns: repeat(2, 1fr); }
   .two-col { grid-template-columns: 1fr; }
   .crm-grid { grid-template-columns: repeat(2, 1fr); }
+  .comp-grid { grid-template-columns: 1fr; }
 }

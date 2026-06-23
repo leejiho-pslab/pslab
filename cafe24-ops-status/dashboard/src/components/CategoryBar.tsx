@@ -1,7 +1,23 @@
 import type { BreakdownItem } from "../types";
 import { formatValue } from "../format";
 
-export function CategoryBar({ items, title }: { items: BreakdownItem[]; title: string }) {
+type Unit = "currency" | "number" | "roas";
+
+function fmt(v: number, unit: Unit): string {
+  if (unit === "roas") return `${v.toFixed(2)}x`;
+  if (unit === "number") return Math.round(v).toLocaleString("ko-KR");
+  return formatValue(v, "currency");
+}
+
+export function CategoryBar({
+  items,
+  title,
+  unit = "currency",
+}: {
+  items: BreakdownItem[];
+  title: string;
+  unit?: Unit;
+}) {
   const max = Math.max(...items.map((i) => i.value), 1);
   return (
     <div className="card">
@@ -16,7 +32,7 @@ export function CategoryBar({ items, title }: { items: BreakdownItem[]; title: s
               <div className="hbar-track">
                 <div className="hbar-fill" style={{ width: `${(it.value / max) * 100}%` }} />
               </div>
-              <span className="hbar-val">{formatValue(it.value, "currency")}</span>
+              <span className="hbar-val">{fmt(it.value, unit)}</span>
             </div>
           ))}
         </div>
