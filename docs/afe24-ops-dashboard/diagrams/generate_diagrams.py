@@ -109,6 +109,45 @@ class SVG:
     def vflow(self, cx, y1, y2, color="#94a3b8"):
         self.arrow(cx, y1, cx, y2, color=color, width=2.6)
 
+    def kpi(self, x, y, w, h, key, label, value):
+        p = PALETTE[key]
+        self.parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" '
+                          f'fill="#ffffff" stroke="{p["stroke"]}" stroke-width="1.6"/>')
+        self.parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="5" rx="2.5" fill="{p["head"]}"/>')
+        self.text(x + 14, y + 28, label, size=12.5, fill=SUBINK)
+        self.text(x + 14, y + 56, value, size=20, fill=INK, weight="bold")
+
+    def table(self, x, y, w, headers, rows, col_ratios=None, row_h=27,
+              head_fill="#475569", zebra="#f1f5f9", font=11.5):
+        n = len(headers)
+        ratios = col_ratios or [1] * n
+        tot = sum(ratios)
+        widths = [w * r / tot for r in ratios]
+        xs = [x]
+        for cw in widths:
+            xs.append(xs[-1] + cw)
+        self.parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{row_h}" rx="6" fill="{head_fill}"/>')
+        for i, htxt in enumerate(headers):
+            anchor = "start" if i == 0 else "middle"
+            tx = xs[i] + 12 if i == 0 else (xs[i] + xs[i + 1]) / 2
+            self.text(tx, y + row_h / 2 + 4.5, htxt, size=font + 0.5, fill="#ffffff",
+                      weight="bold", anchor=anchor)
+        for r, row in enumerate(rows):
+            ry = y + row_h * (r + 1)
+            if r % 2 == 1:
+                self.parts.append(f'<rect x="{x}" y="{ry}" width="{w}" height="{row_h}" fill="{zebra}"/>')
+            for i, cell in enumerate(row):
+                anchor = "start" if i == 0 else "middle"
+                tx = xs[i] + 12 if i == 0 else (xs[i] + xs[i + 1]) / 2
+                val, color = (cell if isinstance(cell, tuple) else (cell, INK))
+                weight = "bold" if i == 0 else "normal"
+                self.text(tx, ry + row_h / 2 + 4.5, val, size=font, fill=color,
+                          weight=weight, anchor=anchor)
+        th = row_h * (len(rows) + 1)
+        self.parts.append(f'<rect x="{x}" y="{y}" width="{w}" height="{th}" rx="6" '
+                          f'fill="none" stroke="{BANDLINE}" stroke-width="1.2"/>')
+        return th
+
     def render(self, name):
         marker = (
             '<defs><marker id="arr" markerWidth="11" markerHeight="11" refX="8" refY="5" '
@@ -176,7 +215,7 @@ def diagram_system():
            "ETL · 정규화 엔진", ["단위/통화/기간 표준화 · 중복제거 · 일/주/월 집계"], title_size=13.5)
     s.card(L + 18 + (R - L - 18 * 3) / 2 + 18, by + 162, (R - L - 18 * 3) / 2, 52, "skill",
            "스케줄러 (cron · GitHub Actions)",
-           ["정기 자동 실행 — 매시간/매일/매주 트리거로 100% 무인 수집"], title_size=13.5)
+           ["매일 1회(데일리) 전일자 데이터 자동 수집 — 100% 무인"], title_size=13.5)
 
     # ---- Band C: 데이터 저장 -------------------------------------------
     cy = 560
@@ -200,7 +239,7 @@ def diagram_system():
     s.band(L, ey, R - L, 250, "⑤ 프론트엔드 — React 웹 대시보드", None)
     dw = (R - L - 18 * 5) / 4
     dboards = [
-        ("c24",  "카페24 어드민\n대시보드", ["매출·주문·방문", "전환·재고·회원", "운영 KPI 한눈에"]),
+        ("c24",  "카페24 어드민\n대시보드", ["매출·주문·전환·객단가", "방문/재방문·카테고리", "디바이스·베스트·CRM"]),
         ("ads",  "광고 대시보드", ["ROAS·광고비·기여", "채널별 성과", "자사몰 현황과 결합"]),
         ("hist", "광고 히스토리\n대시보드", ["DA 소재별 데이터", "Top 소재 자동 선별", "성과 추세 비교"]),
         ("comp", "경쟁사 모니터링\n대시보드", ["프로모션·광고", "베스트·후기 추적", "벤치마킹 인사이트"]),
@@ -236,8 +275,8 @@ def diagram_dashboards():
 
     blocks = [
         ("c24", "카페24 어드민 대시보드",
-         "자사몰 운영에 필요한 데이터를 자동 수집해 판매 활동을 지원",
-         [("핵심 지표", ["매출/객단가/주문수", "방문수·전환율·장바구니", "재고·품절임박·재구매율", "신규/기존 회원, 쿠폰"]),
+         "기존 keek 운영 대시보드와 동일 지표 · 데일리 수집 (상세: 도면 05)",
+         [("핵심 지표", ["매출·주문·객단가·전환율", "방문/재방문·회원가입", "디바이스·카테고리 매출", "베스트상품·CRM·재고"]),
           ("자동으로 답하는 질문", ["오늘/이번주 매출은?", "어떤 상품이 잘 팔리나?", "어디서 이탈이 나나?"])]),
         ("ads", "광고 대시보드",
          "자사몰 현황과 광고 현황을 함께 분석",
@@ -294,6 +333,7 @@ def diagram_skill():
         ("SKILL.md", "스킬 정의 · 사용법 · 트리거", 0, "skill"),
         ("config/", "", 0, None),
         ("sources.yaml", "쇼핑몰·광고계정·경쟁사 목록", 1, "store"),
+        ("metrics.yaml", "대시보드 지표 정의(수정 자유)", 1, "c24"),
         ("secrets.env", "API 키/토큰 (gitignore)", 1, "store"),
         ("collectors/", "", 0, None),
         ("cafe24_collector.py", "Admin API 수집", 1, "c24"),
@@ -325,7 +365,7 @@ def diagram_skill():
     px, py, pw, ph = tx + tw + 20, 110, R - (tx + tw + 20), 560
     s.band(px, py, pw, ph, "자동화 파이프라인 (무인 실행)", "스케줄 트리거 → 수집 → 정규화 → 집계 → 제공")
     steps = [
-        ("skill", "트리거", "cron / GitHub Actions\n매시간·매일·매주"),
+        ("skill", "트리거", "cron / GitHub Actions\n매일 1회(데일리)"),
         ("c24",   "1) 수집", "소스별 collector 병렬 실행\n(카페24·광고·소재·경쟁사)"),
         ("skill", "2) 정규화", "단위/기간/통화 표준화\n중복 제거 · 매핑"),
         ("store", "3) 집계·저장", "KPI 집계 → DB/캐시 적재\nraw 스냅샷 보관"),
@@ -433,9 +473,132 @@ def diagram_roadmap():
     s.render("04_roadmap")
 
 
+# =======================================================================
+# 5. 카페24 어드민 대시보드 상세 (기존 keek 대시보드와 동일 지표)
+# =======================================================================
+def diagram_cafe24_detail():
+    W, H = 1680, 1300
+    s = SVG(W, H, bg="#ffffff")
+    header(s, "카페24 어드민 대시보드 — 상세 설계",
+           "기존 keek 운영 대시보드와 동일 지표 구성 · 데일리(매일 1회) 자동 수집 · 모든 지표는 config/metrics.yaml로 자유 수정")
+    L, R = 40, W - 40
+    red = "#dc2626"
+    grn = "#16a34a"
+
+    # ---- 상단 요약 KPI 카드 -------------------------------------------
+    s.text(L, 104, "상단 요약 KPI", size=15, fill=SUBINK, weight="bold")
+    kpis = [("매출", "₩26,723,153"), ("광고 매출액", "—"), ("주문건수", "221건"),
+            ("객단가", "₩120,919"), ("구매전환율", "1.02%"), ("매출대비 광고비율", "23.72%")]
+    ky = 116
+    kw = (R - L - 14 * 5) / 6
+    for i, (lab, val) in enumerate(kpis):
+        s.kpi(L + i * (kw + 14), ky, kw, 78, "c24", lab, val)
+
+    # ---- 핵심 지표 기간 비교 표 ----------------------------------------
+    ty = 226
+    s.text(L, ty - 8, "핵심 지표 기간 비교", size=15, fill=SUBINK, weight="bold")
+    headers = ["지표", "최근 7일", "직전 7일", "당월 누적", "전월 동기", "전년 동기"]
+    rows = [
+        ["매출", "₩705,912", "₩16,379,939", "₩26,723,153", "₩16,160,042", "₩6,309,987"],
+        ["수주건수", "65", "130", "221", "131", "70"],
+        ["객단가", "₩118,552", "₩125,000", "₩120,919", "₩123,359", "₩90,148"],
+        ["구매전환율", "1.14%", "1.04%", "1.02%", "0.55%", "0.35%"],
+        ["방문자", "5,703", "12,494", "21,742", "23,951", "19,938"],
+        ["광고비용", "₩935,475", "₩3,885,160", "₩6,338,937", "₩9,848,709", "₩40,010"],
+        ["매출대비 광고비율", "8.55%", "23.72%", "23.72%", "54.76%", "0.63%"],
+    ]
+    s.table(L, ty + 6, R - L, headers, rows, col_ratios=[2.0, 1.3, 1.3, 1.3, 1.3, 1.3])
+
+    # ---- 일별 운영 데이터 표 (구분 그룹) -------------------------------
+    gy = 480
+    s.text(L, gy - 8, "일별 운영 데이터 (구분 그룹별 · 일자별 컬럼으로 전개)", size=15, fill=SUBINK, weight="bold")
+    groups = [
+        ("매출·주문", ["매출합계", "주문수 · 객단가", "순매출 · 구매전환율", "취소 · 환불금액"]),
+        ("방문자", ["전체 · 신규 · 재방문", "재방문율", "신규가입수 · 가입율"]),
+        ("CRM", ["문자 · 알림톡", "카카오", "후기수"]),
+        ("모바일(결제)", ["매출 · 주문건수", "객단가 · 결제비중"]),
+        ("PC", ["매출 · 주문건수", "객단가 · PC비중"]),
+        ("재고·장바구니", ["장바구니 · 재고수량", "입고예정 · 품절", "외부채널 비율"]),
+        ("카테고리 매출", ["All · BEST · NEW", "Travel · Filovely", "Recovery · HOODIE …"]),
+        ("베스트 상품 TOP", ["상품별 매출 순위", "(TOP N 자동 정렬)"]),
+    ]
+    gcols = 4
+    gw = (R - L - 16 * (gcols - 1)) / gcols
+    gh = 132
+    for i, (name, items) in enumerate(groups):
+        r, c = divmod(i, gcols)
+        x = L + c * (gw + 16)
+        y = gy + 8 + r * (gh + 14)
+        s.card(x, y, gw, gh, "c24", name, items, title_size=13.5, body_size=12.5)
+
+    # ---- 차트 5종 ------------------------------------------------------
+    cy = 800
+    s.text(L, cy - 8, "차트 5종", size=15, fill=SUBINK, weight="bold")
+    charts = ["① 일별 매출 추이\n(누적 vs 목표)", "② 디바이스별 매출 비중\n(모바일/PC)",
+              "③ 신규 vs 재구매 매출\n(일별)", "④ 일별 광고비\nvs 매출대비 광고비율",
+              "⑤ 카테고리 매출\nTOP 10"]
+    chtypes = ["barline", "donut", "area", "barline", "hbar"]
+    cw5 = (R - L - 16 * 4) / 5
+    chh = 150
+    cyy = cy + 8
+    for i, (title, kind) in enumerate(zip(charts, chtypes)):
+        x = L + i * (cw5 + 16)
+        p = PALETTE["c24"]
+        s.parts.append(f'<rect x="{x}" y="{cyy}" width="{cw5}" height="{chh}" rx="10" '
+                       f'fill="#ffffff" stroke="{p["stroke"]}" stroke-width="1.6"/>')
+        t1, t2 = title.split("\n")
+        s.text(x + 12, cyy + 24, t1, size=12.5, fill=INK, weight="bold")
+        s.text(x + 12, cyy + 42, t2, size=11.5, fill=SUBINK)
+        # mini glyph
+        gx, gyc, gw2, gh2 = x + 20, cyy + 70, cw5 - 40, 60
+        col = p["head"]
+        if kind == "barline":
+            bars = [0.4, 0.7, 0.3, 0.9, 0.55, 0.8]
+            bw = gw2 / (len(bars) * 1.6)
+            for j, hbar in enumerate(bars):
+                bx = gx + j * (gw2 / len(bars))
+                s.parts.append(f'<rect x="{bx}" y="{gyc + gh2 - gh2*hbar}" width="{bw}" '
+                               f'height="{gh2*hbar}" fill="{col}" opacity="0.55"/>')
+            pts = " ".join(f"{gx + j*(gw2/len(bars)) + bw/2},{gyc + gh2 - gh2*min(1,(0.2+0.13*j))}"
+                           for j in range(len(bars)))
+            s.parts.append(f'<polyline points="{pts}" fill="none" stroke="{INK}" stroke-width="2"/>')
+        elif kind == "donut":
+            ccx, ccy = gx + gw2 / 2, gyc + gh2 / 2
+            s.parts.append(f'<circle cx="{ccx}" cy="{ccy}" r="26" fill="none" stroke="{col}" stroke-width="12"/>')
+            s.parts.append(f'<circle cx="{ccx}" cy="{ccy}" r="26" fill="none" stroke="{PALETTE["ads"]["head"]}" '
+                           f'stroke-width="12" stroke-dasharray="55 200" transform="rotate(-90 {ccx} {ccy})"/>')
+        elif kind == "area":
+            s.parts.append(f'<polygon points="{gx},{gyc+gh2} {gx},{gyc+gh2-12} '
+                           f'{gx+gw2*0.3},{gyc+gh2-40} {gx+gw2*0.55},{gyc+gh2-18} '
+                           f'{gx+gw2*0.8},{gyc+gh2-34} {gx+gw2},{gyc+gh2-20} {gx+gw2},{gyc+gh2}" '
+                           f'fill="{col}" opacity="0.45"/>')
+        elif kind == "hbar":
+            vals = [0.95, 0.8, 0.66, 0.55, 0.4]
+            bh3 = gh2 / (len(vals) * 1.5)
+            for j, v in enumerate(vals):
+                by = gyc + j * (gh2 / len(vals))
+                s.parts.append(f'<rect x="{gx}" y="{by}" width="{gw2*v}" height="{bh3}" '
+                               f'fill="{col}" opacity="0.6"/>')
+
+    # ---- 하단 안내(자유도 / 데일리) -----------------------------------
+    ny = cyy + chh + 26
+    s.parts.append(f'<rect x="{L}" y="{ny}" width="{R-L}" height="120" rx="12" '
+                   f'fill="#ecfdf5" stroke="{grn}" stroke-width="1.6"/>')
+    s.text(L + 20, ny + 32, "수정 자유도 & 수집 주기", size=15, fill=grn, weight="bold")
+    notes = [
+        "• 카드 · 표 · 차트의 모든 지표는 config/metrics.yaml에 선언 → 추가/삭제/순서변경/이름변경이 코드 수정 없이 가능",
+        "• 수집은 시간별이 아닌 데일리(매일 1회, 전일자 기준) · 집계 단위: 일/주(7일)/당월/전월/전년 동기 비교",
+        "• 지표 그룹·카테고리·베스트 TOP N 개수도 설정값 → 운영하며 자유롭게 튜닝",
+    ]
+    s.lines(L + 20, ny + 58, notes, size=12.8, fill=INK, lh=22)
+
+    s.render("05_cafe24_dashboard_detail")
+
+
 if __name__ == "__main__":
     diagram_system()
     diagram_dashboards()
     diagram_skill()
     diagram_roadmap()
+    diagram_cafe24_detail()
     print("done")
