@@ -1,0 +1,93 @@
+"""대시보드용 서비스 API (FastAPI).
+
+React 대시보드가 호출하는 읽기 전용 엔드포인트.
+저장된 KPI/지표 정의를 제공한다.
+
+실행:
+    uvicorn api.main:app --reload
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from fastapi import FastAPI, Query  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+from cafe24_ops.config import load_config  # noqa: E402
+from cafe24_ops.store import Store  # noqa: E402
+
+app = FastAPI(title="cafe24-ops-status API", version="0.0.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Phase 0: 로컬 개발용. 운영 시 도메인 제한.
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+_config = load_config()
+
+
+def _store() -> Store:
+    return Store(_config.data_dir)
+
+
+@app.get("/health")
+def health() -> dict:
+    return {"status": "ok", "mode": _config.mode}
+
+
+@app.get("/api/config/metrics")
+def metrics_config() -> dict:
+    m = _config.metrics
+    return {
+        "collection": {
+            "granularity": m.collection.granularity,
+            "run_at": m.collection.run_at,
+            "compare_windows": m.collection.compare_windows,
+        },
+        "summary_cards": m.summary_cards,
+        "period_comparison": m.period_comparison_rows,
+        "daily_groups": m.daily_groups,
+        "charts": m.charts,
+    }
+
+
+@app.get("/api/summary")
+def summary(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> dict:
+    store = _store()
+    try:
+        dates = store.list_dates()
+        target = date or (dates[-1] if dates else None)
+        kpi = store.get_kpi(target) if target else {}
+        cards = [
+            {"key": c["key"], "label": c["label"], "format": c.get("format"),
+             "value": kpi.get(c["key"])}
+            for c in _config.metrics.summary_cards
+        ]
+        return {"date": target, "cards": cards}
+    finally:
+        store.close()
+
+
+@app.get("/api/daily")
+def daily(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to, "rows": store.get_daily(date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/dates")
+def dates() -> dict:
+    store = _store()
+    try:
+        return {"dates": store.list_dates()}
+    finally:
+        store.close()
