@@ -26,6 +26,7 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
 )
 from cafe24_ops.etl.ads_metrics import ads_by_channel, ads_summary, ads_trend  # noqa: E402
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
+from cafe24_ops.etl.competitor_metrics import competitor_snapshot, competitor_trend  # noqa: E402
 from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_fatigue,
     creative_trend,
@@ -238,6 +239,28 @@ def creatives_trend_ep(
     try:
         return {"creative_id": creative_id,
                 "rows": creative_trend(store, creative_id, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/competitors")
+def competitors_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, "competitors": competitor_snapshot(store, target) if target else []}
+    finally:
+        store.close()
+
+
+@app.get("/api/competitors/trend")
+def competitors_trend_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to, "rows": competitor_trend(store, date_from, date_to)}
     finally:
         store.close()
 

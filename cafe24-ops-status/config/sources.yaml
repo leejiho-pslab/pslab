@@ -12,4 +12,7 @@ ads:
   - { channel: naver,  account_id: "" }
   - { channel: kakao,  account_id: "" }
 
-competitors: []          # Phase 3: 경쟁사 목록 추가
+competitors:             # Phase 3: 핵심 경쟁사 (mock 데모용 샘플 — 실제 브랜드/URL 로 교체)
+  - { name: 컴포트랩, url: "" }
+  - { name: 데일리핏, url: "" }
+  - { name: 무브웨어, url: "" }
