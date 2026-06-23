@@ -24,8 +24,16 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
     device_breakdown,
     new_returning_trend,
 )
+from cafe24_ops.etl.ads_metrics import ads_by_channel, ads_summary, ads_trend  # noqa: E402
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
+
+
+def _resolve_date(store: Store, date: str | None) -> str | None:
+    if date:
+        return date
+    dates = store.list_dates()
+    return dates[-1] if dates else None
 
 
 def _best_top_n() -> int:
@@ -154,6 +162,38 @@ def trend(
                 "returning_sales": nr.get(d, {}).get("returning"),
             })
         return {"from": date_from, "to": date_to, "rows": rows}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/summary")
+def ads_summary_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, **(ads_summary(store, target) if target else {})}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/channels")
+def ads_channels_ep(date: str | None = Query(default=None)) -> dict:
+    store = _store()
+    try:
+        target = _resolve_date(store, date)
+        return {"date": target, "channels": ads_by_channel(store, target) if target else []}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/trend")
+def ads_trend_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to, "rows": ads_trend(store, date_from, date_to)}
     finally:
         store.close()
 

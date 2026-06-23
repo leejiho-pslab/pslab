@@ -26,7 +26,17 @@ class AdsCollector(BaseCollector):
             r = _rng(date, channel)
             cost = float(r.randint(50_000, 800_000))
             roas = round(r.uniform(1.5, 6.0), 2)
-            for metric, value in (("ad_cost", cost), ("roas", roas)):
+            sales = round(cost * roas)
+            impressions = float(r.randint(20_000, 300_000))
+            clicks = float(r.randint(200, 6_000))
+            conversions = float(r.randint(2, 120))
+            for metric, value in (
+                ("ad_cost", cost),
+                ("ad_sales", sales),
+                ("impressions", impressions),
+                ("clicks", clicks),
+                ("conversions", conversions),
+            ):
                 records.append({
                     "date": date, "source": self.source, "metric": metric,
                     "value": value, "dims": {"channel": channel},
