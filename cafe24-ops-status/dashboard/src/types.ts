@@ -87,11 +87,35 @@ export interface AdsChannel {
   channel: string;
   ad_cost: number;
   ad_sales: number;
+  impressions: number;
+  clicks: number;
   conversions: number;
   roas: number | null;
   ctr: number | null;
+  cvr: number | null;
   cpc: number | null;
   cpa: number | null;
+  budget_share?: number;
+}
+
+export interface AdsSummaryRange {
+  ad_cost: number;
+  ad_sales: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  roas: number | null;
+  ctr: number | null;
+  cvr: number | null;
+  ad_share: number | null;
+  gross_sales: number;
+  channels: number;
+}
+
+export interface AdsOverview {
+  selected: { from: string; to: string; summary: AdsSummaryRange; channels: AdsChannel[] };
+  comparison: { from: string; to: string; summary: AdsSummaryRange; channels: AdsChannel[] };
+  deltas: Record<string, number | null>;
 }
 
 export interface AdsTrendRow {

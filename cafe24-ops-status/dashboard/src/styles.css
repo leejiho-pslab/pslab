@@ -46,6 +46,38 @@ body {
 }
 .kpi-label { color: var(--sub); font-size: 12.5px; }
 .kpi-value { font-size: 21px; font-weight: 700; margin-top: 6px; }
+.kpi-delta { font-size: 12px; font-weight: 600; margin-top: 4px; }
+.kpi-delta.up { color: var(--up); }
+.kpi-delta.down { color: var(--down); }
+.kpi-delta.flat { color: var(--sub); }
+
+/* 기간 선택기 */
+.period-selector { padding: 14px 16px; }
+.preset-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.preset-row button {
+  background: #f1f5f9; border: 1px solid var(--line); color: var(--sub);
+  border-radius: 8px; padding: 6px 13px; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.preset-row button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.range-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--sub); }
+.range-row input[type="date"] { border: 1px solid var(--line); border-radius: 7px; padding: 5px 8px; font-size: 13px; }
+.range-row input:disabled { background: #f8fafc; color: var(--sub); }
+.range-tag { font-weight: 700; padding: 3px 8px; border-radius: 7px; font-size: 12px; }
+.range-tag.sel { background: #e8f0fe; color: #1e40af; }
+.range-tag.cmp { background: #f1f5f9; color: var(--sub); margin-left: 10px; }
+
+.section-title { font-size: 15px; margin: 4px 0 12px; color: var(--ink); }
+.hbar-row.wide { grid-template-columns: 90px 1fr 200px; }
+
+/* 채널 개별 카드 */
+.ch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+.ch-card { margin-bottom: 0; }
+.ch-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.ch-head h2 { margin: 0; }
+.ch-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.ch-metrics > div { background: #f8fafc; border: 1px solid var(--line); border-radius: 8px; padding: 8px; text-align: center; }
+.ch-metrics span { display: block; color: var(--sub); font-size: 11px; }
+.ch-metrics b { font-size: 14.5px; }
 
 .card {
   background: #fff; border: 1px solid var(--line); border-radius: 12px;

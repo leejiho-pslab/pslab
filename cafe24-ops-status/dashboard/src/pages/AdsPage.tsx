@@ -1,100 +1,97 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
-import { daysBefore } from "../util";
 import { formatValue } from "../format";
-import type { AdsChannel, AdsSummary, AdsTrendRow } from "../types";
-import { AdsTrendChart } from "../components/AdsTrendChart";
-import { CategoryBar } from "../components/CategoryBar";
+import { computeRanges, type Preset, type Ranges } from "../periods";
+import type { AdsChannel, AdsOverview } from "../types";
+import { PeriodSelector } from "../components/PeriodSelector";
+import { KpiDelta } from "../components/KpiDelta";
 
 const CH_LABEL: Record<string, string> = {
   meta: "Meta", google: "Google", naver: "Naver", kakao: "Kakao",
 };
+const won = (v: number) => formatValue(v, "currency");
+const num = (v: number) => Math.round(v).toLocaleString("ko-KR");
 
 export function AdsPage({ date }: { date: string }) {
-  const [summary, setSummary] = useState<AdsSummary | null>(null);
-  const [channels, setChannels] = useState<AdsChannel[]>([]);
-  const [trend, setTrend] = useState<AdsTrendRow[]>([]);
+  const [ranges, setRanges] = useState<Ranges>(() => computeRanges(date, "week"));
+  const [data, setData] = useState<AdsOverview | null>(null);
 
+  useEffect(() => setRanges(computeRanges(date, "week")), [date]);
   useEffect(() => {
-    if (!date) return;
-    const from = daysBefore(date, 13);
-    Promise.all([api.adsSummary(date), api.adsChannels(date), api.adsTrend(from, date)]).then(
-      ([s, ch, tr]) => {
-        setSummary(s);
-        setChannels(ch.channels);
-        setTrend(tr.rows);
-      },
-    );
-  }, [date]);
+    api.adsOverview(ranges).then(setData);
+  }, [ranges]);
+
+  const onChange = (r: Ranges, _p: Preset) => setRanges(r);
+  const s = data?.selected.summary;
+  const d = data?.deltas ?? {};
+  const channels = data?.selected.channels ?? [];
 
   return (
     <>
-      <div className="kpi-grid kpi-4">
-        <Kpi label="총 광고비" value={summary ? formatValue(summary.ad_cost, "currency") : "—"} />
-        <Kpi label="광고 매출" value={summary ? formatValue(summary.ad_sales, "currency") : "—"} />
-        <Kpi label="ROAS" value={summary?.roas != null ? `${summary.roas}x` : "—"} />
-        <Kpi
-          label="광고매출 비중"
-          value={summary?.ad_share != null ? `${summary.ad_share}%` : "—"}
-        />
+      <PeriodSelector base={date} ranges={ranges} onChange={onChange} />
+
+      {/* 상단: 광고 전체 요약 (비교기간 대비 증감) */}
+      <div className="kpi-grid">
+        <KpiDelta label="총 광고비" value={s ? won(s.ad_cost) : "—"} delta={d.ad_cost} />
+        <KpiDelta label="광고 매출" value={s ? won(s.ad_sales) : "—"} delta={d.ad_sales} />
+        <KpiDelta label="ROAS" value={s?.roas != null ? `${s.roas}x` : "—"} delta={d.roas} />
+        <KpiDelta label="노출량" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
+        <KpiDelta label="클릭수" value={s ? num(s.clicks) : "—"} delta={d.clicks} />
+        <KpiDelta label="전환율" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
       </div>
 
+      {/* 채널별 예산 비율표 */}
       <div className="card">
-        <h2>채널별 성과</h2>
-        <div className="table-wrap">
-          <table className="grid-table">
-            <thead>
-              <tr>
-                <th className="left">채널</th>
-                <th>광고비</th>
-                <th>광고매출</th>
-                <th>ROAS</th>
-                <th>CTR</th>
-                <th>CPC</th>
-                <th>CPA</th>
-                <th>전환수</th>
-              </tr>
-            </thead>
-            <tbody>
-              {channels.map((c) => (
-                <tr key={c.channel}>
-                  <td className="left strong">{CH_LABEL[c.channel] ?? c.channel}</td>
-                  <td>{formatValue(c.ad_cost, "currency")}</td>
-                  <td>{formatValue(c.ad_sales, "currency")}</td>
-                  <td className="strong">{c.roas != null ? `${c.roas}x` : "—"}</td>
-                  <td>{c.ctr != null ? `${c.ctr}%` : "—"}</td>
-                  <td>{c.cpc != null ? formatValue(c.cpc, "currency") : "—"}</td>
-                  <td>{c.cpa != null ? formatValue(c.cpa, "currency") : "—"}</td>
-                  <td>{Math.round(c.conversions).toLocaleString("ko-KR")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <h2>채널별 예산 비율</h2>
+        <div className="hbars">
+          {channels.map((c) => (
+            <div className="hbar-row wide" key={c.channel}>
+              <span className="hbar-label">{CH_LABEL[c.channel] ?? c.channel}</span>
+              <div className="hbar-track">
+                <div className="hbar-fill" style={{ width: `${c.budget_share ?? 0}%` }} />
+              </div>
+              <span className="hbar-val">{c.budget_share ?? 0}% · {won(c.ad_cost)}</span>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="two-col">
-        <CategoryBar
-          title="채널별 ROAS"
-          unit="roas"
-          items={channels.map((c) => ({ key: CH_LABEL[c.channel] ?? c.channel, value: c.roas ?? 0 }))}
-        />
-        <CategoryBar
-          title="채널별 광고비"
-          items={channels.map((c) => ({ key: CH_LABEL[c.channel] ?? c.channel, value: c.ad_cost }))}
-        />
+      {/* 하단: 채널 개별 현황 */}
+      <h2 className="section-title">채널별 데일리 현황</h2>
+      <div className="ch-grid">
+        {channels.map((c) => (
+          <ChannelCard key={c.channel} c={c} />
+        ))}
       </div>
-
-      <AdsTrendChart rows={trend} />
     </>
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+function ChannelCard({ c }: { c: AdsChannel }) {
+  const rows: [string, string][] = [
+    ["광고비", won(c.ad_cost)],
+    ["광고매출", won(c.ad_sales)],
+    ["ROAS", c.roas != null ? `${c.roas}x` : "—"],
+    ["노출량", num(c.impressions)],
+    ["클릭수", num(c.clicks)],
+    ["전환율", c.cvr != null ? `${c.cvr}%` : "—"],
+    ["CTR", c.ctr != null ? `${c.ctr}%` : "—"],
+    ["CPA", c.cpa != null ? won(c.cpa) : "—"],
+  ];
   return (
-    <div className="kpi-card">
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-value">{value}</div>
+    <div className="card ch-card">
+      <div className="ch-head">
+        <h2>{CH_LABEL[c.channel] ?? c.channel}</h2>
+        <span className="badge">예산 {c.budget_share ?? 0}%</span>
+      </div>
+      <div className="ch-metrics">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <span>{k}</span>
+            <b>{v}</b>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

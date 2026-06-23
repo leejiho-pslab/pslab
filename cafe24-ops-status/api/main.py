@@ -24,7 +24,12 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
     device_breakdown,
     new_returning_trend,
 )
-from cafe24_ops.etl.ads_metrics import ads_by_channel, ads_summary, ads_trend  # noqa: E402
+from cafe24_ops.etl.ads_metrics import (  # noqa: E402
+    ads_by_channel,
+    ads_overview,
+    ads_summary,
+    ads_trend,
+)
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
 from cafe24_ops.etl.competitor_metrics import competitor_snapshot, competitor_trend  # noqa: E402
 from cafe24_ops.etl.creative_metrics import (  # noqa: E402
@@ -188,6 +193,20 @@ def ads_channels_ep(date: str | None = Query(default=None)) -> dict:
     try:
         target = _resolve_date(store, date)
         return {"date": target, "channels": ads_by_channel(store, target) if target else []}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/overview")
+def ads_overview_ep(
+    sel_from: str = Query(..., alias="from"),
+    sel_to: str = Query(..., alias="to"),
+    cmp_from: str = Query(..., alias="cmp_from"),
+    cmp_to: str = Query(..., alias="cmp_to"),
+) -> dict:
+    store = _store()
+    try:
+        return ads_overview(store, sel_from, sel_to, cmp_from, cmp_to)
     finally:
         store.close()
 
