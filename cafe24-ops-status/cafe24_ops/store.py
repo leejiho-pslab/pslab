@@ -96,6 +96,24 @@ class Store:
         )
         return [dict(r) for r in cur.fetchall()]
 
+    def get_facts(
+        self, date_from: str, date_to: str, source: str | None = None, metric: str | None = None
+    ) -> list[dict]:
+        q = "SELECT date, source, metric, value, dims FROM facts WHERE date BETWEEN ? AND ?"
+        params: list = [date_from, date_to]
+        if source:
+            q += " AND source=?"
+            params.append(source)
+        if metric:
+            q += " AND metric=?"
+            params.append(metric)
+        out = []
+        for r in self.conn.execute(q, params).fetchall():
+            d = dict(r)
+            d["dims"] = json.loads(r["dims"] or "{}")
+            out.append(d)
+        return out
+
     def list_dates(self) -> list[str]:
         cur = self.conn.execute("SELECT DISTINCT date FROM kpi_daily ORDER BY date")
         return [r["date"] for r in cur.fetchall()]

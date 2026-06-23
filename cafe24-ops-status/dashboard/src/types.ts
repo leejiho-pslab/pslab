@@ -43,3 +43,31 @@ export interface DailyResponse {
   to: string;
   rows: DailyRow[];
 }
+
+export interface BreakdownItem {
+  key: string;
+  value: number;
+}
+
+export interface DailyDetailResponse {
+  date: string | null;
+  device: BreakdownItem[];
+  category: BreakdownItem[];
+  best: BreakdownItem[];
+  crm: Record<string, number>;
+}
+
+export interface TrendRow {
+  date: string;
+  gross_sales: number | null;
+  ad_cost: number | null;
+  ad_cost_ratio: number | null;
+  new_sales: number | null;
+  returning_sales: number | null;
+}
+
+export interface TrendResponse {
+  from: string;
+  to: string;
+  rows: TrendRow[];
+}

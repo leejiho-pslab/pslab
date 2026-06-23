@@ -72,8 +72,23 @@ def signup_metrics(date: str, new_signups: int | None) -> list[dict]:
     return [{"date": date, "source": "cafe24", "metric": "new_signups", "value": float(new_signups)}]
 
 
+MOCK_PRODUCTS = [
+    "keek Pillow", "Filovely Basic Windbreaker", "keek Recovery Slipper",
+    "keek Travel Pouch", "HOODIE Oversfit", "keek Neck Cushion",
+    "Filovely Logo Tee", "keek Pillow U V2", "Recovery Band", "Travel Organizer",
+    "keek Hoodie Zip-up", "Filovely Utility Vest",
+]
+MOCK_CRM_CHANNELS = ["sms", "alimtalk", "kakao", "reviews"]
+
+
 class Cafe24Collector(BaseCollector):
     source = "cafe24"
+
+    def _category_names(self) -> list[str]:
+        for g in self.config.metrics.daily_groups:
+            if g.get("name") == "카테고리 매출":
+                return list(g.get("metrics", []))
+        return ["All", "BEST", "NEW"]
 
     def collect_mock(self, date: str) -> list[dict]:
         r = _rng(date)
@@ -95,10 +110,45 @@ class Cafe24Collector(BaseCollector):
             "ad_cost": float(ad_cost),
             "ad_cost_ratio": round(ad_cost / gross_sales * 100, 2),     # %
         }
-        return [
+        facts = [
             {"date": date, "source": self.source, "metric": k, "value": v}
             for k, v in values.items()
         ]
+        facts += self._dimensional_mock(date, r, gross_sales, order_count)
+        return facts
+
+    def _dimensional_mock(self, date, r, gross_sales, order_count) -> list[dict]:
+        """일별 운영 데이터 상세용 차원 팩트(디바이스/신규·재구매/카테고리/베스트/CRM)."""
+        out: list[dict] = []
+
+        def f(metric, value, **dims):
+            out.append({"date": date, "source": self.source, "metric": metric,
+                        "value": float(value), "dims": dims})
+
+        # 디바이스 매출 비중
+        mobile = round(gross_sales * r.uniform(0.55, 0.80))
+        f("device_sales", mobile, device="mobile")
+        f("device_sales", gross_sales - mobile, device="pc")
+
+        # 신규 vs 재구매 매출
+        new_sales = round(gross_sales * r.uniform(0.30, 0.60))
+        f("customer_sales", new_sales, customer_type="new")
+        f("customer_sales", gross_sales - new_sales, customer_type="returning")
+
+        # 카테고리 매출
+        for cat in self._category_names():
+            f("category_sales", round(gross_sales * r.uniform(0.05, 0.45)), category=cat)
+
+        # 베스트 상품
+        for name in MOCK_PRODUCTS:
+            f("product_sales", r.randint(200_000, 3_000_000), product=name)
+
+        # CRM 발송/후기
+        for ch in MOCK_CRM_CHANNELS:
+            base = order_count * r.uniform(0.5, 3.0)
+            f("crm_count", round(base), channel=ch)
+
+        return out
 
     def collect_live(self, date: str) -> list[dict]:
         from ..clients import Cafe24Client

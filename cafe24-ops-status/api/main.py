@@ -17,8 +17,22 @@ from fastapi import FastAPI, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from cafe24_ops.config import load_config  # noqa: E402
+from cafe24_ops.etl.breakdown import (  # noqa: E402
+    best_products,
+    category_breakdown,
+    crm_counts,
+    device_breakdown,
+    new_returning_trend,
+)
 from cafe24_ops.etl.compare import period_comparison  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
+
+
+def _best_top_n() -> int:
+    for g in _config.metrics.daily_groups:
+        if g.get("top_n"):
+            return int(g["top_n"])
+    return 10
 
 app = FastAPI(title="cafe24-ops-status API", version="0.0.0")
 app.add_middleware(
@@ -94,6 +108,52 @@ def daily(
     store = _store()
     try:
         return {"from": date_from, "to": date_to, "rows": store.get_daily(date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/daily-detail")
+def daily_detail(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> dict:
+    store = _store()
+    try:
+        dates = store.list_dates()
+        target = date or (dates[-1] if dates else None)
+        if not target:
+            return {"date": None, "device": [], "category": [], "best": [], "crm": {}}
+        return {
+            "date": target,
+            "device": device_breakdown(store, target),
+            "category": category_breakdown(store, target),
+            "best": best_products(store, target, _best_top_n()),
+            "crm": crm_counts(store, target),
+        }
+    finally:
+        store.close()
+
+
+@app.get("/api/trend")
+def trend(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    store = _store()
+    try:
+        by_date: dict[str, dict] = {}
+        for r in store.get_daily(date_from, date_to):
+            by_date.setdefault(r["date"], {})[r["metric"]] = r["value"]
+        nr = {x["date"]: x for x in new_returning_trend(store, date_from, date_to)}
+        rows = []
+        for d in sorted(by_date):
+            m = by_date[d]
+            rows.append({
+                "date": d,
+                "gross_sales": m.get("gross_sales"),
+                "ad_cost": m.get("ad_cost"),
+                "ad_cost_ratio": m.get("ad_cost_ratio"),
+                "new_sales": nr.get(d, {}).get("new"),
+                "returning_sales": nr.get(d, {}).get("returning"),
+            })
+        return {"from": date_from, "to": date_to, "rows": rows}
     finally:
         store.close()
 
