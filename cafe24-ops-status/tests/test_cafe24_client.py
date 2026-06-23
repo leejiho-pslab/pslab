@@ -1,7 +1,12 @@
 import httpx
 
 from cafe24_ops.clients import Cafe24Client
-from cafe24_ops.collectors.cafe24 import order_amount, orders_to_metrics
+from cafe24_ops.collectors.cafe24 import (
+    order_amount,
+    orders_to_metrics,
+    signup_metrics,
+    visitor_metrics,
+)
 
 
 def _client(handler, **kw):
@@ -74,3 +79,47 @@ def test_orders_to_metrics_maps_sales_count_aov():
     assert facts["gross_sales"] == 20000.0
     assert facts["order_count"] == 3.0
     assert facts["aov"] == round(20000.0 / 3, 2)
+
+
+def test_visitor_metrics_computes_conversion():
+    facts = {f["metric"]: f["value"] for f in visitor_metrics("2026-06-17", order_count=20, visitors=1000)}
+    assert facts["visitors"] == 1000.0
+    assert facts["conversion_rate"] == 2.0  # 20/1000*100
+    # 방문자 없음 → 비움 (전환율 계산 불가)
+    assert visitor_metrics("2026-06-17", 20, None) == []
+    assert visitor_metrics("2026-06-17", 20, 0) == []
+
+
+def test_signup_metrics_optional():
+    assert signup_metrics("2026-06-17", None) == []
+    assert signup_metrics("2026-06-17", 7)[0]["value"] == 7.0
+
+
+def test_visitor_count_disabled_by_default(monkeypatch):
+    monkeypatch.delenv("CAFE24_VISITORS_PATH", raising=False)
+
+    def handler(req):  # 호출되면 안 됨
+        raise AssertionError("기본값에서는 방문자 엔드포인트를 호출하지 않아야 한다")
+
+    c = _client(handler)
+    assert c.get_visitor_count("2026-06-17") is None
+
+
+def test_visitor_count_enabled_via_env(monkeypatch):
+    monkeypatch.setenv("CAFE24_VISITORS_PATH", "/api/v2/admin/reports/visits")
+
+    def handler(req):
+        if req.url.path == "/api/v2/admin/reports/visits":
+            return httpx.Response(200, json={"visit_count": 1234})
+        return httpx.Response(404)
+
+    c = _client(handler)
+    assert c.get_visitor_count("2026-06-17") == 1234
+
+
+def test_count_new_customers_graceful_404():
+    def handler(req):
+        return httpx.Response(404, json={"error": "not found"})
+
+    c = _client(handler)
+    assert c.count_new_customers("2026-06-17", "2026-06-17") is None

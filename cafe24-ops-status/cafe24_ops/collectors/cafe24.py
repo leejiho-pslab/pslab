@@ -55,6 +55,23 @@ def orders_to_metrics(date: str, orders: list[dict], order_count: int | None = N
     ]
 
 
+def visitor_metrics(date: str, order_count: int, visitors: int | None) -> list[dict]:
+    """방문자수가 있으면 visitors + conversion_rate(구매전환율, %)를 만든다."""
+    if not visitors or visitors <= 0:
+        return []
+    return [
+        {"date": date, "source": "cafe24", "metric": "visitors", "value": float(visitors)},
+        {"date": date, "source": "cafe24", "metric": "conversion_rate",
+         "value": round(order_count / visitors * 100, 2)},
+    ]
+
+
+def signup_metrics(date: str, new_signups: int | None) -> list[dict]:
+    if new_signups is None:
+        return []
+    return [{"date": date, "source": "cafe24", "metric": "new_signups", "value": float(new_signups)}]
+
+
 class Cafe24Collector(BaseCollector):
     source = "cafe24"
 
@@ -90,6 +107,12 @@ class Cafe24Collector(BaseCollector):
         try:
             orders = client.list_orders(date, date)
             count = client.count_orders(date, date)
+            visitors = client.get_visitor_count(date)       # CAFE24_VISITORS_PATH 설정 시
+            signups = client.count_new_customers(date, date)
         finally:
             client.close()
-        return orders_to_metrics(date, orders, count)
+        return (
+            orders_to_metrics(date, orders, count)
+            + visitor_metrics(date, count, visitors)
+            + signup_metrics(date, signups)
+        )

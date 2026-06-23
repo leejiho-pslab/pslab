@@ -142,5 +142,41 @@ class Cafe24Client:
         )
         return int(data.get("count", 0) or 0)
 
+    def count_new_customers(self, start_date: str, end_date: str) -> int | None:
+        """기간 내 신규 가입 회원수. 엔드포인트가 없으면 None."""
+        try:
+            data = self.get(
+                "/api/v2/admin/customers/count",
+                {"created_start_date": start_date, "created_end_date": end_date},
+            )
+        except httpx.HTTPStatusError:
+            return None
+        return int(data.get("count", 0) or 0)
+
+    def get_visitor_count(self, date: str) -> int | None:
+        """일자 방문자수.
+
+        카페24 방문/통계 엔드포인트는 몰·플랜·버전에 따라 경로/필드가 달라서,
+        잘못된 URL 을 호출하지 않도록 기본값은 비활성(None)이다.
+        CAFE24_VISITORS_PATH 환경변수로 경로를 지정하면 활성화된다.
+        응답에서 count/visit_count/visitors/unique_visitors 중 하나를 읽는다.
+        """
+        path = os.environ.get("CAFE24_VISITORS_PATH")
+        if not path:
+            return None
+        try:
+            data = self.get(path, {"start_date": date, "end_date": date})
+        except httpx.HTTPStatusError:
+            return None
+        if isinstance(data, dict):
+            for k in ("count", "visit_count", "visitors", "unique_visitors"):
+                v = data.get(k)
+                if v is not None:
+                    try:
+                        return int(v)
+                    except (TypeError, ValueError):
+                        return None
+        return None
+
     def close(self) -> None:
         self._http.close()
