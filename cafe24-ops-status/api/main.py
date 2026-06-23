@@ -17,6 +17,7 @@ from fastapi import FastAPI, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 
 from cafe24_ops.config import load_config  # noqa: E402
+from cafe24_ops.etl.compare import period_comparison  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
 
 app = FastAPI(title="cafe24-ops-status API", version="0.0.0")
@@ -68,6 +69,19 @@ def summary(date: str | None = Query(default=None, description="YYYY-MM-DD")) ->
             for c in _config.metrics.summary_cards
         ]
         return {"date": target, "cards": cards}
+    finally:
+        store.close()
+
+
+@app.get("/api/period-comparison")
+def period_compare(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> dict:
+    store = _store()
+    try:
+        dates = store.list_dates()
+        target = date or (dates[-1] if dates else None)
+        if not target:
+            return {"date": None, "rows": []}
+        return {"date": target, "rows": period_comparison(store, target, _config.metrics)}
     finally:
         store.close()
 

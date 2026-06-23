@@ -2,7 +2,11 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
-# 비밀값 / 수집 데이터(로컬)
+# 비밀값 / 수집 데이터 / 토큰(로컬)
 config/secrets.env
-store/data/
+store/
 *.db
+
+# React
+dashboard/node_modules/
+dashboard/dist/

@@ -20,7 +20,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.pipeline import run_pipeline, yesterday  # noqa: E402
+from cafe24_ops.secrets import load_secrets  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
+
+load_secrets()  # config/secrets.env → 환경변수 (live 모드 자격증명)
 
 
 def _fmt(metric: str, value: float) -> str:

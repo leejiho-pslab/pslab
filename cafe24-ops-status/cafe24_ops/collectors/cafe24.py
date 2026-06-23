@@ -1,7 +1,10 @@
 """카페24 Admin API 수집기.
 
-Phase 0: mock 모드에서 기존 keek 운영 대시보드와 동일한 KPI 셋을 일자별로 생성한다.
-Phase 1: collect_live 에서 카페24 Admin API(주문/상품/방문/회원)를 호출해 동일 형태로 반환.
+- mock: 기존 keek 운영 대시보드와 동일한 KPI 셋을 일자별로 생성 (결정적)
+- live: 카페24 Admin API(주문)를 호출해 매출/주문수/객단가를 산출
+
+방문자·전환율 등 주문 외 지표는 별도 통계/연동이 필요하므로 Phase 1 에서는
+주문 기반 지표(gross_sales, order_count, aov)부터 실연동한다.
 """
 from __future__ import annotations
 
@@ -14,6 +17,42 @@ from .base import BaseCollector
 def _rng(date: str) -> random.Random:
     seed = int(hashlib.sha256(date.encode()).hexdigest(), 16) % (2**32)
     return random.Random(seed)
+
+
+def order_amount(order: dict) -> float:
+    """주문 1건의 결제 금액을 안전하게 추출한다 (API 버전별 필드 차이 대응)."""
+    for key in ("payment_amount", "order_price_amount"):
+        v = order.get(key)
+        if v not in (None, ""):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                pass
+    aoa = order.get("actual_order_amount") or {}
+    for key in ("payment_amount", "order_amount"):
+        v = aoa.get(key)
+        if v not in (None, ""):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                pass
+    return 0.0
+
+
+def orders_to_metrics(date: str, orders: list[dict], order_count: int | None = None) -> list[dict]:
+    """주문 목록 → 표준 metric 레코드(gross_sales/order_count/aov)."""
+    gross = sum(order_amount(o) for o in orders)
+    count = order_count if order_count is not None else len(orders)
+    aov = (gross / count) if count else 0.0
+    values = {
+        "gross_sales": float(gross),
+        "order_count": float(count),
+        "aov": round(aov, 2),
+    }
+    return [
+        {"date": date, "source": "cafe24", "metric": k, "value": v}
+        for k, v in values.items()
+    ]
 
 
 class Cafe24Collector(BaseCollector):
@@ -45,7 +84,12 @@ class Cafe24Collector(BaseCollector):
         ]
 
     def collect_live(self, date: str) -> list[dict]:
-        # TODO(Phase 1): 카페24 Admin API 연동
-        #   - OAuth access_token 으로 /api/v2/admin/orders, /products, /customers 등 호출
-        #   - 응답을 위 mock 과 동일한 {date,source,metric,value} 형태로 변환
-        raise NotImplementedError("[cafe24] Admin API 연동은 Phase 1에서 구현됩니다.")
+        from ..clients import Cafe24Client
+
+        client = Cafe24Client.from_config(self.config)
+        try:
+            orders = client.list_orders(date, date)
+            count = client.count_orders(date, date)
+        finally:
+            client.close()
+        return orders_to_metrics(date, orders, count)
