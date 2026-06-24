@@ -32,6 +32,16 @@ description: 카페24 자사몰 통합 자동화 운영현황 대시보드. 데�
 ## 빠른 시작
 
 ```bash
+# 단일 서비스 (API + 대시보드 한 번에)
+docker compose up --build          # → http://localhost:8000
+
+# 또는 로컬 개발 (핫리로드: API :8000 + 대시보드 :5173)
+./scripts/dev.sh
+```
+
+## 수동 실행
+
+```bash
 cd cafe24-ops-status
 pip install -r requirements.txt
 

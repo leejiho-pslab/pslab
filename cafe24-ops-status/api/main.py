@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi import FastAPI, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.etl.breakdown import (  # noqa: E402
@@ -357,3 +358,10 @@ def dates() -> dict:
         return {"dates": store.list_dates()}
     finally:
         store.close()
+
+
+# 빌드된 React 대시보드를 같은 서비스에서 서빙 (있을 때만).
+# /api/* 라우트가 먼저 매칭되고, 그 외 경로는 정적 파일 → 단일 배포 단위.
+_dist = _config.project_root / "dashboard" / "dist"
+if _dist.is_dir():
+    app.mount("/", StaticFiles(directory=str(_dist), html=True), name="dashboard")

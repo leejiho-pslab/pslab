@@ -1,0 +1,10 @@
+**/__pycache__/
+**/*.pyc
+.pytest_cache/
+.venv/
+store/
+*.db
+config/secrets.env
+dashboard/node_modules/
+dashboard/dist/
+.git/
