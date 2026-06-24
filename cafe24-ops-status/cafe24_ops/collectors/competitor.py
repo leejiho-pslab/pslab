@@ -60,5 +60,24 @@ class CompetitorCollector(BaseCollector):
         return records
 
     def collect_live(self, date: str) -> list[dict]:
-        # TODO(Phase 3): 경쟁사 공개정보 크롤링/검색 연동
-        raise NotImplementedError("[competitor] 경쟁사 모니터링 연동은 Phase 3에서 구현됩니다.")
+        """우선 네이버 검색 트렌드만 실수집(자격증명 시). 프로모션/후기/광고/베스트는 크롤링 TODO."""
+        import os
+
+        records: list[dict] = []
+        collected_any = False
+        names = [c.get("name") if isinstance(c, dict) else str(c) for c in self.config.sources.competitors]
+        if names and os.environ.get("NAVER_CLIENT_ID") and os.environ.get("NAVER_CLIENT_SECRET"):
+            from ..clients.naver_datalab import NaverDataLabClient
+
+            client = NaverDataLabClient.from_env()
+            try:
+                records += client.fetch_search_facts(date, date, names)
+            finally:
+                client.close()
+            collected_any = True
+        # TODO(Phase 3): 프로모션/후기/광고소재/베스트 상품 크롤링
+        if not collected_any:
+            raise NotImplementedError(
+                "[competitor] 자격증명 없음 — NAVER_CLIENT_ID/SECRET 설정 시 검색 트렌드부터 수집됩니다."
+            )
+        return records
