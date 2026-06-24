@@ -66,9 +66,16 @@ export default function App() {
         </div>
       </header>
 
-      <nav className="tabs">
+      <nav className="tabs" role="tablist" aria-label="대시보드 탭">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            aria-current={tab === t.id ? "page" : undefined}
+            className={tab === t.id ? "active" : ""}
+            onClick={() => setTab(t.id)}
+          >
             {t.label}
           </button>
         ))}
