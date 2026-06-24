@@ -44,5 +44,25 @@ class AdsCollector(BaseCollector):
         return records
 
     def collect_live(self, date: str) -> list[dict]:
-        # TODO(Phase 2): Meta/Google/Naver/Kakao 광고 API 연동
-        raise NotImplementedError("[ads] 광고 플랫폼 API 연동은 Phase 2에서 구현됩니다.")
+        """채널별로 자격증명이 있는 플랫폼만 실수집한다. 없으면 스킵(NotImplementedError)."""
+        import os
+
+        records: list[dict] = []
+        collected_any = False
+        for acc in self.config.sources.ads:
+            channel = acc.get("channel")
+            if channel == "meta" and os.environ.get("META_ACCESS_TOKEN"):
+                from ..clients.ads_meta import MetaAdsClient
+
+                client = MetaAdsClient.from_account(acc)
+                try:
+                    records += client.fetch_facts(date)
+                finally:
+                    client.close()
+                collected_any = True
+            # TODO(Phase 2): google / naver / kakao 커넥터 추가
+        if not collected_any:
+            raise NotImplementedError(
+                "[ads] 광고 플랫폼 자격증명이 없습니다. META_ACCESS_TOKEN 등 설정 시 활성화됩니다."
+            )
+        return records
