@@ -78,6 +78,14 @@ class CompetitorCollector(BaseCollector):
             finally:
                 client.close()
             collected_any = True
+            # 네이버 검색 API(동일 앱) → 경쟁사 베스트 상품 + 당일 후기 글 수
+            from ..clients.naver_search import NaverSearchClient
+
+            search = NaverSearchClient.from_env()
+            try:
+                records += search.fetch_competitor_facts(date, [n for n in names if n])
+            finally:
+                search.close()
         # TODO(Phase 3): 프로모션/후기/광고소재/베스트 상품 크롤링
         if not collected_any:
             raise NotImplementedError(
