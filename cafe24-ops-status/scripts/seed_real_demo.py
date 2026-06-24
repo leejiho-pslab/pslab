@@ -66,10 +66,18 @@ def main(argv: list[str] | None = None) -> int:
     for i in range(args.days - 1, -1, -1):
         run_pipeline((base_d - timedelta(days=i)).isoformat(), cfg, store, mode="mock")
 
-    # ② 경쟁사 — 네이버 실응답을 실제 매핑으로 변환 후 덮어쓰기
+    # ② 경쟁사 — mock 을 실데이터로 교체.
+    #    트렌드(naver_search_volume)는 fixture 가 전체 기간을 커버 → 범위 전체 교체.
+    #    스냅샷 지표(베스트/후기/프로모션)는 단일 시점 → base_date 만 교체.
     store.db.execute(
-        "DELETE FROM facts WHERE source='competitor' AND metric IN "
-        "('naver_search_volume','bestseller','new_reviews','active_promotions')"
+        "DELETE FROM facts WHERE source='competitor' AND metric='naver_search_volume' "
+        "AND date BETWEEN ? AND ?",
+        (fx.get("trend_from", base), fx.get("trend_to", base)),
+    )
+    store.db.execute(
+        "DELETE FROM facts WHERE source='competitor' AND date=? AND metric IN "
+        "('bestseller','new_reviews','active_promotions')",
+        (base,),
     )
     store.db.commit()
     recs = competitor_facts(fx)

@@ -40,12 +40,22 @@ class Database:
 
     def execute(self, sql: str, params=()):
         cur = self.conn.cursor()
-        cur.execute(self._q(sql), tuple(params))
+        try:
+            cur.execute(self._q(sql), tuple(params))
+        except Exception:
+            # Postgres 는 에러 후 트랜잭션이 '실패 상태'로 남아 이후 쿼리가 모두 실패한다.
+            # 롤백으로 연결을 재사용 가능하게 복구한 뒤 예외를 전파한다(SQLite 도 무해).
+            self.conn.rollback()
+            raise
         return cur
 
     def executemany(self, sql: str, seq):
         cur = self.conn.cursor()
-        cur.executemany(self._q(sql), [tuple(p) for p in seq])
+        try:
+            cur.executemany(self._q(sql), [tuple(p) for p in seq])
+        except Exception:
+            self.conn.rollback()
+            raise
         return cur
 
     def execute_script(self, statements: list[str]) -> None:
