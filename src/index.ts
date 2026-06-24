@@ -52,6 +52,8 @@ export { Orchestrator } from './core/orchestrator.js';
 export type { CycleRecord, OrchestratorDeps } from './core/orchestrator.js';
 export { AutomationDaemon } from './core/daemon.js';
 export type { DaemonOptions } from './core/daemon.js';
+export { StatusBoard } from './core/board.js';
+export type { Board, ClientBoardRow } from './core/board.js';
 export {
   loadClient,
   loadClients,
