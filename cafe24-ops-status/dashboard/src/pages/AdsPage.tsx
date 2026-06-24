@@ -7,6 +7,7 @@ import type { AdsChannel, AdsOverview, AdsTrendRow } from "../types";
 import { PeriodSelector } from "../components/PeriodSelector";
 import { KpiDelta } from "../components/KpiDelta";
 import { AdsTrendChart } from "../components/AdsTrendChart";
+import { Loading, ErrorState } from "../components/States";
 
 const CH_LABEL: Record<string, string> = {
   meta: "Meta", google: "Google", naver: "Naver", kakao: "Kakao",
@@ -20,14 +21,15 @@ export function AdsPage({ date }: { date: string }) {
   const [ranges, setRanges] = useState<Ranges>(() => computeRanges(date, "week"));
   const [data, setData] = useState<AdsOverview | null>(null);
   const [chTrend, setChTrend] = useState<Record<string, AdsTrendRow[]>>({});
+  const [err, setErr] = useState("");
 
   useEffect(() => setRanges(computeRanges(date, "week")), [date]);
   useEffect(() => {
-    api.adsOverview(ranges).then(setData);
+    api.adsOverview(ranges).then(setData).catch((e) => setErr(String(e)));
   }, [ranges]);
   // 30일 추이는 선택기간과 무관하게 상시 표시
   useEffect(() => {
-    api.adsChannelTrend(daysBefore(date, 29), date).then((r) => setChTrend(r.trend));
+    api.adsChannelTrend(daysBefore(date, 29), date).then((r) => setChTrend(r.trend)).catch(() => {});
   }, [date]);
 
   const onChange = (r: Ranges, _p: Preset) => setRanges(r);
@@ -39,43 +41,45 @@ export function AdsPage({ date }: { date: string }) {
   return (
     <>
       <PeriodSelector base={date} ranges={ranges} onChange={onChange} />
+      {err ? (
+        <ErrorState error={err} />
+      ) : !data ? (
+        <Loading rows={3} />
+      ) : (
+        <>
+          {/* 상단: 광고 전체 요약 (비교기간 대비 증감) */}
+          <div className="kpi-grid">
+            <KpiDelta label="총 광고비" value={s ? won(s.ad_cost) : "—"} delta={d.ad_cost} />
+            <KpiDelta label="광고 매출" value={s ? won(s.ad_sales) : "—"} delta={d.ad_sales} />
+            <KpiDelta label="ROAS" value={s?.roas != null ? `${s.roas}x` : "—"} delta={d.roas} />
+            <KpiDelta label="노출량" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
+            <KpiDelta label="클릭수" value={s ? num(s.clicks) : "—"} delta={d.clicks} />
+            <KpiDelta label="전환율" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
+          </div>
 
-      {/* 상단: 광고 전체 요약 (비교기간 대비 증감) */}
-      <div className="kpi-grid">
-        <KpiDelta label="총 광고비" value={s ? won(s.ad_cost) : "—"} delta={d.ad_cost} />
-        <KpiDelta label="광고 매출" value={s ? won(s.ad_sales) : "—"} delta={d.ad_sales} />
-        <KpiDelta label="ROAS" value={s?.roas != null ? `${s.roas}x` : "—"} delta={d.roas} />
-        <KpiDelta label="노출량" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
-        <KpiDelta label="클릭수" value={s ? num(s.clicks) : "—"} delta={d.clicks} />
-        <KpiDelta label="전환율" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
-      </div>
-
-      {/* 채널별 예산 비율표 */}
-      <div className="card">
-        <h2>채널별 예산 비율</h2>
-        <div className="hbars">
-          {channels.map((c) => (
-            <div className="hbar-row wide" key={c.channel}>
-              <span className="hbar-label">{CH_LABEL[c.channel] ?? c.channel}</span>
-              <div className="hbar-track">
-                <div className="hbar-fill" style={{ width: `${c.budget_share ?? 0}%` }} />
-              </div>
-              <span className="hbar-val">{c.budget_share ?? 0}% · {won(c.ad_cost)}</span>
+          {/* 채널별 예산 비율표 */}
+          <div className="card">
+            <h2>채널별 예산 비율</h2>
+            <div className="hbars">
+              {channels.map((c) => (
+                <div className="hbar-row wide" key={c.channel}>
+                  <span className="hbar-label">{CH_LABEL[c.channel] ?? c.channel}</span>
+                  <div className="hbar-track">
+                    <div className="hbar-fill" style={{ width: `${c.budget_share ?? 0}%` }} />
+                  </div>
+                  <span className="hbar-val">{c.budget_share ?? 0}% · {won(c.ad_cost)}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* 하단: 채널 개별 상세 (비교기간 대비 증감 + 30일 추이 상시) */}
-      <h2 className="section-title">채널별 상세 · 흐름</h2>
-      {channels.map((c) => (
-        <ChannelDetail
-          key={c.channel}
-          c={c}
-          cmp={cmpMap.get(c.channel)}
-          trend={chTrend[c.channel] ?? []}
-        />
-      ))}
+          {/* 하단: 채널 개별 상세 (비교기간 대비 증감 + 30일 추이 상시) */}
+          <h2 className="section-title">채널별 상세 · 흐름</h2>
+          {channels.map((c) => (
+            <ChannelDetail key={c.channel} c={c} cmp={cmpMap.get(c.channel)} trend={chTrend[c.channel] ?? []} />
+          ))}
+        </>
+      )}
     </>
   );
 }

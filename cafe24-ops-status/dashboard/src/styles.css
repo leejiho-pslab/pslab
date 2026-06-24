@@ -109,8 +109,34 @@ body {
 .delta.down { color: var(--down); font-weight: 600; }
 .delta.flat { color: var(--sub); }
 
-.chart { width: 100%; height: auto; }
+.chart { width: 100%; height: auto; display: block; }
 .chart .axis { font-size: 9px; fill: var(--sub); }
+
+/* 차트 호버 툴팁 */
+.chart-wrap { position: relative; }
+.chart-tip {
+  position: absolute; top: 4px; transform: translateX(-50%);
+  background: #0f172a; color: #fff; border-radius: 8px; padding: 7px 10px;
+  font-size: 11.5px; line-height: 1.5; white-space: nowrap; pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18); z-index: 5;
+}
+.chart-tip .tip-date { font-weight: 700; margin-bottom: 2px; }
+.chart-tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+
+/* 로딩 스켈레톤 / 빈 상태 */
+.skel { background: #eef2f7; border-radius: 6px; position: relative; overflow: hidden; }
+.skel::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  animation: shimmer 1.3s infinite;
+}
+@keyframes shimmer { 100% { transform: translateX(100%); } }
+.skel::after { transform: translateX(-100%); }
+.skel-line { height: 14px; margin: 6px 0; }
+.skel-line.short { width: 40%; height: 11px; }
+.skel-block { height: 120px; margin-top: 10px; }
+.skel-card { pointer-events: none; }
+.empty-state { padding: 16px 0; text-align: center; }
 
 .badge {
   font-size: 11px; font-weight: 600; color: #16a34a; background: #dcfce7;
