@@ -50,6 +50,8 @@ export { AlertHub, ConsoleAlertSink } from './core/alerts.js';
 export type { Alert, AlertSink } from './core/alerts.js';
 export { Orchestrator } from './core/orchestrator.js';
 export type { CycleRecord, OrchestratorDeps } from './core/orchestrator.js';
+export { AutomationDaemon } from './core/daemon.js';
+export type { DaemonOptions } from './core/daemon.js';
 export {
   loadClient,
   loadClients,

@@ -14,6 +14,7 @@
     "start": "node dist/cli.js",
     "demo": "tsx examples/automate.ts",
     "autopilot": "tsx examples/autopilot.ts",
+    "daemon-demo": "tsx examples/daemon.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --test --import tsx ./test/*.test.ts"
   },

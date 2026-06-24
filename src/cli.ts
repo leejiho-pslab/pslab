@@ -22,6 +22,7 @@ import type { PlatformId, PostContent } from './core/types.js';
 import { ContentPipeline } from './core/content.js';
 import type { ContentBrief } from './core/content.js';
 import { loadClients } from './core/client.js';
+import { AutomationDaemon } from './core/daemon.js';
 
 type Args = Record<string, string | boolean>;
 
@@ -204,6 +205,52 @@ async function cmdCycle(app: App, args: Args): Promise<void> {
   }
 }
 
+async function cmdDaemon(app: App, args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const intervalMs =
+    typeof args.interval === 'string' ? Number(args.interval) * 1000 : 60_000;
+  const once = args.once === true;
+
+  const clients = loadClients(dir);
+  if (clients.length === 0) {
+    console.error(`클라이언트가 없습니다 (dir=${dir}).`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const auto = createAutopilot({ app, dataDir });
+  const daemon = new AutomationDaemon(auto.orchestrator, clients, {
+    intervalMs,
+    alerts: auto.alerts,
+    onCycle: (id, ok) =>
+      console.log(`  ↳ [${id}] 사이클 ${ok ? '완료✅' : '발행안함/실패'}`),
+  });
+
+  if (once) {
+    console.log('▶ 데몬 1회 실행 (모든 클라이언트 즉시 한 사이클)\n');
+    await daemon.runOnce();
+    return;
+  }
+
+  console.log('🟢 무인 데몬(관리인) 시작 — Ctrl+C 로 종료');
+  console.log(`   점검 간격: ${intervalMs / 1000}s | 시간대: ${process.env.TZ ?? '서버 로컬'}`);
+  for (const c of clients) {
+    console.log(`   • ${c.name} → ${c.scheduleTimes.join(', ')}`);
+  }
+  daemon.start();
+
+  // 프로세스를 살려 두고 종료 신호를 기다린다.
+  await new Promise<void>((resolve) => {
+    const shutdown = () => {
+      daemon.stop();
+      resolve();
+    };
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+  });
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -217,12 +264,16 @@ function printHelp(): void {
       '  report                성과 리포트 (데모)',
       '  clients               등록된 클라이언트(설정표) 목록',
       '  cycle [--client id]   오토파일럿 한 사이클 실행 (조사→제작→검수→발행→회의)',
+      '  daemon [--once]       무인 데몬 — 시간표(scheduleTimes)에 맞춰 자동 트리거',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
+      '      --interval <초> --once   (daemon 전용)',
       '',
       '예) pslab publish --topic "신제품 출시" --targets instagram,threads --image hero.png',
       '예) pslab cycle --client demo-cafe',
+      '예) TZ=Asia/Seoul pslab daemon          # 11:00,19:00 에 자동 발행',
+      '예) pslab daemon --once                  # 지금 전체 1사이클',
     ].join('\n'),
   );
 }
@@ -258,6 +309,9 @@ async function main(): Promise<void> {
       break;
     case 'cycle':
       await cmdCycle(app, args);
+      break;
+    case 'daemon':
+      await cmdDaemon(app, args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);

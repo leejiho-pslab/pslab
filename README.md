@@ -124,8 +124,11 @@ const content = new ContentPipeline({
 
 ```bash
 npm run autopilot                # 둥근 벨트 데모 (사이클 2회 + 강화)
+npm run daemon-demo              # 무인 데몬 라이브 데모 (예약 시각에 스스로 발화)
 npm run dev -- clients           # 등록된 클라이언트(설정표) 목록
 npm run dev -- cycle --client demo-cafe   # 한 클라이언트 1사이클 실행
+TZ=Asia/Seoul npm run dev -- daemon       # 무인 데몬 — scheduleTimes에 자동 발행
+npm run dev -- daemon --once              # 모든 클라이언트 즉시 1사이클
 ```
 
 | 모듈 | 설계도 작업소 | 역할 |
@@ -137,6 +140,7 @@ npm run dev -- cycle --client demo-cafe   # 한 클라이언트 1사이클 실�
 | `Analytics` | 5. 성적표실 | 성과 집계 (경쟁사 비교) |
 | `Council` | 6. AI 회의실 | 분야별 AI 토론으로 다음 방향 합의 |
 | `Orchestrator` | 둥근 벨트 | 위를 한 사이클로 묶고 이력을 강화 신호로 환류 |
+| `AutomationDaemon` | 관리인 | scheduleTimes에 맞춰 사이클을 24시간 자동 트리거 |
 | `ClientConfig` / `ClientStore` | 공장 복제 | 설정표 1장으로 클라이언트 추가, 격리 저장 |
 | `AlertHub` | 고장 알림벨 | 실패·승인 대기 알림 |
 
