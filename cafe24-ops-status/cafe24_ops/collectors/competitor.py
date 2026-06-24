@@ -60,35 +60,43 @@ class CompetitorCollector(BaseCollector):
         return records
 
     def collect_live(self, date: str) -> list[dict]:
-        """우선 네이버 검색 트렌드만 실수집(자격증명 시). 프로모션/후기/광고/베스트는 크롤링 TODO."""
+        """네이버 데이터랩(트렌드) + 검색 API(베스트·프로모션·후기) 실수집.
+
+        데이터랩과 검색을 독립적으로 격리해 한쪽이 실패해도 다른 쪽은 수집한다.
+        """
+        import logging
         import os
 
         records: list[dict] = []
-        collected_any = False
         names = [c.get("name") if isinstance(c, dict) else str(c) for c in self.config.sources.competitors]
-        # 자사 브랜드도 함께 추적 → 브랜드 vs 경쟁사 검색 점유 비교
+        names = [n for n in names if n]
+        if not (os.environ.get("NAVER_CLIENT_ID") and os.environ.get("NAVER_CLIENT_SECRET")):
+            raise NotImplementedError(
+                "[competitor] 자격증명 없음 — NAVER_CLIENT_ID/SECRET 설정 시 검색 트렌드부터 수집됩니다."
+            )
+
+        # ① 데이터랩 검색 트렌드 (자사 브랜드 포함 → 점유 비교)
         brand = (self.config.sources.shop or {}).get("brand")
-        track = ([brand] if brand else []) + [n for n in names if n and n != brand]
-        if track and os.environ.get("NAVER_CLIENT_ID") and os.environ.get("NAVER_CLIENT_SECRET"):
+        track = ([brand] if brand else []) + [n for n in names if n != brand]
+        if track:
             from ..clients.naver_datalab import NaverDataLabClient
 
             client = NaverDataLabClient.from_env()
             try:
                 records += client.fetch_search_facts(date, date, track)
+            except Exception as e:  # noqa: BLE001 - 데이터랩 실패가 검색 수집을 막지 않게
+                logging.warning("[competitor] 데이터랩 트렌드 실패: %s", e)
             finally:
                 client.close()
-            collected_any = True
-            # 네이버 검색 API(동일 앱) → 경쟁사 베스트 상품 + 당일 후기 글 수
+
+        # ② 검색 API → 베스트 상품 / 프로모션 / 당일 후기 (경쟁사 단위 격리는 클라이언트 내부)
+        if names:
             from ..clients.naver_search import NaverSearchClient
 
             search = NaverSearchClient.from_env()
             try:
-                records += search.fetch_competitor_facts(date, [n for n in names if n])
+                records += search.fetch_competitor_facts(date, names)
             finally:
                 search.close()
-        # TODO(Phase 3): 프로모션/후기/광고소재/베스트 상품 크롤링
-        if not collected_any:
-            raise NotImplementedError(
-                "[competitor] 자격증명 없음 — NAVER_CLIENT_ID/SECRET 설정 시 검색 트렌드부터 수집됩니다."
-            )
+        # TODO(Phase 3+): 광고 소재(메타 Ad Library 등) / 평점 크롤링
         return records
