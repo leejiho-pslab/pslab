@@ -60,9 +60,18 @@ class AdsCollector(BaseCollector):
                 finally:
                     client.close()
                 collected_any = True
-            # TODO(Phase 2): google / naver / kakao 커넥터 추가
+            elif channel == "google" and os.environ.get("GOOGLE_ADS_ACCESS_TOKEN"):
+                from ..clients.ads_google import GoogleAdsClient
+
+                client = GoogleAdsClient.from_account(acc)
+                try:
+                    records += client.fetch_facts(date)
+                finally:
+                    client.close()
+                collected_any = True
+            # TODO(Phase 2): naver(GFA/SA) / kakao(moment) 커넥터 추가
         if not collected_any:
             raise NotImplementedError(
-                "[ads] 광고 플랫폼 자격증명이 없습니다. META_ACCESS_TOKEN 등 설정 시 활성화됩니다."
+                "[ads] 광고 플랫폼 자격증명이 없습니다. META/GOOGLE 토큰 설정 시 활성화됩니다."
             )
         return records
