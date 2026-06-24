@@ -30,6 +30,8 @@ export interface ClientConfig {
   bannedWords: string[];
   /** 발행할 SNS */
   targets: PlatformId[];
+  /** 플랫폼별 우리 계정 핸들 (참고/표시용; 실제 인증은 .env 자격 증명으로) */
+  accounts?: Partial<Record<PlatformId, string>>;
   /** 발행 시간 (HH:mm, 24h) */
   scheduleTimes: string[];
   /** 검수 스위치 초기값 */
@@ -72,6 +74,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     brandTone: c.brandTone ?? '친근하고 명확하게',
     bannedWords: c.bannedWords ?? [],
     targets: c.targets!,
+    accounts: c.accounts ?? {},
     scheduleTimes: c.scheduleTimes ?? ['11:00', '19:00'],
     reviewMode: c.reviewMode!,
     reportTo: c.reportTo,

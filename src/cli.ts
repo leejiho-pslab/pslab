@@ -166,8 +166,11 @@ async function cmdClients(args: Args): Promise<void> {
   const clients = loadClients(dir);
   console.log(`\n🏭 클라이언트 (${dir}) — ${clients.length}곳\n`);
   for (const c of clients) {
+    const accts = Object.entries(c.accounts ?? {})
+      .map(([p, h]) => `${p}:@${h}`)
+      .join(' ');
     console.log(
-      `  • ${c.name} (${c.id}) — ${c.industry} | 검수:${c.reviewMode} | 채널:${c.targets.join(',')}`,
+      `  • ${c.name} (${c.id}) — ${c.industry} | 검수:${c.reviewMode} | 채널:${c.targets.join(',')}${accts ? ` | 계정 ${accts}` : ''}`,
     );
   }
   if (clients.length === 0) {

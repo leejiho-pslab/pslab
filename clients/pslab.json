@@ -1,25 +1,27 @@
 {
   "id": "pslab",
-  "name": "pslab — SNS 자동화 솔루션",
-  "industry": "SNS 콘텐츠 자동화 / 마케팅 SaaS",
+  "name": "_pslab (테스트베이스)",
+  "industry": "공부·자기계발·동기부여 콘텐츠",
   "keywords": [
-    "SNS자동화",
-    "콘텐츠마케팅",
-    "AI콘텐츠",
-    "숏폼제작",
-    "인스타마케팅",
-    "블로그자동화",
-    "마케팅자동화",
-    "1인사업자마케팅"
+    "공부자극",
+    "갓생",
+    "자기계발",
+    "동기부여",
+    "공부법",
+    "스터디윗미",
+    "마인드셋",
+    "시험준비"
   ],
   "competitors": [
-    { "handle": "REPLACE_경쟁사1", "platform": "instagram", "note": "초안 — 실제 벤치마킹 계정으로 교체" },
-    { "handle": "REPLACE_경쟁사2", "platform": "youtube", "note": "초안 — 실제 벤치마킹 계정으로 교체" }
+    { "handle": "3dragon_pd", "platform": "instagram", "note": "벤치마킹" },
+    { "handle": "mindsseett", "platform": "instagram", "note": "벤치마킹" },
+    { "handle": "highclass_study2025", "platform": "instagram", "note": "벤치마킹" }
   ],
-  "brandTone": "친근하고 실용적으로, 전문성을 담아 — 이모지는 적당히",
-  "bannedWords": ["최저가", "100% 보장", "무조건"],
-  "targets": ["instagram", "threads", "naver-blog", "youtube", "linkedin"],
+  "brandTone": "동기부여가 되고 진정성 있게, 군더더기 없이",
+  "bannedWords": ["100% 보장", "무조건", "최저가"],
+  "targets": ["instagram"],
+  "accounts": { "instagram": "_pslab" },
   "scheduleTimes": ["11:00", "19:00"],
-  "reviewMode": "manual",
+  "reviewMode": "rules",
   "reportTo": "ljhnimwithit@gmail.com"
 }
