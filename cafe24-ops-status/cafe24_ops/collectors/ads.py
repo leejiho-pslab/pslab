@@ -69,9 +69,26 @@ class AdsCollector(BaseCollector):
                 finally:
                     client.close()
                 collected_any = True
-            # TODO(Phase 2): naver(GFA/SA) / kakao(moment) 커넥터 추가
+            elif channel == "naver" and os.environ.get("NAVER_SA_API_KEY"):
+                from ..clients.ads_naver import NaverSearchAdClient
+
+                client = NaverSearchAdClient.from_account(acc)
+                try:
+                    records += client.fetch_facts(date)
+                finally:
+                    client.close()
+                collected_any = True
+            elif channel == "kakao" and os.environ.get("KAKAO_ACCESS_TOKEN"):
+                from ..clients.ads_kakao import KakaoMomentClient
+
+                client = KakaoMomentClient.from_account(acc)
+                try:
+                    records += client.fetch_facts(date)
+                finally:
+                    client.close()
+                collected_any = True
         if not collected_any:
             raise NotImplementedError(
-                "[ads] 광고 플랫폼 자격증명이 없습니다. META/GOOGLE 토큰 설정 시 활성화됩니다."
+                "[ads] 광고 플랫폼 자격증명이 없습니다. META/GOOGLE/NAVER/KAKAO 설정 시 활성화됩니다."
             )
         return records

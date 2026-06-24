@@ -1,0 +1,110 @@
+"""네이버 검색광고(SearchAd) — 무료 API 커넥터.
+
+인증: HMAC-SHA256 서명(X-API-KEY/X-Customer/X-Timestamp/X-Signature).
+계정 전체 통계는 캠페인 id 목록을 받아 /stats 로 집계한다.
+HTTP는 실 키로 검증 필요, 서명/매핑은 단위 테스트로 검증한다.
+
+참고: https://naver.github.io/searchad-apidoc/
+"""
+from __future__ import annotations
+
+import base64
+import hashlib
+import hmac
+import json
+import os
+
+import httpx
+
+NAVER_SA_BASE = "https://api.searchad.naver.com"
+
+
+def sign(secret_key: str, timestamp: str, method: str, path: str) -> str:
+    message = f"{timestamp}.{method}.{path}"
+    digest = hmac.new(secret_key.encode(), message.encode(), hashlib.sha256).digest()
+    return base64.b64encode(digest).decode()
+
+
+def naver_sa_to_facts(date: str, raw: dict) -> list[dict]:
+    """SA /stats 응답 → 표준 metric 레코드(dims.channel=naver)."""
+    rows = (raw or {}).get("data") or []
+    if not rows:
+        return []
+    imp = clk = cost = conv = val = 0.0
+    for d in rows:
+        imp += float(d.get("impCnt", 0) or 0)
+        clk += float(d.get("clkCnt", 0) or 0)
+        cost += float(d.get("salesAmt", 0) or 0)   # SA salesAmt = 광고비(지출액)
+        conv += float(d.get("ccnt", 0) or 0)
+        val += float(d.get("convAmt", 0) or 0)
+    values = {"ad_cost": cost, "impressions": imp, "clicks": clk,
+              "conversions": conv, "ad_sales": val}
+    return [
+        {"date": date, "source": "ads", "metric": k, "value": v, "dims": {"channel": "naver"}}
+        for k, v in values.items()
+    ]
+
+
+class NaverSearchAdClient:
+    def __init__(
+        self,
+        api_key: str,
+        secret_key: str,
+        customer_id: str,
+        timestamp_fn=None,
+        transport: httpx.BaseTransport | None = None,
+        base_url: str = NAVER_SA_BASE,
+        timeout: float = 30.0,
+    ):
+        self.api_key = api_key
+        self.secret_key = secret_key
+        self.customer_id = customer_id
+        self._ts = timestamp_fn  # 테스트 주입용
+        self._http = httpx.Client(base_url=base_url, transport=transport, timeout=timeout)
+
+    @classmethod
+    def from_account(cls, acc: dict, transport: httpx.BaseTransport | None = None) -> "NaverSearchAdClient":
+        return cls(
+            api_key=os.environ.get("NAVER_SA_API_KEY", ""),
+            secret_key=os.environ.get("NAVER_SA_SECRET_KEY", ""),
+            customer_id=str(acc.get("account_id") or os.environ.get("NAVER_SA_CUSTOMER_ID", "")),
+            transport=transport,
+        )
+
+    def _headers(self, method: str, path: str) -> dict:
+        import time
+
+        ts = self._ts() if self._ts else str(int(time.time() * 1000))
+        return {
+            "X-Timestamp": ts,
+            "X-API-KEY": self.api_key,
+            "X-Customer": str(self.customer_id),
+            "X-Signature": sign(self.secret_key, ts, method, path),
+        }
+
+    def _get(self, path: str, params: dict) -> dict:
+        r = self._http.get(path, params=params, headers=self._headers("GET", path))
+        r.raise_for_status()
+        return r.json()
+
+    def list_campaign_ids(self) -> list[str]:
+        data = self._get("/ncc/campaigns", {})
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [c.get("nccCampaignId") for c in items if c.get("nccCampaignId")]
+
+    def stats(self, ids: list[str], date: str) -> dict:
+        params = {
+            "ids": ",".join(ids),
+            "fields": json.dumps(["impCnt", "clkCnt", "salesAmt", "ccnt", "convAmt"]),
+            "timeRange": json.dumps({"since": date, "until": date}),
+        }
+        return self._get("/stats", params)
+
+    def fetch_facts(self, date: str) -> list[dict]:
+        ids = self.list_campaign_ids()
+        if not ids:
+            return []
+        return naver_sa_to_facts(date, self.stats(ids, date))
+
+    def close(self) -> None:
+        self._http.close()
