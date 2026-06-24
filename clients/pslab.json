@@ -1,23 +1,25 @@
 {
   "id": "pslab",
   "name": "_pslab (테스트베이스)",
-  "industry": "공부·자기계발·동기부여 콘텐츠",
+  "industry": "온라인 컨설팅·광고대행 / 마케팅 인사이트 (15년차 전문가 개인 채널)",
   "keywords": [
-    "공부자극",
-    "갓생",
-    "자기계발",
-    "동기부여",
-    "공부법",
-    "스터디윗미",
-    "마인드셋",
-    "시험준비"
+    "온라인마케팅",
+    "마케팅인사이트",
+    "광고대행",
+    "퍼포먼스마케팅",
+    "온라인시장트렌드",
+    "마케팅전략",
+    "사업이야기",
+    "창업인사이트",
+    "브랜딩",
+    "업계비하인드"
   ],
   "competitors": [
     { "handle": "3dragon_pd", "platform": "instagram", "note": "벤치마킹" },
     { "handle": "mindsseett", "platform": "instagram", "note": "벤치마킹" },
     { "handle": "highclass_study2025", "platform": "instagram", "note": "벤치마킹" }
   ],
-  "brandTone": "동기부여가 되고 진정성 있게, 군더더기 없이",
+  "brandTone": "15년차 실전 전문가의 시선으로 — 경험담은 진솔하게, 인사이트는 명확하고 단단하게. 과장 없이 신뢰감 있게",
   "bannedWords": ["100% 보장", "무조건", "최저가"],
   "targets": ["instagram"],
   "accounts": { "instagram": "_pslab" },
