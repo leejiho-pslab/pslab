@@ -1,0 +1,14 @@
+# pslab 무인 데몬 — 한 줄로 가동:  docker compose up -d
+# 로그 보기: docker compose logs -f
+# 상황판:    docker compose exec pslab node dist/cli.js board
+services:
+  pslab:
+    build: .
+    image: pslab
+    restart: unless-stopped        # 서버 재부팅·크래시 시 자동 재가동
+    env_file: .env                 # 자격 증명 / ANTHROPIC_API_KEY 등
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - ./clients:/app/clients     # 클라이언트 설정표
+      - ./data:/app/data           # 사이클 이력 (격리 저장소)

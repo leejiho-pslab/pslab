@@ -169,6 +169,19 @@ gate.setMode('auto');    // 100% 자동 (금지어 등 안전장치는 유지)
 > 클라이언트 설정표는 `clients/*.json` (예시: `clients/demo-cafe.example.json`).
 > 실제 설정표(자격/내부 정보 포함)는 `.gitignore`로 커밋에서 제외된다.
 
+## 배포 (24시간 무인 가동)
+
+Docker로 한 줄 가동 — 자세한 건 `docs/배포.md` 참고.
+
+```bash
+cp .env.example .env        # 자격 증명 / ANTHROPIC_API_KEY 입력
+docker compose up -d        # scheduleTimes(11:00,19:00…)에 맞춰 자동 발행
+docker compose logs -f
+docker compose exec pslab node dist/cli.js board   # 상황판
+```
+
+`restart: unless-stopped`로 재부팅에도 자동 복구, `TZ=Asia/Seoul` 기준.
+
 ## 라이선스
 
 MIT
