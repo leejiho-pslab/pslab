@@ -33,6 +33,9 @@
   "dependencies": {
     "dotenv": "^16.4.5"
   },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.40.0"
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "tsx": "^4.19.2",

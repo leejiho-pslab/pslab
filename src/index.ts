@@ -22,6 +22,7 @@ import { AlertHub } from './core/alerts.js';
 import { Orchestrator } from './core/orchestrator.js';
 import { ClientStore } from './core/client.js';
 import type { CycleRecord } from './core/orchestrator.js';
+import { createTextProvider, createMediaProvider } from './core/providers.js';
 
 export * from './core/types.js';
 export { PluginRegistry } from './core/registry.js';
@@ -54,6 +55,7 @@ export { AutomationDaemon } from './core/daemon.js';
 export type { DaemonOptions } from './core/daemon.js';
 export { StatusBoard } from './core/board.js';
 export type { Board, ClientBoardRow } from './core/board.js';
+export { ClaudeTextProvider, createTextProvider, createMediaProvider } from './core/providers.js';
 export {
   loadClient,
   loadClients,
@@ -101,7 +103,10 @@ export function createApp(options: CreateAppOptions = {}): App {
   const publisher = new Publisher(registry);
   const scheduler = new Scheduler(publisher);
   const analytics = new Analytics(registry);
-  const content = new ContentPipeline(options.content);
+  // 기본값: 환경에 키가 있으면 실제 AI 생성, 없으면 템플릿 폴백
+  const content = new ContentPipeline(
+    options.content ?? { text: createTextProvider(), media: createMediaProvider() },
+  );
 
   return { registry, publisher, scheduler, analytics, content };
 }
