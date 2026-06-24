@@ -31,6 +31,7 @@ class PipelineResult:
     fact_count: int = 0
     kpi: dict = field(default_factory=dict)
     per_source: dict = field(default_factory=dict)
+    errors: dict = field(default_factory=dict)
 
 
 def run_pipeline(
@@ -53,6 +54,11 @@ def run_pipeline(
         except NotImplementedError as e:
             # 아직 실연동 안 된 소스(광고/소재/경쟁사)는 건너뛴다 — 점진적 롤아웃
             log.warning("   - %-11s 건너뜀 (%s)", collector.source, e)
+            result.per_source[collector.source] = 0
+            continue
+        except Exception as e:  # noqa: BLE001 - 한 소스 실패가 전체 수집을 막지 않게(live 견고화)
+            log.error("   - %-11s 실패: %s: %s", collector.source, type(e).__name__, e)
+            result.errors[collector.source] = f"{type(e).__name__}: {e}"
             result.per_source[collector.source] = 0
             continue
         store.save_raw(date, collector.source, records)

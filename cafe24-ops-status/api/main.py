@@ -80,7 +80,21 @@ def _store() -> Store:
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "mode": _config.mode}
+    """헬스 + 데이터 신선도(모니터링용). DB 접근 실패해도 200 으로 status 표기."""
+    info: dict = {"status": "ok", "mode": _config.mode}
+    store = _store()
+    try:
+        dates = store.list_dates()
+        info["db"] = store.db.dialect
+        info["latest_date"] = dates[-1] if dates else None
+        info["dates_count"] = len(dates)
+        info["facts"] = store.count_facts()
+    except Exception as e:  # noqa: BLE001 - 헬스체크는 진단정보만
+        info["status"] = "degraded"
+        info["error"] = f"{type(e).__name__}: {e}"
+    finally:
+        store.close()
+    return info
 
 
 @app.get("/api/config/metrics")
