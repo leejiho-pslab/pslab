@@ -24,15 +24,19 @@ cp config/secrets.env.example config/secrets.env   # 여기에 값 채움
 자사몰 매출/주문/방문/회원의 원천. 쇼핑몰에 기본 포함(무료).
 
 1. **카페24 개발자센터**(developers.cafe24.com) 로그인 → 앱 만들기(무료)
-2. 권한(scope): `mall.read_order`, `mall.read_customer` 등
-3. OAuth 인증으로 `access_token` / `refresh_token` 발급, `client_id`/`client_secret` 확인
-4. `secrets.env`:
+2. 권한(scope): `mall.read_order`, `mall.read_customer` / Redirect URI 에 `https://localhost` 등록
+3. 앱의 **Client ID / Secret** 를 `secrets.env` 에 먼저 입력:
    ```
-   CAFE24_MALL_ID=실제몰id
-   CAFE24_ACCESS_TOKEN=...
-   CAFE24_REFRESH_TOKEN=...
+   CAFE24_MALL_ID=keek
    CAFE24_CLIENT_ID=...
    CAFE24_CLIENT_SECRET=...
+   ```
+4. **OAuth 토큰 발급**(헬퍼 사용):
+   ```bash
+   python scripts/cafe24_auth.py --authorize --redirect-uri https://localhost
+   # → 출력된 URL 을 브라우저로 열고 '승인' → 주소창의 code= 값 복사
+   python scripts/cafe24_auth.py --code <복사한코드> --redirect-uri https://localhost
+   # → access/refresh 토큰 자동 저장 + secrets.env 에 넣을 줄 출력
    ```
 5. **확인**: `python scripts/smoke_live.py --check` → orders/count 가 뜨면 OK
 
