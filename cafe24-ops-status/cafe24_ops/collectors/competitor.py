@@ -66,12 +66,15 @@ class CompetitorCollector(BaseCollector):
         records: list[dict] = []
         collected_any = False
         names = [c.get("name") if isinstance(c, dict) else str(c) for c in self.config.sources.competitors]
-        if names and os.environ.get("NAVER_CLIENT_ID") and os.environ.get("NAVER_CLIENT_SECRET"):
+        # 자사 브랜드도 함께 추적 → 브랜드 vs 경쟁사 검색 점유 비교
+        brand = (self.config.sources.shop or {}).get("brand")
+        track = ([brand] if brand else []) + [n for n in names if n and n != brand]
+        if track and os.environ.get("NAVER_CLIENT_ID") and os.environ.get("NAVER_CLIENT_SECRET"):
             from ..clients.naver_datalab import NaverDataLabClient
 
             client = NaverDataLabClient.from_env()
             try:
-                records += client.fetch_search_facts(date, date, names)
+                records += client.fetch_search_facts(date, date, track)
             finally:
                 client.close()
             collected_any = True
