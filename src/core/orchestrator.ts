@@ -16,6 +16,8 @@ import { Council, type Direction } from './council.js';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { AlertHub } from './alerts.js';
 import type { DesignStudio, DesignStore, DesignStyle } from './design.js';
+import type { PlanStore } from './plan.js';
+import { generatePlan } from './plan.js';
 import type { PlatformId } from './types.js';
 import { createLogger } from './logger.js';
 
@@ -39,6 +41,15 @@ export interface CycleRecord {
   imageUrl?: string;
   /** 채널별 발행 결과 */
   posts?: Array<{ platform: PlatformId; ok: boolean; url?: string; error?: string }>;
+  /** 채널별 성과 지표 */
+  metrics?: Array<{
+    platform: PlatformId;
+    views: number;
+    likes: number;
+    comments: number;
+    shares: number;
+    engagementRate: number;
+  }>;
   /** 사용된 디자인 스타일 버전 */
   designVersion?: number;
 }
@@ -55,6 +66,8 @@ export interface OrchestratorDeps {
   alerts?: AlertHub;
   /** 디자인 자가 진화 (이미지 프롬프트 스타일을 반응도로 업그레이드) */
   design?: { studio: DesignStudio; store: DesignStore };
+  /** 콘텐츠 플랜(발행 대기 큐) 저장소 */
+  plan?: PlanStore;
 }
 
 export class Orchestrator {
@@ -83,6 +96,14 @@ export class Orchestrator {
         detail: '키워드/경쟁사 설정을 확인하세요.',
       });
       throw new Error(`${client.id}: 생성할 소재 후보가 없습니다.`);
+    }
+
+    // 1-1) 발행 대기 플랜 갱신 (이번에 쓰는 1순위 제외한 후보를 예정 큐로)
+    if (this.deps.plan) {
+      this.deps.plan.save(
+        client.id,
+        generatePlan(client, research.topicCandidates.slice(1), new Date()),
+      );
     }
 
     // 2) 제작 (브랜드 말투 + 진화하는 디자인 스타일 반영)
@@ -194,6 +215,14 @@ export class Orchestrator {
         ok: r.ok,
         url: r.url,
         error: r.error,
+      })),
+      metrics: report.reports.map((r) => ({
+        platform: r.platform,
+        views: r.metrics.views ?? 0,
+        likes: r.metrics.likes ?? 0,
+        comments: r.metrics.comments ?? 0,
+        shares: r.metrics.shares ?? 0,
+        engagementRate: r.metrics.engagementRate ?? 0,
       })),
       designVersion: designStyle?.version,
     };
