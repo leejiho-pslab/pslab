@@ -104,7 +104,8 @@ export class Orchestrator {
     }
 
     // 1-1) 발행 대기 플랜 갱신 (이번에 쓰는 1순위 제외한 후보를 예정 큐로)
-    if (this.deps.plan) {
+    //      manualPlan(검수 우선 큐레이션)이면 사람이 만든 기획안을 덮어쓰지 않는다.
+    if (this.deps.plan && !client.manualPlan) {
       this.deps.plan.save(
         client.id,
         generatePlan(client, research.topicCandidates.slice(1), new Date()),

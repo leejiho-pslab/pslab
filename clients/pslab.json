@@ -26,7 +26,8 @@
   "bannedWords": ["100% 보장", "무조건", "최저가"],
   "targets": ["instagram"],
   "accounts": { "instagram": "_pslab" },
-  "scheduleTimes": ["11:00", "19:00"],
-  "reviewMode": "rules",
+  "scheduleTimes": ["19:00"],
+  "manualPlan": true,
+  "reviewMode": "manual",
   "reportTo": "ljhnimwithit@gmail.com"
 }
