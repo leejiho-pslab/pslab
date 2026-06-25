@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="refresh" content="300"/>
+<title>pslab 콘텐츠 현황</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    background:#0f1115; color:#e6e6e6; }
+  header { padding:20px 24px; border-bottom:1px solid #232733; background:#151823;
+    position:sticky; top:0; }
+  header h1 { margin:0; font-size:20px; }
+  header .sub { color:#8b93a7; font-size:13px; margin-top:4px; }
+  .summary { display:flex; gap:18px; flex-wrap:wrap; margin-top:10px; }
+  .summary b { color:#ffb454; }
+  main { padding:20px 24px; max-width:1100px; margin:0 auto; }
+  .client { margin-bottom:34px; }
+  .client-head h2 { margin:0 0 6px; font-size:17px; }
+  .stats { display:flex; gap:16px; flex-wrap:wrap; font-size:13px; color:#b8c0d0; margin-bottom:4px; }
+  .stats b { color:#fff; }
+  .muted { color:#8b93a7; font-size:12px; }
+  .warn { color:#ffb454; }
+  .direction { background:#1a1f2b; border-left:3px solid #ffb454; padding:8px 12px;
+    border-radius:6px; font-size:13px; margin:10px 0; color:#c8cedd; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px,1fr)); gap:14px; }
+  .card { background:#161a24; border:1px solid #232733; border-radius:10px; overflow:hidden; }
+  .thumb { width:100%; aspect-ratio:1/1; object-fit:cover; display:block; background:#0c0e13; }
+  .thumb.noimg { display:flex; align-items:center; justify-content:center; color:#5b6273; font-size:13px; }
+  .card-body { padding:10px 12px; }
+  .card-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .caption { font-size:12px; color:#aeb6c6; margin:6px 0; line-height:1.4;
+    max-height:3.6em; overflow:hidden; }
+  .links a { color:#6db3ff; font-size:12px; text-decoration:none; margin-right:8px; }
+  .badge { font-size:11px; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+  .badge.ok { background:#163a2a; color:#4ade80; }
+  .badge.wait { background:#3a2f16; color:#ffb454; }
+  .badge.hold { background:#3a1d1d; color:#ff7a7a; }
+  footer { text-align:center; color:#5b6273; font-size:12px; padding:24px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>🖥️ pslab 콘텐츠 현황</h1>
+    <div class="sub">실시간 대시보드 · 5분마다 자동 새로고침 · 사이클마다 갱신</div>
+    <div class="summary">
+      <span>클라이언트 <b>2</b></span>
+      <span>누적 사이클 <b>3</b></span>
+      <span>발행 <b>3</b></span>
+      <span class="muted">갱신: 2026-06-25 12:42 (UTC)</span>
+    </div>
+  </header>
+  <main>
+    
+  <section class="client">
+    <div class="client-head">
+      <h2>데모 디저트카페 <span class="muted">(demo-cafe)</span></h2>
+      <div class="stats">
+        <span>사이클 <b>0</b></span>
+        <span>발행률 <b>0%</b></span>
+        <span>참여율 <b>0.0% ·</b></span>
+        <span>검수 <b>manual</b></span>
+        <span>디자인 <b>v1</b></span>
+        
+      </div>
+      <div class="muted">채널: instagram, threads, naver-blog</div>
+    </div>
+    
+    <div class="cards">
+      <div class="muted">아직 사이클 없음</div>
+    </div>
+  </section>
+  <section class="client">
+    <div class="client-head">
+      <h2>_pslab (테스트베이스) <span class="muted">(pslab)</span></h2>
+      <div class="stats">
+        <span>사이클 <b>3</b></span>
+        <span>발행률 <b>100%</b></span>
+        <span>참여율 <b>11.1% 📉</b></span>
+        <span>검수 <b>rules</b></span>
+        <span>디자인 <b>v4</b></span>
+        
+      </div>
+      <div class="muted">채널: instagram</div>
+    </div>
+    <div class="direction">🧠 다음 방향: 다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자.</div>
+    <div class="cards">
+      
+    <div class="card">
+      <img class="thumb" src="https://i.ibb.co/LwMY2nq/b961780986f0.jpg" alt="" loading="lazy"/>
+      <div class="card-body">
+        <div class="card-top">
+          <strong>온라인마케팅</strong> <span class="badge ok">발행됨</span>
+        </div>
+        <div class="muted">2026-06-25 12:42 · 짧은 영상 · 참여율 11.1%</div>
+        <div class="caption">온라인마케팅에 대해 이야기해 볼게요.</div>
+        <div class="links"><a href="https://instagram.com/p/ig_hewipimt_zgvd" target="_blank">instagram ↗</a></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="thumb noimg">이미지 없음</div>
+      <div class="card-body">
+        <div class="card-top">
+          <strong>온라인마케팅</strong> <span class="badge ok">발행됨</span>
+        </div>
+        <div class="muted">2026-06-25 12:17 · 짧은 영상 · 참여율 13.0%</div>
+        <div class="caption"></div>
+        <div class="links"><span class="muted">링크 없음</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="thumb noimg">이미지 없음</div>
+      <div class="card-body">
+        <div class="card-top">
+          <strong>온라인마케팅</strong> <span class="badge ok">발행됨</span>
+        </div>
+        <div class="muted">2026-06-25 09:50 · 짧은 영상 · 참여율 4.0%</div>
+        <div class="caption"></div>
+        <div class="links"><span class="muted">링크 없음</span></div>
+      </div>
+    </div>
+    </div>
+  </section>
+  </main>
+  <footer>pslab autopilot · 자동 생성</footer>
+</body>
+</html>
