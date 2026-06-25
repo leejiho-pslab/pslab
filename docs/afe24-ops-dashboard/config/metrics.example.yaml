@@ -1,0 +1,65 @@
+# =============================================================================
+# 카페24 어드민 대시보드 — 지표 정의 (예시)
+# 이 파일만 수정하면 카드/표/차트의 지표를 코드 변경 없이
+# 추가 · 삭제 · 순서변경 · 이름변경 할 수 있다. (= 수정 자유도)
+# 기존 keek 운영 대시보드와 동일한 지표 구성을 기본값으로 둔다.
+# =============================================================================
+
+collection:
+  granularity: daily        # 일 단위 (시간별 수집 안 함)
+  timezone: Asia/Seoul
+  run_at: "07:00"           # 매일 07시, 전일자 데이터 수집
+  compare_windows:          # 핵심 지표 기간 비교에 쓰는 기준
+    - recent_7d             # 최근 7일
+    - prev_7d               # 직전 7일
+    - month_to_date         # 당월 누적
+    - prev_month_same       # 전월 동기
+    - prev_year_same        # 전년 동기
+
+# ── 상단 요약 KPI 카드 ───────────────────────────────────────────────
+summary_cards:
+  - { key: gross_sales,     label: 매출,             format: currency }
+  - { key: ad_sales,        label: 광고 매출액,       format: currency }
+  - { key: order_count,     label: 주문건수,          format: count }
+  - { key: aov,             label: 객단가,            format: currency }
+  - { key: conversion_rate, label: 구매전환율,         format: percent }
+  - { key: ad_cost_ratio,   label: 매출대비 광고비율,   format: percent }
+
+# ── 핵심 지표 기간 비교 표 ──────────────────────────────────────────
+period_comparison:
+  rows:
+    - { key: gross_sales,     label: 매출 }
+    - { key: order_count,     label: 수주건수 }
+    - { key: aov,             label: 객단가 }
+    - { key: conversion_rate, label: 구매전환율 }
+    - { key: visitors,        label: 방문자 }
+    - { key: ad_cost,         label: 광고비용 }
+    - { key: ad_cost_ratio,   label: 매출대비 광고비율 }
+
+# ── 일별 운영 데이터 표 (구분 그룹별, 일자별 컬럼으로 전개) ──────────
+daily_table:
+  groups:
+    - name: 매출·주문
+      metrics: [매출합계, 주문수, 객단가, 순매출, 구매전환율, 취소·환불금액, 환불주문수]
+    - name: 방문자
+      metrics: [전체방문, 신규방문, 재방문, 재방문율, 신규가입수, 회원가입율]
+    - name: CRM
+      metrics: [문자, 알림톡, 카카오, 후기수]
+    - name: 모바일(결제)
+      metrics: [매출, 주문건수, 객단가, 결제비중]
+    - name: PC
+      metrics: [매출, 주문건수, 객단가, PC비중]
+    - name: 재고·장바구니
+      metrics: [장바구니수, 재고수량, 입고예정, 품절, 외부채널비율]
+    - name: 카테고리 매출
+      metrics: [All, BEST, NEW, Travel, Filovely, Recovery, WINDBREAKER, HOODIE]
+    - name: 베스트 상품 TOP
+      top_n: 10             # 노출 개수도 설정값 → 자유 조정
+
+# ── 차트 ────────────────────────────────────────────────────────────
+charts:
+  - { type: bar_line, title: "일별 매출 추이 (누적 매출 vs 목표)" }
+  - { type: donut,    title: "디바이스별 매출 비중 (모바일/PC)" }
+  - { type: area,     title: "신규 vs 재구매 매출 (일별)" }
+  - { type: bar_line, title: "일별 광고비 vs 매출대비 광고비율" }
+  - { type: hbar,     title: "카테고리 매출 TOP 10" }

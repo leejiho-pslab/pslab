@@ -1,0 +1,202 @@
+[
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T09:50:09.271Z",
+    "finishedAt": "2026-06-25T09:50:11.631Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0.039852851011649294,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    }
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T12:17:11.783Z",
+    "finishedAt": "2026-06-25T12:17:13.977Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0.12959246007505018,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    }
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T12:42:56.072Z",
+    "finishedAt": "2026-06-25T12:42:58.071Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0.11063005983808519,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    },
+    "caption": "온라인마케팅에 대해 이야기해 볼게요.",
+    "imageUrl": "https://i.ibb.co/LwMY2nq/b961780986f0.jpg",
+    "posts": [
+      {
+        "platform": "instagram",
+        "ok": true,
+        "url": "https://instagram.com/p/ig_hewipimt_zgvd"
+      }
+    ],
+    "designVersion": 3
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T13:09:35.174Z",
+    "finishedAt": "2026-06-25T13:09:58.908Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    },
+    "caption": "온라인마케팅에 대해 이야기해 볼게요.",
+    "imageUrl": "https://i.ibb.co/bjxKqrC7/315aa63bb230.jpg",
+    "posts": [
+      {
+        "platform": "instagram",
+        "ok": true,
+        "url": "https://www.instagram.com/p/DaApEYKE6Cr/"
+      }
+    ],
+    "designVersion": 4
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T13:39:51.128Z",
+    "finishedAt": "2026-06-25T13:40:06.315Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    },
+    "caption": "온라인마케팅에 대해 이야기해 볼게요.",
+    "imageUrl": "https://i.ibb.co/bgFmxyCH/680c27e00a8d.jpg",
+    "posts": [
+      {
+        "platform": "instagram",
+        "ok": true,
+        "url": "https://www.instagram.com/p/DaAsg05kj_n/"
+      }
+    ],
+    "metrics": [
+      {
+        "platform": "instagram",
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      }
+    ],
+    "designVersion": 5
+  }
+]

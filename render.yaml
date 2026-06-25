@@ -1,0 +1,61 @@
+# Render Blueprint — 무료 티어 1클릭 배포 (대시보드 + API)
+#
+# 무료 스택 전체 구성:
+#   • 수집(매일): GitHub Actions      — 무료
+#   • DB(영속화) : Neon/Supabase      — 무료 Postgres
+#   • 웹/API     : Render Web Service  — 무료 (이 파일)
+#   • 알림(선택) : Slack Webhook       — 무료
+#
+# 배포 방법:
+#   1) render.com 로그인 → New → Blueprint → 이 저장소 연결 → 기본 브랜치 선택
+#   2) 아래 sync:false 변수(시크릿)를 Render 대시보드에서 입력
+#      → 최소 DATABASE_URL 만 있으면 GitHub Actions 가 수집한 데이터가 그대로 보인다.
+#   3) Deploy. 발급된 https://<이름>.onrender.com 으로 접속.
+#
+# 주의(무료 티어): 15분 무접속 시 슬립 → 첫 요청에 콜드스타트 ~30초. 운영엔 충분.
+
+services:
+  - type: web
+    name: keek-ops-dashboard
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./cafe24-ops-status/Dockerfile
+    dockerContext: ./cafe24-ops-status
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # live 모드: Postgres(DATABASE_URL)에 GitHub Actions 가 적재한 실데이터를 읽어 서빙
+      - key: CAFE24_OPS_MODE
+        value: live
+      # ── 영속 DB (필수) — Neon/Supabase 무료 Postgres 연결문자열 ──
+      - key: DATABASE_URL
+        sync: false
+      # ── 광고/수집 키 (있는 채널만 입력, 없으면 자동 스킵) ──
+      - key: NAVER_SA_API_KEY
+        sync: false
+      - key: NAVER_SA_SECRET_KEY
+        sync: false
+      - key: NAVER_SA_CUSTOMER_ID
+        sync: false
+      - key: CAFE24_MALL_ID
+        sync: false
+      - key: CAFE24_CLIENT_ID
+        sync: false
+      - key: CAFE24_CLIENT_SECRET
+        sync: false
+      - key: CAFE24_ACCESS_TOKEN
+        sync: false
+      - key: CAFE24_REFRESH_TOKEN
+        sync: false
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_AD_ACCOUNT_ID
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      # ── 알림(선택) ──
+      - key: SLACK_WEBHOOK_URL
+        sync: false
