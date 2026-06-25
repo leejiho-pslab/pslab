@@ -9,6 +9,17 @@ export interface ContentBrief {
   topic: string;
   /** 톤앤매너 (예: '전문적', '캐주얼', '유머러스') */
   tone?: string;
+  /** 화자 페르소나 — "누가" 1인칭으로 (카피 품질의 핵심) */
+  persona?: string;
+  /** 타겟 독자 — "누구에게" */
+  audience?: string;
+  /**
+   * 이 글의 각도/관점 — 같은 주제라도 매번 다른 시선으로.
+   * 예: "현장 실패담", "흔한 오해 바로잡기", "실전 체크리스트"
+   */
+  angle?: string;
+  /** 추천 콘텐츠 형식 (예: '카드뉴스', '롱폼 글') */
+  format?: string;
   /** 핵심 메시지/요점 */
   keyPoints?: string[];
   /** 목표 플랫폼 (플랫폼별 길이/형식 최적화에 사용) */
@@ -91,27 +102,40 @@ export class ContentPipeline {
   }
 }
 
-/** 프로바이더가 없을 때 사용하는 결정론적 템플릿 생성기 */
-function templateText(brief: ContentBrief): {
+/**
+ * 프로바이더가 없을 때 사용하는 결정론적 템플릿 생성기.
+ * AI 키 없이도 "초안 골격"은 갖추도록 — 후킹/본문/마무리 구조를 잡아 둔다.
+ * (진짜 전문가 카피는 ANTHROPIC_API_KEY 연결 시 Claude가 작성)
+ */
+export function templateText(brief: ContentBrief): {
   title: string;
   body: string;
   tags: string[];
 } {
-  const title = brief.topic;
+  const angleLabel = brief.angle ? brief.angle.split(' — ')[0] : '';
+  const hook = angleLabel
+    ? `${brief.topic}, ${angleLabel} 관점에서 풀어봅니다.`
+    : `${brief.topic} — 현장에서 자주 마주치는 이야기.`;
+  const lead = brief.audience
+    ? `${brief.audience}이라면 한 번쯤 부딪히는 지점이죠.`
+    : '실무에서 자주 부딪히는 지점을 짚어봅니다.';
   const points =
     brief.keyPoints && brief.keyPoints.length > 0
-      ? brief.keyPoints.map((p) => `• ${p}`).join('\n')
+      ? brief.keyPoints.map((p) => `· ${p}`).join('\n')
       : '';
-  const bodyParts = [
-    `${brief.topic}에 대해 이야기해 볼게요.`,
-    points,
-    brief.link ? `자세히 보기 → ${brief.link}` : '',
-  ].filter(Boolean);
+  const cta = brief.link
+    ? `자세히 보기 → ${brief.link}`
+    : '여러분의 경험은 어떤가요? 댓글로 남겨주세요.';
+  const body = [hook, lead, points, cta].filter(Boolean).join('\n\n');
 
   const tags = [
     ...brief.topic.split(/\s+/).filter((w) => w.length > 1),
+    ...(brief.keyPoints ?? []).slice(0, 2),
     brief.tone ?? 'pslab',
-  ].slice(0, 5);
+  ]
+    .map((t) => t.replace(/\s+/g, ''))
+    .filter(Boolean)
+    .slice(0, 6);
 
-  return { title, body: bodyParts.join('\n\n'), tags };
+  return { title: brief.topic, body, tags };
 }
