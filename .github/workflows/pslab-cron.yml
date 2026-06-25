@@ -68,6 +68,11 @@ jobs:
         continue-on-error: true
         run: node dist/cli.js cycle --client pslab
 
+      # 기획안 카드 렌더 (Chromium 없으면 자동 skip → 커밋된 카드 유지)
+      - name: 매거진 카드 렌더
+        continue-on-error: true
+        run: node scripts/render-cards.mjs --client pslab
+
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
@@ -79,7 +84,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards 2>/dev/null || true
           if ! git diff --cached --quiet; then
             git commit -m "chore(pslab): 사이클 이력·대시보드 갱신 [skip ci]"
             git push

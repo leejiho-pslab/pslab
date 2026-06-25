@@ -43,6 +43,11 @@ export interface ClientConfig {
   accounts?: Partial<Record<PlatformId, string>>;
   /** 발행 시간 (HH:mm, 24h) */
   scheduleTimes: string[];
+  /**
+   * 기획안 수동 큐레이션 모드. true면 오케스트레이터가 plan.json을
+   * 자동 생성으로 덮어쓰지 않는다 (검수 우선 운영 시 큐레이션 보존).
+   */
+  manualPlan?: boolean;
   /** 검수 스위치 초기값 */
   reviewMode: ReviewMode;
   /** 성적표 받을 곳 (이메일/메신저 식별자) */
@@ -88,6 +93,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     targets: c.targets!,
     accounts: c.accounts ?? {},
     scheduleTimes: c.scheduleTimes ?? ['11:00', '19:00'],
+    manualPlan: c.manualPlan ?? false,
     reviewMode: c.reviewMode!,
     reportTo: c.reportTo,
   };
@@ -108,6 +114,8 @@ export function loadClients(dir: string): ClientConfig[] {
   const out: ClientConfig[] = [];
   for (const file of readdirSync(dir)) {
     if (!file.endsWith('.json')) continue;
+    // 예시 템플릿(*.example.json)은 실제 클라이언트로 로드하지 않는다
+    if (file.endsWith('.example.json')) continue;
     try {
       out.push(loadClient(join(dir, file)));
     } catch (err) {

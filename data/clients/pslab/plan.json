@@ -1,77 +1,233 @@
 {
-  "updatedAt": "2026-06-25T13:39:51.130Z",
+  "updatedAt": "2026-06-25T14:00:00.000Z",
   "items": [
     {
-      "id": "plan_0_1782439200000",
-      "topic": "퍼포먼스마케팅",
-      "format": "롱폼 글",
+      "id": "w1-mon",
+      "topic": "광고대행",
+      "format": "카드뉴스",
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-06-26T02:00:00.000Z",
-      "score": 96,
+      "scheduledFor": "2026-06-29T10:00:00.000Z",
+      "score": 90,
       "status": "planned",
-      "rationale": "트렌드 강도 96"
+      "kicker": "Marketing Insight",
+      "headline": "광고비를 태우기 전에<br>반드시 점검할 *3가지*",
+      "sub": "15년간 대행하며 깨달은, 돈이 새는 지점부터 막는 법.",
+      "dayLabel": "월요일 · 인사이트",
+      "palette": "ink",
+      "captionNote": "타겟·소재·랜딩 점검 없이 예산부터 태우다 돈 새는 실제 사례 → 점검 체크리스트",
+      "rationale": "타겟·소재·랜딩 점검 없이 예산부터 태우다 돈 새는 실제 사례 → 점검 체크리스트",
+      "cardImage": "cards/pslab/w1-mon.png"
     },
     {
-      "id": "plan_1_1782468000000",
-      "topic": "창업인사이트",
-      "format": "릴스",
+      "id": "w1-wed",
+      "topic": "업계비하인드",
+      "format": "카드뉴스",
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-06-26T10:00:00.000Z",
-      "score": 96,
+      "scheduledFor": "2026-07-01T10:00:00.000Z",
+      "score": 89,
       "status": "planned",
-      "rationale": "트렌드 강도 96"
+      "kicker": "Agency Behind",
+      "headline": "대행사를 쓰면<br>매출이 오른다는 *착각*",
+      "sub": "대행이 할 수 있는 것과 없는 것, 솔직하게 말합니다.",
+      "dayLabel": "수요일 · 비하인드",
+      "palette": "ink",
+      "captionNote": "기대치 정렬이 안 되면 둘 다 실패하는 이유",
+      "rationale": "기대치 정렬이 안 되면 둘 다 실패하는 이유",
+      "cardImage": "cards/pslab/w1-wed.png"
     },
     {
-      "id": "plan_2_1782525600000",
+      "id": "w1-fri",
       "topic": "브랜딩",
       "format": "카드뉴스",
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-06-27T02:00:00.000Z",
+      "scheduledFor": "2026-07-03T10:00:00.000Z",
       "score": 88,
       "status": "planned",
-      "rationale": "트렌드 강도 88"
+      "kicker": "Brand Strategy",
+      "headline": "팔리는 브랜드는<br>‘무엇’이 아니라 *‘왜’*를 판다",
+      "sub": "작은 브랜드일수록 더 중요한 메시지 설계 이야기.",
+      "dayLabel": "금요일 · 브랜딩",
+      "palette": "ink",
+      "captionNote": "기능 나열 대신 왜 존재하는가를 판 작은 브랜드의 반전 사례",
+      "rationale": "기능 나열 대신 왜 존재하는가를 판 작은 브랜드의 반전 사례",
+      "cardImage": "cards/pslab/w1-fri.png"
     },
     {
-      "id": "plan_3_1782554400000",
-      "topic": "업계비하인드",
-      "format": "이미지 1장",
-      "channels": [
-        "instagram"
-      ],
-      "scheduledFor": "2026-06-27T10:00:00.000Z",
-      "score": 88,
-      "status": "planned",
-      "rationale": "트렌드 강도 88"
-    },
-    {
-      "id": "plan_4_1782612000000",
+      "id": "w2-mon",
       "topic": "마케팅전략",
-      "format": "릴스",
+      "format": "카드뉴스",
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-06-28T02:00:00.000Z",
+      "scheduledFor": "2026-07-06T10:00:00.000Z",
+      "score": 87,
+      "status": "planned",
+      "kicker": "Decision",
+      "headline": "이 광고, 꺼야 할까?<br>판단하는 *숫자 하나*",
+      "sub": "감으로 끄지 마세요. 손익분기 한 줄 계산법.",
+      "dayLabel": "월요일 · 의사결정",
+      "palette": "ink",
+      "captionNote": "CPA/ROAS 손익분기 계산으로 끌 광고 판단",
+      "rationale": "CPA/ROAS 손익분기 계산으로 끌 광고 판단",
+      "cardImage": "cards/pslab/w2-mon.png"
+    },
+    {
+      "id": "w2-wed",
+      "topic": "퍼포먼스마케팅",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-08T10:00:00.000Z",
+      "score": 86,
+      "status": "planned",
+      "kicker": "Ad Ops",
+      "headline": "클릭은 느는데<br>매출이 *안 느는 이유*",
+      "sub": "클릭은 구매가 아닙니다. 전환이 새는 지점.",
+      "dayLabel": "수요일 · 광고운영",
+      "palette": "ink",
+      "captionNote": "랜딩·오퍼·신뢰 요소에서 새는 전환 진단",
+      "rationale": "랜딩·오퍼·신뢰 요소에서 새는 전환 진단",
+      "cardImage": "cards/pslab/w2-wed.png"
+    },
+    {
+      "id": "w2-fri",
+      "topic": "창업인사이트",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-10T10:00:00.000Z",
+      "score": 85,
+      "status": "planned",
+      "kicker": "Startup",
+      "headline": "돈 없이 시작하는 마케팅,<br>*진짜 가능한가*",
+      "sub": "예산 0원부터 검증. 돈 쓰기 전에 할 것.",
+      "dayLabel": "금요일 · 창업",
+      "palette": "ink",
+      "captionNote": "저예산 검증 루틴",
+      "rationale": "저예산 검증 루틴",
+      "cardImage": "cards/pslab/w2-fri.png"
+    },
+    {
+      "id": "w3-mon",
+      "topic": "업계비하인드",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-13T10:00:00.000Z",
       "score": 84,
       "status": "planned",
-      "rationale": "트렌드 강도 84"
+      "kicker": "Agency Behind",
+      "headline": "대행사가 절대<br>먼저 *말 안 해주는 것*",
+      "sub": "수수료 구조와 계약 전 꼭 물어야 할 질문.",
+      "dayLabel": "월요일 · 비하인드",
+      "palette": "ink",
+      "captionNote": "수수료·리포트의 함정",
+      "rationale": "수수료·리포트의 함정",
+      "cardImage": "cards/pslab/w3-mon.png"
     },
     {
-      "id": "plan_5_1782640800000",
-      "topic": "마케팅인사이트",
-      "format": "짧은 영상",
+      "id": "w3-wed",
+      "topic": "브랜딩",
+      "format": "카드뉴스",
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-06-28T10:00:00.000Z",
-      "score": 74,
+      "scheduledFor": "2026-07-15T10:00:00.000Z",
+      "score": 83,
       "status": "planned",
-      "rationale": "트렌드 강도 64 · 과거 반응 좋았던 형식 '짧은 영상'(강화)"
+      "kicker": "Brand Strategy",
+      "headline": "후기가 10개도 없는데<br>*광고부터* 돌린다고?",
+      "sub": "신뢰 자산 없이 광고를 태우면 새는 이유.",
+      "dayLabel": "수요일 · 브랜딩",
+      "palette": "ink",
+      "captionNote": "후기·콘텐츠 신뢰자산 먼저",
+      "rationale": "후기·콘텐츠 신뢰자산 먼저",
+      "cardImage": "cards/pslab/w3-wed.png"
+    },
+    {
+      "id": "w3-fri",
+      "topic": "마케팅인사이트",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-17T10:00:00.000Z",
+      "score": 82,
+      "status": "planned",
+      "kicker": "Marketing Insight",
+      "headline": "트렌드를 좇다 망한<br>브랜드들의 *공통점*",
+      "sub": "유행 추종과 본질. 트렌드를 제대로 쓰는 법.",
+      "dayLabel": "금요일 · 인사이트",
+      "palette": "ink",
+      "captionNote": "트렌드 활용 원칙",
+      "rationale": "트렌드 활용 원칙",
+      "cardImage": "cards/pslab/w3-fri.png"
+    },
+    {
+      "id": "w4-mon",
+      "topic": "퍼포먼스마케팅",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-20T10:00:00.000Z",
+      "score": 81,
+      "status": "planned",
+      "kicker": "Ad Ops",
+      "headline": "예산의 *80%*를<br>어디에 써야 할까",
+      "sub": "테스트·확장·리타겟 배분 원칙.",
+      "dayLabel": "월요일 · 광고운영",
+      "palette": "ink",
+      "captionNote": "예산 배분 프레임",
+      "rationale": "예산 배분 프레임",
+      "cardImage": "cards/pslab/w4-mon.png"
+    },
+    {
+      "id": "w4-wed",
+      "topic": "마케팅전략",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-22T10:00:00.000Z",
+      "score": 80,
+      "status": "planned",
+      "kicker": "Decision",
+      "headline": "대행을 맡길 때<br>vs *직접 할 때*",
+      "sub": "규모·역량·시간으로 보는 판단표.",
+      "dayLabel": "수요일 · 의사결정",
+      "palette": "ink",
+      "captionNote": "인소싱 vs 아웃소싱 판단표",
+      "rationale": "인소싱 vs 아웃소싱 판단표",
+      "cardImage": "cards/pslab/w4-wed.png"
+    },
+    {
+      "id": "w4-fri",
+      "topic": "사업이야기",
+      "format": "카드뉴스",
+      "channels": [
+        "instagram"
+      ],
+      "scheduledFor": "2026-07-24T10:00:00.000Z",
+      "score": 79,
+      "status": "planned",
+      "kicker": "Growth",
+      "headline": "매출이 정체됐을 때<br>가장 먼저 보는 *지표*",
+      "sub": "신규획득과 재구매, 어디가 막혔는지 진단.",
+      "dayLabel": "금요일 · 성장",
+      "palette": "ink",
+      "captionNote": "성장 정체 진단 지표",
+      "rationale": "성장 정체 진단 지표",
+      "cardImage": "cards/pslab/w4-fri.png"
     }
   ]
 }

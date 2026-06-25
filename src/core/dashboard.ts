@@ -42,10 +42,21 @@ interface ChannelPublished {
   engagementRate: number;
 }
 
+interface PendingCard {
+  topic: string;
+  format: string;
+  scheduledFor: string;
+  kicker?: string;
+  headline?: string;
+  dayLabel?: string;
+  cardImage?: string;
+  captionNote?: string;
+}
+
 function buildChannel(
   client: ClientConfig,
   history: CycleRecord[],
-  pendingItems: Array<{ topic: string; format: string; scheduledFor: string }>,
+  pendingItems: PendingCard[],
   key: PlatformId,
 ) {
   const published: ChannelPublished[] = [];
@@ -150,16 +161,26 @@ function buildClientData(
   const plan = planStore.load(client.id);
   const heldCount = history.filter((h) => !h.published && h.review?.pending).length;
 
+  const toCard = (it: (typeof plan.items)[number]): PendingCard => ({
+    topic: it.topic,
+    format: it.format,
+    scheduledFor: it.scheduledFor,
+    kicker: it.kicker,
+    headline: it.headline,
+    dayLabel: it.dayLabel,
+    cardImage: it.cardImage,
+    captionNote: it.captionNote,
+  });
+
   const channels = CHANNELS.map((c) => {
-    const pending = plan.items
-      .filter((it) => it.channels.includes(c.key))
-      .map((it) => ({
-        topic: it.topic,
-        format: it.format,
-        scheduledFor: it.scheduledFor,
-      }));
+    const pending = plan.items.filter((it) => it.channels.includes(c.key)).map(toCard);
     return { ...c, ...buildChannel(client, history, pending, c.key) };
   });
+
+  // 클라이언트 전체 기획안(발행 예정순) — '전체' 탭에서 한눈에
+  const planCards = plan.items
+    .map(toCard)
+    .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
   const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
   const blog = buildBlog(client, blogChannel.published as ChannelPublished[]);
@@ -184,6 +205,8 @@ function buildClientData(
     heldCount,
     totalCycles: history.length,
     totalPublished: history.filter((h) => h.published).length,
+    planUpdatedAt: plan.updatedAt,
+    planCards,
     channels,
     blog,
   };
@@ -299,10 +322,13 @@ function publishedCard(p, badge){
     '<div>'+link+'</div></div></div>';
 }
 function planCard(client, chLabel, it){
-  const t='['+client.name+'/'+chLabel+'] 콘텐츠 수정요청: '+it.topic;
-  const b='예정 콘텐츠에 대한 수정/방향 요청을 남겨주세요.\\n\\n- 주제: '+it.topic+'\\n- 형식: '+it.format+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n\\n수정 요청: ';
-  return '<div class="card"><div class="cbody"><div class="ctop"><strong>'+esc(it.topic)+'</strong><span class="badge b-plan">예정</span></div>'+
-    '<div class="muted">🗓 '+ftime(it.scheduledFor)+' · '+esc(it.format)+'</div>'+
+  const t='['+client.name+'/'+chLabel+'] 콘텐츠 수정요청: '+(it.headline?it.headline.replace(/[*<].*/,''):it.topic);
+  const b='예정 콘텐츠에 대한 수정/방향 요청을 남겨주세요.\\n\\n- 주제: '+it.topic+'\\n- 헤드라인: '+(it.headline||'').replace(/<br>/g,' ').replace(/\\*/g,'')+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n\\n수정 요청: ';
+  const img=it.cardImage?'<img class="thumb" src="'+esc(it.cardImage)+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
+  const head=it.headline?esc(it.headline.replace(/<br>/g,' ').replace(/\\*/g,'')):esc(it.topic);
+  return '<div class="card">'+img+'<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
+    '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
+    (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
     '<div style="margin-top:auto"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a></div></div></div>';
 }
 function channelDetail(client, c){
@@ -363,11 +389,17 @@ function overview(client){
   h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th></tr>'+
     client.channels.map(c=>{const lab=(DATA.channels.find(x=>x.key===c.key)||{});
       return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td></tr>';}).join('')+'</table></div>';
+  // 이번 달 콘텐츠 기획안 (카드 미리보기)
+  const plan=client.planCards||[];
+  const fbTitle='['+client.name+'] 기획안 전체 피드백';
+  const fbBody='이번 달 기획안(주 3회 매거진 카드)에 대한 의견/수정사항을 적어주세요.\\n\\n';
+  h+='<div class="sect-h"><h2>📅 이번 달 콘텐츠 기획안 ('+plan.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
+  h+= plan.length?'<div class="cards">'+plan.map(p=>planCard(client,'인스타그램',p)).join('')+'</div>':'<div class="empty">기획안이 아직 없습니다.</div>';
   // 경쟁사 + 최근 발행 미리보기
-  h+='<div class="panel"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
+  h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
   const recent=[].concat(...client.channels.map(c=>c.published)).sort((a,b)=>(b.time||'').localeCompare(a.time||'')).slice(0,8);
-  h+='<div class="sect-h"><h2>최근 발행</h2></div>';
-  h+= recent.length?'<div class="cards">'+recent.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')).join('')+'</div>':'<div class="empty">아직 발행된 콘텐츠가 없습니다.</div>';
+  h+='<div class="sect-h"><h2>✅ 최근 발행</h2></div>';
+  h+= recent.length?'<div class="cards">'+recent.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')).join('')+'</div>':'<div class="empty">아직 발행된 콘텐츠가 없습니다. (검수 우선 — 승인 후 발행)</div>';
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}

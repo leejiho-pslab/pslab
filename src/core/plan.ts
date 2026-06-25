@@ -24,8 +24,22 @@ export interface PlanItem {
   /** 발행 예정 시각 (ISO) */
   scheduledFor: string;
   score: number;
-  status: 'planned';
+  status: 'planned' | 'approved' | 'published';
   rationale?: string;
+  /** 매거진 카드 상단 라벨 (예: "Marketing Insight") */
+  kicker?: string;
+  /** 카드 헤드라인 (강조어는 *별표*로 감싼다: "점검할 *3가지*") */
+  headline?: string;
+  /** 카드 보조 문구 */
+  sub?: string;
+  /** 카드 하단 라벨 (예: "월요일 · 인사이트") */
+  dayLabel?: string;
+  /** 카드 팔레트 키 (ink/paper/forest) */
+  palette?: string;
+  /** 렌더된 카드 이미지 경로 (대시보드 상대 경로, 예: cards/pslab/xxx.png) */
+  cardImage?: string;
+  /** 캡션(본문) 방향 메모 */
+  captionNote?: string;
 }
 
 export interface ContentPlan {
