@@ -91,8 +91,8 @@ export class Orchestrator {
     const content = await this.deps.content.generate({
       topic: pick.topic,
       tone: client.brandTone,
-      keyPoints: [`추천 형식: ${pick.suggestedFormat}`, pick.rationale],
-      // 나노바나나는 이미지 생성 → 항상 이미지 1장 (영상 형식도 썸네일 톤으로)
+      // 내부 메타(추천 형식/근거)는 캡션에 넣지 않는다 (공개 게시물 품질 보호).
+      // 형식 힌트는 이미지 프롬프트(imagePrompt)에만 반영된다.
       media: [{ kind: 'image', prompt: imagePrompt }],
     });
 
