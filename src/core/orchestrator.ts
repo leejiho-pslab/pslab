@@ -16,6 +16,7 @@ import { Council, type Direction } from './council.js';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { AlertHub } from './alerts.js';
 import type { DesignStudio, DesignStore, DesignStyle } from './design.js';
+import type { PlatformId } from './types.js';
 import { createLogger } from './logger.js';
 
 const log = createLogger('orchestrator');
@@ -32,6 +33,14 @@ export interface CycleRecord {
   publishSummary?: { ok: number; total: number };
   avgEngagementRate: number;
   direction: Pick<Direction, 'focusTopics' | 'focusFormats' | 'rationale'>;
+  /** 생성된 캡션(글) */
+  caption?: string;
+  /** 생성·호스팅된 대표 이미지 URL */
+  imageUrl?: string;
+  /** 채널별 발행 결과 */
+  posts?: Array<{ platform: PlatformId; ok: boolean; url?: string; error?: string }>;
+  /** 사용된 디자인 스타일 버전 */
+  designVersion?: number;
 }
 
 export interface OrchestratorDeps {
@@ -176,6 +185,17 @@ export class Orchestrator {
         focusFormats: direction.focusFormats,
         rationale: direction.rationale,
       },
+      caption: content.body,
+      imageUrl: content.media?.find(
+        (m) => m.kind === 'image' || m.kind === 'video',
+      )?.source,
+      posts: publish?.results.map((r) => ({
+        platform: r.platform,
+        ok: r.ok,
+        url: r.url,
+        error: r.error,
+      })),
+      designVersion: designStyle?.version,
     };
 
     // 7) 격리 저장소에 이력 적재 (다음 사이클 강화 재료)

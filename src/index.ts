@@ -56,6 +56,7 @@ export { AutomationDaemon } from './core/daemon.js';
 export type { DaemonOptions } from './core/daemon.js';
 export { StatusBoard } from './core/board.js';
 export type { Board, ClientBoardRow } from './core/board.js';
+export { renderDashboard } from './core/dashboard.js';
 export {
   ClaudeTextProvider,
   PollinationsImageGenerator,
