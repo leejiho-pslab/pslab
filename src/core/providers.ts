@@ -132,9 +132,11 @@ export function createTextProvider(): TextProvider | undefined {
 }
 
 // ──────────────────────────────────────────────────────────────
-// 이미지 생성 (Gemini 나노바나나) + 공개 URL 호스팅
+// 이미지 생성 (무료 Pollinations 기본 / Gemini 선택) + 공개 URL 호스팅
 // ──────────────────────────────────────────────────────────────
 
+const IMAGE_W = Number(process.env.PSLAB_IMAGE_WIDTH ?? 1080);
+const IMAGE_H = Number(process.env.PSLAB_IMAGE_HEIGHT ?? 1080);
 const GEMINI_IMAGE_MODEL =
   process.env.PSLAB_GEMINI_IMAGE_MODEL ?? 'gemini-2.5-flash-image';
 
@@ -165,24 +167,45 @@ export class ImgbbImageHost implements ImageHost {
   }
 }
 
-/**
- * Gemini(나노바나나) 이미지 생성 프로바이더.
- * 프롬프트 → 이미지 바이트 → 호스트 업로드 → 공개 URL의 MediaAsset.
- */
-export class GeminiImageProvider implements MediaProvider {
-  constructor(
-    private readonly opts: { apiKey: string; host: ImageHost; model?: string },
-  ) {}
+/** 이미지 생성기 — 프롬프트 → 이미지 바이트(base64). */
+export interface ImageGenerator {
+  generate(prompt: string): Promise<{ base64: string; mime: string }>;
+}
 
-  async generate(request: MediaRequest): Promise<MediaAsset> {
+/**
+ * Pollinations.ai 이미지 생성 — **완전 무료, API 키 불필요** (Flux 모델).
+ * 기본 이미지 생성기.
+ */
+export class PollinationsImageGenerator implements ImageGenerator {
+  constructor(private readonly opts: { model?: string } = {}) {}
+
+  async generate(prompt: string): Promise<{ base64: string; mime: string }> {
+    const model = this.opts.model ?? process.env.PSLAB_POLLINATIONS_MODEL ?? 'flux';
+    const seed = Date.now() % 1_000_000;
+    const url =
+      `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}` +
+      `?width=${IMAGE_W}&height=${IMAGE_H}&nologo=true&model=${model}&seed=${seed}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`Pollinations 생성 실패: ${res.status}`);
+    }
+    const buf = Buffer.from(await res.arrayBuffer());
+    const mime = res.headers.get('content-type') ?? 'image/jpeg';
+    return { base64: buf.toString('base64'), mime };
+  }
+}
+
+/** Gemini(나노바나나) 이미지 생성 — 유료(빌링 필요). 선택 시 사용. */
+export class GeminiImageGenerator implements ImageGenerator {
+  constructor(private readonly opts: { apiKey: string; model?: string }) {}
+
+  async generate(prompt: string): Promise<{ base64: string; mime: string }> {
     const model = this.opts.model ?? GEMINI_IMAGE_MODEL;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.opts.apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: request.prompt }] }],
-      }),
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
     });
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -190,20 +213,32 @@ export class GeminiImageProvider implements MediaProvider {
     }
     const parts: any[] = json?.candidates?.[0]?.content?.parts ?? [];
     const imgPart = parts.find((p) => p.inlineData?.data);
-    if (!imgPart) {
-      throw new Error('Gemini 응답에 이미지가 없습니다.');
-    }
-    const base64: string = imgPart.inlineData.data;
-    const mime: string = imgPart.inlineData.mimeType ?? 'image/png';
-    const ext = mime.includes('jpeg') ? 'jpg' : 'png';
-    const publicUrl = await this.opts.host.host(base64, {
+    if (!imgPart) throw new Error('Gemini 응답에 이미지가 없습니다.');
+    return {
+      base64: imgPart.inlineData.data,
+      mime: imgPart.inlineData.mimeType ?? 'image/png',
+    };
+  }
+}
+
+/** 생성기 + 호스트를 조합한 미디어 프로바이더. */
+export class HostedImageProvider implements MediaProvider {
+  constructor(
+    private readonly generator: ImageGenerator,
+    private readonly host: ImageHost,
+  ) {}
+
+  async generate(request: MediaRequest): Promise<MediaAsset> {
+    const { base64, mime } = await this.generator.generate(request.prompt);
+    const ext = mime.includes('png') ? 'png' : 'jpg';
+    const url = await this.host.host(base64, {
       filename: `pslab-${Date.now()}.${ext}`,
       mime,
     });
-    log.info(`이미지 생성·호스팅 완료 → ${publicUrl}`);
+    log.info(`이미지 생성·호스팅 완료 → ${url}`);
     return {
-      kind: request.kind === 'video' ? 'image' : request.kind, // 나노바나나는 이미지
-      source: publicUrl,
+      kind: request.kind === 'video' ? 'image' : request.kind,
+      source: url,
       alt: request.prompt.slice(0, 100),
       mimeType: mime,
     };
@@ -218,20 +253,34 @@ export function createImageHost(): ImageHost | undefined {
 }
 
 /**
- * 이미지 생성 프로바이더를 만든다.
- * GEMINI_API_KEY + 이미지 호스트(IMGBB_API_KEY)가 모두 있어야 활성화.
- * 하나라도 없으면 undefined → 플레이스홀더 폴백.
+ * 이미지 생성기를 만든다.
+ * 기본은 **무료 Pollinations**. PSLAB_IMAGE_GEN=gemini + GEMINI_API_KEY면 Gemini.
+ * PSLAB_IMAGE_GEN=none이면 이미지 생성 끔.
+ */
+export function createImageGenerator(): ImageGenerator | undefined {
+  const mode = process.env.PSLAB_IMAGE_GEN;
+  if (mode === 'none') return undefined;
+  if (mode === 'gemini' && process.env.GEMINI_API_KEY) {
+    return new GeminiImageGenerator({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return new PollinationsImageGenerator(); // 무료 기본
+}
+
+/**
+ * 이미지 미디어 프로바이더를 만든다.
+ * 이미지 생성기(기본 무료) + 호스트(IMGBB_API_KEY)가 있어야 활성화.
+ * 호스트가 없으면 undefined → 플레이스홀더 폴백.
  */
 export function createMediaProvider(): MediaProvider | undefined {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return undefined;
+  const generator = createImageGenerator();
+  if (!generator) return undefined;
   const host = createImageHost();
   if (!host) {
-    log.warn('GEMINI_API_KEY는 있으나 이미지 호스트(IMGBB_API_KEY)가 없어 이미지 생성 비활성화');
+    log.warn('이미지 호스트(IMGBB_API_KEY)가 없어 이미지 생성 비활성화');
     return undefined;
   }
-  log.info(`Gemini 이미지 생성 활성화 (모델: ${GEMINI_IMAGE_MODEL})`);
-  return new GeminiImageProvider({ apiKey, host });
+  log.info(`이미지 생성 활성화 (${generator.constructor.name})`);
+  return new HostedImageProvider(generator, host);
 }
 
 export type { MediaAsset };

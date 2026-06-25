@@ -58,13 +58,16 @@ export { StatusBoard } from './core/board.js';
 export type { Board, ClientBoardRow } from './core/board.js';
 export {
   ClaudeTextProvider,
-  GeminiImageProvider,
+  PollinationsImageGenerator,
+  GeminiImageGenerator,
+  HostedImageProvider,
   ImgbbImageHost,
   createTextProvider,
   createMediaProvider,
   createImageHost,
+  createImageGenerator,
 } from './core/providers.js';
-export type { ImageHost } from './core/providers.js';
+export type { ImageHost, ImageGenerator } from './core/providers.js';
 export { DesignStudio, DesignStore, defaultDesignStyle } from './core/design.js';
 export type { DesignStyle } from './core/design.js';
 export {
