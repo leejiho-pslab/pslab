@@ -4,6 +4,9 @@
 러너는 외부 통신이 열려 있어** cafe24/Meta/Naver/Kakao 호출이 정상 동작합니다.
 아래 순서로 설정하면 매일 자동으로 실데이터가 쌓입니다.
 
+> **현재 활성화 대상: 카페24 · 네이버 검색광고(SA) · 메타** (카카오·구글은 추후)
+> 이 3채널 커넥터는 스펙 검증·보강 완료(필드/엔드포인트/토큰회전). 발급 절차는 맨 아래 부록 참고.
+
 ```
 [GitHub Actions(매일)] --실수집--> [무료 Postgres] <--읽기-- [대시보드/API]
 ```
@@ -94,3 +97,42 @@ DATABASE_URL="postgresql://..." uvicorn api.main:app
 
 > Kakao/Google 은 액세스 토큰이 짧게 만료됩니다. 우선 cafe24·Meta·Naver 로 안정 운영하고,
 > Kakao/Google 리프레시 자동화가 필요하면 알려주세요(커넥터에 추가 가능).
+
+---
+
+# 부록 — 활성 3채널 정확한 발급 절차
+
+## A. 카페24 (✓ 정보 확보됨)
+- `CAFE24_MALL_ID=coversomeone1`, `CAFE24_CLIENT_ID`, `CAFE24_CLIENT_SECRET` 확보.
+- 남은 건 **최초 토큰 발급**(STEP 3) 한 번. 이후 access(2h)/refresh(2주) 회전은 DB가 자동 보존.
+- 수집 지표: 매출(gross_sales)·주문수·객단가·신규가입. (방문자/전환율은 `CAFE24_VISITORS_PATH` 지정 시)
+
+## B. 네이버 검색광고(SA)
+검색광고는 **3개 값 모두 콘솔에서 바로 복사**(발급형 토큰 없음 → 가장 쉬움):
+1. **searchad.naver.com** 로그인 → 우상단 **도구 → API 사용 관리**
+2. `네이버 검색광고 API` → **액세스 라이선스 발급** → 아래 3개 복사:
+   - `NAVER_SA_API_KEY` (액세스 라이선스)
+   - `NAVER_SA_SECRET_KEY` (비밀키 — 발급 시 1회 노출, 꼭 저장)
+   - `NAVER_SA_CUSTOMER_ID` (계정 우상단의 CUSTOMER_ID 숫자)
+- 커넥터: 캠페인 목록 → /stats 로 노출·클릭·광고비·전환·전환매출 집계(100개 단위 청크).
+
+## C. 메타 (광고계정 ID = 1513093573064263 확보, 토큰만 남음)
+**시스템 사용자 토큰(장수명)** 발급 — 무인 운영에 최적:
+1. **business.facebook.com/settings** (Coversomeone Corporation 비즈니스)
+2. 좌측 **사용자 → 시스템 사용자** → 없으면 **추가**(이름 아무거나, 역할 관리자/직원)
+3. 만든 시스템 사용자 선택 → **자산 할당** → 광고계정 **keek2** 에 권한 부여(관리/보기)
+4. **앱 할당**: 앱이 없으면 developers.facebook.com 에서 앱 1개 생성 후 이 비즈니스에 연결
+5. **토큰 생성(Generate token)** → 앱 선택 → 권한 **`ads_read`** 체크 → 생성
+6. 나온 토큰을 `META_ACCESS_TOKEN` Secret 에, `META_AD_ACCOUNT_ID=1513093573064263`
+- 커넥터: act_계정/insights(level=account)로 spend·impressions·clicks·구매전환·전환매출.
+  (구매 전환은 omni_purchase→pixel 순으로 인식)
+
+---
+
+## 이 3채널만 켜고 시작하기 (체크리스트)
+- [ ] 무료 Postgres → `DATABASE_URL`
+- [ ] GitHub Secrets: `DATABASE_URL`, `CAFE24_MALL_ID/CLIENT_ID/CLIENT_SECRET`,
+      `NAVER_SA_API_KEY/SECRET_KEY/CUSTOMER_ID`, `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`
+- [ ] 카페24 최초 토큰 발급(로컬 `cafe24_auth.py --to-db` 또는 부트스트랩 워크플로)
+- [ ] 워크플로를 main 에 머지 → Actions → Run workflow(`days: 14` 백필)
+- [ ] 대시보드를 같은 `DATABASE_URL` 로 띄워 확인

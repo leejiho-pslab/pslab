@@ -16,11 +16,24 @@ META_API_VERSION = "v21.0"
 META_BASE = "https://graph.facebook.com"
 
 
-def _action_value(items, action_type: str) -> float:
-    for it in items or []:
-        if it.get("action_type") == action_type:
+# 구매 전환은 픽셀/온사이트/통합 등 여러 action_type 으로 옵니다. 우선순위대로 첫 값 사용
+# (합산하면 중복 카운트 위험). omni_purchase 가 Meta 권장 통합 지표.
+PURCHASE_ACTION_TYPES = (
+    "omni_purchase",
+    "purchase",
+    "offsite_conversion.fb_pixel_purchase",
+    "onsite_web_purchase",
+)
+
+
+def _action_value(items, action_types) -> float:
+    if isinstance(action_types, str):
+        action_types = (action_types,)
+    index = {it.get("action_type"): it.get("value") for it in (items or [])}
+    for at in action_types:
+        if at in index:
             try:
-                return float(it.get("value", 0) or 0)
+                return float(index[at] or 0)
             except (TypeError, ValueError):
                 return 0.0
     return 0.0
@@ -36,8 +49,8 @@ def meta_insights_to_facts(date: str, raw: dict) -> list[dict]:
         "ad_cost": float(d.get("spend", 0) or 0),
         "impressions": float(d.get("impressions", 0) or 0),
         "clicks": float(d.get("clicks", 0) or 0),
-        "conversions": _action_value(d.get("actions"), "purchase"),
-        "ad_sales": _action_value(d.get("action_values"), "purchase"),
+        "conversions": _action_value(d.get("actions"), PURCHASE_ACTION_TYPES),
+        "ad_sales": _action_value(d.get("action_values"), PURCHASE_ACTION_TYPES),
     }
     return [
         {"date": date, "source": "ads", "metric": k, "value": v, "dims": {"channel": "meta"}}
@@ -55,7 +68,8 @@ class MetaAdsClient:
         version: str = META_API_VERSION,
         timeout: float = 30.0,
     ):
-        self.account_id = account_id
+        # 경로에서 act_ 를 붙이므로, 입력에 act_ 가 있어도 중복되지 않게 제거
+        self.account_id = str(account_id).removeprefix("act_")
         self.access_token = access_token
         self.version = version
         self._http = httpx.Client(base_url=base_url, transport=transport, timeout=timeout)

@@ -93,8 +93,9 @@ class NaverSearchAdClient:
         return [c.get("nccCampaignId") for c in items if c.get("nccCampaignId")]
 
     def stats(self, ids: list[str], date: str) -> dict:
+        # ids 는 배열(반복 파라미터)로 전송해야 함 — 콤마 결합은 '잘못된 파라미터 형식' 오류.
         params = {
-            "ids": ",".join(ids),
+            "ids": list(ids),
             "fields": json.dumps(["impCnt", "clkCnt", "salesAmt", "ccnt", "convAmt"]),
             "timeRange": json.dumps({"since": date, "until": date}),
         }
@@ -104,7 +105,11 @@ class NaverSearchAdClient:
         ids = self.list_campaign_ids()
         if not ids:
             return []
-        return naver_sa_to_facts(date, self.stats(ids, date))
+        # /stats 는 한 번에 최대 100개 id → 청크로 나눠 호출 후 합산
+        data: list[dict] = []
+        for i in range(0, len(ids), 100):
+            data += (self.stats(ids[i:i + 100], date).get("data") or [])
+        return naver_sa_to_facts(date, {"data": data})
 
     def close(self) -> None:
         self._http.close()

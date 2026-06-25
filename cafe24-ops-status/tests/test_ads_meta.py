@@ -31,6 +31,38 @@ def test_meta_mapping_empty():
     assert meta_insights_to_facts("2026-06-17", {}) == []
 
 
+def test_meta_purchase_action_type_priority():
+    # omni_purchase 우선, 픽셀 전환만 있으면 그걸 사용 (합산 아님)
+    raw_omni = {"data": [{
+        "actions": [{"action_type": "offsite_conversion.fb_pixel_purchase", "value": "10"},
+                    {"action_type": "omni_purchase", "value": "12"}],
+        "action_values": [{"action_type": "omni_purchase", "value": "300000"}],
+    }]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-06-17", raw_omni)}
+    assert f["conversions"] == 12.0 and f["ad_sales"] == 300000.0   # omni 우선
+
+    raw_pixel = {"data": [{
+        "actions": [{"action_type": "offsite_conversion.fb_pixel_purchase", "value": "7"}],
+        "action_values": [{"action_type": "offsite_conversion.fb_pixel_purchase", "value": "90000"}],
+    }]}
+    f2 = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-06-17", raw_pixel)}
+    assert f2["conversions"] == 7.0 and f2["ad_sales"] == 90000.0   # 픽셀 폴백
+
+
+def test_meta_strips_act_prefix():
+    seen = {}
+
+    def handler(req):
+        seen["path"] = req.url.path
+        return httpx.Response(200, json=SAMPLE)
+
+    # 입력에 act_ 가 있어도 경로는 act_123 한 번만
+    client = MetaAdsClient("act_123", "tok", transport=httpx.MockTransport(handler))
+    client.fetch_facts("2026-06-17")
+    assert "/act_123/insights" in seen["path"] and "act_act_" not in seen["path"]
+    client.close()
+
+
 def test_meta_client_fetch_with_mock_transport():
     def handler(req):
         assert "/act_123/insights" in req.url.path

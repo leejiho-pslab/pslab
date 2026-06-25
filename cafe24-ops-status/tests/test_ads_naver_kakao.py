@@ -27,6 +27,8 @@ def test_naver_sa_client_flow():
         if req.url.path == "/ncc/campaigns":
             return httpx.Response(200, json=[{"nccCampaignId": "cmp-1"}])
         if req.url.path == "/stats":
+            # ids 는 배열(반복 파라미터)로 와야 함
+            assert req.url.params.get_list("ids") == ["cmp-1"]
             return httpx.Response(200, json={"data": [{"impCnt": "100", "clkCnt": "5", "salesAmt": "1000", "ccnt": "1", "convAmt": "5000"}]})
         return httpx.Response(404)
 
@@ -34,6 +36,27 @@ def test_naver_sa_client_flow():
                             transport=httpx.MockTransport(handler))
     facts = {x["metric"]: x["value"] for x in c.fetch_facts("2026-06-17")}
     assert facts["ad_cost"] == 1000.0 and facts["ad_sales"] == 5000.0
+    c.close()
+
+
+def test_naver_sa_chunks_over_100_ids():
+    calls = {"stats": 0}
+
+    def handler(req):
+        if req.url.path == "/ncc/campaigns":
+            return httpx.Response(200, json=[{"nccCampaignId": f"c{i}"} for i in range(150)])
+        if req.url.path == "/stats":
+            calls["stats"] += 1
+            n = len(req.url.params.get_list("ids"))
+            assert n <= 100
+            return httpx.Response(200, json={"data": [{"salesAmt": "10", "convAmt": "0"}]})
+        return httpx.Response(404)
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    facts = {x["metric"]: x["value"] for x in c.fetch_facts("2026-06-17")}
+    assert calls["stats"] == 2            # 150개 → 100 + 50 두 번 호출
+    assert facts["ad_cost"] == 20.0       # 10 + 10 합산
     c.close()
 
 
