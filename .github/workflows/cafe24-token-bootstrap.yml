@@ -1,0 +1,52 @@
+name: cafe24 token bootstrap
+
+# 카페24 OAuth 인가코드(code)를 access/refresh 토큰으로 교환해 DB(app_kv)에 영속화한다.
+# 일일 수집은 이 DB 토큰을 읽어 쓰고, 만료 시 자동 갱신해 회전 토큰을 다시 DB에 저장한다.
+#
+# 사용법:
+#  1) 브라우저에서 인가 URL 승인 → 리다이렉트 주소창의 code= 값 복사
+#     (인가 URL 은 로컬에서 `python scripts/cafe24_auth.py --authorize ...` 로 생성)
+#  2) Actions → 이 워크플로 → Run workflow → code / redirect_uri 입력해 실행
+#
+# ⚠ 카페24 인가코드는 발급 후 ~1분 만료. CI 콜드스타트가 느리면 실패할 수 있으니,
+#   그 경우 로컬에서 동일 작업을 하세요(GITHUB-ACTIONS.md 참고):
+#     DATABASE_URL=... python scripts/cafe24_auth.py --code <code> --redirect-uri <uri> --to-db
+#
+# 필요한 Secrets: DATABASE_URL, CAFE24_MALL_ID, CAFE24_CLIENT_ID, CAFE24_CLIENT_SECRET
+
+on:
+  workflow_dispatch:
+    inputs:
+      code:
+        description: "카페24 인가코드(code= 값)"
+        required: true
+      redirect_uri:
+        description: "앱에 등록한 Redirect URI"
+        required: true
+        default: "https://coversomeone1.cafe24.com/"
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install minimal deps (속도 위해 핵심만)
+        run: pip install "httpx>=0.27" "psycopg[binary]>=3.1" PyYAML
+      - name: Exchange code → tokens → DB
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+        run: |
+          python scripts/cafe24_auth.py \
+            --code "${{ github.event.inputs.code }}" \
+            --redirect-uri "${{ github.event.inputs.redirect_uri }}" \
+            --to-db

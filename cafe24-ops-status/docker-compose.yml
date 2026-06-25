@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    image: cafe24-ops-status
+    ports:
+      - "8000:8000"
+    environment:
+      # mock(기본) | live — live 시 아래 자격증명 필요
+      CAFE24_OPS_MODE: ${CAFE24_OPS_MODE:-mock}
+      CAFE24_MALL_ID: ${CAFE24_MALL_ID:-}
+      CAFE24_ACCESS_TOKEN: ${CAFE24_ACCESS_TOKEN:-}
+      CAFE24_REFRESH_TOKEN: ${CAFE24_REFRESH_TOKEN:-}
+      CAFE24_CLIENT_ID: ${CAFE24_CLIENT_ID:-}
+      CAFE24_CLIENT_SECRET: ${CAFE24_CLIENT_SECRET:-}
+      SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL:-}
+    volumes:
+      - ./store:/app/store # 수집 데이터/DB 영속화
