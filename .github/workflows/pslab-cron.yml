@@ -1,0 +1,81 @@
+name: pslab autopilot
+
+# 한국시간 11:00 / 19:00 에 자동 실행 (GitHub cron은 UTC 기준 → KST-9)
+on:
+  schedule:
+    - cron: '0 2 * * *'    # 02:00 UTC = 11:00 KST
+    - cron: '0 10 * * *'   # 10:00 UTC = 19:00 KST
+  workflow_dispatch: {}     # 저장소에서 수동 실행 버튼
+
+permissions:
+  contents: write           # 사이클 이력(data/) 커밋·푸시용
+
+concurrency:
+  group: pslab-autopilot
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+      # 안전장치: 기본은 시뮬레이션. 실제 발행하려면 저장소 Variables에
+      # PSLAB_DRY_RUN=false 를 추가하세요 (Settings → Variables → Actions).
+      PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'true' }}
+      PSLAB_LOG_LEVEL: info
+      # --- AI 글 생성 ---
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      PSLAB_CLAUDE_MODEL: ${{ vars.PSLAB_CLAUDE_MODEL || 'claude-opus-4-8' }}
+      # --- AI 이미지 생성 (Gemini 나노바나나 + imgbb 호스팅) ---
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+      PSLAB_GEMINI_IMAGE_MODEL: ${{ vars.PSLAB_GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image' }}
+      # --- Instagram ---
+      PSLAB_INSTAGRAM_ACCESS_TOKEN: ${{ secrets.PSLAB_INSTAGRAM_ACCESS_TOKEN }}
+      PSLAB_INSTAGRAM_IG_USER_ID: ${{ secrets.PSLAB_INSTAGRAM_IG_USER_ID }}
+      # --- Threads ---
+      PSLAB_THREADS_ACCESS_TOKEN: ${{ secrets.PSLAB_THREADS_ACCESS_TOKEN }}
+      PSLAB_THREADS_THREADS_USER_ID: ${{ secrets.PSLAB_THREADS_THREADS_USER_ID }}
+      # --- 네이버 블로그 ---
+      PSLAB_NAVER_BLOG_CLIENT_ID: ${{ secrets.PSLAB_NAVER_BLOG_CLIENT_ID }}
+      PSLAB_NAVER_BLOG_CLIENT_SECRET: ${{ secrets.PSLAB_NAVER_BLOG_CLIENT_SECRET }}
+      PSLAB_NAVER_BLOG_ACCESS_TOKEN: ${{ secrets.PSLAB_NAVER_BLOG_ACCESS_TOKEN }}
+      PSLAB_NAVER_BLOG_BLOG_ID: ${{ secrets.PSLAB_NAVER_BLOG_BLOG_ID }}
+      # --- YouTube ---
+      PSLAB_YOUTUBE_CLIENT_ID: ${{ secrets.PSLAB_YOUTUBE_CLIENT_ID }}
+      PSLAB_YOUTUBE_CLIENT_SECRET: ${{ secrets.PSLAB_YOUTUBE_CLIENT_SECRET }}
+      PSLAB_YOUTUBE_REFRESH_TOKEN: ${{ secrets.PSLAB_YOUTUBE_REFRESH_TOKEN }}
+      PSLAB_YOUTUBE_CHANNEL_ID: ${{ secrets.PSLAB_YOUTUBE_CHANNEL_ID }}
+      # --- LinkedIn ---
+      PSLAB_LINKEDIN_ACCESS_TOKEN: ${{ secrets.PSLAB_LINKEDIN_ACCESS_TOKEN }}
+      PSLAB_LINKEDIN_AUTHOR_URN: ${{ secrets.PSLAB_LINKEDIN_AUTHOR_URN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 의존성 설치 + 빌드
+        run: |
+          npm ci
+          npm run build
+
+      - name: 사이클 실행 (조사→제작→검수→발행→회의)
+        run: node dist/cli.js cycle --client pslab
+
+      - name: 상황판 출력
+        run: node dist/cli.js board
+
+      - name: 사이클 이력 보존 (강화 학습 기록)
+        run: |
+          git config user.name "pslab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f data/ 2>/dev/null || true
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(pslab): 사이클 이력 갱신 [skip ci]"
+            git push
+          else
+            echo "변경된 이력 없음"
+          fi
