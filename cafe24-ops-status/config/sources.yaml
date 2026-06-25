@@ -3,7 +3,7 @@
 
 shop:
   platform: cafe24
-  mall_id: keek          # ← 실제 카페24 mall_id 로 교체
+  mall_id: coversomeone1   # 실제 카페24 mall_id (App URL: coversomeone1.cafe24.com)
   brand: keek
 
 ads:
