@@ -30,5 +30,37 @@
       ],
       "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
     }
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-25T12:17:11.783Z",
+    "finishedAt": "2026-06-25T12:17:13.977Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": true,
+      "pending": false,
+      "reviewer": "rules",
+      "reason": "규칙 검사 통과",
+      "flags": []
+    },
+    "published": true,
+    "publishSummary": {
+      "ok": 1,
+      "total": 1
+    },
+    "avgEngagementRate": 0.12959246007505018,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "퍼포먼스마케팅",
+        "창업인사이트"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "롱폼 글"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 퍼포먼스마케팅, 창업인사이트] 주제를 [짧은 영상, 롱폼 글] 형식으로 강화. 분석: instagram 비중을 늘리자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    }
   }
 ]
