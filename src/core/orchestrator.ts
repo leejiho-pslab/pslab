@@ -15,6 +15,7 @@ import { ReviewGate, type ReviewDecision } from './review.js';
 import { Council, type Direction } from './council.js';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { AlertHub } from './alerts.js';
+import type { DesignStudio, DesignStore, DesignStyle } from './design.js';
 import { createLogger } from './logger.js';
 
 const log = createLogger('orchestrator');
@@ -43,6 +44,8 @@ export interface OrchestratorDeps {
   reviewGateFor?: (client: ClientConfig) => ReviewGate;
   store?: ClientStore<CycleRecord>;
   alerts?: AlertHub;
+  /** 디자인 자가 진화 (이미지 프롬프트 스타일을 반응도로 업그레이드) */
+  design?: { studio: DesignStudio; store: DesignStore };
 }
 
 export class Orchestrator {
@@ -73,14 +76,24 @@ export class Orchestrator {
       throw new Error(`${client.id}: 생성할 소재 후보가 없습니다.`);
     }
 
-    // 2) 제작 (브랜드 말투 반영)
+    // 2) 제작 (브랜드 말투 + 진화하는 디자인 스타일 반영)
+    let designStyle: DesignStyle | undefined;
+    let imagePrompt = `${pick.topic} 대표 이미지, ${client.brandTone}`;
+    if (this.deps.design) {
+      designStyle = this.deps.design.store.load(client.id);
+      imagePrompt = this.deps.design.studio.buildPrompt({
+        topic: pick.topic,
+        format: pick.suggestedFormat,
+        brandTone: client.brandTone,
+        style: designStyle,
+      });
+    }
     const content = await this.deps.content.generate({
       topic: pick.topic,
       tone: client.brandTone,
       keyPoints: [`추천 형식: ${pick.suggestedFormat}`, pick.rationale],
-      media: pick.suggestedFormat.includes('영상')
-        ? [{ kind: 'video', prompt: `${pick.topic} ${pick.suggestedFormat}` }]
-        : [{ kind: 'image', prompt: `${pick.topic} 대표 이미지` }],
+      // 나노바나나는 이미지 생성 → 항상 이미지 1장 (영상 형식도 썸네일 톤으로)
+      media: [{ kind: 'image', prompt: imagePrompt }],
     });
 
     // 3) 검수 (스위치: manual/rules/auto)
@@ -167,6 +180,17 @@ export class Orchestrator {
 
     // 7) 격리 저장소에 이력 적재 (다음 사이클 강화 재료)
     this.deps.store?.append(client.id, record);
+
+    // 7-1) 디자인 스타일 자가 진화 (회의 피드백 + 반응도)
+    if (this.deps.design && designStyle) {
+      const evolved = this.deps.design.studio.evolve(designStyle, {
+        designNotes: direction.designNotes,
+        engagement: report.totals.avgEngagementRate,
+        prevEngagement: history.at(-1)?.avgEngagementRate,
+      });
+      this.deps.design.store.save(client.id, evolved);
+      log.info(`디자인 스타일 v${evolved.version} 저장`);
+    }
     log.info(
       `■ 사이클 완료 — ${client.name}: 주제="${pick.topic}", 발행=${published}, 참여율=${(report.totals.avgEngagementRate * 100).toFixed(1)}%`,
     );

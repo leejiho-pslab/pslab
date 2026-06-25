@@ -26,6 +26,10 @@ jobs:
       # --- AI 글 생성 ---
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       PSLAB_CLAUDE_MODEL: ${{ vars.PSLAB_CLAUDE_MODEL || 'claude-opus-4-8' }}
+      # --- AI 이미지 생성 (Gemini 나노바나나 + imgbb 호스팅) ---
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      IMGBB_API_KEY: ${{ secrets.IMGBB_API_KEY }}
+      PSLAB_GEMINI_IMAGE_MODEL: ${{ vars.PSLAB_GEMINI_IMAGE_MODEL || 'gemini-2.5-flash-image' }}
       # --- Instagram ---
       PSLAB_INSTAGRAM_ACCESS_TOKEN: ${{ secrets.PSLAB_INSTAGRAM_ACCESS_TOKEN }}
       PSLAB_INSTAGRAM_IG_USER_ID: ${{ secrets.PSLAB_INSTAGRAM_IG_USER_ID }}

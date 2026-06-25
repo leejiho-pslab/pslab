@@ -134,7 +134,7 @@ npm run dev -- daemon --once              # 모든 클라이언트 즉시 1사�
 | 모듈 | 설계도 작업소 | 역할 |
 |------|---------------|------|
 | `MarketResearch` | 1. 시장 조사실 | 경쟁사·트렌드 모니터링, 과거 반응으로 소재 강화 |
-| `ContentPipeline` + `CapabilityRegistry` | 2. 제작 공장 | 글/미디어 생성 + 제작 도구 자가 업그레이드 |
+| `ContentPipeline` + `DesignStudio` | 2. 제작 공장 | Claude 글 + Gemini(나노바나나) 이미지, 반응도로 디자인 스타일 자가 진화 |
 | `ReviewGate` | 3. 검수 스위치 | `manual`→`rules`→`auto` 단계 전환 |
 | `Publisher` | 4. 발송 센터 | 멀티채널 동시 발행 |
 | `Analytics` | 5. 성적표실 | 성과 집계 (경쟁사 비교) |

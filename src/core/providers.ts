@@ -11,7 +11,7 @@
  *   - 적응형 사고(thinking: adaptive)
  *   - 실패 시 템플릿으로 폴백 → 한 번의 API 오류가 사이클을 깨지 않음
  */
-import type { TextProvider, MediaProvider, ContentBrief } from './content.js';
+import type { TextProvider, MediaProvider, ContentBrief, MediaRequest } from './content.js';
 import type { MediaAsset } from './types.js';
 import { createLogger } from './logger.js';
 
@@ -131,15 +131,107 @@ export function createTextProvider(): TextProvider | undefined {
   return new ClaudeTextProvider({ apiKey });
 }
 
+// ──────────────────────────────────────────────────────────────
+// 이미지 생성 (Gemini 나노바나나) + 공개 URL 호스팅
+// ──────────────────────────────────────────────────────────────
+
+const GEMINI_IMAGE_MODEL =
+  process.env.PSLAB_GEMINI_IMAGE_MODEL ?? 'gemini-2.5-flash-image';
+
+/** 생성된 이미지 바이트를 공개 http(s) URL로 만들어 주는 호스트. */
+export interface ImageHost {
+  /** 이미지 바이트 → 공개 URL */
+  host(base64: string, opts: { filename: string; mime: string }): Promise<string>;
+}
+
 /**
- * 이미지/영상 생성 프로바이더 자리.
- * 현재는 미연결(undefined → 플레이스홀더). 이미지 생성 키가 준비되면
- * 여기서 해당 어댑터(예: Higgsfield/Canva)를 반환하도록 채운다.
+ * imgbb 무료 이미지 호스팅. base64를 올리고 즉시 공개 URL을 받는다.
+ * (Instagram이 이 URL에서 이미지를 가져감)
  */
-export function createMediaProvider(): MediaProvider | undefined {
-  // TODO(key): 이미지/영상 생성 서비스 키가 오면 어댑터 연결
+export class ImgbbImageHost implements ImageHost {
+  constructor(private readonly apiKey: string) {}
+
+  async host(base64: string): Promise<string> {
+    const body = new URLSearchParams({ key: this.apiKey, image: base64 });
+    const res = await fetch('https://api.imgbb.com/1/upload', {
+      method: 'POST',
+      body,
+    });
+    const json: any = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.data?.url) {
+      throw new Error(`imgbb 업로드 실패: ${json?.error?.message ?? res.status}`);
+    }
+    return json.data.url as string;
+  }
+}
+
+/**
+ * Gemini(나노바나나) 이미지 생성 프로바이더.
+ * 프롬프트 → 이미지 바이트 → 호스트 업로드 → 공개 URL의 MediaAsset.
+ */
+export class GeminiImageProvider implements MediaProvider {
+  constructor(
+    private readonly opts: { apiKey: string; host: ImageHost; model?: string },
+  ) {}
+
+  async generate(request: MediaRequest): Promise<MediaAsset> {
+    const model = this.opts.model ?? GEMINI_IMAGE_MODEL;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.opts.apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: request.prompt }] }],
+      }),
+    });
+    const json: any = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(`Gemini 생성 실패: ${json?.error?.message ?? res.status}`);
+    }
+    const parts: any[] = json?.candidates?.[0]?.content?.parts ?? [];
+    const imgPart = parts.find((p) => p.inlineData?.data);
+    if (!imgPart) {
+      throw new Error('Gemini 응답에 이미지가 없습니다.');
+    }
+    const base64: string = imgPart.inlineData.data;
+    const mime: string = imgPart.inlineData.mimeType ?? 'image/png';
+    const ext = mime.includes('jpeg') ? 'jpg' : 'png';
+    const publicUrl = await this.opts.host.host(base64, {
+      filename: `pslab-${Date.now()}.${ext}`,
+      mime,
+    });
+    log.info(`이미지 생성·호스팅 완료 → ${publicUrl}`);
+    return {
+      kind: request.kind === 'video' ? 'image' : request.kind, // 나노바나나는 이미지
+      source: publicUrl,
+      alt: request.prompt.slice(0, 100),
+      mimeType: mime,
+    };
+  }
+}
+
+/** 환경에서 이미지 호스트를 만든다 (현재 imgbb 지원). */
+export function createImageHost(): ImageHost | undefined {
+  const imgbb = process.env.IMGBB_API_KEY;
+  if (imgbb) return new ImgbbImageHost(imgbb);
   return undefined;
 }
 
-/** 사용하지 않는 import 방지용 (MediaAsset는 향후 미디어 어댑터에서 사용) */
+/**
+ * 이미지 생성 프로바이더를 만든다.
+ * GEMINI_API_KEY + 이미지 호스트(IMGBB_API_KEY)가 모두 있어야 활성화.
+ * 하나라도 없으면 undefined → 플레이스홀더 폴백.
+ */
+export function createMediaProvider(): MediaProvider | undefined {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return undefined;
+  const host = createImageHost();
+  if (!host) {
+    log.warn('GEMINI_API_KEY는 있으나 이미지 호스트(IMGBB_API_KEY)가 없어 이미지 생성 비활성화');
+    return undefined;
+  }
+  log.info(`Gemini 이미지 생성 활성화 (모델: ${GEMINI_IMAGE_MODEL})`);
+  return new GeminiImageProvider({ apiKey, host });
+}
+
 export type { MediaAsset };

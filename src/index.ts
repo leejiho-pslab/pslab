@@ -23,6 +23,7 @@ import { Orchestrator } from './core/orchestrator.js';
 import { ClientStore } from './core/client.js';
 import type { CycleRecord } from './core/orchestrator.js';
 import { createTextProvider, createMediaProvider } from './core/providers.js';
+import { DesignStudio, DesignStore } from './core/design.js';
 
 export * from './core/types.js';
 export { PluginRegistry } from './core/registry.js';
@@ -55,7 +56,17 @@ export { AutomationDaemon } from './core/daemon.js';
 export type { DaemonOptions } from './core/daemon.js';
 export { StatusBoard } from './core/board.js';
 export type { Board, ClientBoardRow } from './core/board.js';
-export { ClaudeTextProvider, createTextProvider, createMediaProvider } from './core/providers.js';
+export {
+  ClaudeTextProvider,
+  GeminiImageProvider,
+  ImgbbImageHost,
+  createTextProvider,
+  createMediaProvider,
+  createImageHost,
+} from './core/providers.js';
+export type { ImageHost } from './core/providers.js';
+export { DesignStudio, DesignStore, defaultDesignStyle } from './core/design.js';
+export type { DesignStyle } from './core/design.js';
 export {
   loadClient,
   loadClients,
@@ -155,6 +166,10 @@ export function createAutopilot(options: AutopilotOptions = {}): Autopilot {
     council,
     store,
     alerts,
+    design: {
+      studio: new DesignStudio(),
+      store: new DesignStore(options.dataDir ?? './data/clients'),
+    },
   });
 
   return { app, research, council, alerts, store, orchestrator };
