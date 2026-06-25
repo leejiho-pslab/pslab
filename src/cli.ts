@@ -21,9 +21,13 @@ import type { App } from './index.js';
 import type { PlatformId, PostContent } from './core/types.js';
 import { ContentPipeline } from './core/content.js';
 import type { ContentBrief } from './core/content.js';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { loadClients, ClientStore } from './core/client.js';
 import { AutomationDaemon } from './core/daemon.js';
 import { StatusBoard } from './core/board.js';
+import { renderDashboard } from './core/dashboard.js';
+import { DesignStore } from './core/design.js';
 import type { CycleRecord } from './core/orchestrator.js';
 
 type Args = Record<string, string | boolean>;
@@ -266,6 +270,19 @@ async function cmdBoard(args: Args): Promise<void> {
   }
 }
 
+async function cmdDashboard(args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const out = typeof args.out === 'string' ? args.out : './docs/index.html';
+  const clients = loadClients(dir);
+  const store = new ClientStore<CycleRecord>(dataDir);
+  const designStore = new DesignStore(dataDir);
+  const html = renderDashboard(clients, store, designStore);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, html, 'utf8');
+  console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -281,6 +298,7 @@ function printHelp(): void {
       '  cycle [--client id]   오토파일럿 한 사이클 실행 (조사→제작→검수→발행→회의)',
       '  daemon [--once]       무인 데몬 — 시간표(scheduleTimes)에 맞춰 자동 트리거',
       '  board [--json]        관제실 상황판 — 클라이언트별 현황 한눈에',
+      '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -331,6 +349,9 @@ async function main(): Promise<void> {
       break;
     case 'board':
       await cmdBoard(args);
+      break;
+    case 'dashboard':
+      await cmdDashboard(args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);
