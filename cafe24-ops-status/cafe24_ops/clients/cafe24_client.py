@@ -50,13 +50,20 @@ class Cafe24Client:
 
     # ---- 팩토리 -----------------------------------------------------
     @classmethod
-    def from_config(cls, config, transport: httpx.BaseTransport | None = None) -> "Cafe24Client":
+    def from_config(
+        cls,
+        config,
+        transport: httpx.BaseTransport | None = None,
+        access_override: str | None = None,
+        refresh_override: str | None = None,
+    ) -> "Cafe24Client":
+        """access_override/refresh_override 가 주어지면(예: DB 영속 토큰) 최우선 사용."""
         mall_id = os.environ.get("CAFE24_MALL_ID") or config.sources.shop.get("mall_id", "")
         token_store = config.data_dir / "cafe24_token.json"
-        access = os.environ.get("CAFE24_ACCESS_TOKEN", "")
-        refresh = os.environ.get("CAFE24_REFRESH_TOKEN", "")
-        # 이전 실행에서 갱신된 토큰이 있으면 우선 사용
-        if token_store.exists():
+        access = access_override or os.environ.get("CAFE24_ACCESS_TOKEN", "")
+        refresh = refresh_override or os.environ.get("CAFE24_REFRESH_TOKEN", "")
+        # override 없을 때만 파일 token_store 폴백 사용
+        if not access_override and token_store.exists():
             try:
                 saved = json.loads(token_store.read_text(encoding="utf-8"))
                 access = saved.get("access_token") or access

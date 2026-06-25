@@ -152,15 +152,29 @@ class Cafe24Collector(BaseCollector):
 
     def collect_live(self, date: str) -> list[dict]:
         from ..clients import Cafe24Client
+        from ..store import Store
 
-        client = Cafe24Client.from_config(self.config)
+        # DB 에 영속된 토큰을 최우선 사용(무인 환경 토큰 회전 대응). 없으면 env 폴백.
+        kv = Store(self.config.data_dir)
         try:
-            orders = client.list_orders(date, date)
-            count = client.count_orders(date, date)
-            visitors = client.get_visitor_count(date)       # CAFE24_VISITORS_PATH 설정 시
-            signups = client.count_new_customers(date, date)
+            access = kv.get_kv("cafe24_access_token")
+            refresh = kv.get_kv("cafe24_refresh_token")
+            client = Cafe24Client.from_config(
+                self.config, access_override=access, refresh_override=refresh
+            )
+            try:
+                orders = client.list_orders(date, date)
+                count = client.count_orders(date, date)
+                visitors = client.get_visitor_count(date)    # CAFE24_VISITORS_PATH 설정 시
+                signups = client.count_new_customers(date, date)
+            finally:
+                client.close()
+            # 갱신(회전)되었을 수 있는 토큰을 DB 에 저장 → 다음 실행이 이어받음
+            kv.set_kv("cafe24_access_token", client.access_token)
+            if client.refresh_token:
+                kv.set_kv("cafe24_refresh_token", client.refresh_token)
         finally:
-            client.close()
+            kv.close()
         return (
             orders_to_metrics(date, orders, count)
             + visitor_metrics(date, count, visitors)

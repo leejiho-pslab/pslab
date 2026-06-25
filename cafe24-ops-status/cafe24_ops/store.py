@@ -49,7 +49,24 @@ class Store:
                 value  REAL NOT NULL,
                 PRIMARY KEY (date, metric)
             )""",
+            """CREATE TABLE IF NOT EXISTS app_kv (
+                key   TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )""",
         ])
+
+    # ---- key-value (토큰 등 회전값 영속화) -------------------------
+    def get_kv(self, key: str) -> str | None:
+        row = self.db.execute("SELECT value FROM app_kv WHERE key=?", (key,)).fetchone()
+        return row["value"] if row else None
+
+    def set_kv(self, key: str, value: str) -> None:
+        self.db.execute(
+            "INSERT INTO app_kv(key, value) VALUES (?,?) "
+            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            (key, value),
+        )
+        self.db.commit()
 
     # ---- 쓰기 -------------------------------------------------------
     def save_raw(self, date: str, source: str, records: list[dict]) -> None:

@@ -76,6 +76,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--redirect-uri", default="https://localhost", help="앱에 등록한 Redirect URI")
     p.add_argument("--scope", default=DEFAULT_SCOPE, help=f"권한 scope (기본: {DEFAULT_SCOPE})")
     p.add_argument("--state", default="keek", help="state 값")
+    p.add_argument("--to-db", action="store_true",
+                   help="발급 토큰을 DATABASE_URL 의 app_kv 에 영속화(무인 수집용)")
     args = p.parse_args(argv)
 
     load_secrets()
@@ -107,6 +109,18 @@ def main(argv: list[str] | None = None) -> int:
     store_path = cfg.data_dir / "cafe24_token.json"
     store_path.parent.mkdir(parents=True, exist_ok=True)
     store_path.write_text(json.dumps(tok, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    # --to-db: DATABASE_URL(예: Postgres) 의 app_kv 에 영속화 → GitHub Actions 무인 수집이 이어받음
+    if args.to_db:
+        from cafe24_ops.store import Store
+
+        s = Store(cfg.data_dir)
+        try:
+            s.set_kv("cafe24_access_token", tok.get("access_token", ""))
+            s.set_kv("cafe24_refresh_token", tok.get("refresh_token", ""))
+        finally:
+            s.close()
+        print(f"  DB 영속화: {s.db_path} (app_kv)")
 
     print("== ② 토큰 발급 완료 ==")
     print(f"  저장: {store_path} (수집 시 자동 사용)")

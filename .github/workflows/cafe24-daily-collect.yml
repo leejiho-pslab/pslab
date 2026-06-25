@@ -1,19 +1,35 @@
-name: cafe24 daily collect
+name: ops daily collect (all channels)
 
-# 데일리(매일 1회) 카페24 데이터 수집 — Phase 4 자동화
-# 주의: 스케줄은 기본 브랜치에서만 동작한다. 자격증명은 repo Secrets 로 주입한다.
-#   필요한 Secrets: CAFE24_MALL_ID, CAFE24_ACCESS_TOKEN, CAFE24_REFRESH_TOKEN,
-#                   CAFE24_CLIENT_ID, CAFE24_CLIENT_SECRET, (선택) SLACK_WEBHOOK_URL
-# 영구 저장이 필요하면 store/ 를 관리형 DB(Postgres 등)로 교체할 것. (현재는 러너 임시 저장)
+# 매일 1회 전 채널 실데이터 수집 — GitHub 러너는 외부 API egress 가 열려 있어
+# 웹 샌드박스에서 막히는 cafe24/Meta/Naver/Kakao 호출이 여기선 동작한다.
+#
+# 영속화: DATABASE_URL(무료 Postgres: Supabase/Neon/Railway) 를 Secret 으로 넣을 것.
+#   없으면 러너 SQLite 에 수집되지만 잡 종료와 함께 사라진다(특히 cafe24 토큰 회전이
+#   보존되지 않아 무인 수집이 깨짐). → 운영에선 DATABASE_URL 필수.
+#
+# 필요한 Secrets (있는 채널만 채우면 됨):
+#   공통:    DATABASE_URL
+#   cafe24:  CAFE24_MALL_ID, CAFE24_CLIENT_ID, CAFE24_CLIENT_SECRET,
+#            CAFE24_ACCESS_TOKEN, CAFE24_REFRESH_TOKEN  (최초 1회용; 이후 DB가 회전 토큰 보존)
+#   Meta:    META_ACCESS_TOKEN, META_AD_ACCOUNT_ID
+#   Google:  GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_ACCESS_TOKEN, GOOGLE_ADS_CUSTOMER_ID,
+#            GOOGLE_ADS_LOGIN_CUSTOMER_ID
+#   NaverSA: NAVER_SA_API_KEY, NAVER_SA_SECRET_KEY, NAVER_SA_CUSTOMER_ID
+#   Kakao:   KAKAO_ACCESS_TOKEN, KAKAO_AD_ACCOUNT_ID
+#   Naver:   NAVER_CLIENT_ID, NAVER_CLIENT_SECRET   (경쟁사 트렌드/검색)
+#   알림:    SLACK_WEBHOOK_URL (선택)
+#
+# 주의: schedule 은 기본 브랜치(main)에서만 동작 → 이 워크플로를 main 에 머지할 것.
 
 on:
   schedule:
     - cron: "10 22 * * *" # 07:10 KST (UTC+9)
   workflow_dispatch:
     inputs:
-      date:
-        description: "수집 기준일 (YYYY-MM-DD, 비우면 어제)"
+      days:
+        description: "최근 N일 백필 (기본 1)"
         required: false
+        default: "1"
 
 jobs:
   collect:
@@ -27,36 +43,45 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
 
       - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Guard — 자격증명 없으면 스킵
-        id: guard
-        env:
-          TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
-        run: |
-          if [ -z "$TOKEN" ]; then
-            echo "CAFE24_ACCESS_TOKEN 미설정 — 수집 스킵"
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Run daily pipeline (live)
-        if: steps.guard.outputs.skip != 'true'
         env:
           CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # cafe24
           CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
-          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
-          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
           CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
           CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
+          # Meta
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+          # Google Ads
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_ACCESS_TOKEN: ${{ secrets.GOOGLE_ADS_ACCESS_TOKEN }}
+          GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_CUSTOMER_ID }}
+          GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ secrets.GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+          # Naver SearchAd
+          NAVER_SA_API_KEY: ${{ secrets.NAVER_SA_API_KEY }}
+          NAVER_SA_SECRET_KEY: ${{ secrets.NAVER_SA_SECRET_KEY }}
+          NAVER_SA_CUSTOMER_ID: ${{ secrets.NAVER_SA_CUSTOMER_ID }}
+          # Kakao Moment
+          KAKAO_ACCESS_TOKEN: ${{ secrets.KAKAO_ACCESS_TOKEN }}
+          KAKAO_AD_ACCOUNT_ID: ${{ secrets.KAKAO_AD_ACCOUNT_ID }}
+          # Naver DataLab/Search (경쟁사)
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         run: |
-          DATE_ARG=""
-          if [ -n "${{ github.event.inputs.date }}" ]; then DATE_ARG="--date ${{ github.event.inputs.date }}"; fi
-          python scripts/run_all.py --mode live $DATE_ARG
+          python scripts/run_all.py --mode live --days "${{ github.event.inputs.days || '1' }}"
 
       - name: Alerts (optional Slack)
-        if: steps.guard.outputs.skip != 'true'
+        if: ${{ always() }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        run: python scripts/notify.py
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/notify.py || true
