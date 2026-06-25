@@ -82,12 +82,17 @@ export class Orchestrator {
     const history = this.deps.store?.read(client.id) ?? [];
     const reinforcement = this.extractReinforcement(history);
 
-    // 1) 시장 조사 (경쟁사·트렌드 + 강화)
+    // 1) 시장 조사 (경쟁사·트렌드 + 강화 + 최근 주제 회전)
+    const recentTopics = history
+      .slice(-5)
+      .reverse()
+      .map((h) => h.topic);
     const research: ResearchResult = await this.deps.research.investigate({
       industry: client.industry,
       keywords: client.keywords,
       competitors: client.competitors,
       reinforcement,
+      recentTopics,
     });
     const pick = research.topicCandidates[0];
     if (!pick) {
@@ -121,8 +126,12 @@ export class Orchestrator {
     const content = await this.deps.content.generate({
       topic: pick.topic,
       tone: client.brandTone,
-      // 내부 메타(추천 형식/근거)는 캡션에 넣지 않는다 (공개 게시물 품질 보호).
-      // 형식 힌트는 이미지 프롬프트(imagePrompt)에만 반영된다.
+      // 누가·누구에게·어떤 각도로 — 카피 품질의 핵심 컨텍스트
+      persona: client.persona,
+      audience: client.audience,
+      angle: pick.angle,
+      format: pick.suggestedFormat,
+      targetPlatform: client.targets[0],
       media: [{ kind: 'image', prompt: imagePrompt }],
     });
 

@@ -12,6 +12,7 @@
  *   - 실패 시 템플릿으로 폴백 → 한 번의 API 오류가 사이클을 깨지 않음
  */
 import type { TextProvider, MediaProvider, ContentBrief, MediaRequest } from './content.js';
+import { templateText } from './content.js';
 import type { MediaAsset } from './types.js';
 import { createLogger } from './logger.js';
 
@@ -31,49 +32,58 @@ const CONTENT_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+/** 플랫폼별 분량·형식 가이드 */
+function platformGuide(p?: string): string {
+  switch (p) {
+    case 'instagram':
+      return '인스타그램: 첫 줄(후킹)이 생명. 본문 600~1000자, 짧은 문단·줄바꿈으로 가독성. 끝에 해시태그와 어울리는 자연스러운 마무리.';
+    case 'threads':
+      return '스레드: 대화체로 짧고 밀도 있게(300~500자). 한 가지 인사이트만 날카롭게.';
+    case 'naver-blog':
+      return '네이버 블로그: 소제목으로 구조화한 롱폼(1500자+). 검색 의도에 답하는 정보형. 경험·근거·예시를 충분히.';
+    case 'linkedin':
+      return '링크드인: 비즈니스 인사이트 톤. 첫 2줄 후킹 후 핵심 주장→근거→교훈. 800~1200자.';
+    case 'youtube':
+      return '유튜브: 영상 설명/스크립트 톤. 후킹 한 줄 + 핵심 3~5줄 + 행동 유도.';
+    default:
+      return 'SNS 피드: 첫 줄 후킹, 짧은 문단, 구체적 사례 중심.';
+  }
+}
+
 function systemPrompt(brief: ContentBrief): string {
+  const persona =
+    brief.persona ??
+    '해당 분야에서 오래 일한 실무 전문가. 현장 경험을 바탕으로 솔직하게 말한다';
   return [
-    '당신은 SNS 콘텐츠를 쓰는 전문 카피라이터입니다.',
-    brief.tone ? `브랜드 말투: ${brief.tone}` : '',
-    brief.targetPlatform ? `플랫폼: ${brief.targetPlatform} (해당 플랫폼 관습에 맞게)` : '',
-    '결과는 한국어로, 자연스럽고 진정성 있게. 과장·클릭베이트 금지.',
-    'title은 짧고 명확하게, body는 본문, tags는 # 없이 핵심 키워드 3~6개.',
+    `당신은 "${persona}" 입니다. 그 사람의 목소리로 1인칭으로 직접 글을 씁니다 — 외주 카피라이터가 아니라 본인입니다.`,
+    brief.audience ? `독자: ${brief.audience}. 이들이 "이건 진짜 현업 사람이 쓴 글이다"라고 느끼게 하세요.` : '',
+    brief.tone ? `말투: ${brief.tone}.` : '',
+    platformGuide(brief.targetPlatform),
+    '',
+    '[좋은 글의 조건]',
+    '1) 첫 문장에서 멈추게 한다 — 뻔한 인사("~에 대해 알아볼게요") 절대 금지. 구체적 장면·숫자·반론·질문으로 시작.',
+    '2) 추상론 금지. 실제 사례·수치·비교·"이렇게 하면 이렇게 된다"의 구체성을 담는다.',
+    '3) 교과서 요약이 아니라 관점/주장이 있어야 한다. 무엇을 하라/하지 말라가 분명히.',
+    '4) 독자가 바로 써먹을 한 가지(실행 포인트)를 반드시 남긴다.',
+    '5) 진정성 > 과장. 클릭베이트·영혼 없는 미사여구·이모지 남발 금지.',
+    '',
+    'title은 스크롤을 멈추게 하는 한 줄. body는 위 조건을 갖춘 완성 본문. tags는 # 없이 핵심 키워드 4~6개(붙여쓰기).',
   ]
-    .filter(Boolean)
+    .filter((x) => x !== '')
     .join('\n');
 }
 
 function userPrompt(brief: ContentBrief): string {
-  const points =
-    brief.keyPoints && brief.keyPoints.length > 0
-      ? `\n참고 포인트:\n- ${brief.keyPoints.join('\n- ')}`
-      : '';
-  const link = brief.link ? `\n링크(CTA): ${brief.link}` : '';
-  return `다음 주제로 게시물을 작성해 주세요.\n주제: ${brief.topic}${points}${link}`;
-}
-
-/** 프로바이더가 없을 때와 동일한 결정론적 템플릿 (폴백용) */
-function templateFallback(brief: ContentBrief): {
-  title: string;
-  body: string;
-  tags: string[];
-} {
-  const points =
-    brief.keyPoints && brief.keyPoints.length > 0
-      ? brief.keyPoints.map((p) => `• ${p}`).join('\n')
-      : '';
-  const body = [
-    `${brief.topic}에 대해 이야기해 볼게요.`,
-    points,
-    brief.link ? `자세히 보기 → ${brief.link}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n\n');
-  const tags = [
-    ...brief.topic.split(/\s+/).filter((w) => w.length > 1),
-    brief.tone ?? 'pslab',
-  ].slice(0, 5);
-  return { title: brief.topic, body, tags };
+  const lines = [`주제(소재): ${brief.topic}`];
+  if (brief.angle) lines.push(`이번 글의 각도/관점: ${brief.angle}`);
+  if (brief.format) lines.push(`형식 힌트: ${brief.format}`);
+  if (brief.keyPoints && brief.keyPoints.length > 0)
+    lines.push(`참고 포인트:\n- ${brief.keyPoints.join('\n- ')}`);
+  if (brief.link) lines.push(`링크(CTA): ${brief.link}`);
+  lines.push(
+    '\n위 소재를, 지정된 각도로, 당신의 실제 경험담처럼 구체적으로 써주세요. 같은 주제라도 매번 다른 사례와 시선으로.',
+  );
+  return lines.join('\n');
 }
 
 export class ClaudeTextProvider implements TextProvider {
@@ -115,7 +125,7 @@ export class ClaudeTextProvider implements TextProvider {
       log.warn(
         `Claude 생성 실패 → 템플릿 폴백 (${err instanceof Error ? err.message : err})`,
       );
-      return templateFallback(brief);
+      return templateText(brief);
     }
   }
 }

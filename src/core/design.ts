@@ -56,7 +56,14 @@ export function defaultDesignStyle(): DesignStyle {
     mood: '신뢰감 있고 전문적이며 깔끔한',
     composition: COMPOSITION_VARIANTS[0],
     motifs: ['미니멀 그래프/도형', '여백', '굵은 산세리프 헤드라인'],
-    avoid: ['과한 스톡사진 느낌', '잡다한 요소', '저화질', '클립아트'],
+    avoid: [
+      '사람 얼굴이나 인물 사진(주제와 무관한 모델·인물 금지)',
+      '과한 스톡사진 느낌',
+      '잡다한 요소',
+      '저화질',
+      '클립아트',
+      '워터마크·로고·깨진 글자',
+    ],
     notes: [],
     declineStreak: 0,
     updatedAt: new Date().toISOString(),
@@ -82,7 +89,8 @@ export class DesignStudio {
       ? '영상 썸네일처럼 첫 3초에 시선을 잡는 강한 후킹 비주얼.'
       : '피드에서 멈추게 만드는 한 장의 임팩트 비주얼.';
     return [
-      `주제: "${input.topic}" 에 대한 SNS 인스타그램용 정사각형(1:1) 이미지.`,
+      `주제: "${input.topic}" 를 표현한 SNS 인스타그램용 정사각형(1:1) 그래픽.`,
+      '형태: 인물 사진이 아니라 텍스트 중심의 에디토리얼/인포그래픽 카드. 추상 도형·아이콘·미니멀 일러스트로 개념을 시각화.',
       `브랜드 톤: ${input.brandTone}.`,
       `스타일: ${s.mood}. 색감: ${s.palette}.`,
       `구도: ${s.composition}.`,
@@ -91,7 +99,7 @@ export class DesignStudio {
       '텍스트를 넣는다면 한국어로 짧고 크게, 가독성 최우선.',
       `피해야 할 것: ${s.avoid.join(', ')}.`,
       s.notes.length > 0 ? `반영할 학습: ${s.notes.slice(-3).join(' / ')}.` : '',
-      '고해상도, 전문 디자이너 퀄리티.',
+      '고해상도, 브랜드 그래픽 디자이너 퀄리티의 깔끔한 벡터형 비주얼.',
     ]
       .filter(Boolean)
       .join('\n');

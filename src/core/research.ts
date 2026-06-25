@@ -49,6 +49,8 @@ export interface TopicCandidate {
   score: number;
   /** 추천 형식 */
   suggestedFormat: string;
+  /** 이 글을 풀어갈 각도/관점 (같은 주제라도 매번 다르게) */
+  angle: string;
 }
 
 export interface ResearchResult {
@@ -71,6 +73,11 @@ export interface ResearchInput {
     favoredTopics?: string[];
     favoredFormats?: string[];
   };
+  /**
+   * 최근에 이미 다룬 주제들 (중복 회피용). 여기 담긴 주제는 점수가 깎여
+   * 매 사이클 같은 주제만 반복되는 것을 막고 소재가 회전한다.
+   */
+  recentTopics?: string[];
 }
 
 /**
@@ -83,6 +90,20 @@ export interface ResearchProvider {
 }
 
 const FORMATS = ['짧은 영상', '카드뉴스', '롱폼 글', '이미지 1장', '릴스'];
+
+/**
+ * 전문가 콘텐츠 각도 풀 — 같은 키워드라도 매번 다른 시선으로 풀게 한다.
+ * 카피 엔진(Claude)에 전달되어 글의 구체적 방향을 잡는다.
+ */
+const ANGLES = [
+  '현장 경험담 — 실제로 겪은 사례 한 가지를 중심으로',
+  '흔한 오해 바로잡기 — 많은 사람이 잘못 알고 있는 지점',
+  '실패에서 배운 교훈 — 돈·시간 태우고 깨달은 것',
+  '실전 체크리스트 — 바로 적용하는 핵심 몇 가지',
+  '비포/애프터 — 개선 전후를 숫자로 비교',
+  '지금 왜 중요한가 — 트렌드 변화와 그 의미 해설',
+  '이럴 땐 이렇게 — 상황별 의사결정 기준',
+];
 
 /** 문자열 시드 → 의사난수 (결정론적 mock 데이터용) */
 function seed(s: string): (n: number) => number {
@@ -171,6 +192,13 @@ export class MarketResearch {
       (input.reinforcement?.favoredTopics ?? []).map((t) => t.toLowerCase()),
     );
     const favoredFormats = new Set(input.reinforcement?.favoredFormats ?? []);
+    // 최근 주제는 점수를 깎아 매 사이클 같은 주제만 반복되는 것을 막는다.
+    const recentPenalty = new Map<string, number>();
+    (input.recentTopics ?? []).forEach((t, i, arr) => {
+      // 가장 최근 항목에 가장 큰 페널티 → 직전 주제는 연속 선택되지 않고
+      // 여러 사이클 뒤에야 다시 떠오른다 (강화 가산보다 확실히 크게).
+      recentPenalty.set(t.toLowerCase(), 45 + (arr.length - i) * 10);
+    });
 
     const candidates: TopicCandidate[] = trends.map((t) => {
       const rand = seed(`cand:${t.keyword}`);
@@ -198,11 +226,25 @@ export class MarketResearch {
         reasons.push(`과거 반응 좋았던 형식 '${suggestedFormat}'(강화)`);
       }
 
+      // 회전: 최근 다룬 주제는 점수를 깎아 다른 소재에 기회를 준다
+      const penalty = recentPenalty.get(t.keyword.toLowerCase());
+      if (penalty) {
+        score -= penalty;
+        reasons.push('최근 다룸(회전)');
+      }
+
+      // 각도: 키워드 + 최근 사용 횟수로 회전시켜 같은 주제도 매번 다르게
+      const angleSalt = (input.recentTopics ?? []).filter(
+        (r) => r.toLowerCase() === t.keyword.toLowerCase(),
+      ).length;
+      const angle = ANGLES[seed(`angle:${t.keyword}:${angleSalt}`)(ANGLES.length)];
+
       return {
         topic: t.keyword,
         rationale: reasons.join(' · '),
-        score: Math.min(100, Math.round(score)),
+        score: Math.max(0, Math.min(100, Math.round(score))),
         suggestedFormat,
+        angle,
       };
     });
 

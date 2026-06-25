@@ -70,6 +70,22 @@ test('시장조사: 강화 신호가 해당 주제 점수를 끌어올린다', a
   assert.ok(boostScore > baseScore, `${boostScore} > ${baseScore}`);
 });
 
+test('시장조사: 최근 다룬 주제는 회전 페널티로 1순위에서 밀려난다', async () => {
+  const mr = new MarketResearch();
+  const input = {
+    industry: '카페',
+    keywords: ['신메뉴', '딸기케이크', '시즌음료', '브런치'],
+    competitors: [],
+  };
+  const base = await mr.investigate(input);
+  const topTopic = base.topicCandidates[0].topic;
+  // 방금 그 주제를 막 다뤘다고 알려주면, 다음엔 1순위가 바뀌어야 한다
+  const rotated = await mr.investigate({ ...input, recentTopics: [topTopic] });
+  assert.notEqual(rotated.topicCandidates[0].topic, topTopic);
+  // 각도(angle)도 항상 채워진다
+  assert.ok(base.topicCandidates[0].angle.length > 0);
+});
+
 test('검수 스위치: auto는 통과, rules는 금지어를 잡는다', () => {
   const auto = new ReviewGate({ mode: 'auto', bannedWords: ['최저가'] });
   assert.equal(auto.review({ body: '맛있는 신메뉴 출시!' }).approved, true);

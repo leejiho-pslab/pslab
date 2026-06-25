@@ -26,6 +26,15 @@ export interface ClientConfig {
   competitors: CompetitorRef[];
   /** 브랜드 말투 */
   brandTone: string;
+  /**
+   * 화자 페르소나 — "누가" 1인칭으로 말하는지. 카피 품질의 핵심.
+   * 예: "온라인 컨설팅·광고대행 15년차 대표. 현장 집행 경험과 실패담을 솔직하게 공유"
+   */
+  persona?: string;
+  /** 타겟 독자 — "누구에게" 쓰는지. 예: "광고 집행을 고민하는 소상공인·마케팅 담당자" */
+  audience?: string;
+  /** 콘텐츠 기둥(주제축) — 채널이 반복해서 다루는 큰 주제 묶음 */
+  contentPillars?: string[];
   /** 금지어 */
   bannedWords: string[];
   /** 발행할 SNS */
@@ -72,6 +81,9 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     keywords: c.keywords!,
     competitors: c.competitors ?? [],
     brandTone: c.brandTone ?? '친근하고 명확하게',
+    persona: c.persona,
+    audience: c.audience,
+    contentPillars: c.contentPillars ?? [],
     bannedWords: c.bannedWords ?? [],
     targets: c.targets!,
     accounts: c.accounts ?? {},
