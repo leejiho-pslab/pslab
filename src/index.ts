@@ -24,6 +24,7 @@ import { ClientStore } from './core/client.js';
 import type { CycleRecord } from './core/orchestrator.js';
 import { createTextProvider, createMediaProvider } from './core/providers.js';
 import { DesignStudio, DesignStore } from './core/design.js';
+import { PlanStore } from './core/plan.js';
 
 export * from './core/types.js';
 export { PluginRegistry } from './core/registry.js';
@@ -71,6 +72,8 @@ export {
 export type { ImageHost, ImageGenerator } from './core/providers.js';
 export { DesignStudio, DesignStore, defaultDesignStyle } from './core/design.js';
 export type { DesignStyle } from './core/design.js';
+export { PlanStore, generatePlan, upcomingSlots } from './core/plan.js';
+export type { PlanItem, ContentPlan } from './core/plan.js';
 export {
   loadClient,
   loadClients,
@@ -174,6 +177,7 @@ export function createAutopilot(options: AutopilotOptions = {}): Autopilot {
       studio: new DesignStudio(),
       store: new DesignStore(options.dataDir ?? './data/clients'),
     },
+    plan: new PlanStore(options.dataDir ?? './data/clients'),
   });
 
   return { app, research, council, alerts, store, orchestrator };

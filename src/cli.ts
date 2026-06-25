@@ -28,6 +28,7 @@ import { AutomationDaemon } from './core/daemon.js';
 import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
+import { PlanStore } from './core/plan.js';
 import type { CycleRecord } from './core/orchestrator.js';
 
 type Args = Record<string, string | boolean>;
@@ -277,7 +278,8 @@ async function cmdDashboard(args: Args): Promise<void> {
   const clients = loadClients(dir);
   const store = new ClientStore<CycleRecord>(dataDir);
   const designStore = new DesignStore(dataDir);
-  const html = renderDashboard(clients, store, designStore);
+  const planStore = new PlanStore(dataDir);
+  const html = renderDashboard(clients, store, designStore, planStore);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html, 'utf8');
   console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
