@@ -330,6 +330,9 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 const DATA = ${json};
 const REPO = DATA.repo;
 let ci = 0, ch = 'all';
+// 카드 이미지 캐시버스팅 — 기획안 갱신 시에만 새로 받게 버전 쿼리 부여
+const VER = (((DATA.clients[0]||{}).planUpdatedAt)||DATA.generatedAt||'').replace(/\\D/g,'').slice(0,14);
+const imgv = s => !s ? s : (s + (s.indexOf('?')<0?'?':'&') + 'v=' + VER);
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const ftime = s => !s?'-':String(s).replace('T',' ').slice(0,16);
 const pct = v => (v*100).toFixed(1)+'%';
@@ -358,7 +361,7 @@ function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').repl
 function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
 function slideCount(it){ return (it.slideImages&&it.slideImages.length)||1; }
 function planCard(client, chLabel, it){
-  const img=it.cardImage?'<img class="thumb" src="'+esc(it.cardImage)+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
+  const img=it.cardImage?'<img class="thumb" src="'+esc(imgv(it.cardImage))+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
   const head=esc(plainHead(it));
   const n=slideCount(it);
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
@@ -375,7 +378,7 @@ function openDetail(id){
   const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
   const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
-  const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(s)+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
+  const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=esc(it.captionBody||it.captionNote||'').replace(/\\n/g,'<br>');
   document.getElementById('mbody').innerHTML=
     '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+' · 📑 캐러셀 '+imgs.length+'장</div>'+
