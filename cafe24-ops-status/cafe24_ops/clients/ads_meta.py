@@ -82,6 +82,27 @@ class MetaAdsClient:
             transport=transport,
         )
 
+    def exchange_for_long_lived(self, app_id: str, app_secret: str) -> str | None:
+        """단기/장기 토큰 → 장기(약 60일) 토큰으로 교환.
+
+        매 실행마다 호출해 만료를 갱신하면(카페24 토큰 회전과 동일 발상) 무인 환경에서
+        토큰이 끊기지 않는다. 실패하면 None(기존 토큰으로 수집 계속 시도).
+        """
+        if not (app_id and app_secret and self.access_token):
+            return None
+        r = self._http.get(
+            f"/{self.version}/oauth/access_token",
+            params={
+                "grant_type": "fb_exchange_token",
+                "client_id": app_id,
+                "client_secret": app_secret,
+                "fb_exchange_token": self.access_token,
+            },
+        )
+        if r.status_code != 200:
+            return None
+        return (r.json() or {}).get("access_token")
+
     def insights(self, date: str) -> dict:
         path = f"/{self.version}/act_{self.account_id}/insights"
         params = {
