@@ -74,14 +74,16 @@ class AdsCollector(BaseCollector):
                     db_token = kv.get_kv("meta_access_token")
                     if db_token:
                         client.access_token = db_token
-                    # 매 실행마다 60일 토큰으로 연장 → DB 저장(app_id/secret 있을 때만).
+                    # 60일 토큰으로 연장 → DB 저장. 백필(다일) 시 매일 교환은 낭비라
+                    # 실행(프로세스)당 1회만 교환한다(이후 날짜는 DB 토큰 재사용).
                     app_id = os.environ.get("META_APP_ID")
                     app_secret = os.environ.get("META_APP_SECRET")
-                    if app_id and app_secret:
+                    if app_id and app_secret and not getattr(self, "_meta_refreshed", False):
                         new_token = client.exchange_for_long_lived(app_id, app_secret)
                         if new_token:
                             client.access_token = new_token
                             kv.set_kv("meta_access_token", new_token)
+                        self._meta_refreshed = True
                     records += client.fetch_facts(date)
                 finally:
                     client.close()

@@ -3,10 +3,25 @@ import httpx
 from cafe24_ops.clients import Cafe24Client
 from cafe24_ops.collectors.cafe24 import (
     order_amount,
+    order_breakdowns,
     orders_to_metrics,
     signup_metrics,
     visitor_metrics,
 )
+
+
+def test_order_breakdowns_device_and_customer():
+    orders = [
+        {"payment_amount": "10000", "order_from_mobile": "T", "first_order": "T"},  # 모바일·신규
+        {"payment_amount": "20000", "order_from_mobile": "F", "first_order": "F"},  # PC·재구매
+        {"payment_amount": "5000", "order_from_mobile": "T", "first_order": None},   # 모바일·마켓→신규
+    ]
+    facts = order_breakdowns("2026-06-25", orders)
+    dev = {f["dims"]["device"]: f["value"] for f in facts if f["metric"] == "device_sales"}
+    cust = {f["dims"]["customer_type"]: f["value"] for f in facts if f["metric"] == "customer_sales"}
+    assert dev == {"mobile": 15000.0, "pc": 20000.0}
+    assert cust == {"new": 15000.0, "returning": 20000.0}
+    assert sum(dev.values()) == sum(cust.values()) == 35000.0
 
 
 def _client(handler, **kw):
