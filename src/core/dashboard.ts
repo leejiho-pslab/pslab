@@ -57,6 +57,8 @@ interface PendingCard {
   captionBody?: string;
   variant?: string;
   slideImages?: string[];
+  status?: string;
+  publishedUrl?: string;
 }
 
 function buildChannel(
@@ -182,6 +184,8 @@ function buildClientData(
     captionBody: it.captionBody,
     variant: it.variant,
     slideImages: it.slideImages,
+    status: it.status,
+    publishedUrl: it.publishedUrl,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -375,12 +379,15 @@ function planCard(client, chLabel, it){
   const head=esc(plainHead(it));
   const n=slideCount(it);
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
+  const pub=it.status==='published';
+  const stBadge=pub?'<span class="badge b-ok">발행됨</span>':'<span class="badge b-plan">예정</span>';
+  const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
   return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+
     '<div class="thumbwrap">'+img+carBadge+'</div>'+
-    '<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
+    '<div class="cbody"><div class="ctop"><strong>'+head+'</strong>'+stBadge+'</div>'+
     '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
     (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
-    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+'<span class="muted">클릭하면 전체보기 →</span></div></div></div>';
+    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+right+'</div></div></div>';
 }
 function openDetail(id){
   const c=DATA.clients[ci];
