@@ -66,7 +66,9 @@ def test_meta_strips_act_prefix():
 def test_meta_client_fetch_with_mock_transport():
     def handler(req):
         assert "/act_123/insights" in req.url.path
-        assert req.url.params.get("access_token") == "tok"
+        # 토큰은 URL 이 아니라 Authorization 헤더로(로그 노출 방지)
+        assert req.url.params.get("access_token") is None
+        assert req.headers.get("authorization") == "Bearer tok"
         return httpx.Response(200, json=SAMPLE)
 
     client = MetaAdsClient("123", "tok", transport=httpx.MockTransport(handler))
