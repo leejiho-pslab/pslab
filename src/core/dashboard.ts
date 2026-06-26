@@ -43,14 +43,18 @@ interface ChannelPublished {
 }
 
 interface PendingCard {
+  id: string;
   topic: string;
   format: string;
   scheduledFor: string;
   kicker?: string;
   headline?: string;
+  sub?: string;
   dayLabel?: string;
   cardImage?: string;
   captionNote?: string;
+  captionBody?: string;
+  variant?: string;
 }
 
 function buildChannel(
@@ -162,14 +166,18 @@ function buildClientData(
   const heldCount = history.filter((h) => !h.published && h.review?.pending).length;
 
   const toCard = (it: (typeof plan.items)[number]): PendingCard => ({
+    id: it.id,
     topic: it.topic,
     format: it.format,
     scheduledFor: it.scheduledFor,
     kicker: it.kicker,
     headline: it.headline,
+    sub: it.sub,
     dayLabel: it.dayLabel,
     cardImage: it.cardImage,
     captionNote: it.captionNote,
+    captionBody: it.captionBody,
+    variant: it.variant,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -282,6 +290,19 @@ th{color:#7b8398;font-weight:600;font-size:12px}
 .empty{color:#6b7387;padding:18px;text-align:center;font-size:13px}
 .tag{display:inline-block;background:#1a1e2a;border:1px solid #262b3a;border-radius:6px;padding:2px 7px;font-size:11px;color:#9aa3b5;margin:2px 2px 0 0}
 footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
+.card.clk{cursor:pointer;transition:transform .12s,border-color .12s}
+.card.clk:hover{transform:translateY(-3px);border-color:#3a4256}
+.b-var{font-weight:600}.v-A{background:#33240f;color:#ff8a3d}.v-B{background:#0c2a28;color:#36d6c4}.v-C{background:#2a2415;color:#ffc24a}
+.modal{position:fixed;inset:0;background:rgba(6,8,12,.82);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow:auto}
+.modal.on{display:flex}
+.mwrap{position:relative;background:#12141d;border:1px solid #262b3a;border-radius:16px;max-width:920px;width:100%;padding:22px}
+.mx{position:absolute;top:14px;right:14px;background:#222838;border:1px solid #2d3346;color:#cbd3e1;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
+.mgrid{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:22px}
+.mimg img{width:100%;border-radius:12px;display:block;background:#0a0c11}
+.mtext h2{font-size:24px;margin:2px 0}
+.mtext .kick{color:#ff8a3d;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.mcap{white-space:normal;line-height:1.75;font-size:15px;color:#d4dae6}
+@media(max-width:720px){.mgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -293,6 +314,9 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 <div class="tabs" id="tabs"></div>
 <main id="view"></main>
 <footer>pslab autopilot · 자동 생성 · <span id="gen"></span></footer>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="mwrap"><button class="mx" onclick="closeModal()">✕</button><div id="mbody"></div></div>
+</div>
 <script>
 const DATA = ${json};
 const REPO = DATA.repo;
@@ -321,16 +345,34 @@ function publishedCard(p, badge){
     '<div class="met"><span>👁 '+p.views+'</span><span>❤ '+p.likes+'</span><span>💬 '+p.comments+'</span><span>'+pct(p.engagementRate)+'</span></div>'+
     '<div>'+link+'</div></div></div>';
 }
+function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').replace(/\\*/g,''):it.topic; }
+function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
 function planCard(client, chLabel, it){
-  const t='['+client.name+'/'+chLabel+'] 콘텐츠 수정요청: '+(it.headline?it.headline.replace(/[*<].*/,''):it.topic);
-  const b='예정 콘텐츠에 대한 수정/방향 요청을 남겨주세요.\\n\\n- 주제: '+it.topic+'\\n- 헤드라인: '+(it.headline||'').replace(/<br>/g,' ').replace(/\\*/g,'')+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n\\n수정 요청: ';
   const img=it.cardImage?'<img class="thumb" src="'+esc(it.cardImage)+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
-  const head=it.headline?esc(it.headline.replace(/<br>/g,' ').replace(/\\*/g,'')):esc(it.topic);
-  return '<div class="card">'+img+'<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
+  const head=esc(plainHead(it));
+  return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+img+'<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
     '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
     (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
-    '<div style="margin-top:auto"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a></div></div></div>';
+    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+'<span class="muted">클릭하면 전체보기 →</span></div></div></div>';
 }
+function openDetail(id){
+  const c=DATA.clients[ci];
+  const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
+  const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
+  const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
+  const img=it.cardImage?'<img src="'+esc(it.cardImage)+'" alt=""/>':'';
+  const cap=esc(it.captionBody||it.captionNote||'').replace(/\\n/g,'<br>');
+  document.getElementById('mbody').innerHTML=
+    '<div class="mgrid"><div class="mimg">'+img+'</div><div class="mtext">'+
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+'</div>'+
+    '<h2>'+esc(plainHead(it))+'</h2>'+
+    '<div class="muted" style="margin:6px 0 16px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · 📸 인스타그램 · <span class="badge b-plan">발행 대기</span></div>'+
+    '<div class="mcap">'+cap+'</div>'+
+    '<div style="margin-top:18px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>'+
+    '</div></div>';
+  document.getElementById('modal').classList.add('on');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('on'); }
 function channelDetail(client, c){
   const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
   let h='';
