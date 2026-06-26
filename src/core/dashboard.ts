@@ -46,6 +46,7 @@ interface PendingCard {
   id: string;
   topic: string;
   format: string;
+  channels: PlatformId[];
   scheduledFor: string;
   kicker?: string;
   headline?: string;
@@ -170,6 +171,7 @@ function buildClientData(
     id: it.id,
     topic: it.topic,
     format: it.format,
+    channels: it.channels,
     scheduledFor: it.scheduledFor,
     kicker: it.kicker,
     headline: it.headline,
@@ -309,6 +311,10 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 .capbox{background:#0f1219;border:1px solid #222838;border-radius:12px;padding:14px 16px}
 .caphd{color:#7b8398;font-size:12px;font-weight:600;margin-bottom:8px}
 .mcap{white-space:normal;line-height:1.75;font-size:15px;color:#d4dae6}
+.chgrp{margin:10px 0 18px}
+.chgrp-h{font-size:14px;font-weight:700;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #1e2230}
+.md-h1{font-size:18px;margin:10px 0 6px}.md-h{font-size:15px;color:#ffb454;margin:12px 0 4px}
+.md-tag{color:#6db3ff;font-weight:600;font-size:13px;margin:10px 0 2px}.md-sp{height:10px}
 .thumbwrap{position:relative}
 .b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#e6e8ee;border:1px solid #2d3346}
 @media(max-width:720px){.carou .slide img{height:60vh}}
@@ -378,20 +384,34 @@ function openDetail(id){
   const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
   const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
+  const isCarousel=imgs.length>1;
+  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':chDef.key==='linkedin'?'💼 링크드인 포스트':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
-  const cap=esc(it.captionBody||it.captionNote||'').replace(/\\n/g,'<br>');
+  const cap=fmtCaption(it.captionBody||it.captionNote||'');
   document.getElementById('mbody').innerHTML=
-    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+' · 📑 캐러셀 '+imgs.length+'장</div>'+
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+'</div>'+
     '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
-    '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · 📸 인스타그램 · <span class="badge b-plan">발행 대기</span></div>'+
+    '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · '+chDef.icon+' '+esc(chDef.label)+' · <span class="badge b-plan">발행 대기</span></div>'+
     '<div class="carou">'+slides+'</div>'+
-    '<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>'+
-    '<div class="capbox"><div class="caphd">📝 발행 캡션</div><div class="mcap">'+cap+'</div></div>'+
+    (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
+    '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');
   const car=document.querySelector('.carou'); if(car) car.scrollLeft=0;
 }
 function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+// 블로그/대본 등 본문의 가벼운 마크다운(## 소제목, [HOOK] 등)을 보기 좋게
+function fmtCaption(s){
+  return String(s||'').split('\\n').map(line=>{
+    const t=line.trim();
+    if(t.startsWith('## ')) return '<h4 class="md-h">'+esc(t.slice(3))+'</h4>';
+    if(t.startsWith('# ')) return '<h3 class="md-h1">'+esc(t.slice(2))+'</h3>';
+    if(/^\\[.+\\]$/.test(t)) return '<div class="md-tag">'+esc(t)+'</div>';
+    if(t==='---'||t==='') return '<div class="md-sp"></div>';
+    return '<div>'+esc(line)+'</div>';
+  }).join('');
+}
 function channelDetail(client, c){
   const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
   let h='';
@@ -450,12 +470,21 @@ function overview(client){
   h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th></tr>'+
     client.channels.map(c=>{const lab=(DATA.channels.find(x=>x.key===c.key)||{});
       return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td></tr>';}).join('')+'</table></div>';
-  // 이번 달 콘텐츠 기획안 (카드 미리보기)
+  // 이번 달 콘텐츠 기획안 — 채널별로 묶어서 (채널별 순차 검수)
   const plan=client.planCards||[];
   const fbTitle='['+client.name+'] 기획안 전체 피드백';
-  const fbBody='이번 달 기획안(주 3회 매거진 카드)에 대한 의견/수정사항을 적어주세요.\\n\\n';
-  h+='<div class="sect-h"><h2>📅 이번 달 콘텐츠 기획안 ('+plan.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
-  h+= plan.length?'<div class="cards">'+plan.map(p=>planCard(client,'인스타그램',p)).join('')+'</div>':'<div class="empty">기획안이 아직 없습니다.</div>';
+  const fbBody='이번 달 기획안에 대한 의견/수정사항을 적어주세요.\\n\\n';
+  h+='<div class="sect-h"><h2>📅 7월 콘텐츠 기획안 ('+plan.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
+  if(!plan.length){ h+='<div class="empty">기획안이 아직 없습니다.</div>'; }
+  else {
+    for(const chDef of DATA.channels){
+      const items=plan.filter(p=>(p.channels||[]).includes(chDef.key));
+      if(!items.length) continue;
+      const lab=chDef.icon+' '+chDef.label;
+      h+='<div class="chgrp"><div class="chgrp-h">'+lab+' <span class="muted">'+items.length+'건 · '+esc((items[0].format)||'')+'</span></div>'+
+         '<div class="cards">'+items.map(p=>planCard(client,chDef.label,p)).join('')+'</div></div>';
+    }
+  }
   // 경쟁사 + 최근 발행 미리보기
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
   const recent=[].concat(...client.channels.map(c=>c.published)).sort((a,b)=>(b.time||'').localeCompare(a.time||'')).slice(0,8);

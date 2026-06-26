@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-25T15:00:00.000Z",
+  "updatedAt": "2026-06-25T16:00:00.000Z",
   "items": [
     {
       "id": "w1-mon",
@@ -642,6 +642,474 @@
         "cards/pslab/w4-fri-6.png"
       ],
       "cardImage": "cards/pslab/w4-fri-1.png"
+    },
+    {
+      "id": "naver-blog-07-02",
+      "topic": "광고대행",
+      "format": "블로그 롱폼",
+      "channels": [
+        "naver-blog"
+      ],
+      "scheduledFor": "2026-07-02T01:00:00.000Z",
+      "score": 80,
+      "status": "planned",
+      "kicker": "Agency Guide",
+      "headline": "광고대행사 맡기기 전<br>꼭 확인할 *5가지*",
+      "sub": "15년차가 알려주는 대행사 체크리스트.",
+      "dayLabel": "네이버블로그 · 롱폼",
+      "motif": "lock",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "# 광고대행사, 맡기기 전에 꼭 확인할 5가지 (15년차 체크리스트)\n\n광고를 대행에 맡기기로 했다면, 계약서에 사인하기 전 이 5가지를 반드시 확인하세요. 안 물으면 굳이 먼저 말해주지 않는 것들입니다.\n\n## 1. 수수료 구조 — %인가 고정인가\n매체비의 %로 받으면 대행은 '더 많이 쓰게' 유인이 생깁니다. 고정이면 효율 유인이 약해질 수 있고요. 우리 상황에 맞는 구조인지 보세요.\n\n## 2. 리포트의 '진짜 지표'\n노출·클릭·CTR은 좋아 보입니다. 하지만 매출·전환·ROAS로 이어지는지가 핵심입니다. 리포트 양식을 미리 받아보세요.\n\n## 3. 담당자 — 누가 실제로 운영하나\n영업과 운영 담당이 다른 경우가 많습니다. 실제 내 계정을 만질 사람의 경력을 확인하세요.\n\n## 4. 책임 범위 문서화\n소재 제작, 랜딩, CS는 누가? 경계가 흐리면 둘 다 지칩니다. 계약 전 R&R을 글로 남기세요.\n\n## 5. 종료 조건과 데이터 소유권\n계약 종료 시 계정·픽셀·데이터를 우리가 가져올 수 있는지. 의외로 많이 놓치는 부분입니다.\n\n---\n대행은 '실행의 효율'을 사는 것이지 '매출 보장'을 사는 게 아닙니다. 이 5가지를 정리하고 시작하면 실패 확률이 확 줄어듭니다.",
+      "captionNote": "15년차가 알려주는 대행사 체크리스트.",
+      "rationale": "15년차가 알려주는 대행사 체크리스트.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/naver-blog-07-02-1.png"
+      ],
+      "cardImage": "cards/pslab/naver-blog-07-02-1.png"
+    },
+    {
+      "id": "naver-blog-07-09",
+      "topic": "퍼포먼스마케팅",
+      "format": "블로그 롱폼",
+      "channels": [
+        "naver-blog"
+      ],
+      "scheduledFor": "2026-07-09T01:00:00.000Z",
+      "score": 79,
+      "status": "planned",
+      "kicker": "Performance",
+      "headline": "클릭은 느는데<br>매출이 *안 오르는* 이유",
+      "sub": "전환이 새는 지점을 진단하는 법.",
+      "dayLabel": "네이버블로그 · 롱폼",
+      "motif": "chart",
+      "variant": "B",
+      "palette": "ink",
+      "captionBody": "# 클릭은 느는데 매출이 안 오르는 진짜 이유\n\n\"광고 성과가 좋다는데 왜 통장은 그대로지?\" 가장 많이 받는 질문입니다. 결론부터, 대개 광고가 아니라 '광고 다음'이 문제입니다.\n\n## 클릭은 관심, 구매는 확신\n클릭은 \"한번 볼까?\"입니다. 구매는 \"사도 되겠다\"는 확신이고요. 이 사이에 다리가 없으면 클릭은 비용으로 끝납니다.\n\n## 전환이 새는 3곳\n1) 랜딩 첫 화면 — 3초 안에 '이게 나한테 왜 필요한지' 안 보이면 이탈합니다.\n2) 가격의 근거 — 비싸 보이면 안 삽니다. 가격을 정당화할 이유를 보여주세요.\n3) 신뢰 장치 — 후기·사용 사례·보장이 없으면 마지막에 멈칫합니다.\n\n## 광고를 더 돌리기 전에\n전환율 1%를 2%로 올리면 같은 광고비로 매출이 2배입니다. 광고 예산을 늘리기 전에, 클릭 다음 화면부터 점검하세요.\n\n---\n성과는 '유입 × 전환 × 객단가'입니다. 유입만 보면 절반만 보는 겁니다.",
+      "captionNote": "전환이 새는 지점을 진단하는 법.",
+      "rationale": "전환이 새는 지점을 진단하는 법.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/naver-blog-07-09-1.png"
+      ],
+      "cardImage": "cards/pslab/naver-blog-07-09-1.png"
+    },
+    {
+      "id": "naver-blog-07-16",
+      "topic": "브랜딩",
+      "format": "블로그 롱폼",
+      "channels": [
+        "naver-blog"
+      ],
+      "scheduledFor": "2026-07-16T01:00:00.000Z",
+      "score": 78,
+      "status": "planned",
+      "kicker": "Branding",
+      "headline": "작은 브랜드일수록<br>*‘왜’*를 팔아야 한다",
+      "sub": "메시지 설계 실전 가이드.",
+      "dayLabel": "네이버블로그 · 롱폼",
+      "motif": "compass",
+      "variant": "C",
+      "palette": "ink",
+      "captionBody": "# 작은 브랜드일수록 '왜'를 팔아야 하는 이유\n\n대기업은 '무엇'으로 이깁니다 — 더 싸게, 더 많이. 작은 브랜드가 같은 싸움을 하면 집니다. 우리의 무기는 '왜'입니다.\n\n## 사람은 '왜'를 기억한다\n기능은 잊혀도, \"이 사람들은 이래서 이걸 만들었대\"는 남습니다. 같은 제품도 '왜'가 붙으면 다른 물건이 됩니다.\n\n## '왜'를 찾는 3가지 질문\n1) 우리는 어떤 불편을 못 참아서 시작했나?\n2) 고객의 어떤 순간을 바꾸고 싶나?\n3) 우리가 절대 타협하지 않는 것은?\n\n## 메시지로 옮기기\n찾은 '왜'를 한 문장으로 압축하세요. 그 문장이 상세페이지 첫 줄, 인스타 바이오, 광고 후킹에 일관되게 흘러야 합니다.\n\n---\n작을수록 메시지가 자산입니다. '무엇'으로 경쟁하지 말고 '왜'로 기억되세요.",
+      "captionNote": "메시지 설계 실전 가이드.",
+      "rationale": "메시지 설계 실전 가이드.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/naver-blog-07-16-1.png"
+      ],
+      "cardImage": "cards/pslab/naver-blog-07-16-1.png"
+    },
+    {
+      "id": "naver-blog-07-23",
+      "topic": "마케팅전략",
+      "format": "블로그 롱폼",
+      "channels": [
+        "naver-blog"
+      ],
+      "scheduledFor": "2026-07-23T01:00:00.000Z",
+      "score": 77,
+      "status": "planned",
+      "kicker": "Budget",
+      "headline": "광고 예산 배분의 정석<br>*70-20-10* 법칙",
+      "sub": "검증·테스트·도전 배분 실전.",
+      "dayLabel": "네이버블로그 · 롱폼",
+      "motif": "chart",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "# 광고 예산 배분의 정석: 70-20-10 법칙\n\n예산을 어디에 얼마나 쓸지부터 틀리면, 소재를 아무리 잘 만들어도 결과가 안 납니다. 제가 15년간 쓰는 배분 원칙을 공유합니다.\n\n## 70% — 검증된 승자\n이미 ROAS가 나오는 캠페인·소재·타겟에. 안정적으로 매출을 만드는 엔진입니다. 여기를 함부로 건드리지 마세요.\n\n## 20% — 테스트\n새 타겟, 새 소재, 새 채널 실험에. 다음 승자를 찾는 자리입니다. 이게 없으면 성장이 멈춥니다.\n\n## 10% — 도전\n완전히 새로운 시도(새 플랫폼, 파격 소재)에. 대부분 실패하지만, 가끔의 대박이 판을 바꿉니다.\n\n## 흔한 실수\n- 전부 승자에 몰빵 → 단기 효율은 좋지만 성장 정체.\n- 전부 새것에 베팅 → 돈이 줄줄 샙니다.\n\n---\n배분이 곧 전략입니다. 비율부터 정하고 시작하세요.",
+      "captionNote": "검증·테스트·도전 배분 실전.",
+      "rationale": "검증·테스트·도전 배분 실전.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/naver-blog-07-23-1.png"
+      ],
+      "cardImage": "cards/pslab/naver-blog-07-23-1.png"
+    },
+    {
+      "id": "linkedin-07-01",
+      "topic": "광고대행",
+      "format": "링크드인 포스트",
+      "channels": [
+        "linkedin"
+      ],
+      "scheduledFor": "2026-06-30T23:00:00.000Z",
+      "score": 80,
+      "status": "planned",
+      "kicker": "Insight",
+      "headline": "대행을 쓸 때<br>가장 중요한 *한 가지*",
+      "sub": "15년간 본 성공·실패의 갈림길.",
+      "dayLabel": "링크드인 · 비즈니스",
+      "motif": "lock",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "광고대행을 15년 하며 수백 곳을 봤습니다. 성공한 광고주와 실패한 광고주를 가른 건 예산도, 업종도 아니었습니다.\n\n'기대치 정렬'이었습니다.\n\n대행이 잘하는 건 실행의 효율입니다. 같은 예산으로 더 정교하게, 더 빠르게.\n하지만 '팔리는 상품'과 '살 이유'를 만드는 건 끝까지 브랜드의 몫입니다.\n\n이 경계를 처음에 합의한 광고주는 대행과 오래갑니다.\n\"매출은 알아서 오르겠지\"로 시작한 곳은 3개월 안에 서로를 탓합니다.\n\n맡기기 전에 딱 하나만 정하세요 — '우리가 끝까지 책임질 것'은 무엇인가.\n\n#마케팅 #광고대행 #퍼포먼스마케팅",
+      "captionNote": "15년간 본 성공·실패의 갈림길.",
+      "rationale": "15년간 본 성공·실패의 갈림길.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/linkedin-07-01-1.png"
+      ],
+      "cardImage": "cards/pslab/linkedin-07-01-1.png"
+    },
+    {
+      "id": "linkedin-07-08",
+      "topic": "마케팅전략",
+      "format": "링크드인 포스트",
+      "channels": [
+        "linkedin"
+      ],
+      "scheduledFor": "2026-07-07T23:00:00.000Z",
+      "score": 79,
+      "status": "planned",
+      "kicker": "Decision",
+      "headline": "“이 광고 꺼야 하나”<br>판단하는 *숫자 하나*",
+      "sub": "감이 아니라 손익분기선으로.",
+      "dayLabel": "링크드인 · 비즈니스",
+      "motif": "branch",
+      "variant": "B",
+      "palette": "ink",
+      "captionBody": "\"이 광고, 꺼야 할까요?\" 대표님들이 가장 자주 묻는 질문입니다.\n\n감으로 정하지 마세요. 숫자 하나면 됩니다 — 손익분기 CPA.\n\n(객단가 × 마진율) = 허용 CPA.\n실제 CPA가 이걸 넘으면, 켤수록 적자입니다.\n\n예) 객단가 5만원 × 마진 40% = 허용 CPA 2만원.\n지금 전환당 3만원이 든다면? 끄거나, 소재·타겟·랜딩을 고치세요.\n\n마케팅은 예술 같지만, 끄고 켜는 결정만큼은 산수입니다.\n이 한 줄을 모든 캠페인에 계산해 두면, 감정적 의사결정이 사라집니다.\n\n#마케팅전략 #퍼포먼스마케팅 #그로스",
+      "captionNote": "감이 아니라 손익분기선으로.",
+      "rationale": "감이 아니라 손익분기선으로.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/linkedin-07-08-1.png"
+      ],
+      "cardImage": "cards/pslab/linkedin-07-08-1.png"
+    },
+    {
+      "id": "linkedin-07-15",
+      "topic": "브랜딩",
+      "format": "링크드인 포스트",
+      "channels": [
+        "linkedin"
+      ],
+      "scheduledFor": "2026-07-14T23:00:00.000Z",
+      "score": 78,
+      "status": "planned",
+      "kicker": "Branding",
+      "headline": "팔리는 브랜드는<br>*‘왜’*를 판다",
+      "sub": "기능이 아니라 이유로 기억된다.",
+      "dayLabel": "링크드인 · 비즈니스",
+      "motif": "compass",
+      "variant": "C",
+      "palette": "ink",
+      "captionBody": "경쟁사와 똑같은 기능을 말하고 있다면, 고객 입장에선 고를 이유가 없습니다.\n\n사람은 '무엇'이 아니라 '왜'로 브랜드를 기억합니다.\n\n스펙은 경쟁사도 똑같이 말합니다. 차별은 거기서 안 생깁니다.\n\"이 사람들은 왜 이걸 만들까\"에 답이 있을 때, 비로소 선택받습니다.\n\n특히 작은 브랜드일수록 그렇습니다. 자원이 적을수록 메시지가 유일한 무기니까요.\n\n오늘 한 가지만 해보세요.\n우리 브랜드의 '왜'를 한 문장으로 써보는 것.\n안 써진다면 — 그게 지금 가장 시급한 과제입니다.\n\n#브랜딩 #마케팅 #스타트업",
+      "captionNote": "기능이 아니라 이유로 기억된다.",
+      "rationale": "기능이 아니라 이유로 기억된다.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/linkedin-07-15-1.png"
+      ],
+      "cardImage": "cards/pslab/linkedin-07-15-1.png"
+    },
+    {
+      "id": "linkedin-07-22",
+      "topic": "사업이야기",
+      "format": "링크드인 포스트",
+      "channels": [
+        "linkedin"
+      ],
+      "scheduledFor": "2026-07-21T23:00:00.000Z",
+      "score": 77,
+      "status": "planned",
+      "kicker": "Growth",
+      "headline": "매출이 정체됐을 때<br>먼저 보는 *지표*",
+      "sub": "광고가 아니라 병목부터.",
+      "dayLabel": "링크드인 · 비즈니스",
+      "motif": "growth",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "매출이 정체되면 대부분 \"광고를 더 돌려야 하나\"부터 생각합니다.\n저는 광고를 마지막에 봅니다. 먼저 '어디가 막혔는지'를 봅니다.\n\n매출 = 신규획득 × 전환 × 재구매. 셋 중 어디가 막혔는지에 따라 처방이 완전히 다릅니다.\n\n· 신규는 오는데 안 산다 → 전환 문제 (상세·가격·신뢰)\n· 사는데 더 안 는다 → 획득 문제 (채널·타겟)\n· 한 번 사고 안 온다 → 재구매 문제 (경험·CRM)\n\n광고비를 붓는 건 '획득'에만 듣습니다.\n전환이 막혔는데 광고를 늘리면, 비싼 클릭으로 빈 그릇을 채우는 셈입니다.\n\n정체는 '광고 부족'이 아니라 '진단 부족'인 경우가 훨씬 많습니다.\n\n#그로스 #마케팅 #사업",
+      "captionNote": "광고가 아니라 병목부터.",
+      "rationale": "광고가 아니라 병목부터.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/linkedin-07-22-1.png"
+      ],
+      "cardImage": "cards/pslab/linkedin-07-22-1.png"
+    },
+    {
+      "id": "threads-07-04",
+      "topic": "온라인마케팅",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-04T10:00:00.000Z",
+      "score": 80,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "광고비 태우기 전<br>점검 *3가지*",
+      "sub": "짧게 핵심만.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "chart",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "광고비, 켜기 전이 90%입니다. 🧵\n\n1) 타겟 — \"누구나\"는 \"아무도\"예요. 한 사람을 그리세요.\n\n2) 소재 — 첫 3초에 멈출 이유가 없으면 돈만 흐릅니다.\n\n3) 랜딩 — 클릭 다음 화면이 약하면 모든 클릭이 비용이에요.\n\n이 셋 맞추기 전에 예산부터 올리면? 적자는 정해진 결과입니다.",
+      "captionNote": "짧게 핵심만.",
+      "rationale": "짧게 핵심만.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-04-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-04-1.png"
+    },
+    {
+      "id": "threads-07-07",
+      "topic": "업계비하인드",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-07T10:00:00.000Z",
+      "score": 79,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "대행사가 *안 해주는* 말",
+      "sub": "솔직한 비하인드.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "lock",
+      "variant": "B",
+      "palette": "ink",
+      "captionBody": "대행사가 먼저 안 해주는 것들. 🧵\n\n· 수수료가 매체비의 %인지 고정인지에 따라 이해관계가 달라져요.\n\n· 리포트의 '좋아 보이는 지표'와 '매출 지표'는 다릅니다.\n\n· 계약 전, 누가 뭘 책임지는지 글로 남기세요.\n\n나쁜 대행이라서가 아니라, 안 물으면 굳이 말 안 하는 구조라서요.",
+      "captionNote": "솔직한 비하인드.",
+      "rationale": "솔직한 비하인드.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-07-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-07-1.png"
+    },
+    {
+      "id": "threads-07-11",
+      "topic": "창업인사이트",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-11T10:00:00.000Z",
+      "score": 78,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "돈 없이 마케팅<br>*가능한가*",
+      "sub": "검증부터.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "rocket",
+      "variant": "C",
+      "palette": "ink",
+      "captionBody": "\"돈 없으면 마케팅 못 하죠\" — 절반만 맞아요. 🧵\n\n돈이 필요한 건 '확장'이고, '검증'은 거의 공짜입니다.\n\n콘텐츠 몇 개, DM 몇 통, 작은 설문으로 \"살 사람이 있는지\"부터 확인하세요.\n\n수요 확인 전에 광고비부터 태우면, 가장 빠르게 망하는 길입니다.\n\n돈은 검증된 다음에 붓는 겁니다.",
+      "captionNote": "검증부터.",
+      "rationale": "검증부터.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-11-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-11-1.png"
+    },
+    {
+      "id": "threads-07-14",
+      "topic": "퍼포먼스마케팅",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-14T10:00:00.000Z",
+      "score": 77,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "클릭은 느는데<br>매출이 *그대로*",
+      "sub": "전환을 보라.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "chart",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "클릭은 느는데 매출은 그대로. 광고 탓일까요? 🧵\n\n대개 아니에요. 클릭은 '관심', 구매는 '확신'.\n\n랜딩 첫 화면 · 가격의 근거 · 후기.\n이 중 하나만 약해도 전환이 무너집니다.\n\n광고를 더 돌리기 전에, 클릭 다음 화면부터 보세요.",
+      "captionNote": "전환을 보라.",
+      "rationale": "전환을 보라.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-14-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-14-1.png"
+    },
+    {
+      "id": "threads-07-18",
+      "topic": "브랜딩",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-18T10:00:00.000Z",
+      "score": 76,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "*‘왜’*를 팔아라",
+      "sub": "기억되는 법.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "compass",
+      "variant": "B",
+      "palette": "ink",
+      "captionBody": "사람은 '무엇'이 아니라 '왜'로 브랜드를 기억해요. 🧵\n\n기능은 경쟁사도 똑같이 말합니다. 차별은 '왜'에서 생겨요.\n\n작은 브랜드일수록 더 그렇습니다 — 자원이 적을수록 메시지가 무기니까.\n\n오늘 우리 브랜드의 '왜'를 한 문장으로 써보세요. 안 써지면, 그게 과제예요.",
+      "captionNote": "기억되는 법.",
+      "rationale": "기억되는 법.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-18-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-18-1.png"
+    },
+    {
+      "id": "threads-07-21",
+      "topic": "마케팅전략",
+      "format": "스레드(타래)",
+      "channels": [
+        "threads"
+      ],
+      "scheduledFor": "2026-07-21T10:00:00.000Z",
+      "score": 75,
+      "status": "planned",
+      "kicker": "Threads",
+      "headline": "예산 배분<br>*70-20-10*",
+      "sub": "한 줄 원칙.",
+      "dayLabel": "스레드 · 타래",
+      "motif": "chart",
+      "variant": "C",
+      "palette": "ink",
+      "captionBody": "광고 예산 배분, 저는 70-20-10으로 갑니다. 🧵\n\n70% 검증된 승자(확장)\n20% 새 타겟·소재 테스트\n10% 과감한 실험\n\n전부 승자에 몰면 성장 정지, 전부 새것에 걸면 돈 누수.\n\n배분이 곧 전략입니다.",
+      "captionNote": "한 줄 원칙.",
+      "rationale": "한 줄 원칙.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/threads-07-21-1.png"
+      ],
+      "cardImage": "cards/pslab/threads-07-21-1.png"
+    },
+    {
+      "id": "youtube-07-05",
+      "topic": "광고대행",
+      "format": "쇼츠 대본",
+      "channels": [
+        "youtube"
+      ],
+      "scheduledFor": "2026-07-05T10:00:00.000Z",
+      "score": 80,
+      "status": "planned",
+      "kicker": "Shorts",
+      "headline": "광고비 *날리는* 사장님 특징",
+      "sub": "30초 쇼츠.",
+      "dayLabel": "유튜브 · 쇼츠",
+      "motif": "chart",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "[HOOK · 0~3초]\n광고비 날리는 사장님들, 공통점이 있어요.\n\n[본론 · 3~25초]\n켜기 전 준비를 안 합니다.\n- 타겟이 \"누구나\" — 그럼 아무에게도 안 닿아요.\n- 소재가 평범 — 첫 3초에 멈출 이유가 없죠.\n- 랜딩이 부실 — 클릭해도 안 삽니다.\n이 셋 안 맞으면, 예산 올릴수록 적자예요.\n\n[CTA · 25~30초]\n켜기 전 이 3개부터. 저장해두세요.",
+      "captionNote": "30초 쇼츠.",
+      "rationale": "30초 쇼츠.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/youtube-07-05-1.png"
+      ],
+      "cardImage": "cards/pslab/youtube-07-05-1.png"
+    },
+    {
+      "id": "youtube-07-12",
+      "topic": "마케팅전략",
+      "format": "쇼츠 대본",
+      "channels": [
+        "youtube"
+      ],
+      "scheduledFor": "2026-07-12T10:00:00.000Z",
+      "score": 79,
+      "status": "planned",
+      "kicker": "Shorts",
+      "headline": "이 광고 *꺼야 할까*?",
+      "sub": "숫자 하나로 판단.",
+      "dayLabel": "유튜브 · 쇼츠",
+      "motif": "branch",
+      "variant": "B",
+      "palette": "ink",
+      "captionBody": "[HOOK]\n\"이 광고 꺼야 하나, 더 둬야 하나?\" 감으로 정하지 마세요.\n\n[본론]\n숫자 하나면 됩니다. 손익분기 CPA.\n객단가 곱하기 마진율. 그게 허용 CPA예요.\n객단가 5만, 마진 40%면 → 2만원.\n지금 전환당 3만원? 끄거나 고치세요.\n\n[CTA]\n감이 아니라 산수입니다. 계산해 보세요.",
+      "captionNote": "숫자 하나로 판단.",
+      "rationale": "숫자 하나로 판단.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/youtube-07-12-1.png"
+      ],
+      "cardImage": "cards/pslab/youtube-07-12-1.png"
+    },
+    {
+      "id": "youtube-07-19",
+      "topic": "브랜딩",
+      "format": "쇼츠 대본",
+      "channels": [
+        "youtube"
+      ],
+      "scheduledFor": "2026-07-19T10:00:00.000Z",
+      "score": 78,
+      "status": "planned",
+      "kicker": "Shorts",
+      "headline": "작은 브랜드가 *이기는* 법",
+      "sub": "왜를 팔아라.",
+      "dayLabel": "유튜브 · 쇼츠",
+      "motif": "compass",
+      "variant": "C",
+      "palette": "ink",
+      "captionBody": "[HOOK]\n작은 브랜드가 대기업을 이기는 유일한 방법.\n\n[본론]\n'무엇'으로 싸우지 마세요. 더 싸게, 더 많이는 못 이겨요.\n'왜'를 파세요.\n사람은 기능이 아니라 이유를 기억합니다.\n\"이 사람들은 왜 이걸 만들까\" — 거기에 답이 있으면 선택받아요.\n\n[CTA]\n우리 브랜드의 '왜', 한 문장으로 적어보세요.",
+      "captionNote": "왜를 팔아라.",
+      "rationale": "왜를 팔아라.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/youtube-07-19-1.png"
+      ],
+      "cardImage": "cards/pslab/youtube-07-19-1.png"
+    },
+    {
+      "id": "youtube-07-26",
+      "topic": "사업이야기",
+      "format": "쇼츠 대본",
+      "channels": [
+        "youtube"
+      ],
+      "scheduledFor": "2026-07-26T10:00:00.000Z",
+      "score": 77,
+      "status": "planned",
+      "kicker": "Shorts",
+      "headline": "매출 *정체* 풀리는 순서",
+      "sub": "병목부터 보라.",
+      "dayLabel": "유튜브 · 쇼츠",
+      "motif": "growth",
+      "variant": "A",
+      "palette": "ink",
+      "captionBody": "[HOOK]\n매출이 멈췄을 때, 광고부터 늘리면 안 되는 이유.\n\n[본론]\n매출은 신규 × 전환 × 재구매예요.\n- 오는데 안 산다 → 전환(상세·가격·신뢰)\n- 사는데 안 는다 → 획득(채널·타겟)\n- 한 번 사고 끝 → 재구매(경험·CRM)\n막힌 곳이 다른데 광고만 늘리면 돈만 새요.\n\n[CTA]\n정체는 광고 부족이 아니라 진단 부족입니다.",
+      "captionNote": "병목부터 보라.",
+      "rationale": "병목부터 보라.",
+      "slides": [],
+      "slideImages": [
+        "cards/pslab/youtube-07-26-1.png"
+      ],
+      "cardImage": "cards/pslab/youtube-07-26-1.png"
     }
   ]
 }
