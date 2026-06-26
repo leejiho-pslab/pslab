@@ -121,7 +121,13 @@ class Cafe24Client:
         if resp.status_code == 401 and _retry and self.refresh_token:
             self._refresh()
             return self.get(path, params, _retry=False)
-        resp.raise_for_status()
+        if resp.status_code >= 400:
+            # 카페24 에러 본문(원인 메시지)을 예외에 실어 로그에서 바로 보이게 한다.
+            raise httpx.HTTPStatusError(
+                f"{resp.status_code} for {path} :: {resp.text[:600]}",
+                request=resp.request,
+                response=resp,
+            )
         return resp.json()
 
     def iter_pages(self, path: str, params: dict, key: str, limit: int = PAGE_LIMIT):
