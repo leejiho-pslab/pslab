@@ -15,7 +15,7 @@ from pathlib import Path
 
 import httpx
 
-DEFAULT_API_VERSION = "2024-06-01"
+DEFAULT_API_VERSION = "2026-03-01"
 PAGE_LIMIT = 1000          # 카페24 orders 최대 limit
 OFFSET_SAFETY = 100_000    # 무한루프 방지
 
