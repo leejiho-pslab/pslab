@@ -60,6 +60,10 @@ export interface PlanItem {
   cardImage?: string;
   /** 캡션(본문) 방향 메모 */
   captionNote?: string;
+  /** 발행 완료된 게시물 URL */
+  publishedUrl?: string;
+  /** 발행 완료 시각 (ISO) */
+  publishedAt?: string;
 }
 
 export interface ContentPlan {

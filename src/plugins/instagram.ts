@@ -61,11 +61,16 @@ export class InstagramPlugin extends BasePlugin {
 
   async publish(content: PostContent): Promise<PublishResult> {
     this.ensureConnected();
-    const media = content.media?.find(
-      (m) => m.kind === 'image' || m.kind === 'video',
-    );
+    const images = (content.media ?? []).filter((m) => m.kind === 'image');
+    const video = (content.media ?? []).find((m) => m.kind === 'video');
+    const media = video ?? images[0];
+    const isCarousel = !video && images.length > 1;
     const caption = this.buildCaption(content);
-    this.log.info(`피드 발행 (${media?.kind}: ${media?.source})`);
+    this.log.info(
+      isCarousel
+        ? `캐러셀 발행 (${images.length}장)`
+        : `피드 발행 (${media?.kind}: ${media?.source})`,
+    );
 
     if (this.ctx.dryRun) {
       const creationId = await simulateApiCall(
@@ -88,26 +93,45 @@ export class InstagramPlugin extends BasePlugin {
     if (!media) {
       throw new Error('발행할 미디어가 없습니다.');
     }
-    if (!/^https?:\/\//.test(media.source)) {
-      throw new Error(
-        `Instagram 실제 발행에는 공개 http(s) 미디어 URL이 필요합니다 (현재: ${media.source}).`,
-      );
+    for (const m of isCarousel ? images : [media]) {
+      if (!/^https?:\/\//.test(m.source)) {
+        throw new Error(
+          `Instagram 실제 발행에는 공개 http(s) 미디어 URL이 필요합니다 (현재: ${m.source}).`,
+        );
+      }
     }
 
-    // 1단계: 컨테이너 생성
-    const params: Record<string, string> = { caption };
-    if (media.kind === 'video') {
-      params.media_type = 'REELS';
-      params.video_url = media.source;
+    let creationId: string;
+    if (isCarousel) {
+      // 캐러셀: 각 이미지를 자식 컨테이너로 만든 뒤, 부모 캐러셀 컨테이너로 묶는다.
+      const childIds: string[] = [];
+      for (const img of images.slice(0, 10)) {
+        const child = await this.graphPost(`${igUserId}/media`, {
+          image_url: img.source,
+          is_carousel_item: 'true',
+        });
+        childIds.push(String(child.id));
+      }
+      const parent = await this.graphPost(`${igUserId}/media`, {
+        media_type: 'CAROUSEL',
+        children: childIds.join(','),
+        caption,
+      });
+      creationId = String(parent.id);
     } else {
-      params.image_url = media.source;
-    }
-    const created = await this.graphPost(`${igUserId}/media`, params);
-    const creationId = String(created.id);
-
-    // 영상은 처리 완료까지 대기
-    if (media.kind === 'video') {
-      await this.waitForContainerReady(creationId);
+      // 단일 이미지/영상
+      const params: Record<string, string> = { caption };
+      if (media.kind === 'video') {
+        params.media_type = 'REELS';
+        params.video_url = media.source;
+      } else {
+        params.image_url = media.source;
+      }
+      const created = await this.graphPost(`${igUserId}/media`, params);
+      creationId = String(created.id);
+      if (media.kind === 'video') {
+        await this.waitForContainerReady(creationId);
+      }
     }
 
     // 2단계: 발행

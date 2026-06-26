@@ -316,6 +316,73 @@ async function cmdGeneratePlan(args: Args): Promise<void> {
   }
 }
 
+async function cmdPublishPlan(app: App, args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const only = typeof args.client === 'string' ? args.client : undefined;
+  const id = typeof args.id === 'string' ? args.id : undefined;
+  const due = args.due === true;
+
+  const repo = process.env.PSLAB_REPO ?? 'leejiho-pslab/pslab';
+  const [owner, repoName] = repo.split('/');
+  const pages = process.env.PSLAB_PAGES_BASE ?? `https://${owner}.github.io/${repoName}`;
+
+  if (!id && !due) {
+    console.error('--id <항목ID> 또는 --due (예정시각 지난 항목) 중 하나가 필요합니다.');
+    process.exitCode = 1;
+    return;
+  }
+
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  const store = new PlanStore(dataDir);
+  const now = Date.now();
+
+  for (const client of clients) {
+    const plan = store.load(client.id);
+    const targets = plan.items.filter((it) => {
+      if (it.status === 'published') return false;
+      if (id) return it.id === id;
+      return new Date(it.scheduledFor).getTime() <= now; // --due
+    });
+    if (targets.length === 0) {
+      console.log(`  ${client.name}: 발행할 항목 없음`);
+      continue;
+    }
+    for (const it of targets) {
+      const imgs = it.slideImages?.length
+        ? it.slideImages
+        : it.cardImage
+          ? [it.cardImage]
+          : [];
+      if (imgs.length === 0) {
+        console.log(`  ${it.id}: 카드 이미지 없음 → 건너뜀`);
+        continue;
+      }
+      const content: PostContent = {
+        id: it.id,
+        title: (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, ''),
+        body: it.captionBody ?? it.captionNote ?? it.topic,
+        media: imgs.map((p) => ({
+          kind: 'image' as const,
+          source: `${pages}/${p}`,
+          alt: it.topic,
+        })),
+        tags: [],
+      };
+      console.log(`\n▶ 발행: [${it.channels.join(',')}] ${content.title} (${imgs.length}장)`);
+      const result = await app.publisher.publish(content, { targets: it.channels });
+      printResults(`📤 ${it.id}`, result.results);
+      const okResult = result.results.find((r) => r.ok);
+      if (okResult) {
+        it.status = 'published';
+        it.publishedUrl = okResult.url;
+        it.publishedAt = new Date().toISOString();
+      }
+    }
+    store.save(client.id, plan);
+  }
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -333,6 +400,7 @@ function printHelp(): void {
       '  board [--json]        관제실 상황판 — 클라이언트별 현황 한눈에',
       '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
       '  generate-plan         AI 기획 생성 (--channel instagram --count 6, 발행 전 검수)',
+      '  publish-plan          승인된 기획안 발행 (--id <항목> | --due, 카드는 Pages URL 사용)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -389,6 +457,9 @@ async function main(): Promise<void> {
       break;
     case 'generate-plan':
       await cmdGeneratePlan(args);
+      break;
+    case 'publish-plan':
+      await cmdPublishPlan(app, args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);
