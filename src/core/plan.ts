@@ -16,6 +16,16 @@ import type { PlatformId } from './types.js';
 import type { ClientConfig } from './client.js';
 import type { TopicCandidate } from './research.js';
 
+/** 캐러셀 한 장 (커버 다음에 이어지는 내용 슬라이드) */
+export interface PlanSlide {
+  /** 좌상단 구분 라벨 (예: "01", "WHY", "정리") */
+  label?: string;
+  /** 슬라이드 제목 */
+  title?: string;
+  /** 슬라이드 본문 (줄바꿈 \n 허용) */
+  body?: string;
+}
+
 export interface PlanItem {
   id: string;
   topic: string;
@@ -42,7 +52,11 @@ export interface PlanItem {
   variant?: string;
   /** 발행 캡션 전체 본문 (모달 상세에서 노출) */
   captionBody?: string;
-  /** 렌더된 카드 이미지 경로 (대시보드 상대 경로, 예: cards/pslab/xxx.png) */
+  /** 캐러셀 내용 슬라이드 (커버 다음 장들) */
+  slides?: PlanSlide[];
+  /** 렌더된 전체 슬라이드 이미지 경로들 (커버 포함, 순서대로) */
+  slideImages?: string[];
+  /** 렌더된 카드 이미지 경로 (대시보드 상대 경로 — 커버=슬라이드1) */
   cardImage?: string;
   /** 캡션(본문) 방향 메모 */
   captionNote?: string;
