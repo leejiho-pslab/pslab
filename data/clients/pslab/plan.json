@@ -10,7 +10,7 @@
       ],
       "scheduledFor": "2026-06-29T10:00:00.000Z",
       "score": 90,
-      "status": "planned",
+      "status": "published",
       "kicker": "Marketing Insight",
       "headline": "광고비를 태우기 전에<br>반드시 점검할 *3가지*",
       "sub": "15년간 대행하며 깨달은, 돈이 새는 지점부터 막는 법.",
@@ -56,7 +56,9 @@
         "cards/pslab/w1-mon-5.png",
         "cards/pslab/w1-mon-6.png"
       ],
-      "cardImage": "cards/pslab/w1-mon-1.png"
+      "cardImage": "cards/pslab/w1-mon-1.png",
+      "publishedUrl": "https://www.instagram.com/p/DaCerLaFY2L/",
+      "publishedAt": "2026-06-26T06:17:35.229Z"
     },
     {
       "id": "w1-wed",
