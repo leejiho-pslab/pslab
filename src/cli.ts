@@ -29,6 +29,8 @@ import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
 import { PlanStore } from './core/plan.js';
+import { createContentGenerator } from './core/generate.js';
+import type { PlatformId as PlatformIdT } from './core/types.js';
 import type { CycleRecord } from './core/orchestrator.js';
 
 type Args = Record<string, string | boolean>;
@@ -285,6 +287,35 @@ async function cmdDashboard(args: Args): Promise<void> {
   console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
 }
 
+async function cmdGeneratePlan(args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const only = typeof args.client === 'string' ? args.client : undefined;
+  const channel = (typeof args.channel === 'string' ? args.channel : 'instagram') as PlatformIdT;
+  const count = typeof args.count === 'string' ? Number(args.count) : 6;
+
+  const gen = createContentGenerator();
+  if (!gen) {
+    console.error('ANTHROPIC_API_KEY가 없어 자동 생성을 건너뜁니다 (검수 우선: 기존 큐레이션 유지).');
+    return;
+  }
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  const store = new PlanStore(dataDir);
+  for (const client of clients) {
+    console.log(`\n🤖 기획 생성 — ${client.name} / ${channel} × ${count}`);
+    const items = await gen.generate(client, { channel, count });
+    const plan = store.load(client.id);
+    // 같은 채널의 자동 생성분(*-gen-*)만 교체, 사람이 만든 큐레이션은 보존
+    plan.items = plan.items.filter(
+      (it) => !(it.channels.includes(channel) && it.id.includes('-gen-')),
+    );
+    plan.items.push(...items);
+    plan.updatedAt = new Date().toISOString();
+    store.save(client.id, plan);
+    console.log(`  ${items.length}건 생성·저장 (status=planned, 발행 전 검수 대기)`);
+  }
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -301,6 +332,7 @@ function printHelp(): void {
       '  daemon [--once]       무인 데몬 — 시간표(scheduleTimes)에 맞춰 자동 트리거',
       '  board [--json]        관제실 상황판 — 클라이언트별 현황 한눈에',
       '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
+      '  generate-plan         AI 기획 생성 (--channel instagram --count 6, 발행 전 검수)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -354,6 +386,9 @@ async function main(): Promise<void> {
       break;
     case 'dashboard':
       await cmdDashboard(args);
+      break;
+    case 'generate-plan':
+      await cmdGeneratePlan(args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);
