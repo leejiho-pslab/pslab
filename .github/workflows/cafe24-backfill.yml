@@ -1,0 +1,55 @@
+name: ops backfill (history)
+
+# 과거 데이터 1회성 백필 — 카페24 매출·주문(+광고)을 지정 시작일부터 채운다.
+# 경쟁사(competitor)는 현재 시점 스냅샷이라 과거가 없으므로 기본 제외(skip).
+# DATABASE_URL(Neon) 에 적재되어 대시보드에 즉시 반영된다.
+#
+# 사용: Actions → 이 워크플로 → Run workflow → start_date / skip 확인 후 실행.
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "백필 시작일 (YYYY-MM-DD)"
+        required: true
+        default: "2025-01-01"
+      skip:
+        description: "제외 채널(콤마). 경쟁사는 과거 스냅샷 없음 → 기본 제외"
+        required: false
+        default: "competitor,creative"
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Backfill (live)
+        env:
+          CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.META_AD_ACCOUNT_ID }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          NAVER_SA_API_KEY: ${{ secrets.NAVER_SA_API_KEY }}
+          NAVER_SA_SECRET_KEY: ${{ secrets.NAVER_SA_SECRET_KEY }}
+          NAVER_SA_CUSTOMER_ID: ${{ secrets.NAVER_SA_CUSTOMER_ID }}
+        run: |
+          python scripts/run_all.py --mode live \
+            --start "${{ github.event.inputs.start_date }}" \
+            --skip "${{ github.event.inputs.skip }}"
