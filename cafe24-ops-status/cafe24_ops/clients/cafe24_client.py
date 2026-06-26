@@ -155,13 +155,18 @@ class Cafe24Client:
         )
         return int(data.get("count", 0) or 0)
 
+    # 몰/토큰권한에 따라 신규고객 엔드포인트가 없을 수 있다. 한 번 실패하면 프로세스
+    # 내에서 더 호출하지 않아(백필 시 매일 404/422 반복 방지) 속도를 아낀다.
+    _new_customers_unavailable = False
+
     def count_new_customers(self, start_date: str, end_date: str) -> int | None:
         """기간 내 신규 가입 회원수.
 
-        몰/버전에 따라 /customers/count 가 없을 수 있어(404), 그 경우
-        존재가 확실한 목록 엔드포인트(/customers)를 기간 필터로 페이지네이션해 센다.
-        둘 다 실패하면 None.
+        /customers/count(404 가능) → 목록(/customers) 폴백. 둘 다 실패하면 None 이며,
+        이후 호출은 즉시 None(반복 실패 호출 생략).
         """
+        if Cafe24Client._new_customers_unavailable:
+            return None
         try:
             data = self.get(
                 "/api/v2/admin/customers/count",
@@ -179,6 +184,7 @@ class Cafe24Client:
             ))
             return len(rows)
         except httpx.HTTPStatusError:
+            Cafe24Client._new_customers_unavailable = True
             return None
 
     def get_visitor_count(self, date: str) -> int | None:
