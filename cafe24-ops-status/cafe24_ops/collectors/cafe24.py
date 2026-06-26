@@ -72,6 +72,29 @@ def signup_metrics(date: str, new_signups: int | None) -> list[dict]:
     return [{"date": date, "source": "cafe24", "metric": "new_signups", "value": float(new_signups)}]
 
 
+def order_breakdowns(date: str, orders: list[dict]) -> list[dict]:
+    """실주문 → 디바이스/신규·재구매 매출 차원 팩트 (추가 scope 불필요).
+
+    - 디바이스: order_from_mobile == "T" → mobile, else pc
+    - 신규/재구매: first_order == "F" → 재구매(returning), 그 외(T·null·게스트/마켓) → 신규(new)
+      (마켓/비회원 주문은 first_order 가 null 이라 '신규'로 집계 — 합계가 매출과 일치)
+    """
+    dev = {"mobile": 0.0, "pc": 0.0}
+    cust = {"new": 0.0, "returning": 0.0}
+    for o in orders:
+        amt = order_amount(o)
+        dev["mobile" if o.get("order_from_mobile") == "T" else "pc"] += amt
+        cust["returning" if o.get("first_order") == "F" else "new"] += amt
+    out = []
+    for d, v in dev.items():
+        out.append({"date": date, "source": "cafe24", "metric": "device_sales",
+                    "value": round(v, 2), "dims": {"device": d}})
+    for c, v in cust.items():
+        out.append({"date": date, "source": "cafe24", "metric": "customer_sales",
+                    "value": round(v, 2), "dims": {"customer_type": c}})
+    return out
+
+
 MOCK_PRODUCTS = [
     "keek Pillow", "Filovely Basic Windbreaker", "keek Recovery Slipper",
     "keek Travel Pouch", "HOODIE Oversfit", "keek Neck Cushion",
@@ -179,4 +202,5 @@ class Cafe24Collector(BaseCollector):
             orders_to_metrics(date, orders, count)
             + visitor_metrics(date, count, visitors)
             + signup_metrics(date, signups)
+            + order_breakdowns(date, orders)
         )
