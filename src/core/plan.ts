@@ -36,6 +36,12 @@ export interface PlanItem {
   dayLabel?: string;
   /** 카드 팔레트 키 (ink/paper/forest) */
   palette?: string;
+  /** 주제 그래픽 모티프 키 (chart/lock/compass/branch/rocket/bulb/growth) */
+  motif?: string;
+  /** 디자인 변형 (A/B/C) — 반응도 A/B 테스트용 */
+  variant?: string;
+  /** 발행 캡션 전체 본문 (모달 상세에서 노출) */
+  captionBody?: string;
   /** 렌더된 카드 이미지 경로 (대시보드 상대 경로, 예: cards/pslab/xxx.png) */
   cardImage?: string;
   /** 캡션(본문) 방향 메모 */

@@ -5,14 +5,15 @@
  * data/clients/<id>/plan.json 의 각 항목을 매거진 스타일 카드(PNG)로 렌더해
  * docs/cards/<id>/<itemId>.png 에 저장하고, plan.json 에 cardImage 경로를 채운다.
  *
- * AI 그림 생성(diffusion)은 한글 텍스트를 깨뜨리므로, 타이포그래피는 HTML/CSS로
- * 렌더링(헤드리스 Chromium)해 글자를 100% 선명하게 만든다. 인물 이미지 미사용.
+ * - 타이포는 HTML/CSS로 렌더(헤드리스 Chromium) → 한글 100% 선명, 인물 미사용.
+ * - 주제 그래픽: item.motif(chart/lock/compass/branch/rocket/bulb/growth)를 SVG로 합성.
+ * - 디자인 변형: item.variant(A/B/C)로 색·레이아웃을 바꿔 반응도 A/B 테스트.
  *
  * 사용: node scripts/render-cards.mjs --client pslab
- * Chromium 경로: PSLAB_CHROMIUM 환경변수 > /opt/pw-browsers/chromium > which chromium
+ * Chromium 경로: PSLAB_CHROMIUM > /opt/pw-browsers/chromium > which chromium
  * Chromium이 없으면 렌더를 건너뛴다(기존 커밋된 카드 유지) — CI를 깨지 않음.
  */
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,53 +50,123 @@ function fontFaces() {
     .join('\n');
 }
 
-const PALETTES = {
-  ink: { bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', rule: 'rgba(244,241,234,.18)' },
-  paper: { bg: '#f3efe6', fg: '#1a1a1a', muted: '#6b6357', accent: '#c8531b', rule: 'rgba(26,26,26,.14)' },
-  forest: { bg: '#10231c', fg: '#f1efe6', muted: '#9bb3a6', accent: '#e8b44a', rule: 'rgba(241,239,230,.16)' },
+// 디자인 변형 — 모두 잉크(다크) 계열, 액센트·레이아웃을 바꿔 A/B 테스트
+const VARIANTS = {
+  A: { name: '잉크·에디토리얼', bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', layout: 'editorial' },
+  B: { name: '잉크·그래픽', bg: '#0b1a1c', fg: '#eef3f1', muted: '#8fb0ab', accent: '#36d6c4', layout: 'graphic' },
+  C: { name: '잉크·스포트라이트', bg: '#14121d', fg: '#f3eff6', muted: '#a99fc0', accent: '#ffc24a', layout: 'spotlight' },
 };
 
-/** 헤드라인의 *강조어* → <em>, 줄바꿈은 <br> 유지 (그 외 태그/특수문자는 이스케이프) */
+// 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
+function motifSVG(key, color, size, opacity) {
+  const sw = 4.2;
+  const common = `fill="none" stroke="${color}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"`;
+  const paths = {
+    chart:
+      `<rect x="16" y="58" width="15" height="26" ${common}/>` +
+      `<rect x="42" y="42" width="15" height="42" ${common}/>` +
+      `<rect x="68" y="26" width="15" height="58" ${common}/>` +
+      `<polyline points="16,40 38,30 60,34 86,14" ${common}/>` +
+      `<polyline points="86,14 86,26 74,18" ${common}/>`,
+    lock:
+      `<rect x="26" y="46" width="48" height="40" rx="7" ${common}/>` +
+      `<path d="M37 46 V36 a13 13 0 0 1 26 0 V46" ${common}/>` +
+      `<circle cx="50" cy="63" r="4.5" ${common}/><line x1="50" y1="67" x2="50" y2="75" ${common}/>`,
+    compass:
+      `<circle cx="50" cy="50" r="37" ${common}/>` +
+      `<polygon points="50,20 59,50 50,80 41,50" ${common}/>` +
+      `<circle cx="50" cy="50" r="3.5" fill="${color}" stroke="none"/>`,
+    branch:
+      `<circle cx="50" cy="22" r="5" ${common}/><line x1="50" y1="27" x2="50" y2="46" ${common}/>` +
+      `<path d="M50 46 C50 66 30 64 27 82" ${common}/><path d="M50 46 C50 66 70 64 73 82" ${common}/>` +
+      `<polyline points="27,82 21,74 33,76" ${common}/><polyline points="73,82 67,76 79,74" ${common}/>`,
+    rocket:
+      `<path d="M50 14 C62 26 62 54 56 68 L44 68 C38 54 38 26 50 14 Z" ${common}/>` +
+      `<circle cx="50" cy="38" r="6.5" ${common}/>` +
+      `<path d="M44 64 L33 78 L42 72" ${common}/><path d="M56 64 L67 78 L58 72" ${common}/>` +
+      `<path d="M46 70 Q50 84 54 70" ${common}/>`,
+    bulb:
+      `<circle cx="50" cy="40" r="23" ${common}/>` +
+      `<line x1="41" y1="66" x2="59" y2="66" ${common}/><line x1="43" y1="73" x2="57" y2="73" ${common}/><line x1="45" y1="80" x2="55" y2="80" ${common}/>` +
+      `<polyline points="43,40 50,49 57,40" ${common}/>`,
+    growth:
+      `<line x1="16" y1="84" x2="88" y2="84" ${common}/><line x1="16" y1="84" x2="16" y2="16" ${common}/>` +
+      `<path d="M20 78 Q44 76 58 50 T88 18" ${common}/>` +
+      `<polyline points="88,18 76,18 84,28" ${common}/>`,
+  };
+  const inner = paths[key] || paths.compass;
+  return `<svg class="motif" viewBox="0 0 100 100" width="${size}" height="${size}" style="opacity:${opacity}">${inner}</svg>`;
+}
+
 function headlineHTML(s) {
   return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/&lt;br\s*\/?&gt;/g, '<br>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>');
 }
-const esc = (s) =>
-  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function cardHTML(item, no, faces) {
-  const p = PALETTES[item.palette] ?? PALETTES.ink;
+  const v = VARIANTS[item.variant] || VARIANTS.A;
+  const rule = `rgba(255,255,255,.16)`;
+  let body;
+  if (v.layout === 'graphic') {
+    // B: 좌측 텍스트 + 우측 큰 주제 그래픽(액센트, 선명)
+    body = `
+    <div class="abar"></div>
+    <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="no">ISSUE ${no}</div></div>
+    <div class="rule"></div>
+    <div class="gwrap">
+      <div class="gtext"><div class="headline">${headlineHTML(item.headline)}</div><div class="sub">${esc(item.sub)}</div></div>
+      <div class="gfig">${motifSVG(item.motif, v.accent, 380, 0.96)}</div>
+    </div>
+    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+  } else if (v.layout === 'spotlight') {
+    // C: 거대 호수 + 중앙 정렬 헤드라인 + 상단 작은 그래픽
+    body = `
+    <div class="bigno">${no}</div>
+    <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="smfig">${motifSVG(item.motif, v.accent, 96, 0.95)}</div></div>
+    <div class="center">
+      <div class="headline" style="text-align:center">${headlineHTML(item.headline)}</div>
+      <div class="sub" style="text-align:center;margin-left:auto;margin-right:auto">${esc(item.sub)}</div>
+    </div>
+    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+  } else {
+    // A: 에디토리얼 — 큰 그래픽 배경 워터마크 + 좌하단 헤드라인
+    body = `
+    <div class="bgfig">${motifSVG(item.motif, v.fg, 560, 0.07)}</div>
+    <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="no">ISSUE ${no}</div></div>
+    <div class="rule"></div>
+    <div class="headline" style="margin-top:auto">${headlineHTML(item.headline)}</div>
+    <div class="sub">${esc(item.sub)}</div>
+    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+  }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
 html,body{width:1080px;height:1350px}
-.card{width:1080px;height:1350px;background:${p.bg};color:${p.fg};font-family:'Pretendard';
+.card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
   padding:96px 92px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.top{display:flex;justify-content:space-between;align-items:center}
-.kicker{font-weight:600;font-size:30px;letter-spacing:.22em;color:${p.accent};text-transform:uppercase}
-.no{font-weight:600;font-size:28px;color:${p.muted};letter-spacing:.1em}
-.rule{height:2px;background:${p.rule};margin:40px 0}
-.headline{font-weight:800;font-size:104px;line-height:1.16;letter-spacing:-.03em;margin-top:auto}
-.headline em{font-style:normal;color:${p.accent};position:relative;white-space:nowrap}
-.headline em::after{content:'';position:absolute;left:0;right:0;bottom:6px;height:14px;background:${p.accent};opacity:.18;z-index:-1}
-.sub{font-weight:500;font-size:38px;line-height:1.5;color:${p.muted};margin-top:44px;max-width:86%}
-.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:60px}
+.top{display:flex;justify-content:space-between;align-items:center;z-index:2}
+.kicker{font-weight:600;font-size:30px;letter-spacing:.22em;color:${v.accent};text-transform:uppercase}
+.no{font-weight:600;font-size:28px;color:${v.muted};letter-spacing:.1em}
+.rule{height:2px;background:${rule};margin:40px 0;z-index:2}
+.headline{font-weight:800;font-size:104px;line-height:1.16;letter-spacing:-.03em;z-index:2;position:relative}
+.headline em{font-style:normal;color:${v.accent};position:relative;white-space:nowrap}
+.headline em::after{content:'';position:absolute;left:0;right:0;bottom:6px;height:14px;background:${v.accent};opacity:.18;z-index:-1}
+.sub{font-weight:500;font-size:38px;line-height:1.5;color:${v.muted};margin-top:44px;max-width:86%;z-index:2}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:60px;z-index:2}
 .brand{font-weight:700;font-size:34px;letter-spacing:.02em}
-.tag{font-weight:500;font-size:26px;color:${p.muted}}
-.bigmark{position:absolute;top:300px;right:-30px;font-weight:800;font-size:560px;color:${p.fg};opacity:.04;line-height:.8}
-</style></head><body>
-<div class="card">
-  <div class="bigmark">"</div>
-  <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="no">ISSUE ${no}</div></div>
-  <div class="rule"></div>
-  <div class="headline">${headlineHTML(item.headline)}</div>
-  <div class="sub">${esc(item.sub)}</div>
-  <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>
-</div></body></html>`;
+.tag{font-weight:500;font-size:26px;color:${v.muted}}
+.bgfig{position:absolute;top:300px;right:-40px;z-index:1}
+.abar{position:absolute;left:0;top:0;bottom:0;width:16px;background:${v.accent}}
+.gwrap{display:flex;align-items:center;gap:30px;margin-top:auto;z-index:2}
+.gtext{flex:1}.gtext .headline{font-size:90px}.gtext .sub{max-width:100%}
+.gfig{flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.smfig{display:flex;align-items:center}
+.bigno{position:absolute;top:120px;left:70px;font-weight:800;font-size:300px;line-height:.8;color:${v.accent};opacity:.12;z-index:1}
+.center{margin:auto 0;z-index:2}
+</style></head><body><div class="card">${body}</div></body></html>`;
 }
 
 const planFile = join(ROOT, 'data/clients', clientId, 'plan.json');
@@ -110,23 +181,22 @@ if (items.length === 0) {
   process.exit(0);
 }
 
-const chromium = findChromium();
 const outDir = join(ROOT, 'docs/cards', clientId);
 mkdirSync(outDir, { recursive: true });
-const faces = fontFaces();
-const tmpHtml = join(outDir, '_tmp.html');
+const chromium = findChromium();
 
 if (!chromium) {
   console.warn('Chromium을 찾지 못해 렌더를 건너뜁니다(기존 카드 유지). PSLAB_CHROMIUM 설정 가능.');
-  // cardImage 경로만 채워 둔다 (이미 렌더된 파일이 있으면 대시보드에 보임)
-  for (let i = 0; i < items.length; i++) {
-    const file = `${items[i].id}.png`;
-    if (existsSync(join(outDir, file))) items[i].cardImage = `cards/${clientId}/${file}`;
+  for (const it of items) {
+    const file = `${it.id}.png`;
+    if (existsSync(join(outDir, file))) it.cardImage = `cards/${clientId}/${file}`;
   }
   writeFileSync(planFile, JSON.stringify(plan, null, 2));
   process.exit(0);
 }
 
+const faces = fontFaces();
+const tmpHtml = join(outDir, '_tmp.html');
 let n = 0;
 for (let i = 0; i < items.length; i++) {
   const item = items[i];
@@ -147,11 +217,6 @@ for (let i = 0; i < items.length; i++) {
   item.cardImage = `cards/${clientId}/${file}`;
   n++;
 }
-// 임시 파일 정리
-try {
-  for (const f of readdirSync(outDir)) if (f === '_tmp.html') execFileSync('rm', [join(outDir, f)]);
-} catch {
-  /* ignore */
-}
+try { rmSync(tmpHtml); } catch { /* ignore */ }
 writeFileSync(planFile, JSON.stringify(plan, null, 2));
 console.log(`카드 ${n}장 렌더 완료 → docs/cards/${clientId}/`);
