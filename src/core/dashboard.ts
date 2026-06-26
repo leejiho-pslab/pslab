@@ -55,6 +55,7 @@ interface PendingCard {
   captionNote?: string;
   captionBody?: string;
   variant?: string;
+  slideImages?: string[];
 }
 
 function buildChannel(
@@ -178,6 +179,7 @@ function buildClientData(
     captionNote: it.captionNote,
     captionBody: it.captionBody,
     variant: it.variant,
+    slideImages: it.slideImages,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -297,12 +299,19 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 .modal.on{display:flex}
 .mwrap{position:relative;background:#12141d;border:1px solid #262b3a;border-radius:16px;max-width:920px;width:100%;padding:22px}
 .mx{position:absolute;top:14px;right:14px;background:#222838;border:1px solid #2d3346;color:#cbd3e1;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
-.mgrid{display:grid;grid-template-columns:minmax(0,340px) 1fr;gap:22px}
-.mimg img{width:100%;border-radius:12px;display:block;background:#0a0c11}
-.mtext h2{font-size:24px;margin:2px 0}
-.mtext .kick{color:#ff8a3d;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+#mbody h2{font-size:23px}
+#mbody .kick{color:#ff8a3d;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.carou{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;-webkit-overflow-scrolling:touch}
+.carou .slide{position:relative;flex:0 0 auto;scroll-snap-align:center}
+.carou .slide img{height:520px;width:auto;border-radius:14px;display:block;background:#0a0c11;border:1px solid #222838}
+.carou .snum{position:absolute;top:10px;right:10px;background:rgba(8,10,14,.7);color:#cbd3e1;font-size:11px;padding:3px 8px;border-radius:20px}
+.carou::-webkit-scrollbar{height:8px}.carou::-webkit-scrollbar-thumb{background:#2d3346;border-radius:8px}
+.capbox{background:#0f1219;border:1px solid #222838;border-radius:12px;padding:14px 16px}
+.caphd{color:#7b8398;font-size:12px;font-weight:600;margin-bottom:8px}
 .mcap{white-space:normal;line-height:1.75;font-size:15px;color:#d4dae6}
-@media(max-width:720px){.mgrid{grid-template-columns:1fr}}
+.thumbwrap{position:relative}
+.b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#e6e8ee;border:1px solid #2d3346}
+@media(max-width:720px){.carou .slide img{height:60vh}}
 </style>
 </head>
 <body>
@@ -347,10 +356,15 @@ function publishedCard(p, badge){
 }
 function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').replace(/\\*/g,''):it.topic; }
 function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
+function slideCount(it){ return (it.slideImages&&it.slideImages.length)||1; }
 function planCard(client, chLabel, it){
   const img=it.cardImage?'<img class="thumb" src="'+esc(it.cardImage)+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
   const head=esc(plainHead(it));
-  return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+img+'<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
+  const n=slideCount(it);
+  const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
+  return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+
+    '<div class="thumbwrap">'+img+carBadge+'</div>'+
+    '<div class="cbody"><div class="ctop"><strong>'+head+'</strong><span class="badge b-plan">예정</span></div>'+
     '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
     (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
     '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+'<span class="muted">클릭하면 전체보기 →</span></div></div></div>';
@@ -360,17 +374,19 @@ function openDetail(id){
   const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
   const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
   const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
-  const img=it.cardImage?'<img src="'+esc(it.cardImage)+'" alt=""/>':'';
+  const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(s)+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=esc(it.captionBody||it.captionNote||'').replace(/\\n/g,'<br>');
   document.getElementById('mbody').innerHTML=
-    '<div class="mgrid"><div class="mimg">'+img+'</div><div class="mtext">'+
-    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+'</div>'+
-    '<h2>'+esc(plainHead(it))+'</h2>'+
-    '<div class="muted" style="margin:6px 0 16px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · 📸 인스타그램 · <span class="badge b-plan">발행 대기</span></div>'+
-    '<div class="mcap">'+cap+'</div>'+
-    '<div style="margin-top:18px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>'+
-    '</div></div>';
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+' · 📑 캐러셀 '+imgs.length+'장</div>'+
+    '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
+    '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · 📸 인스타그램 · <span class="badge b-plan">발행 대기</span></div>'+
+    '<div class="carou">'+slides+'</div>'+
+    '<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>'+
+    '<div class="capbox"><div class="caphd">📝 발행 캡션</div><div class="mcap">'+cap+'</div></div>'+
+    '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');
+  const car=document.querySelector('.carou'); if(car) car.scrollLeft=0;
 }
 function closeModal(){ document.getElementById('modal').classList.remove('on'); }
 function channelDetail(client, c){

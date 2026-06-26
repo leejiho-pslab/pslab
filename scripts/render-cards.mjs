@@ -169,6 +169,41 @@ html,body{width:1080px;height:1350px}
 </style></head><body><div class="card">${body}</div></body></html>`;
 }
 
+const bodyHTML = (s) =>
+  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+
+// 캐러셀 내용 슬라이드 (커버 다음 장들) — 큰 라벨 + 제목 + 본문, 변형 팔레트 사용
+function contentSlideHTML(item, slide, n, total, faces) {
+  const v = VARIANTS[item.variant] || VARIANTS.A;
+  const rule = 'rgba(255,255,255,.16)';
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+${faces}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+html,body{width:1080px;height:1350px}
+.card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
+  padding:96px 92px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.top{display:flex;justify-content:space-between;align-items:center}
+.kicker{font-weight:600;font-size:27px;letter-spacing:.2em;color:${v.muted};text-transform:uppercase}
+.page{font-weight:700;font-size:26px;color:${v.accent};letter-spacing:.08em}
+.rule{height:2px;background:${rule};margin:36px 0 0}
+.label{font-weight:800;font-size:120px;line-height:1;color:${v.accent};margin-top:70px;letter-spacing:-.02em}
+.title{font-weight:800;font-size:78px;line-height:1.2;letter-spacing:-.02em;margin-top:24px}
+.body{font-weight:500;font-size:42px;line-height:1.62;color:${v.fg};opacity:.9;margin-top:36px;max-width:96%}
+.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:50px}
+.brand{font-weight:700;font-size:32px;letter-spacing:.02em}
+.tag{font-weight:500;font-size:25px;color:${v.muted}}
+.bar{position:absolute;left:0;top:0;bottom:0;width:14px;background:${v.accent};opacity:.85}
+</style></head><body><div class="card">
+  <div class="bar"></div>
+  <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="page">${n} / ${total}</div></div>
+  <div class="rule"></div>
+  ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
+  ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
+  ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
+  <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>
+</div></body></html>`;
+}
+
 const planFile = join(ROOT, 'data/clients', clientId, 'plan.json');
 if (!existsSync(planFile)) {
   console.error(`plan.json 없음: ${planFile}`);
@@ -185,11 +220,20 @@ const outDir = join(ROOT, 'docs/cards', clientId);
 mkdirSync(outDir, { recursive: true });
 const chromium = findChromium();
 
+// 한 항목의 전체 슬라이드(커버 + 내용) 파일명 목록
+function slideFilesFor(item) {
+  const total = 1 + (item.slides?.length ?? 0);
+  return Array.from({ length: total }, (_, k) => `${item.id}-${k + 1}.png`);
+}
+
 if (!chromium) {
   console.warn('Chromium을 찾지 못해 렌더를 건너뜁니다(기존 카드 유지). PSLAB_CHROMIUM 설정 가능.');
   for (const it of items) {
-    const file = `${it.id}.png`;
-    if (existsSync(join(outDir, file))) it.cardImage = `cards/${clientId}/${file}`;
+    const files = slideFilesFor(it).filter((f) => existsSync(join(outDir, f)));
+    if (files.length) {
+      it.slideImages = files.map((f) => `cards/${clientId}/${f}`);
+      it.cardImage = it.slideImages[0];
+    }
   }
   writeFileSync(planFile, JSON.stringify(plan, null, 2));
   process.exit(0);
@@ -197,12 +241,8 @@ if (!chromium) {
 
 const faces = fontFaces();
 const tmpHtml = join(outDir, '_tmp.html');
-let n = 0;
-for (let i = 0; i < items.length; i++) {
-  const item = items[i];
-  const no = String(i + 1).padStart(2, '0');
-  writeFileSync(tmpHtml, cardHTML(item, no, faces));
-  const file = `${item.id}.png`;
+function shoot(html, file) {
+  writeFileSync(tmpHtml, html);
   execFileSync(
     chromium,
     [
@@ -214,9 +254,29 @@ for (let i = 0; i < items.length; i++) {
     ],
     { stdio: 'pipe' },
   );
-  item.cardImage = `cards/${clientId}/${file}`;
-  n++;
+}
+
+let nSlides = 0;
+for (let i = 0; i < items.length; i++) {
+  const item = items[i];
+  const no = String(i + 1).padStart(2, '0');
+  const slides = item.slides ?? [];
+  const total = 1 + slides.length;
+  const files = [];
+  // 슬라이드 1 = 커버
+  shoot(cardHTML(item, no, faces), `${item.id}-1.png`);
+  files.push(`cards/${clientId}/${item.id}-1.png`);
+  nSlides++;
+  // 슬라이드 2..N = 내용
+  slides.forEach((slide, k) => {
+    const f = `${item.id}-${k + 2}.png`;
+    shoot(contentSlideHTML(item, slide, k + 2, total, faces), f);
+    files.push(`cards/${clientId}/${f}`);
+    nSlides++;
+  });
+  item.slideImages = files;
+  item.cardImage = files[0];
 }
 try { rmSync(tmpHtml); } catch { /* ignore */ }
 writeFileSync(planFile, JSON.stringify(plan, null, 2));
-console.log(`카드 ${n}장 렌더 완료 → docs/cards/${clientId}/`);
+console.log(`${items.length}개 콘텐츠 · 슬라이드 ${nSlides}장 렌더 완료 → docs/cards/${clientId}/`);
