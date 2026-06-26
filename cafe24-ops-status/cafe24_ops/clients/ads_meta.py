@@ -104,15 +104,16 @@ class MetaAdsClient:
         return (r.json() or {}).get("access_token")
 
     def insights(self, date: str) -> dict:
+        # 토큰은 쿼리 대신 Authorization 헤더로 보낸다 → URL(로그)에 토큰이 노출되지 않음.
         path = f"/{self.version}/act_{self.account_id}/insights"
         params = {
-            "access_token": self.access_token,
             "level": "account",
             "fields": "spend,impressions,clicks,actions,action_values",
             "time_range[since]": date,
             "time_range[until]": date,
         }
-        r = self._http.get(path, params=params)
+        r = self._http.get(path, params=params,
+                           headers={"Authorization": f"Bearer {self.access_token}"})
         r.raise_for_status()
         return r.json()
 
