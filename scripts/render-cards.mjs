@@ -143,10 +143,14 @@ function cardHTML(item, no, faces) {
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;
+  word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
 html,body{width:1080px;height:1350px}
+/* 세이프존: 모든 텍스트는 이 여백 안에 둔다. 인스타 프로필 그리드는 4:5를
+   1:1 중앙으로 크롭(상하 135px 잘림)하므로 핵심 텍스트는 중앙 밴드에 배치. */
+:root{--safe-x:96px;--safe-t:120px;--safe-b:130px}
 .card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
-  padding:96px 92px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  padding:var(--safe-t) var(--safe-x) var(--safe-b);display:flex;flex-direction:column;position:relative;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center;z-index:2}
 .kicker{font-weight:600;font-size:30px;letter-spacing:.22em;color:${v.accent};text-transform:uppercase}
 .no{font-weight:600;font-size:28px;color:${v.muted};letter-spacing:.1em}
@@ -178,10 +182,14 @@ function contentSlideHTML(item, slide, n, total, faces) {
   const rule = 'rgba(255,255,255,.16)';
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;
+  word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
 html,body{width:1080px;height:1350px}
+/* 세이프존: 모든 텍스트는 이 여백 안에 둔다. 인스타 프로필 그리드는 4:5를
+   1:1 중앙으로 크롭(상하 135px 잘림)하므로 핵심 텍스트는 중앙 밴드에 배치. */
+:root{--safe-x:96px;--safe-t:120px;--safe-b:130px}
 .card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
-  padding:96px 92px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+  padding:var(--safe-t) var(--safe-x) var(--safe-b);display:flex;flex-direction:column;position:relative;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center}
 .kicker{font-weight:600;font-size:27px;letter-spacing:.2em;color:${v.muted};text-transform:uppercase}
 .page{font-weight:700;font-size:26px;color:${v.accent};letter-spacing:.08em}
