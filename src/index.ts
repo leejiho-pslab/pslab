@@ -74,7 +74,7 @@ export { DesignStudio, DesignStore, defaultDesignStyle } from './core/design.js'
 export type { DesignStyle } from './core/design.js';
 export { PlanStore, generatePlan, upcomingSlots } from './core/plan.js';
 export type { PlanItem, ContentPlan, PlanSlide } from './core/plan.js';
-export { ContentGenerator, createContentGenerator } from './core/generate.js';
+export { ContentGenerator, createContentGenerator, CONTENT_DOCTRINE } from './core/generate.js';
 export type { GenerateOptions } from './core/generate.js';
 export {
   loadClient,

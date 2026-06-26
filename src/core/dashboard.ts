@@ -313,8 +313,12 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 .mcap{white-space:normal;line-height:1.75;font-size:15px;color:#d4dae6}
 .chgrp{margin:10px 0 18px}
 .chgrp-h{font-size:14px;font-weight:700;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #1e2230}
-.md-h1{font-size:18px;margin:10px 0 6px}.md-h{font-size:15px;color:#ffb454;margin:12px 0 4px}
+.md-h1{font-size:19px;margin:10px 0 8px;font-weight:800}.md-h{font-size:15px;color:#ffb454;margin:14px 0 4px;font-weight:700}
 .md-tag{color:#6db3ff;font-weight:600;font-size:13px;margin:10px 0 2px}.md-sp{height:10px}
+.md-quote{background:#16202e;border-left:3px solid #ffb454;padding:8px 12px;color:#e6e8ee;font-size:14px}
+.md-quote+.md-quote{padding-top:0}
+.md-tags{color:#6db3ff;font-size:13px;margin-top:12px}
+.mcap b{color:#fff}
 .thumbwrap{position:relative}
 .b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#e6e8ee;border:1px solid #2d3346}
 @media(max-width:720px){.carou .slide img{height:60vh}}
@@ -402,14 +406,17 @@ function openDetail(id){
 }
 function closeModal(){ document.getElementById('modal').classList.remove('on'); }
 // 블로그/대본 등 본문의 가벼운 마크다운(## 소제목, [HOOK] 등)을 보기 좋게
+function mdInline(x){ return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>'); }
 function fmtCaption(s){
   return String(s||'').split('\\n').map(line=>{
     const t=line.trim();
-    if(t.startsWith('## ')) return '<h4 class="md-h">'+esc(t.slice(3))+'</h4>';
-    if(t.startsWith('# ')) return '<h3 class="md-h1">'+esc(t.slice(2))+'</h3>';
+    if(t.startsWith('## ')) return '<h4 class="md-h">'+mdInline(t.slice(3))+'</h4>';
+    if(t.startsWith('# ')) return '<h3 class="md-h1">'+mdInline(t.slice(2))+'</h3>';
+    if(t==='>'||t.startsWith('> ')) return '<div class="md-quote">'+mdInline(t.replace(/^>\\s?/,''))+'</div>';
+    if(t.indexOf('🔖')===0) return '<div class="md-tags">'+esc(t)+'</div>';
     if(/^\\[.+\\]$/.test(t)) return '<div class="md-tag">'+esc(t)+'</div>';
     if(t==='---'||t==='') return '<div class="md-sp"></div>';
-    return '<div>'+esc(line)+'</div>';
+    return '<div>'+mdInline(line)+'</div>';
   }).join('');
 }
 function channelDetail(client, c){

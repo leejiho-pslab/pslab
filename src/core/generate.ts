@@ -20,18 +20,31 @@ const DEFAULT_MODEL = process.env.PSLAB_CLAUDE_MODEL ?? 'claude-opus-4-8';
 const MOTIFS = ['chart', 'lock', 'compass', 'branch', 'rocket', 'bulb', 'growth'];
 const VARIANTS = ['A', 'B', 'C'];
 
+/**
+ * 콘텐츠 기획 원칙 — 모든 채널의 모든 콘텐츠가 따른다.
+ * (생성 엔진 프롬프트 + 수기 큐레이션의 공통 기준)
+ */
+export const CONTENT_DOCTRINE = [
+  '[콘텐츠 기획 5원칙 — 예외 없이 적용]',
+  '1) 경험담 기반: 1인칭 실제 경험·사례로. "제가 ○○했을 때"처럼 구체적 장면과 숫자로. 일반론·교과서 요약 금지.',
+  '2) 결론 우선(BLUF): 핵심 결론/답을 맨 앞에 한 줄로 박고, 그 뒤에 왜 그런지를 스토리로 풀어간다.',
+  '3) 시의성·이슈성: 지금 시점의 트렌드·계절·업계 이슈와 연결한 후킹으로 시작한다.',
+  '4) SEO·GEO: 검색 키워드를 제목·소제목에 자연스럽게 녹이고, AI 답변엔진이 인용하기 쉽게 명확한 주장·정의·FAQ·요약을 포함한다.',
+  '5) 채널 어휘: 채널 특성에 맞는 말투로 변환한다(블로그=정보형 존댓말, 스레드=캐주얼 구어, 링크드인=비즈니스, 인스타=짧고 임팩트, 유튜브=말하는 대본).',
+].join('\n');
+
 /** 채널별 형식 가이드 (프롬프트에 주입) */
 const CHANNEL_GUIDE: Record<string, string> = {
   instagram:
-    '인스타그램 캐러셀. slides에 내용 4~5장(WHY → 01/02/03 → 정리). 각 슬라이드는 label(예 "WHY","01","정리"), title(짧게), body(2~3줄). captionBody는 발행 캡션 전문 + 해시태그.',
+    '인스타그램 캐러셀(짧고 임팩트 어휘). slides에 내용 4~5장(결론/후킹 → 경험 스토리 → 01/02/03 → 정리·저장 유도). 각 슬라이드는 label, title(짧게), body(2~3줄). captionBody는 결론 한 줄로 시작하는 캡션 전문 + 해시태그.',
   threads:
-    '스레드 타래(대화체, 짧게). slides는 비움([]). captionBody에 2~4개 짧은 단락으로 타래 구성.',
+    '스레드 타래(반말 섞인 캐주얼 구어, 🧵). slides는 비움([]). captionBody는 결론 한 줄로 시작해 2~4개 짧은 단락으로 타래 구성.',
   'naver-blog':
-    '네이버 블로그 롱폼. slides는 비움([]). captionBody에 "# 제목"과 "## 소제목" 구조의 정보형 글(800자+).',
+    '네이버 블로그 롱폼(정보형 존댓말, 바로 발행 가능한 완성글 1000자+). slides 비움([]). captionBody 구조: "# SEO제목(핵심키워드 앞배치)" → "> [핵심 요약] 결론 2~3줄(GEO용 명확한 답)" → 경험담 도입 → "## 키워드형 소제목" 본문들 → "## 자주 묻는 질문" Q&A 2~3개(GEO) → 마무리 CTA → "🔖 태그: #키워드".',
   youtube:
-    '유튜브 쇼츠 대본. slides는 비움([]). captionBody에 [HOOK]/[본론]/[CTA] 구조의 30~45초 대본.',
+    '유튜브 쇼츠 대본(말하는 구어체). slides 비움([]). captionBody는 [HOOK 0~3초: 결론/도발] → [본론: 경험 사례] → [CTA] 구조의 30~45초 대본.',
   linkedin:
-    '링크드인 비즈니스 포스트. slides는 비움([]). captionBody에 전문적 톤의 인사이트 글.',
+    '링크드인 비즈니스 포스트(전문적·간결). slides 비움([]). captionBody는 결론 한 줄로 시작 → 경험담 → 인사이트 → 해시태그.',
 };
 
 const SLIDE_SCHEMA = {
@@ -89,12 +102,16 @@ export class ContentGenerator {
       client.audience ? `독자: ${client.audience}.` : '',
       client.contentPillars?.length ? `콘텐츠 기둥: ${client.contentPillars.join(', ')}.` : '',
       `말투: ${client.brandTone}.`,
+      '',
+      CONTENT_DOCTRINE,
+      '',
       `채널 형식 — ${guide}`,
-      '규칙: 뻔한 인사 금지. 구체적 사례·숫자·관점·실행 포인트. 과장·클릭베이트 금지.',
+      '뻔한 인사 금지. 과장·클릭베이트 금지.',
       `금지어: ${client.bannedWords.join(', ') || '없음'}.`,
       'headline은 스크롤을 멈추게 하는 한 줄(핵심어는 *별표*, 줄바꿈 <br>). 서로 다른 소재로 다양하게.',
+      'captionBody는 반드시 "결론 한 줄" 또는 "[핵심 요약]"으로 시작한 뒤 경험담 스토리로 풀 것.',
     ]
-      .filter(Boolean)
+      .filter((x) => x !== undefined)
       .join('\n');
 
     const user = `다음 채널에 올릴 콘텐츠 ${opts.count}건을 기획해 주세요: ${opts.channel}.\n키워드 풀: ${client.keywords.join(', ')}.\n각 건은 서로 다른 소재/각도로.`;
