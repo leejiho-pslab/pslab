@@ -19,6 +19,18 @@ def _rng(date: str, salt: str) -> random.Random:
 class AdsCollector(BaseCollector):
     source = "ads"
 
+    def _meta_db_token(self) -> str | None:
+        """DB(app_kv)에 영속된 Meta 장기 토큰. env 토큰이 비어도 DB 토큰으로 수집 가능."""
+        from ..store import Store
+
+        kv = Store(self.config.data_dir)
+        try:
+            return kv.get_kv("meta_access_token")
+        except Exception:
+            return None
+        finally:
+            kv.close()
+
     def collect_mock(self, date: str) -> list[dict]:
         records: list[dict] = []
         for acc in self.config.sources.ads:
@@ -51,14 +63,29 @@ class AdsCollector(BaseCollector):
         collected_any = False
         for acc in self.config.sources.ads:
             channel = acc.get("channel")
-            if channel == "meta" and os.environ.get("META_ACCESS_TOKEN"):
+            if channel == "meta" and (os.environ.get("META_ACCESS_TOKEN") or self._meta_db_token()):
                 from ..clients.ads_meta import MetaAdsClient
+                from ..store import Store
 
                 client = MetaAdsClient.from_account(acc)
+                kv = Store(self.config.data_dir)
                 try:
+                    # DB 에 영속된 장기 토큰을 최우선 사용(무인 토큰 갱신 대응). 없으면 env.
+                    db_token = kv.get_kv("meta_access_token")
+                    if db_token:
+                        client.access_token = db_token
+                    # 매 실행마다 60일 토큰으로 연장 → DB 저장(app_id/secret 있을 때만).
+                    app_id = os.environ.get("META_APP_ID")
+                    app_secret = os.environ.get("META_APP_SECRET")
+                    if app_id and app_secret:
+                        new_token = client.exchange_for_long_lived(app_id, app_secret)
+                        if new_token:
+                            client.access_token = new_token
+                            kv.set_kv("meta_access_token", new_token)
                     records += client.fetch_facts(date)
                 finally:
                     client.close()
+                    kv.close()
                 collected_any = True
             elif channel == "google" and os.environ.get("GOOGLE_ADS_ACCESS_TOKEN"):
                 from ..clients.ads_google import GoogleAdsClient
