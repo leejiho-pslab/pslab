@@ -156,15 +156,30 @@ class Cafe24Client:
         return int(data.get("count", 0) or 0)
 
     def count_new_customers(self, start_date: str, end_date: str) -> int | None:
-        """기간 내 신규 가입 회원수. 엔드포인트가 없으면 None."""
+        """기간 내 신규 가입 회원수.
+
+        몰/버전에 따라 /customers/count 가 없을 수 있어(404), 그 경우
+        존재가 확실한 목록 엔드포인트(/customers)를 기간 필터로 페이지네이션해 센다.
+        둘 다 실패하면 None.
+        """
         try:
             data = self.get(
                 "/api/v2/admin/customers/count",
                 {"created_start_date": start_date, "created_end_date": end_date},
             )
+            return int(data.get("count", 0) or 0)
+        except httpx.HTTPStatusError:
+            pass
+        # 폴백: 목록을 기간 필터로 받아 건수를 센다.
+        try:
+            rows = list(self.iter_pages(
+                "/api/v2/admin/customers",
+                {"created_start_date": start_date, "created_end_date": end_date},
+                "customers",
+            ))
+            return len(rows)
         except httpx.HTTPStatusError:
             return None
-        return int(data.get("count", 0) or 0)
 
     def get_visitor_count(self, date: str) -> int | None:
         """일자 방문자수.
