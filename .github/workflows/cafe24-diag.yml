@@ -1,0 +1,35 @@
+name: cafe24 diag (order schema)
+
+# 주문 객체의 실제 필드를 출력해 신규/재구매·디바이스·베스트 구현 근거를 확보한다.
+# 읽기 전용(토큰 회전 없음).
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "주문이 있는 날짜 (YYYY-MM-DD)"
+        required: true
+        default: "2026-06-25"
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install minimal deps
+        run: pip install "httpx>=0.27" "psycopg[binary]>=3.1" PyYAML
+      - name: Dump order schema
+        env:
+          CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+        run: python scripts/diag_order.py --date "${{ github.event.inputs.date }}"
