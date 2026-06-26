@@ -38,6 +38,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="cafe24-ops-status 데일리 파이프라인")
     parser.add_argument("--date", help="수집 기준일 (YYYY-MM-DD). 기본: 어제")
     parser.add_argument("--days", type=int, default=1, help="기준일 포함 최근 N일 백필 (기본 1)")
+    parser.add_argument("--start", help="백필 시작일 (YYYY-MM-DD). 지정 시 start~기준일 전체 백필(--days 무시)")
+    parser.add_argument("--skip", default="",
+                        help="제외할 수집기 source 콤마목록 (예: competitor,creative). "
+                             "경쟁사는 현재 스냅샷이라 과거 백필 대상이 아님.")
     parser.add_argument("--mode", choices=["mock", "live"], help="mock(기본) | live")
     parser.add_argument("--quiet", action="store_true", help="단계 로그 숨김")
     args = parser.parse_args(argv)
@@ -51,10 +55,23 @@ def main(argv: list[str] | None = None) -> int:
     store = Store(config.data_dir)
     base = _date.fromisoformat(args.date) if args.date else _date.fromisoformat(yesterday())
 
+    # 백필 날짜 목록: --start 가 있으면 start~base 전체, 없으면 최근 --days 일.
+    if args.start:
+        start = _date.fromisoformat(args.start)
+        span = (base - start).days
+        dates = [(start + timedelta(days=i)).isoformat() for i in range(span + 1)]
+    else:
+        dates = [(base - timedelta(days=i)).isoformat() for i in range(args.days - 1, -1, -1)]
+
+    # 채널(수집기) 필터: --skip 으로 제외. (경쟁사는 과거 스냅샷이 없어 백필 제외 권장)
+    from cafe24_ops.collectors import build_collectors  # noqa: E402
+
+    skip = {s.strip() for s in args.skip.split(",") if s.strip()}
+    cols = [c for c in build_collectors(config, args.mode or "mock") if c.source not in skip]
+
     last = None
-    for i in range(args.days - 1, -1, -1):
-        d = (base - timedelta(days=i)).isoformat()
-        last = run_pipeline(d, config, store, mode=args.mode)
+    for d in dates:
+        last = run_pipeline(d, config, store, mode=args.mode, collectors=cols)
 
     print("\n===== 요약 (" + (last.date if last else "-") + ", mode=" + (last.mode if last else "-") + ") =====")
     if last:
