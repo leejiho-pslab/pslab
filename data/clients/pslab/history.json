@@ -297,5 +297,38 @@
     "imageUrl": "https://i.ibb.co/1Sv4wQw/c7f15e0e0b91.jpg",
     "metrics": [],
     "designVersion": 8
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-27T11:25:50.546Z",
+    "finishedAt": "2026-06-27T11:25:52.547Z",
+    "topic": "업계비하인드",
+    "suggestedFormat": "이미지 1장",
+    "review": {
+      "approved": false,
+      "pending": true,
+      "reviewer": "human",
+      "reason": "사람 승인 대기",
+      "flags": []
+    },
+    "published": false,
+    "avgEngagementRate": 0,
+    "direction": {
+      "focusTopics": [
+        "업계비하인드",
+        "마케팅전략",
+        "온라인마케팅"
+      ],
+      "focusFormats": [
+        "짧은 영상",
+        "이미지 1장",
+        "릴스"
+      ],
+      "rationale": "다음 사이클은 [업계비하인드, 마케팅전략, 온라인마케팅] 주제를 [짧은 영상, 이미지 1장, 릴스] 형식으로 강화. 분석: 발행량을 늘려 데이터를 모으자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 핵심 메시지를 첫 이미지에 크게 배치하자."
+    },
+    "caption": "업계비하인드, 현장 경험담 관점에서 풀어봅니다.\n\n광고·마케팅 집행을 고민하는 소상공인과 사업주, 실무 마케팅 담당자, 대행사 선택이나 창업을 앞두고 현실 조언이 필요한 사람들이라면 한 번쯤 부딪히는 지점이죠.\n\n여러분의 경험은 어떤가요? 댓글로 남겨주세요.",
+    "imageUrl": "https://i.ibb.co/sv9LYJMB/dbaca1cac0d4.jpg",
+    "metrics": [],
+    "designVersion": 9
   }
 ]
