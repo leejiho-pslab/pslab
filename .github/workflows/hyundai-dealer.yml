@@ -1,0 +1,88 @@
+name: hyundai-dealer (gh-pages)
+
+# 러너에서 홈페이지를 빌드(현대 공식 이미지 자동 수집)하고,
+# gh-pages 브랜치로 발행한다. 대시보드(docs/, 기본 브랜치)는 루트에, 홈페이지는 /home/ 에 둔다.
+#   - 대시보드: https://leejiho-pslab.github.io/pslab/
+#   - 홈페이지: https://leejiho-pslab.github.io/pslab/home/
+# 이 방식은 github-pages 환경 제한(기본 브랜치 전용)을 피하려고 gh-pages 브랜치 푸시를 사용한다.
+# 최초 1회: Settings → Pages → Source = "Deploy from a branch" → gh-pages → /(root).
+
+on:
+  push:
+    branches: [claude/hyundai-dealer-homepage-oukndu]
+    paths:
+      - 'hyundai-dealer/**'
+      - '.github/workflows/hyundai-dealer.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hyundai-dealer-ghpages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: hyundai-dealer/package-lock.json
+
+      - name: Install
+        working-directory: hyundai-dealer
+        run: npm ci
+
+      - name: Test
+        working-directory: hyundai-dealer
+        run: npm test
+
+      - name: Fetch SNS + images (현대 공식 이미지 자동 수집)
+        working-directory: hyundai-dealer
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          YT_CHANNEL_ID: ${{ secrets.YT_CHANNEL_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: |
+          npm run fetch:content
+          npm run fetch:images
+
+      - name: Build homepage
+        working-directory: hyundai-dealer
+        env:
+          SITE_URL: https://leejiho-pslab.github.io
+          SITE_BASE: /pslab/home/
+        run: npm run build
+
+      - name: Get dashboard (docs) from default branch
+        run: |
+          git fetch origin claude/eager-lamport-mX0eT --depth=1 || true
+          rm -rf _dash && mkdir -p _dash
+          git archive origin/claude/eager-lamport-mX0eT docs 2>/dev/null | tar -x -C _dash || echo "대시보드 docs 없음 — 생략"
+
+      - name: Assemble publish dir
+        run: |
+          rm -rf publish && mkdir -p publish/home
+          if [ -d _dash/docs ]; then cp -r _dash/docs/. publish/; fi
+          cp -r hyundai-dealer/dist/. publish/home/
+          touch publish/.nojekyll
+          echo "=== publish tree (top) ==="; ls -la publish
+
+      - name: Publish to gh-pages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd publish
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "deploy: 홈페이지(/home) + 대시보드(/) 발행"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          echo "gh-pages 발행 완료"
