@@ -12,6 +12,8 @@ import type { ClientConfig, ClientStore } from './client.js';
 import type { CycleRecord } from './orchestrator.js';
 import type { DesignStore } from './design.js';
 import type { PlanStore } from './plan.js';
+import type { LearningStore } from './learning.js';
+import type { TokenHealthStore } from './token-health.js';
 import type { PlatformId } from './types.js';
 
 const REPO = process.env.PSLAB_REPO ?? 'leejiho-pslab/pslab';
@@ -59,6 +61,7 @@ interface PendingCard {
   slideImages?: string[];
   status?: string;
   publishedUrl?: string;
+  metrics?: { views?: number; likes?: number; comments?: number; engagementRate?: number };
 }
 
 function buildChannel(
@@ -163,10 +166,14 @@ function buildClientData(
   store: ClientStore<CycleRecord>,
   designStore: DesignStore,
   planStore: PlanStore,
+  learnStore?: LearningStore,
+  tokenStore?: TokenHealthStore,
 ) {
   const history = store.read(client.id);
   const design = designStore.load(client.id);
   const plan = planStore.load(client.id);
+  const learning = learnStore?.load(client.id);
+  const tokenHealth = tokenStore?.load(client.id);
   const heldCount = history.filter((h) => !h.published && h.review?.pending).length;
 
   const toCard = (it: (typeof plan.items)[number]): PendingCard => ({
@@ -186,6 +193,7 @@ function buildClientData(
     slideImages: it.slideImages,
     status: it.status,
     publishedUrl: it.publishedUrl,
+    metrics: it.metrics,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -225,6 +233,8 @@ function buildClientData(
     planCards,
     channels,
     blog,
+    learning: learning ?? null,
+    tokenHealth: tokenHealth ?? null,
   };
 }
 
@@ -233,12 +243,16 @@ export function renderDashboard(
   store: ClientStore<CycleRecord>,
   designStore: DesignStore,
   planStore: PlanStore,
+  learnStore?: LearningStore,
+  tokenStore?: TokenHealthStore,
 ): string {
   const data = {
     generatedAt: new Date().toISOString(),
     repo: REPO,
     channels: CHANNELS,
-    clients: clients.map((c) => buildClientData(c, store, designStore, planStore)),
+    clients: clients.map((c) =>
+      buildClientData(c, store, designStore, planStore, learnStore, tokenStore),
+    ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
 
@@ -380,13 +394,17 @@ function planCard(client, chLabel, it){
   const n=slideCount(it);
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
   const pub=it.status==='published';
-  const stBadge=pub?'<span class="badge b-ok">발행됨</span>':'<span class="badge b-plan">예정</span>';
+  const manual=it.status==='manual';
+  const stBadge=pub?'<span class="badge b-ok">발행됨</span>':manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
   const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
+  const m=it.metrics;
+  const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
   return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+
     '<div class="thumbwrap">'+img+carBadge+'</div>'+
     '<div class="cbody"><div class="ctop"><strong>'+head+'</strong>'+stBadge+'</div>'+
     '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
     (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
+    metLine+
     '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+right+'</div></div></div>';
 }
 function openDetail(id){
@@ -475,12 +493,44 @@ function blogSection(client){
   h+='</div>';
   return h;
 }
+function tokenBanner(client){
+  const th=client.tokenHealth; if(!th||!th.tokens||!th.tokens.length) return '';
+  const bad=th.tokens.filter(t=>t.warn||!t.ok);
+  if(!bad.length) return '';
+  return '<div class="panel" style="border-color:#5a3a2a;background:#241a14">'+
+    '<h3>🔑 토큰 점검 경고</h3>'+
+    bad.map(t=>'<div class="muted" style="color:#ffb454;font-size:13px;margin:2px 0">'+(t.ok?'🟡':'🔴')+' '+esc(t.label)+': '+esc(t.detail||'확인 필요')+'</div>').join('')+
+    '<div class="muted" style="margin-top:6px">토큰을 새로 발급해 GitHub 시크릿(PSLAB_*_ACCESS_TOKEN)을 갱신하세요. 마지막 점검: '+ftime(th.checkedAt)+'</div></div>';
+}
+function learningPanel(client){
+  const L=client.learning; if(!L) return '';
+  const gs=g=>'<tr><td>'+esc(g.key)+'</td><td>'+g.posts+'</td><td>'+pct(g.avgEngagement)+'</td><td>'+Math.round(g.avgLikes)+'</td></tr>';
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🧠 성과 인사이트 · 자체 학습</h3><span class="muted">표본 '+L.sampleSize+'건 · '+ftime(L.generatedAt)+'</span></div>';
+  if(L.sampleSize<1){
+    h+='<div class="empty">발행물 성과가 쌓이면 어떤 디자인·시간대·소재가 잘 먹히는지 여기서 자동 분석됩니다.</div></div>';
+    return h;
+  }
+  if(L.hints&&L.hints.length){
+    h+='<div style="margin-bottom:10px">'+L.hints.map(x=>'<div class="muted" style="color:#9fe6b0;font-size:13px;margin:3px 0">💡 '+esc(x)+'</div>').join('')+'</div>';
+  }
+  if(L.variants&&L.variants.length){
+    h+='<div class="muted" style="margin:8px 0 4px">디자인 변형별 성과'+(L.bestVariant?' · 우세: <b style="color:#ffb454">'+esc(L.bestVariant)+'안</b>':'')+'</div>'+
+      '<table><tr><th>디자인</th><th>발행</th><th>평균 참여율</th><th>평균 좋아요</th></tr>'+L.variants.map(gs).join('')+'</table>';
+  }
+  if(L.hours&&L.hours.length>1){
+    h+='<div class="muted" style="margin:12px 0 4px">시간대별 성과</div><table><tr><th>발행시각</th><th>발행</th><th>평균 참여율</th><th>평균 좋아요</th></tr>'+L.hours.map(gs).join('')+'</table>';
+  }
+  h+='<div class="muted" style="margin-top:10px">이 학습은 다음 기획 생성 때 디자인 선택·소재 방향에 자동 반영됩니다(자체 디벨롭).</div></div>';
+  return h;
+}
 function overview(client){
-  let h='<div class="kpis">'+
+  let h=tokenBanner(client);
+  h+='<div class="kpis">'+
     kpi(client.totalCycles,'총 사이클')+
     kpi(client.totalPublished,'총 발행')+
     kpi(client.heldCount,'승인 대기',client.heldCount>0)+
     kpi('v'+client.designVersion,'디자인 진화')+'</div>';
+  h+=learningPanel(client);
   h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th></tr>'+
     client.channels.map(c=>{const lab=(DATA.channels.find(x=>x.key===c.key)||{});
       return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td></tr>';}).join('')+'</table></div>';

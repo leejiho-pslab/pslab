@@ -40,18 +40,29 @@ export class NaverBlogPlugin extends BasePlugin {
 
   async publish(content: PostContent): Promise<PublishResult> {
     this.ensureConnected();
-    this.log.info(`블로그 포스팅: "${content.title}"`);
+    this.log.info(`블로그 포스팅(수동 채널): "${content.title}"`);
 
-    // 실제: 네이버 블로그 글쓰기 API 호출 (제목, 본문 HTML, 태그, 첨부)
-    const remoteId = await simulateApiCall(
-      `nb_${Math.random().toString(36).slice(2, 11)}`,
-    );
-    const blogId = this.credentials.blogId ?? 'my-blog';
+    // 네이버 블로그는 공식 자동발행 API가 없다(글쓰기 오픈 API 종료).
+    // 자동 발행을 흉내내 "성공"이라 보고하면 사용자를 속이게 되므로,
+    // 여기서는 명확히 실패(수동 발행 필요)로 반환한다.
+    // 실제 발행은 대시보드에서 완성된 글을 복사해 직접 올린다.
+    if (this.ctx.dryRun) {
+      const remoteId = await simulateApiCall(
+        `nb_dry_${Math.random().toString(36).slice(2, 9)}`,
+      );
+      return {
+        platform: this.platform,
+        ok: true,
+        remoteId,
+        url: `https://blog.naver.com/preview/${remoteId}`,
+        publishedAt: this.now(),
+      };
+    }
     return {
       platform: this.platform,
-      ok: true,
-      remoteId,
-      url: `https://blog.naver.com/${blogId}/${remoteId}`,
+      ok: false,
+      error:
+        '네이버 블로그는 자동 발행 API가 없는 수동 채널입니다. 대시보드에서 완성된 글을 복사해 직접 게시하세요.',
       publishedAt: this.now(),
     };
   }
