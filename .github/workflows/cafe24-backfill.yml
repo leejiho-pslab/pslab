@@ -1,27 +1,30 @@
 name: ops backfill (history)
 
-# 과거 데이터 1회성 백필 — 카페24 매출·주문(+광고)을 지정 시작일부터 채운다.
-# 경쟁사(competitor)는 현재 시점 스냅샷이라 과거가 없으므로 기본 제외(skip).
-# DATABASE_URL(Neon) 에 적재되어 대시보드에 즉시 반영된다.
+# 이어받기 + 시간예산 백필 — 인력 0, 타임아웃 불가.
+#  - 한 번 실행에 최대 40분만 수집하고 진행 위치(cursor)를 DB에 저장
+#  - 2시간마다 스케줄이 자동으로 이어받아 끝까지 채움 (다 채우면 즉시 무동작)
+#  - 매일 수집이 빠진 날짜가 생겨도 자동으로 메움(자가 치유)
 #
-# 사용: Actions → 이 워크플로 → Run workflow → start_date / skip 확인 후 실행.
+# 시작일을 바꾸거나 즉시 한 단계 진행하려면 수동 실행(Run workflow).
 
 on:
+  schedule:
+    - cron: "0 */2 * * *" # 2시간마다 자동 이어받기
   workflow_dispatch:
     inputs:
       start_date:
-        description: "백필 시작일 (YYYY-MM-DD)"
-        required: true
-        default: "2025-01-01"
-      skip:
-        description: "제외 채널(콤마). 경쟁사는 과거 스냅샷 없음 → 기본 제외"
+        description: "백필 시작일 (커서 없을 때만 적용)"
         required: false
-        default: "competitor,creative"
+        default: "2025-01-01"
+      budget_min:
+        description: "이번 실행 최대 작업시간(분)"
+        required: false
+        default: "40"
 
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 55
     defaults:
       run:
         working-directory: cafe24-ops-status
@@ -33,7 +36,7 @@ jobs:
           cache: pip
       - name: Install deps
         run: pip install -r requirements.txt
-      - name: Backfill (live)
+      - name: Backfill step (resumable)
         env:
           CAFE24_OPS_MODE: live
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -50,6 +53,6 @@ jobs:
           NAVER_SA_SECRET_KEY: ${{ secrets.NAVER_SA_SECRET_KEY }}
           NAVER_SA_CUSTOMER_ID: ${{ secrets.NAVER_SA_CUSTOMER_ID }}
         run: |
-          python scripts/run_all.py --mode live \
-            --start "${{ github.event.inputs.start_date }}" \
-            --skip "${{ github.event.inputs.skip }}"
+          python scripts/backfill.py \
+            --start "${{ github.event.inputs.start_date || '2025-01-01' }}" \
+            --budget-min "${{ github.event.inputs.budget_min || '40' }}"
