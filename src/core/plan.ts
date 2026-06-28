@@ -34,7 +34,7 @@ export interface PlanItem {
   /** 발행 예정 시각 (ISO) */
   scheduledFor: string;
   score: number;
-  status: 'planned' | 'approved' | 'published';
+  status: 'planned' | 'approved' | 'published' | 'manual';
   rationale?: string;
   /** 매거진 카드 상단 라벨 (예: "Marketing Insight") */
   kicker?: string;
@@ -64,6 +64,37 @@ export interface PlanItem {
   publishedUrl?: string;
   /** 발행 완료 시각 (ISO) */
   publishedAt?: string;
+  /** 채널별 발행 결과 (성과 수집용 — 플랫폼별 remoteId 보관) */
+  published?: PlanPublication[];
+  /** 최근 수집한 성과 지표 (좋아요·조회·참여율) */
+  metrics?: PlanMetrics;
+  /** 성과 수집 시각 (ISO) */
+  metricsAt?: string;
+}
+
+/** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */
+export interface PlanPublication {
+  platform: PlatformId;
+  remoteId: string;
+  url?: string;
+}
+
+/** 게시물 성과 스냅샷 (대시보드·학습용) */
+export interface PlanMetrics {
+  views?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  /** 0~1 참여율 */
+  engagementRate?: number;
+}
+
+/** 자동 발행을 지원하지 않는 수동 채널 (복붙 발행) */
+export const MANUAL_CHANNELS: PlatformId[] = ['naver-blog', 'youtube'];
+
+/** 해당 항목이 전부 수동 채널로만 구성됐는지 */
+export function isManualOnly(channels: PlatformId[]): boolean {
+  return channels.length > 0 && channels.every((c) => MANUAL_CHANNELS.includes(c));
 }
 
 export interface ContentPlan {

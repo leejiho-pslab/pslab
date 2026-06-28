@@ -48,17 +48,28 @@ export class YouTubePlugin extends BasePlugin {
   async publish(content: PostContent): Promise<PublishResult> {
     this.ensureConnected();
     const video = content.media?.find((m) => m.kind === 'video');
-    this.log.info(`동영상 업로드: "${content.title}" (${video?.source})`);
+    this.log.info(`쇼츠 대본(수동 채널): "${content.title}"`);
 
-    // 실제: youtube.videos.insert({ part, requestBody, media })
-    const remoteId = await simulateApiCall(
-      `yt_${Math.random().toString(36).slice(2, 13)}`,
-    );
+    // 유튜브 업로드는 실제 "영상 파일"이 필요하다(우리는 대본만 생성).
+    // 영상 없이 "성공"이라 보고하면 거짓이므로, 수동 발행 필요로 반환한다.
+    if (this.ctx.dryRun) {
+      const remoteId = await simulateApiCall(
+        `yt_dry_${Math.random().toString(36).slice(2, 11)}`,
+      );
+      return {
+        platform: this.platform,
+        ok: true,
+        remoteId,
+        url: `https://youtu.be/${remoteId}`,
+        publishedAt: this.now(),
+      };
+    }
     return {
       platform: this.platform,
-      ok: true,
-      remoteId,
-      url: `https://youtu.be/${remoteId}`,
+      ok: false,
+      error: video
+        ? '유튜브 업로드는 OAuth 영상 업로드 연동이 필요한 수동 채널입니다. 대본으로 영상 제작 후 직접 업로드하세요.'
+        : '유튜브는 영상 파일이 필요합니다. pslab은 쇼츠 대본만 생성합니다 — 대본으로 영상을 만든 뒤 직접 업로드하세요.',
       publishedAt: this.now(),
     };
   }

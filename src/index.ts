@@ -72,8 +72,12 @@ export {
 export type { ImageHost, ImageGenerator } from './core/providers.js';
 export { DesignStudio, DesignStore, defaultDesignStyle } from './core/design.js';
 export type { DesignStyle } from './core/design.js';
-export { PlanStore, generatePlan, upcomingSlots } from './core/plan.js';
-export type { PlanItem, ContentPlan, PlanSlide } from './core/plan.js';
+export { PlanStore, generatePlan, upcomingSlots, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
+export type { PlanItem, ContentPlan, PlanSlide, PlanPublication, PlanMetrics } from './core/plan.js';
+export { LearningEngine, LearningStore } from './core/learning.js';
+export type { LearningSummary, GroupStat } from './core/learning.js';
+export { checkTokens, TokenHealthStore } from './core/token-health.js';
+export type { TokenHealth, TokenStatus } from './core/token-health.js';
 export { ContentGenerator, createContentGenerator, CONTENT_DOCTRINE } from './core/generate.js';
 export type { GenerateOptions } from './core/generate.js';
 export {

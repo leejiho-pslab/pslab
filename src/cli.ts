@@ -28,7 +28,9 @@ import { AutomationDaemon } from './core/daemon.js';
 import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
-import { PlanStore } from './core/plan.js';
+import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
+import { LearningEngine, LearningStore } from './core/learning.js';
+import { checkTokens, TokenHealthStore } from './core/token-health.js';
 import { createContentGenerator } from './core/generate.js';
 import type { PlatformId as PlatformIdT } from './core/types.js';
 import type { CycleRecord } from './core/orchestrator.js';
@@ -281,7 +283,9 @@ async function cmdDashboard(args: Args): Promise<void> {
   const store = new ClientStore<CycleRecord>(dataDir);
   const designStore = new DesignStore(dataDir);
   const planStore = new PlanStore(dataDir);
-  const html = renderDashboard(clients, store, designStore, planStore);
+  const learnStore = new LearningStore(dataDir);
+  const tokenStore = new TokenHealthStore(dataDir);
+  const html = renderDashboard(clients, store, designStore, planStore, learnStore, tokenStore);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html, 'utf8');
   console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
@@ -301,9 +305,14 @@ async function cmdGeneratePlan(args: Args): Promise<void> {
   }
   const clients = loadClients(dir).filter((c) => !only || c.id === only);
   const store = new PlanStore(dataDir);
+  const learnStore = new LearningStore(dataDir);
   for (const client of clients) {
+    const learning = learnStore.load(client.id);
+    if (learning?.bestVariant) {
+      console.log(`  🧠 학습 반영: 우세 디자인 ${learning.bestVariant}안 + 성과 힌트 ${learning.hints.length}건`);
+    }
     console.log(`\n🤖 기획 생성 — ${client.name} / ${channel} × ${count}`);
-    const items = await gen.generate(client, { channel, count });
+    const items = await gen.generate(client, { channel, count, learning });
     const plan = store.load(client.id);
     // 같은 채널의 자동 생성분(*-gen-*)만 교체, 사람이 만든 큐레이션은 보존
     plan.items = plan.items.filter(
@@ -342,13 +351,24 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
     const targets = plan.items.filter((it) => {
       if (it.status === 'published') return false;
       if (id) return it.id === id;
-      return new Date(it.scheduledFor).getTime() <= now; // --due
+      // --due: 예정시각이 지난 항목 (이미 수동발행 처리된 건 제외)
+      if (it.status === 'manual') return false;
+      return new Date(it.scheduledFor).getTime() <= now;
     });
     if (targets.length === 0) {
       console.log(`  ${client.name}: 발행할 항목 없음`);
       continue;
     }
     for (const it of targets) {
+      // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
+      // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
+      if (isManualOnly(it.channels)) {
+        it.status = 'manual';
+        console.log(
+          `\n📋 수동 발행 대기: [${it.channels.join(',')}] ${it.topic} — 대시보드에서 복사해 직접 게시`,
+        );
+        continue;
+      }
       const imgs = it.slideImages?.length
         ? it.slideImages
         : it.cardImage
@@ -358,6 +378,8 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         console.log(`  ${it.id}: 카드 이미지 없음 → 건너뜀`);
         continue;
       }
+      // 자동 채널만 추려 발행 (수동 채널이 섞여 있으면 제외)
+      const autoChannels = it.channels.filter((c) => !MANUAL_CHANNELS.includes(c));
       const content: PostContent = {
         id: it.id,
         title: (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, ''),
@@ -369,17 +391,92 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         })),
         tags: [],
       };
-      console.log(`\n▶ 발행: [${it.channels.join(',')}] ${content.title} (${imgs.length}장)`);
-      const result = await app.publisher.publish(content, { targets: it.channels });
+      console.log(`\n▶ 발행: [${autoChannels.join(',')}] ${content.title} (${imgs.length}장)`);
+      const result = await app.publisher.publish(content, { targets: autoChannels });
       printResults(`📤 ${it.id}`, result.results);
-      const okResult = result.results.find((r) => r.ok);
-      if (okResult) {
+      const okResults = result.results.filter((r) => r.ok && r.remoteId);
+      if (okResults.length > 0) {
         it.status = 'published';
-        it.publishedUrl = okResult.url;
+        it.publishedUrl = okResults[0].url;
         it.publishedAt = new Date().toISOString();
+        // 성과 수집용으로 채널별 remoteId를 보관 (학습 루프의 입력)
+        it.published = okResults.map((r) => ({
+          platform: r.platform,
+          remoteId: r.remoteId!,
+          url: r.url,
+        }));
       }
     }
     store.save(client.id, plan);
+  }
+}
+
+async function cmdCollectInsights(app: App, args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const only = typeof args.client === 'string' ? args.client : undefined;
+
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  const store = new PlanStore(dataDir);
+  const learnStore = new LearningStore(dataDir);
+  const engine = new LearningEngine();
+
+  for (const client of clients) {
+    const plan = store.load(client.id);
+    const published = plan.items.filter(
+      (it) => it.status === 'published' && it.published?.length,
+    );
+    console.log(`\n📈 성과 수집 — ${client.name} (발행 ${published.length}건)`);
+
+    for (const it of published) {
+      let views = 0, likes = 0, comments = 0, shares = 0, erSum = 0, erN = 0;
+      let any = false;
+      for (const pub of it.published!) {
+        const plugin = app.registry.all().find((p) => p.platform === pub.platform);
+        if (!plugin || !plugin.isConnected()) continue;
+        try {
+          const rep = await plugin.fetchAnalytics(pub.remoteId);
+          const m = rep.metrics;
+          views += m.views ?? 0;
+          likes += m.likes ?? 0;
+          comments += m.comments ?? 0;
+          shares += m.shares ?? 0;
+          if (typeof m.engagementRate === 'number') { erSum += m.engagementRate; erN++; }
+          any = true;
+        } catch (err) {
+          console.log(`  ${it.id}/${pub.platform}: 수집 실패 (${err instanceof Error ? err.message : err})`);
+        }
+      }
+      if (any) {
+        it.metrics = {
+          views, likes, comments, shares,
+          engagementRate: erN > 0 ? erSum / erN : views > 0 ? (likes + comments) / views : 0,
+        };
+        it.metricsAt = new Date().toISOString();
+        console.log(`  ${it.id}: 👁 ${views} ❤ ${likes} 💬 ${comments} (참여율 ${((it.metrics.engagementRate ?? 0) * 100).toFixed(1)}%)`);
+      }
+    }
+    store.save(client.id, plan);
+
+    // 학습 요약 갱신 (다음 기획 생성·대시보드가 읽음)
+    const summary = engine.summarize(plan);
+    learnStore.save(client.id, summary);
+    console.log(`  🧠 학습 갱신: 표본 ${summary.sampleSize}건` + (summary.bestVariant ? `, 우세 디자인 ${summary.bestVariant}안` : ''));
+    for (const h of summary.hints) console.log(`     · ${h}`);
+  }
+}
+
+async function cmdCheckTokens(args: Args): Promise<void> {
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const only = typeof args.client === 'string' ? args.client : 'pslab';
+  const health = await checkTokens();
+  const store = new TokenHealthStore(dataDir);
+  store.save(only, health);
+  console.log('\n🔑 토큰 상태 점검');
+  for (const t of health.tokens) {
+    const icon = t.ok ? (t.warn ? '🟡' : '🟢') : '🔴';
+    const exp = t.expiresInDays != null ? ` (만료 ${t.expiresInDays}일 후)` : '';
+    console.log(`  ${icon} ${t.label.padEnd(12)} ${t.ok ? '정상' : '오류'}${exp} ${t.detail ?? ''}`);
   }
 }
 
@@ -401,6 +498,8 @@ function printHelp(): void {
       '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
       '  generate-plan         AI 기획 생성 (--channel instagram --count 6, 발행 전 검수)',
       '  publish-plan          승인된 기획안 발행 (--id <항목> | --due, 카드는 Pages URL 사용)',
+      '  collect-insights      발행물 성과 수집 + 자체 학습 갱신 (반응도 기반 자기발전)',
+      '  check-tokens          SNS 토큰 상태·만료 점검 (만료 전 경고)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -460,6 +559,12 @@ async function main(): Promise<void> {
       break;
     case 'publish-plan':
       await cmdPublishPlan(app, args);
+      break;
+    case 'collect-insights':
+      await cmdCollectInsights(app, args);
+      break;
+    case 'check-tokens':
+      await cmdCheckTokens(args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);

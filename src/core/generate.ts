@@ -11,6 +11,7 @@
 import type { ClientConfig } from './client.js';
 import type { PlanItem, PlanSlide } from './plan.js';
 import type { PlatformId } from './types.js';
+import type { LearningSummary } from './learning.js';
 import { upcomingSlots } from './plan.js';
 import { createLogger } from './logger.js';
 
@@ -86,6 +87,8 @@ export interface GenerateOptions {
   count: number;
   /** 시작 시각 (없으면 now) */
   from?: Date;
+  /** 지난 발행 성과 학습 (있으면 디자인·소재 선택에 되먹임) */
+  learning?: LearningSummary;
 }
 
 export class ContentGenerator {
@@ -97,6 +100,10 @@ export class ContentGenerator {
     opts: GenerateOptions,
   ): Promise<PlanItem[]> {
     const guide = CHANNEL_GUIDE[opts.channel] ?? CHANNEL_GUIDE.instagram;
+    const learnBlock =
+      opts.learning && opts.learning.hints.length
+        ? ['', '[지난 발행 성과 학습 — 이번 기획에 반영할 것]', ...opts.learning.hints.map((h) => `· ${h}`)].join('\n')
+        : '';
     const system = [
       `당신은 "${client.persona ?? client.name}" 입니다. 그 사람의 1인칭 목소리로 SNS 콘텐츠를 기획합니다.`,
       client.audience ? `독자: ${client.audience}.` : '',
@@ -104,6 +111,7 @@ export class ContentGenerator {
       `말투: ${client.brandTone}.`,
       '',
       CONTENT_DOCTRINE,
+      learnBlock,
       '',
       `채널 형식 — ${guide}`,
       '뻔한 인사 금지. 과장·클릭베이트 금지.',
@@ -141,6 +149,14 @@ export class ContentGenerator {
     }
 
     const slots = upcomingSlots(client.scheduleTimes, opts.from ?? new Date(), opts.count);
+    // 디자인 변형 선택: 학습된 우세안이 있으면 더 자주(짝수 인덱스), 나머지는 탐색용 순환.
+    const best = opts.learning?.bestVariant;
+    const variantFor = (i: number): string =>
+      best
+        ? i % 2 === 0
+          ? best
+          : VARIANTS[Math.floor(i / 2) % VARIANTS.length]
+        : VARIANTS[Math.floor(i / 3) % VARIANTS.length];
     return (parsed.items ?? []).slice(0, opts.count).map((it, i) => ({
       id: `${opts.channel}-gen-${slots[i].getTime()}`,
       topic: it.topic ?? '소재',
@@ -154,7 +170,7 @@ export class ContentGenerator {
       sub: it.sub,
       dayLabel: it.dayLabel ?? client.name,
       motif: MOTIFS.includes(it.motif as string) ? it.motif : 'compass',
-      variant: VARIANTS[Math.floor(i / 3) % VARIANTS.length], // 3건 단위 A/B/C
+      variant: variantFor(i), // 학습 우세안 가중 + 탐색
       palette: 'ink',
       captionBody: it.captionBody,
       captionNote: it.sub,
