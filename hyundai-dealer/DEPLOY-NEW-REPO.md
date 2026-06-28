@@ -15,7 +15,8 @@ GitHub에서 새 저장소 생성 (예: 이름 `moomoo`). README 없이 빈 저�
 로컬에서:
 
 ```bash
-# pslab 저장소를 받은 상태에서
+# 홈페이지 소스가 있는 브랜치를 받는다 (최신 소스는 이 브랜치 기준)
+git clone -b claude/hyundai-dealer-homepage-oukndu <pslab-저장소-URL> pslab
 cd pslab/hyundai-dealer
 
 # 이 폴더만 새 git 저장소로 초기화
