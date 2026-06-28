@@ -55,7 +55,8 @@ jobs:
           touch docs/.nojekyll
           git add -f data/ docs/index.html docs/.nojekyll 2>/dev/null || true
           if ! git diff --cached --quiet; then
-            git commit -m "chore(pslab): 발행 상태·대시보드 갱신 [skip ci]"
+            # [skip ci] 금지: docs/ 변경이 Pages 배포(pages-build-deployment)를 트리거해야 함
+            git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
             git push
           else
             echo "변경 없음"
