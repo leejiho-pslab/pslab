@@ -38,18 +38,58 @@ function extFor(url, contentType) {
   return m ? m[1].toLowerCase().replace('jpeg', 'jpg') : 'jpg';
 }
 
+const UA = 'Mozilla/5.0 (hyundai-dealer build)';
+
+/** 절대 URL 로 변환 */
+function absolutize(u, base) {
+  try {
+    return new URL(u, base).href;
+  } catch {
+    return u;
+  }
+}
+
+/** HTML 에서 대표 이미지(og:image / twitter:image) URL 추출 */
+export function extractOgImage(html, pageUrl) {
+  const patterns = [
+    /<meta[^>]+property=["']og:image(?::secure_url)?["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image(?::secure_url)?["']/i,
+    /<meta[^>]+name=["']twitter:image["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:image["']/i,
+  ];
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m && m[1]) return absolutize(m[1].trim(), pageUrl);
+  }
+  return null;
+}
+
+/** URL 에서 이미지 바이트를 가져온다. HTML 페이지면 og:image 를 따라간다. */
+async function fetchImageBytes(url) {
+  const res = await fetch(url, { headers: { 'user-agent': UA } });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const ct = res.headers.get('content-type') || '';
+  if (ct.includes('text/html')) {
+    const html = await res.text();
+    const og = extractOgImage(html, url);
+    if (!og) throw new Error('페이지에서 og:image 를 찾지 못함');
+    const r2 = await fetch(og, { headers: { 'user-agent': UA, referer: url } });
+    if (!r2.ok) throw new Error(`og:image HTTP ${r2.status}`);
+    return { buf: Buffer.from(await r2.arrayBuffer()), url: og, contentType: r2.headers.get('content-type') };
+  }
+  return { buf: Buffer.from(await res.arrayBuffer()), url, contentType: ct };
+}
+
 /** 한 장 다운로드 → public/images/<name>.<ext>. 성공 시 'images/<name>.<ext>' 반환 */
 async function download(name, url) {
   if (!url || typeof url !== 'string' || !/^https?:\/\//.test(url)) return null;
   try {
-    const res = await fetch(url, { headers: { 'user-agent': 'Mozilla/5.0 (hyundai-dealer build)' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const ext = extFor(url, res.headers.get('content-type'));
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.byteLength < 512) throw new Error('너무 작은 응답(이미지 아님?)');
+    const { buf, url: finalUrl, contentType } = await fetchImageBytes(url);
+    if (buf.byteLength < 1024) throw new Error('너무 작은 응답(이미지 아님?)');
+    const ext = extFor(finalUrl, contentType);
     const rel = `images/${name}.${ext}`;
     await writeFile(resolve(ROOT, 'public', rel), buf);
-    console.log(`[img] ${name} ← ${url} (${(buf.byteLength / 1024).toFixed(0)}KB)`);
+    console.log(`[img] ${name} ← ${finalUrl} (${(buf.byteLength / 1024).toFixed(0)}KB)`);
     return rel;
   } catch (e) {
     console.warn(`[img] ${name} 실패, 폴백 유지: ${e.message}`);
