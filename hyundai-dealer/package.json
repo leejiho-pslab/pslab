@@ -9,6 +9,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "fetch:content": "node scripts/fetch-content.mjs",
+    "fetch:images": "node scripts/fetch-images.mjs",
     "test": "node --test"
   },
   "dependencies": {

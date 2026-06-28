@@ -37,8 +37,22 @@ npm test                # 콘텐츠 수집 정규화·폴백 단위 테스트
 - [`src/data/site.config.ts`](src/data/site.config.ts)
 
 이미지 슬롯(`image`, `backgroundImage`)에 경로를 넣으면 해당 위치에 사진이 들어가고,
-비워두면 프리미엄 그라디언트 비주얼로 자동 폴백된다.
-이미지 파일은 `public/images/` 에 두고 `/images/파일명` 으로 참조한다.
+비워두면 프리미엄 그라디언트/일러스트 비주얼로 자동 폴백된다.
+직접 가진 이미지는 `public/images/` 에 두고 `/images/파일명` 으로 참조한다.
+
+## 실제 이미지 자동 수집 (현대 공식 이미지 등)
+
+이미지 URL만 채우면 **빌드 시 자동 다운로드되어 사이트에 자체 호스팅**된다(핫링크 아님).
+
+1. [`src/data/image-sources.json`](src/data/image-sources.json) 에 URL을 채운다:
+   - `hero` — 히어로 배경 이미지
+   - `profile` — 딜러 프로필 사진
+   - `models.<id>` — 차종 카드 이미지 (`id` 는 `site.config.ts` 의 각 차종 id)
+2. `npm run fetch:images` → `public/images/` 로 내려받고 `src/data/images.json` 매니페스트 생성
+3. 빌드하면 해당 슬롯이 일러스트 대신 실제 사진으로 교체된다.
+
+URL이 비었거나 다운로드가 실패하면 그 슬롯은 **일러스트로 폴백**되어 빌드는 항상 성공한다.
+(사내망/샌드박스는 외부 접근이 막혀 실패할 수 있으나, GitHub Actions 러너에서는 정상 동작한다.)
 
 ## SNS 자동 업데이트
 
