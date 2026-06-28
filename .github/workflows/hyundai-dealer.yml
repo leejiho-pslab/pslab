@@ -1,0 +1,92 @@
+name: hyundai-dealer build & deploy
+
+# 현대자동차 딜러 원페이지 — 예약 빌드.
+# 매일 SNS(유튜브·인스타) 최신 콘텐츠를 수집해 feed.json 을 갱신하고,
+# 정적 사이트를 빌드해 GitHub Pages 로 배포한다.
+#
+# 필요한 Secret (Settings → Secrets → Actions):
+#   YT_API_KEY, YT_CHANNEL_ID, IG_ACCESS_TOKEN, (선택) IG_USER_ID
+# Pages 배포를 쓰려면 Settings → Pages → Source 를 "GitHub Actions" 로 설정.
+
+on:
+  schedule:
+    - cron: '0 21 * * *' # 매일 06:00 KST
+  workflow_dispatch:
+  push:
+    branches: [claude/hyundai-dealer-homepage-oukndu, main]
+    paths:
+      - 'hyundai-dealer/**'
+      - '.github/workflows/hyundai-dealer.yml'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: hyundai-dealer
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: hyundai-dealer
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: hyundai-dealer/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Fetch SNS content
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          YT_CHANNEL_ID: ${{ secrets.YT_CHANNEL_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: npm run fetch:content
+
+      - name: Build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_BASE: ${{ vars.SITE_BASE }}
+        run: npm run build
+
+      - name: Commit refreshed feed.json
+        run: |
+          if ! git diff --quiet -- src/data/feed.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add src/data/feed.json
+            git commit -m "chore(hyundai-dealer): SNS 피드 갱신 [skip ci]"
+            git push
+          else
+            echo "feed.json 변경 없음 — 커밋 생략"
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: hyundai-dealer/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
