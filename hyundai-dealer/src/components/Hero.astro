@@ -1,15 +1,31 @@
 ---
 import { site } from '../data/site.config';
+import images from '../data/images.json';
+import { img } from '../lib/img';
 const { eyebrow, title, subtitle, backgroundImage } = site.hero;
+const heroPhoto = img(images.hero ?? backgroundImage);
 const titleLines = title.split('\n');
 const subtitleLines = subtitle.split('\n');
 ---
 
 <section class="hero" id="top">
-  <div class="hero__bg" style={backgroundImage ? `background-image:url('${backgroundImage}')` : undefined}>
+  <div
+    class="hero__bg"
+    data-photo={heroPhoto ? 'true' : undefined}
+    style={heroPhoto ? `background-image:url('${heroPhoto}')` : undefined}
+  >
     <div class="hero__grid"></div>
     <div class="hero__glow"></div>
   </div>
+
+  {!heroPhoto && (
+    <img
+      class="hero__car"
+      src={`${import.meta.env.BASE_URL}images/car-silhouette.svg`}
+      alt=""
+      aria-hidden="true"
+    />
+  )}
 
   <div class="hero__inner container">
     <p class="eyebrow" data-reveal>{eyebrow}</p>
@@ -58,6 +74,13 @@ const subtitleLines = subtitle.split('\n');
       radial-gradient(90% 80% at 12% 100%, rgba(0, 44, 95, 0.55), transparent 60%),
       linear-gradient(180deg, #06070a 0%, #0a0c10 45%, #05070b 100%);
   }
+  /* 실제 사진 배경일 때 좌측 텍스트 가독성 확보용 오버레이 */
+  .hero__bg[data-photo] { background-size: cover; background-position: center; }
+  .hero__bg[data-photo]::before {
+    background:
+      linear-gradient(90deg, rgba(5, 7, 11, 0.85) 0%, rgba(5, 7, 11, 0.5) 52%, rgba(5, 7, 11, 0.2) 100%),
+      linear-gradient(0deg, rgba(5, 7, 11, 0.72), rgba(5, 7, 11, 0.05) 60%);
+  }
   .hero__grid {
     position: absolute; inset: 0;
     background-image:
@@ -74,6 +97,24 @@ const subtitleLines = subtitle.split('\n');
     filter: blur(20px);
     pointer-events: none;
   }
+  .hero__car {
+    position: absolute;
+    z-index: 1;
+    right: -2%;
+    bottom: 7%;
+    width: min(60%, 760px);
+    filter: drop-shadow(0 30px 60px rgba(0, 170, 210, 0.25));
+    pointer-events: none;
+    animation: carfloat 7s var(--ease) infinite;
+  }
+  @keyframes carfloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__car { animation: none; }
+  }
+
   .hero__inner { position: relative; z-index: 2; padding-block: 120px 96px; }
   .hero__title { margin-top: 22px; max-width: 16ch; }
   .hero__sub { margin-top: 26px; color: rgba(255, 255, 255, 0.72); max-width: 52ch; }
@@ -99,5 +140,11 @@ const subtitleLines = subtitle.split('\n');
   }
   @media (max-width: 880px) {
     .hero__cta .btn { flex: 1 1 auto; }
+    .hero__car {
+      width: 116%;
+      right: -8%;
+      bottom: 4%;
+      opacity: 0.5;
+    }
   }
 </style>

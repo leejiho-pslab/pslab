@@ -1,6 +1,10 @@
 ---
 import { site } from '../data/site.config';
+import images from '../data/images.json';
+import { img } from '../lib/img';
 const { title, description, items } = site.models;
+const carSilhouette = `${import.meta.env.BASE_URL}images/car-silhouette.svg`;
+const modelPhotos: Record<string, string | null> = images.models ?? {};
 ---
 
 <section class="section" id="models">
@@ -12,7 +16,9 @@ const { title, description, items } = site.models;
     </div>
 
     <div class="models">
-      {items.map((m, i) => (
+      {items.map((m, i) => {
+        const photo = img(modelPhotos[m.id] ?? m.image);
+        return (
         <a
           class="model"
           href={m.href}
@@ -24,8 +30,18 @@ const { title, description, items } = site.models;
           <div
             class="model__media"
             data-variant={String(i % 4)}
-            style={m.image ? `background-image:url('${m.image}')` : undefined}
+            data-photo={photo ? 'true' : undefined}
+            style={photo ? `background-image:url('${photo}')` : undefined}
           >
+            {!photo && (
+              <img
+                class="model__car"
+                src={carSilhouette}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+              />
+            )}
             <span class="model__segment">{m.segment}</span>
           </div>
           <div class="model__body">
@@ -34,7 +50,8 @@ const { title, description, items } = site.models;
             <span class="model__link">자세히 보기 <span aria-hidden="true">→</span></span>
           </div>
         </a>
-      ))}
+        );
+      })}
     </div>
   </div>
 </section>
@@ -75,6 +92,15 @@ const { title, description, items } = site.models;
     position: absolute; inset: 0;
     background: radial-gradient(120% 80% at 80% 0%, rgba(255,255,255,0.18), transparent 60%);
   }
+  .model__car {
+    position: absolute;
+    left: 50%; top: 56%;
+    transform: translate(-50%, -50%);
+    width: 86%;
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.35));
+    transition: transform 0.5s var(--ease);
+  }
+  .model:hover .model__car { transform: translate(-50%, -50%) scale(1.05); }
   .model__segment {
     position: relative; z-index: 1;
     margin: 16px; padding: 6px 12px;
