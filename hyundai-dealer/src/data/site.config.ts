@@ -15,16 +15,6 @@ export interface CarModel {
   image?: string;
 }
 
-export interface PortfolioItem {
-  title: string;
-  /** 출고 차종/고객 한줄 설명 */
-  caption: string;
-  /** 이미지 경로(선택). 없으면 그라디언트 비주얼 폴백 */
-  image?: string;
-  /** 영상 링크(선택, 유튜브/드라이브 등) */
-  videoUrl?: string;
-}
-
 export interface SiteConfig {
   brand: {
     name: string;
@@ -49,11 +39,6 @@ export interface SiteConfig {
     title: string;
     description: string;
     items: CarModel[];
-  };
-  portfolio: {
-    title: string;
-    description: string;
-    items: PortfolioItem[];
   };
   youtube: {
     title: string;
@@ -138,18 +123,6 @@ export const site: SiteConfig = {
         segment: 'SEDAN',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
-    ],
-  },
-  portfolio: {
-    title: '고객 출고 스토리',
-    description: '새로운 차와 함께한 고객들의 순간. 다음 주인공은 당신입니다.',
-    items: [
-      { title: '그랜저 캘리그래피 출고', caption: '20년 무사고 베테랑 고객님' },
-      { title: '아이오닉 5 인도', caption: '첫 전기차에 도전한 신혼부부' },
-      { title: '싼타페 패밀리카', caption: '네 식구의 새 출발' },
-      { title: '아반떼 N라인', caption: '사회초년생의 첫 차' },
-      { title: '팰리세이드 출고', caption: '캠핑을 사랑하는 가족' },
-      { title: '쏘나타 디 엣지', caption: '오래 기다린 인생 첫 세단' },
     ],
   },
   youtube: {
