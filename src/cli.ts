@@ -331,6 +331,8 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
   const only = typeof args.client === 'string' ? args.client : undefined;
   const id = typeof args.id === 'string' ? args.id : undefined;
   const due = args.due === true;
+  // 시뮬레이션(dry-run)일 땐 플랜 상태를 변경하지 않는다(가짜 '발행됨' 방지).
+  const dryRun = process.env.PSLAB_DRY_RUN !== 'false';
 
   const repo = process.env.PSLAB_REPO ?? 'leejiho-pslab/pslab';
   const [owner, repoName] = repo.split('/');
@@ -363,7 +365,7 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
       // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
       if (isManualOnly(it.channels)) {
-        it.status = 'manual';
+        if (!dryRun) it.status = 'manual';
         console.log(
           `\n📋 수동 발행 대기: [${it.channels.join(',')}] ${it.topic} — 대시보드에서 복사해 직접 게시`,
         );
@@ -394,6 +396,10 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       console.log(`\n▶ 발행: [${autoChannels.join(',')}] ${content.title} (${imgs.length}장)`);
       const result = await app.publisher.publish(content, { targets: autoChannels });
       printResults(`📤 ${it.id}`, result.results);
+      if (dryRun) {
+        console.log('  (시뮬레이션 — 플랜 상태는 변경하지 않음)');
+        continue;
+      }
       const okResults = result.results.filter((r) => r.ok && r.remoteId);
       if (okResults.length > 0) {
         it.status = 'published';
