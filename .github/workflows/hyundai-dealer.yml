@@ -59,8 +59,10 @@ jobs:
 
       - name: Build
         env:
-          SITE_URL: ${{ vars.SITE_URL }}
-          SITE_BASE: ${{ vars.SITE_BASE }}
+          # GitHub Project Pages 는 /<repo>/ 하위 경로로 서빙되므로 base 를 맞춘다.
+          # 커스텀 도메인/유저페이지를 쓰면 저장소 Variables 로 덮어쓰면 된다.
+          SITE_URL: ${{ vars.SITE_URL || 'https://leejiho-pslab.github.io' }}
+          SITE_BASE: ${{ vars.SITE_BASE || '/pslab/' }}
         run: npm run build
 
       - name: Commit refreshed feed.json
