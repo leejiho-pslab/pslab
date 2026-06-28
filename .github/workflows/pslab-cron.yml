@@ -14,6 +14,8 @@ on:
 
 permissions:
   contents: write           # 사이클 이력(data/) 커밋·푸시용
+  pages: write              # GitHub Pages 배포용
+  id-token: write           # deploy-pages 인증용
 
 concurrency:
   group: pslab-autopilot
@@ -22,6 +24,10 @@ concurrency:
 jobs:
   cycle:
     runs-on: ubuntu-latest
+    # Pages 배포(deploy-pages@v4)에 필요한 환경
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
       # 안전장치: 기본은 시뮬레이션. 실제 발행하려면 저장소 Variables에
@@ -113,3 +119,15 @@ jobs:
           else
             echo "변경 없음"
           fi
+
+      # GitHub Pages 라이브 배포 — pslab이 docs/를 단독 배포(다른 프로젝트와 분리)
+      # (Settings → Pages → Source 를 "GitHub Actions"로 설정해야 동작)
+      - name: Pages 설정
+        uses: actions/configure-pages@v5
+      - name: Pages 아티팩트 업로드 (docs/)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Pages 배포
+        id: deploy
+        uses: actions/deploy-pages@v4

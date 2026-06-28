@@ -16,6 +16,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
   group: pslab-publish
@@ -24,6 +26,9 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
       PSLAB_DRY_RUN: ${{ github.event.inputs.dry_run }}
@@ -55,9 +60,22 @@ jobs:
           touch docs/.nojekyll
           git add -f data/ docs/index.html docs/.nojekyll 2>/dev/null || true
           if ! git diff --cached --quiet; then
-            # [skip ci] 금지: docs/ 변경이 Pages 배포(pages-build-deployment)를 트리거해야 함
             git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
             git push
           else
             echo "변경 없음"
           fi
+
+      # 실제 발행 시 라이브 Pages 배포 (Settings → Pages → Source = "GitHub Actions")
+      - name: Pages 설정
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/configure-pages@v5
+      - name: Pages 아티팩트 업로드 (docs/)
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Pages 배포
+        id: deploy
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/deploy-pages@v4
