@@ -1,0 +1,63 @@
+name: deploy
+
+# 새 전용 저장소(루트에 이 프로젝트가 있는 경우)용 배포 워크플로.
+# 매일 SNS 콘텐츠를 수집해 빌드하고 GitHub Pages 로 게시한다.
+#
+# 사용 전 확인:
+#  1) 아래 SITE_BASE 기본값 '/REPO_NAME/' 을 실제 저장소 이름으로 바꾼다
+#     (예: 저장소가 moomoo 이면 '/moomoo/'). 또는 저장소 Variables 에 SITE_BASE 등록.
+#  2) Settings → Pages → Source 를 'GitHub Actions' 로 설정.
+#  3) (선택) SNS 자동 수집용 Secret 등록: YT_API_KEY, YT_CHANNEL_ID, IG_ACCESS_TOKEN, IG_USER_ID
+
+on:
+  schedule:
+    - cron: '0 21 * * *' # 매일 06:00 KST
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Fetch SNS content
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+          YT_CHANNEL_ID: ${{ secrets.YT_CHANNEL_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+        run: npm run fetch:content
+      - name: Build
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_BASE: ${{ vars.SITE_BASE || '/REPO_NAME/' }}
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
