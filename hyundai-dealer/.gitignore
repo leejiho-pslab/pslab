@@ -9,10 +9,8 @@ node_modules/
 .env
 .env.local
 
-# 빌드 시 자동 다운로드되는 이미지(매니페스트로 관리, 러너가 매번 재생성)
-public/images/hero.*
-public/images/profile.*
-public/images/model-*
+# 빌드 시 자동 다운로드되는 이미지(러너가 매번 재생성). 수동 업로드 이미지(public/images/*)는 추적함
+public/images/_fetched/
 
 # os
 .DS_Store

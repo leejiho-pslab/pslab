@@ -1,7 +1,10 @@
 ---
 import { site } from '../data/site.config';
-const { title, description, phone, kakaoUrl, hours, location } = site.contact;
+const { title, description, phone, officeTel, email, kakaoUrl, hours, location } = site.contact;
 const telHref = `tel:${phone.replace(/[^0-9+]/g, '')}`;
+const officeTelHref = `tel:${officeTel.replace(/[^0-9+]/g, '')}`;
+const mailHref = `mailto:${email}`;
+const hasKakao = Boolean(kakaoUrl);
 ---
 
 <section class="section section--dark contact" id="contact">
@@ -14,14 +17,26 @@ const telHref = `tel:${phone.replace(/[^0-9+]/g, '')}`;
 
       <div class="contact__cta" data-reveal data-reveal-delay="3">
         <a class="btn btn--primary" href={telHref}>📞 전화 상담</a>
-        <a class="btn btn--ghost" href={kakaoUrl} target="_blank" rel="noopener">💬 카카오톡 상담</a>
+        {hasKakao ? (
+          <a class="btn btn--ghost" href={kakaoUrl} target="_blank" rel="noopener">💬 카카오톡 상담</a>
+        ) : (
+          <a class="btn btn--ghost" href={mailHref}>✉️ 이메일 문의</a>
+        )}
       </div>
     </div>
 
     <ul class="contact__meta" data-reveal data-reveal-delay="2">
       <li>
-        <span class="contact__label">전화</span>
+        <span class="contact__label">상담 전화</span>
         <a class="contact__value" href={telHref}>{phone}</a>
+      </li>
+      <li>
+        <span class="contact__label">대표 전화</span>
+        <a class="contact__value" href={officeTelHref}>{officeTel}</a>
+      </li>
+      <li>
+        <span class="contact__label">이메일</span>
+        <a class="contact__value" href={mailHref}>{email}</a>
       </li>
       <li>
         <span class="contact__label">상담 시간</span>

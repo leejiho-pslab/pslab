@@ -1,16 +1,25 @@
 ---
 import { site } from '../data/site.config';
 const { phone, kakaoUrl } = site.contact;
-const telHref = `tel:${phone.replace(/[^0-9+]/g, '')}`;
+const digits = phone.replace(/[^0-9+]/g, '');
+const telHref = `tel:${digits}`;
+const smsHref = `sms:${digits}`;
+const hasKakao = Boolean(kakaoUrl);
 ---
 
 <div class="sticky-cta" aria-label="빠른 상담">
   <a class="sticky-cta__btn sticky-cta__btn--tel" href={telHref}>
     <span aria-hidden="true">📞</span> 전화 상담
   </a>
-  <a class="sticky-cta__btn sticky-cta__btn--kakao" href={kakaoUrl} target="_blank" rel="noopener">
-    <span aria-hidden="true">💬</span> 카카오톡
-  </a>
+  {hasKakao ? (
+    <a class="sticky-cta__btn sticky-cta__btn--kakao" href={kakaoUrl} target="_blank" rel="noopener">
+      <span aria-hidden="true">💬</span> 카카오톡
+    </a>
+  ) : (
+    <a class="sticky-cta__btn sticky-cta__btn--sms" href={smsHref}>
+      <span aria-hidden="true">✉️</span> 문자 상담
+    </a>
+  )}
 </div>
 
 <style>
@@ -30,5 +39,6 @@ const telHref = `tel:${phone.replace(/[^0-9+]/g, '')}`;
     }
     .sticky-cta__btn--tel { background: var(--accent); color: #04222b; }
     .sticky-cta__btn--kakao { background: #fae100; color: #3a1d1d; }
+    .sticky-cta__btn--sms { background: #fff; color: #04222b; }
   }
 </style>

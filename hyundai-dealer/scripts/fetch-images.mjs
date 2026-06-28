@@ -19,7 +19,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 const SOURCES = resolve(ROOT, 'src/data/image-sources.json');
 const MANIFEST = resolve(ROOT, 'src/data/images.json');
-const OUT_DIR = resolve(ROOT, 'public/images');
+// 자동 다운로드 이미지는 _fetched/ 로 분리한다(수동 업로드 이미지와 충돌 방지, gitignore 대상).
+const OUT_DIR = resolve(ROOT, 'public/images/_fetched');
 
 const EXT_BY_TYPE = {
   'image/jpeg': 'jpg',
@@ -87,7 +88,7 @@ async function download(name, url) {
     const { buf, url: finalUrl, contentType } = await fetchImageBytes(url);
     if (buf.byteLength < 1024) throw new Error('너무 작은 응답(이미지 아님?)');
     const ext = extFor(finalUrl, contentType);
-    const rel = `images/${name}.${ext}`;
+    const rel = `images/_fetched/${name}.${ext}`;
     await writeFile(resolve(ROOT, 'public', rel), buf);
     console.log(`[img] ${name} ← ${finalUrl} (${(buf.byteLength / 1024).toFixed(0)}KB)`);
     return rel;

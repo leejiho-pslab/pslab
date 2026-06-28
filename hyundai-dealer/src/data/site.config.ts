@@ -52,11 +52,22 @@ export interface SiteConfig {
     description: string;
     profileUrl: string;
   };
+  /** 담당 딜러 정보 (히어로 카드·소개 섹션에 표시) */
+  dealer: {
+    name: string;
+    role: string;
+    dealership: string;
+  };
   contact: {
     title: string;
     description: string;
+    /** 휴대전화 (상담) */
     phone: string;
-    /** 카카오톡 채널/오픈채팅 링크 */
+    /** 대표 전화 */
+    officeTel: string;
+    /** 이메일 */
+    email: string;
+    /** 카카오톡 채널/오픈채팅 링크 (없으면 빈 문자열) */
     kakaoUrl: string;
     hours: string;
     location: string;
@@ -65,24 +76,29 @@ export interface SiteConfig {
 
 export const site: SiteConfig = {
   brand: {
-    name: '무무 현대자동차',
+    name: '현대자동차 대전선화대리점',
     logoText: 'MOOMOO',
-    slogan: '신뢰로 만나는 현대자동차',
+    slogan: '신뢰로 만나는 현대자동차 · 제네시스',
+  },
+  dealer: {
+    name: '김무겸',
+    role: 'CAR MASTER',
+    dealership: '현대자동차 대전선화대리점',
   },
   hero: {
-    eyebrow: 'HYUNDAI DEALER',
+    eyebrow: 'HYUNDAI · GENESIS',
     title: '당신의 드라이브,\n여기서 시작됩니다',
     subtitle:
-      '상담부터 출고까지, 현대자동차 전문 딜러가 처음부터 끝까지 함께합니다.\n진심을 담은 한 대를 약속드립니다.',
+      '상담부터 출고까지, 카마스터 김무겸이 처음부터 끝까지 함께합니다.\n진심을 담은 한 대를 약속드립니다.',
     backgroundImage: undefined,
   },
   about: {
     title: '한 대의 차가 아닌,\n오래갈 신뢰를 팝니다',
-    body: '수많은 고객의 첫 차와 인생 차를 함께해 왔습니다. 무리한 권유 대신 가장 잘 맞는 선택을, 계약 이후에도 변함없는 케어를 약속합니다.',
+    body: '현대자동차 대전선화대리점 카마스터 김무겸입니다. 무리한 권유 대신 가장 잘 맞는 선택을, 계약 이후에도 변함없는 케어를 약속합니다.',
     stats: [
-      { value: '10년+', label: '현대차 판매 경력' },
-      { value: '1,200대+', label: '누적 출고' },
-      { value: '4.9★', label: '고객 상담 만족도' },
+      { value: 'Hyundai', label: '현대자동차 정식 카마스터' },
+      { value: 'Genesis', label: '제네시스 상담 가능' },
+      { value: '대전', label: '대전선화대리점' },
     ],
   },
   models: {
@@ -145,10 +161,12 @@ export const site: SiteConfig = {
   },
   contact: {
     title: '지금 상담하세요',
-    description: '궁금한 차종, 견적, 프로모션 무엇이든 편하게 문의주세요. 가장 빠르게 답해드립니다.',
-    phone: '010-0000-0000',
-    kakaoUrl: 'https://pf.kakao.com/',
+    description: '궁금한 차종, 견적, 프로모션 무엇이든 편하게 문의주세요. 카마스터 김무겸이 가장 빠르게 답해드립니다.',
+    phone: '010-8033-3522',
+    officeTel: '042-254-9000',
+    email: 'mookyumi@naver.com',
+    kakaoUrl: '',
     hours: '평일 09:00 – 19:00 · 주말·공휴일 예약 상담',
-    location: '현대자동차 ○○대리점 · 서울 ○○구 ○○로 00',
+    location: '현대자동차 대전선화대리점 · 대전광역시 중구 우암로 4',
   },
 };
