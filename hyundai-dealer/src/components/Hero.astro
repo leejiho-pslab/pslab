@@ -11,6 +11,13 @@ const subtitleLines = subtitle.split('\n');
     <div class="hero__glow"></div>
   </div>
 
+  <img
+    class="hero__car"
+    src={`${import.meta.env.BASE_URL}images/car-silhouette.svg`}
+    alt=""
+    aria-hidden="true"
+  />
+
   <div class="hero__inner container">
     <p class="eyebrow" data-reveal>{eyebrow}</p>
     <h1 class="display hero__title" data-reveal data-reveal-delay="1">
@@ -74,6 +81,24 @@ const subtitleLines = subtitle.split('\n');
     filter: blur(20px);
     pointer-events: none;
   }
+  .hero__car {
+    position: absolute;
+    z-index: 1;
+    right: -2%;
+    bottom: 7%;
+    width: min(60%, 760px);
+    filter: drop-shadow(0 30px 60px rgba(0, 170, 210, 0.25));
+    pointer-events: none;
+    animation: carfloat 7s var(--ease) infinite;
+  }
+  @keyframes carfloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero__car { animation: none; }
+  }
+
   .hero__inner { position: relative; z-index: 2; padding-block: 120px 96px; }
   .hero__title { margin-top: 22px; max-width: 16ch; }
   .hero__sub { margin-top: 26px; color: rgba(255, 255, 255, 0.72); max-width: 52ch; }
@@ -99,5 +124,11 @@ const subtitleLines = subtitle.split('\n');
   }
   @media (max-width: 880px) {
     .hero__cta .btn { flex: 1 1 auto; }
+    .hero__car {
+      width: 116%;
+      right: -8%;
+      bottom: 4%;
+      opacity: 0.5;
+    }
   }
 </style>
