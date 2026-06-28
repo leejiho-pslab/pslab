@@ -3,7 +3,9 @@ import { site } from '../data/site.config';
 import images from '../data/images.json';
 import { img } from '../lib/img';
 const { eyebrow, title, subtitle, backgroundImage } = site.hero;
-const heroPhoto = img(images.hero ?? backgroundImage);
+// 합성 히어로: 차량 이미지(배경) + 딜러 사진(전면 포트레이트)
+const heroCar = img(images.hero ?? backgroundImage ?? images.models?.grandeur);
+const dealerPhoto = img(images.profile) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
 const titleLines = title.split('\n');
 const subtitleLines = subtitle.split('\n');
 ---
@@ -11,14 +13,14 @@ const subtitleLines = subtitle.split('\n');
 <section class="hero" id="top">
   <div
     class="hero__bg"
-    data-photo={heroPhoto ? 'true' : undefined}
-    style={heroPhoto ? `background-image:url('${heroPhoto}')` : undefined}
+    data-photo={heroCar ? 'true' : undefined}
+    style={heroCar ? `background-image:url('${heroCar}')` : undefined}
   >
     <div class="hero__grid"></div>
     <div class="hero__glow"></div>
   </div>
 
-  {!heroPhoto && (
+  {!heroCar && (
     <img
       class="hero__car"
       src={`${import.meta.env.BASE_URL}images/car-silhouette.svg`}
@@ -28,21 +30,31 @@ const subtitleLines = subtitle.split('\n');
   )}
 
   <div class="hero__inner container">
-    <p class="eyebrow" data-reveal>{eyebrow}</p>
-    <h1 class="display hero__title" data-reveal data-reveal-delay="1">
-      {titleLines.map((line, i) => (
-        <>{line}{i < titleLines.length - 1 && <br />}</>
-      ))}
-    </h1>
-    <p class="lead hero__sub" data-reveal data-reveal-delay="2">
-      {subtitleLines.map((line, i) => (
-        <>{line}{i < subtitleLines.length - 1 && <br />}</>
-      ))}
-    </p>
-    <div class="hero__cta" data-reveal data-reveal-delay="3">
-      <a class="btn btn--primary" href="#contact">상담 신청하기</a>
-      <a class="btn btn--ghost" href="#models">차종 둘러보기</a>
+    <div class="hero__copy">
+      <p class="eyebrow" data-reveal>{eyebrow}</p>
+      <h1 class="display hero__title" data-reveal data-reveal-delay="1">
+        {titleLines.map((line, i) => (
+          <>{line}{i < titleLines.length - 1 && <br />}</>
+        ))}
+      </h1>
+      <p class="lead hero__sub" data-reveal data-reveal-delay="2">
+        {subtitleLines.map((line, i) => (
+          <>{line}{i < subtitleLines.length - 1 && <br />}</>
+        ))}
+      </p>
+      <div class="hero__cta" data-reveal data-reveal-delay="3">
+        <a class="btn btn--primary" href="#contact">상담 신청하기</a>
+        <a class="btn btn--ghost" href="#models">차종 둘러보기</a>
+      </div>
     </div>
+
+    <figure class="hero__dealer" data-reveal data-reveal-delay="2">
+      <img src={dealerPhoto} alt="담당 딜러" />
+      <figcaption>
+        <strong>{site.brand.name}</strong>
+        <span>당신의 드라이브를 함께할 담당 딜러</span>
+      </figcaption>
+    </figure>
   </div>
 
   <a class="hero__scroll" href="#about" aria-label="아래로 스크롤">
@@ -65,7 +77,6 @@ const subtitleLines = subtitle.split('\n');
     background-size: cover; background-position: center;
     background-color: var(--ink);
   }
-  /* 이미지가 없을 때도 프리미엄 다크 비주얼이 되도록 그라디언트 레이어 */
   .hero__bg::before {
     content: '';
     position: absolute; inset: 0;
@@ -74,11 +85,10 @@ const subtitleLines = subtitle.split('\n');
       radial-gradient(90% 80% at 12% 100%, rgba(0, 44, 95, 0.55), transparent 60%),
       linear-gradient(180deg, #06070a 0%, #0a0c10 45%, #05070b 100%);
   }
-  /* 실제 사진 배경일 때 좌측 텍스트 가독성 확보용 오버레이 */
-  .hero__bg[data-photo] { background-size: cover; background-position: center; }
+  /* 실제 차량 사진 배경일 때 가독성 오버레이 */
   .hero__bg[data-photo]::before {
     background:
-      linear-gradient(90deg, rgba(5, 7, 11, 0.85) 0%, rgba(5, 7, 11, 0.5) 52%, rgba(5, 7, 11, 0.2) 100%),
+      linear-gradient(90deg, rgba(5, 7, 11, 0.85) 0%, rgba(5, 7, 11, 0.5) 52%, rgba(5, 7, 11, 0.22) 100%),
       linear-gradient(0deg, rgba(5, 7, 11, 0.72), rgba(5, 7, 11, 0.05) 60%);
   }
   .hero__grid {
@@ -97,28 +107,52 @@ const subtitleLines = subtitle.split('\n');
     filter: blur(20px);
     pointer-events: none;
   }
+  /* 차량 사진이 없을 때의 실루엣 백드롭 */
   .hero__car {
-    position: absolute;
-    z-index: 1;
-    right: -2%;
-    bottom: 7%;
-    width: min(60%, 760px);
+    position: absolute; z-index: 1;
+    left: 50%; bottom: 6%;
+    transform: translateX(-50%);
+    width: min(78%, 880px);
+    opacity: 0.5;
     filter: drop-shadow(0 30px 60px rgba(0, 170, 210, 0.25));
     pointer-events: none;
-    animation: carfloat 7s var(--ease) infinite;
-  }
-  @keyframes carfloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .hero__car { animation: none; }
   }
 
-  .hero__inner { position: relative; z-index: 2; padding-block: 120px 96px; }
+  .hero__inner {
+    position: relative; z-index: 2;
+    padding-block: 124px 100px;
+    display: grid;
+    grid-template-columns: 1.08fr 0.92fr;
+    gap: clamp(32px, 5vw, 72px);
+    align-items: center;
+    width: 100%;
+  }
   .hero__title { margin-top: 22px; max-width: 16ch; }
   .hero__sub { margin-top: 26px; color: rgba(255, 255, 255, 0.72); max-width: 52ch; }
   .hero__cta { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 40px; }
+
+  .hero__dealer {
+    margin: 0;
+    justify-self: end;
+    width: min(100%, 380px);
+    border-radius: 22px;
+    overflow: hidden;
+    position: relative;
+    background: rgba(12, 16, 24, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 40px 80px -30px rgba(0, 170, 210, 0.45);
+    backdrop-filter: blur(4px);
+  }
+  .hero__dealer img {
+    width: 100%; aspect-ratio: 4 / 5; object-fit: cover; display: block;
+  }
+  .hero__dealer figcaption {
+    position: absolute; inset: auto 0 0 0;
+    padding: 40px 20px 18px;
+    background: linear-gradient(180deg, transparent, rgba(5, 7, 11, 0.88));
+  }
+  .hero__dealer strong { display: block; font-size: 1.15rem; }
+  .hero__dealer span { display: block; margin-top: 4px; font-size: 0.85rem; color: rgba(255, 255, 255, 0.72); }
 
   .hero__scroll {
     position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%);
@@ -138,13 +172,15 @@ const subtitleLines = subtitle.split('\n');
   @media (prefers-reduced-motion: reduce) {
     .hero__scroll span { animation: none; }
   }
+
   @media (max-width: 880px) {
-    .hero__cta .btn { flex: 1 1 auto; }
-    .hero__car {
-      width: 116%;
-      right: -8%;
-      bottom: 4%;
-      opacity: 0.5;
+    .hero__inner {
+      grid-template-columns: 1fr;
+      padding-block: 110px 88px;
+      gap: 40px;
     }
+    .hero__cta .btn { flex: 1 1 auto; }
+    .hero__dealer { justify-self: start; width: min(72%, 300px); }
+    .hero__car { width: 120%; opacity: 0.32; bottom: 2%; }
   }
 </style>
