@@ -34,9 +34,8 @@ export class ThreadsPlugin extends BasePlugin {
     if (this.ctx.dryRun) {
       return simulateApiCall(`Threads 계정(${creds.threadsUserId})`);
     }
-    const json = await this.apiGet(`${creds.threadsUserId}`, {
-      fields: 'username',
-    });
+    // Threads는 본인 노드를 'me'로 조회한다 (숫자 ID 직접 조회는 미지원).
+    const json = await this.apiGet('me', { fields: 'username' });
     return `@${json.username ?? creds.threadsUserId}`;
   }
 
@@ -74,8 +73,7 @@ export class ThreadsPlugin extends BasePlugin {
       };
     }
 
-    // --- 실제 발행 ---
-    const userId = this.credentials.threadsUserId!;
+    // --- 실제 발행 (본인 노드는 'me'로) ---
     if (image && !/^https?:\/\//.test(image.source)) {
       throw new Error(
         `Threads 이미지 발행에는 공개 http(s) URL이 필요합니다 (현재: ${image.source}).`,
@@ -90,7 +88,7 @@ export class ThreadsPlugin extends BasePlugin {
     } else {
       params.media_type = 'TEXT';
     }
-    const created = await this.apiPost(`${userId}/threads`, params);
+    const created = await this.apiPost('me/threads', params);
     const creationId = String(created.id);
 
     // 미디어는 처리 완료까지 잠깐 대기 (텍스트는 즉시)
@@ -99,7 +97,7 @@ export class ThreadsPlugin extends BasePlugin {
     }
 
     // 2단계: 발행
-    const published = await this.apiPost(`${userId}/threads_publish`, {
+    const published = await this.apiPost('me/threads_publish', {
       creation_id: creationId,
     });
     const remoteId = String(published.id);
