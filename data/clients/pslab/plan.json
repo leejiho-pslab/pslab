@@ -862,7 +862,7 @@
       ],
       "scheduledFor": "2026-07-04T10:00:00.000Z",
       "score": 80,
-      "status": "planned",
+      "status": "published",
       "kicker": "Threads",
       "headline": "광고비 태우기 전<br>점검 *3가지*",
       "sub": "짧게 핵심만.",
@@ -877,7 +877,9 @@
       "slideImages": [
         "cards/pslab/threads-07-04-1.png"
       ],
-      "cardImage": "cards/pslab/threads-07-04-1.png"
+      "cardImage": "cards/pslab/threads-07-04-1.png",
+      "publishedUrl": "https://www.threads.com/@_pslab/post/DaIUz7QGpp_",
+      "publishedAt": "2026-06-28T12:46:54.616Z"
     },
     {
       "id": "threads-07-07",
