@@ -362,5 +362,36 @@
     "imageUrl": "https://i.ibb.co/Df2LLL1s/02134ed65f56.jpg",
     "metrics": [],
     "designVersion": 10
+  },
+  {
+    "clientId": "pslab",
+    "startedAt": "2026-06-28T11:45:56.903Z",
+    "finishedAt": "2026-06-28T11:45:59.126Z",
+    "topic": "온라인마케팅",
+    "suggestedFormat": "짧은 영상",
+    "review": {
+      "approved": false,
+      "pending": true,
+      "reviewer": "human",
+      "reason": "사람 승인 대기",
+      "flags": []
+    },
+    "published": false,
+    "avgEngagementRate": 0,
+    "direction": {
+      "focusTopics": [
+        "온라인마케팅",
+        "마케팅인사이트",
+        "광고대행"
+      ],
+      "focusFormats": [
+        "짧은 영상"
+      ],
+      "rationale": "다음 사이클은 [온라인마케팅, 마케팅인사이트, 광고대행] 주제를 [짧은 영상] 형식으로 강화. 분석: 발행량을 늘려 데이터를 모으자. / 경쟁사: 우리도 짧은 영상 형식을 시험하자. / 디자인: 썸네일 대비를 높이고 첫 3초 훅을 강화하자."
+    },
+    "caption": "온라인마케팅, 현장 경험담 관점에서 풀어봅니다.\n\n광고·마케팅 집행을 고민하는 소상공인과 사업주, 실무 마케팅 담당자, 대행사 선택이나 창업을 앞두고 현실 조언이 필요한 사람들이라면 한 번쯤 부딪히는 지점이죠.\n\n여러분의 경험은 어떤가요? 댓글로 남겨주세요.",
+    "imageUrl": "https://i.ibb.co/r2N6pdT4/18fb69a63057.jpg",
+    "metrics": [],
+    "designVersion": 11
   }
 ]
