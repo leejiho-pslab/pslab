@@ -97,6 +97,10 @@ jobs:
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
+      # 주의: 커밋 메시지에 [skip ci]를 넣지 말 것!
+      # docs/ 변경은 pages-build-deployment(자동)를 트리거해 실제 사이트에 배포된다.
+      # [skip ci]를 붙이면 Pages 배포까지 막혀 대시보드가 라이브에 반영되지 않는다.
+      # (pslab 워크플로는 schedule/dispatch로만 돌아 push 루프 위험이 없다.)
       - name: 이력·대시보드 커밋
         run: |
           git config user.name "pslab-bot"
@@ -104,7 +108,7 @@ jobs:
           touch docs/.nojekyll
           git add -f data/ docs/index.html docs/.nojekyll docs/cards 2>/dev/null || true
           if ! git diff --cached --quiet; then
-            git commit -m "chore(pslab): 발행·성과·대시보드 갱신 [skip ci]"
+            git commit -m "chore(pslab): 발행·성과·대시보드 갱신"
             git push
           else
             echo "변경 없음"
