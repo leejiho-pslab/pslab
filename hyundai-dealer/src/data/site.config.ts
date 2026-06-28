@@ -5,6 +5,8 @@
  */
 
 export interface CarModel {
+  /** 이미지 소스 매핑용 식별자 (image-sources.json 의 models 키와 일치) */
+  id: string;
   name: string;
   tagline: string;
   /** 차급/세그먼트 라벨 */
@@ -88,36 +90,42 @@ export const site: SiteConfig = {
     description: '대표 라인업을 빠르게 만나보세요. 자세한 제원은 현대자동차 공식 페이지에서 확인할 수 있습니다.',
     items: [
       {
+        id: 'grandeur',
         name: '디 올 뉴 그랜저',
         tagline: '플래그십 세단의 품격',
         segment: 'SEDAN',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
       {
+        id: 'santafe',
         name: '싼타페',
         tagline: '가족을 위한 정공법 SUV',
         segment: 'SUV',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
       {
+        id: 'avante',
         name: '아반떼',
         tagline: '첫 차로 완벽한 밸런스',
         segment: 'SEDAN',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
       {
+        id: 'ioniq5',
         name: '아이오닉 5',
         tagline: '전동화의 새로운 기준',
         segment: 'EV',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
       {
+        id: 'palisade',
         name: '팰리세이드',
         tagline: '대형 SUV의 완성',
         segment: 'SUV',
         href: 'https://www.hyundai.com/kr/ko/e',
       },
       {
+        id: 'sonata',
         name: '쏘나타',
         tagline: '시대를 잇는 베스트셀러',
         segment: 'SEDAN',

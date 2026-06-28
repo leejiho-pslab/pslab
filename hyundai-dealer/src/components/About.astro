@@ -1,18 +1,17 @@
 ---
 import { site } from '../data/site.config';
+import images from '../data/images.json';
+import { img } from '../lib/img';
 const { title, body, stats } = site.about;
 const titleLines = title.split('\n');
+const profilePhoto = img(images.profile) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
 ---
 
 <section class="section section--dark" id="about">
   <div class="container about">
     <div class="about__intro">
       <figure class="about__photo" data-reveal>
-        <img
-          src={`${import.meta.env.BASE_URL}images/dealer-profile.svg`}
-          alt="딜러 프로필"
-          loading="lazy"
-        />
+        <img src={profilePhoto} alt="딜러 프로필" loading="lazy" />
         <figcaption>담당 딜러</figcaption>
       </figure>
 
