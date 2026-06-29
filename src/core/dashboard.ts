@@ -255,10 +255,22 @@ export function renderDashboard(
   tokenStore?: TokenHealthStore,
   reportStore?: WeeklyReportStore,
 ): string {
+  // 설정 현황 — 환경변수 "존재 여부"만 본다(값은 절대 노출하지 않음).
+  const env = process.env;
+  const has = (...keys: string[]) => keys.every((k) => Boolean(env[k]));
+  const setup = {
+    realPublish: env.PSLAB_DRY_RUN === 'false',
+    telegram: has('TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID'),
+    anthropic: has('ANTHROPIC_API_KEY'),
+    instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
+    threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
+    linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
+  };
   const data = {
     generatedAt: new Date().toISOString(),
     repo: REPO,
     channels: CHANNELS,
+    setup,
     clients: clients.map((c) =>
       buildClientData(c, store, designStore, planStore, learnStore, tokenStore, reportStore),
     ),
@@ -565,8 +577,27 @@ function pubDataRows(items){
   return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📊 발행 콘텐츠 데이터</h3><span class="muted">'+pub.length+'건 · 성과+인사이트</span></div>'+
     '<table><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows+'</table></div>';
 }
+function setupPanel(){
+  const s=DATA.setup||{};
+  const settingsUrl='https://github.com/'+REPO+'/settings/secrets/actions';
+  const varsUrl='https://github.com/'+REPO+'/settings/variables/actions';
+  const row=(ok,name,todo,url)=>'<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⬜')+'</td><td><b>'+esc(name)+'</b>'+(ok?'':'<div class="muted" style="margin-top:2px">'+todo+(url?' · <a href="'+url+'" target="_blank">설정 열기 ↗</a>':'')+'</div>')+'</td></tr>';
+  const done=[s.instagram,s.threads,s.telegram,s.anthropic,s.realPublish].filter(Boolean).length;
+  return '<div class="panel" style="border-color:#2b6fff">'+
+    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/5 완료</span></div>'+
+    '<table>'+
+    row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
+    row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
+    row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
+    '</table>'+
+    '<div class="muted" style="margin-top:8px">네이버 블로그·유튜브는 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다. 각 채널 탭에서 완성된 글을 복사해 올리세요.</div>'+
+    '</div>';
+}
 function overview(client){
   let h=tokenBanner(client);
+  h+=setupPanel();
   h+=weeklyPanel(client);
   h+='<div class="kpis">'+
     kpi(client.totalCycles,'총 사이클')+
