@@ -93,6 +93,14 @@ const modelPhotos: Record<string, string | null> = images.models ?? {};
     position: absolute; inset: 0;
     background: radial-gradient(120% 80% at 80% 0%, rgba(255,255,255,0.18), transparent 60%);
   }
+  /* 실제 차량 사진은 잘리지 않게 전체 표시(contain) + 밝은 배경 */
+  .model__media[data-photo] {
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center 58%;
+    background-color: #eef1f5;
+  }
+  .model__media[data-photo]::after { display: none; }
   .model__car {
     position: absolute;
     left: 50%; top: 56%;
@@ -118,6 +126,13 @@ const modelPhotos: Record<string, string | null> = images.models ?? {};
   }
   .model:hover .model__link span { display: inline-block; transform: translateX(4px); transition: transform 0.3s var(--ease); }
 
-  @media (max-width: 880px) { .models { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 560px) { .models { grid-template-columns: 1fr; } }
+  /* 모바일에서도 2열 유지 — 세로 스크롤 절감 */
+  @media (max-width: 880px) {
+    .models { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .model__body { padding: 14px 14px 18px; }
+    .model__name { font-size: 1.05rem; }
+    .model__tagline { font-size: 0.84rem; }
+    .model__link { margin-top: 8px; font-size: 0.82rem; }
+    .model__segment { margin: 10px; padding: 4px 9px; font-size: 0.62rem; }
+  }
 </style>

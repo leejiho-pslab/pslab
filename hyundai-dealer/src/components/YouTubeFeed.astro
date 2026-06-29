@@ -90,8 +90,8 @@ const videos = (feed.youtube ?? []).slice(0, 6);
   .feed-empty em { display: block; font-style: normal; color: var(--muted-dark); margin-top: 4px; font-size: 0.92rem; }
 
   @media (max-width: 880px) {
-    .section__head--row { flex-direction: column; align-items: flex-start; }
-    .yt-grid { grid-template-columns: repeat(2, 1fr); }
+    .section__head--row { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .yt-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .yt-card__title { font-size: 0.86rem; }
   }
-  @media (max-width: 560px) { .yt-grid { grid-template-columns: 1fr; } }
 </style>

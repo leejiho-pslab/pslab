@@ -3,8 +3,8 @@ import { site } from '../data/site.config';
 import feed from '../data/feed.json';
 
 const { title, description, profileUrl } = site.instagram;
-const posts = (feed.instagram ?? []).slice(0, 8);
-const placeholders = Array.from({ length: 8 }, (_, i) => i);
+const posts = (feed.instagram ?? []).slice(0, 6);
+const placeholders = Array.from({ length: 6 }, (_, i) => i);
 ---
 
 <section class="section" id="instagram">
@@ -43,8 +43,8 @@ const placeholders = Array.from({ length: 8 }, (_, i) => i);
 <style>
   .ig__profile { flex: none; }
   .ig-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: clamp(8px, 1.4vw, 16px);
+    display: grid; grid-template-columns: repeat(6, 1fr);
+    gap: clamp(8px, 1.2vw, 14px);
   }
   .ig-cell {
     position: relative; aspect-ratio: 1; border-radius: 14px; overflow: hidden;
@@ -72,8 +72,7 @@ const placeholders = Array.from({ length: 8 }, (_, i) => i);
   .ig-cell--ph[data-variant='3'] { background: linear-gradient(135deg, #d3e3ef, #aac4dc); }
 
   @media (max-width: 880px) {
-    .section__head--row { flex-direction: column; align-items: flex-start; }
+    .section__head--row { flex-direction: column; align-items: flex-start; gap: 16px; }
     .ig-grid { grid-template-columns: repeat(3, 1fr); }
   }
-  @media (max-width: 520px) { .ig-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
