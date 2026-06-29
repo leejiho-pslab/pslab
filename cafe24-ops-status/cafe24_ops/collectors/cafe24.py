@@ -113,15 +113,35 @@ def _item_amount(it: dict) -> float:
         return 0.0
 
 
-def best_products(date: str, orders: list[dict], top_n: int = 10) -> list[dict]:
-    """주문 items 집계 → 베스트상품(product_sales) 상위 N. embed=items 필요."""
-    agg: dict[str, float] = {}
+def _allocated_items(orders: list[dict]):
+    """주문별 실결제액(order_amount)을 품목에 비례 배분해 (item, 배분금액)을 낸다.
+
+    카페24 embed=items 의 품목 payment_amount 가 None 인 경우가 많아, 품목 정가
+    (_item_amount)를 가중치로 주문 실결제액을 나눈다. → 카테고리/베스트 합이 매출과
+    일치하고 할인·배송비가 반영된 '실매출 기여'가 된다. 가중치 합이 0이면 균등분배.
+    """
     for o in orders:
-        for it in (o.get("items") or []):
-            name = it.get("product_name") or it.get("product_name_default") or it.get("product_code")
-            if not name:
-                continue
-            agg[name] = agg.get(name, 0.0) + _item_amount(it)
+        items = o.get("items") or []
+        if not items:
+            continue
+        weights = [_item_amount(it) for it in items]
+        tot = sum(weights)
+        paid = order_amount(o)
+        for it, w in zip(items, weights):
+            amt = paid * (w / tot) if tot > 0 else paid / len(items)
+            yield it, amt
+
+
+def best_products(date: str, orders: list[dict], top_n: int = 10) -> list[dict]:
+    """주문 items 집계 → 베스트상품(product_sales) 상위 N. embed=items 필요.
+
+    실결제액을 품목에 비례배분해 집계(정가 폴백의 과대계상 방지)."""
+    agg: dict[str, float] = {}
+    for it, amt in _allocated_items(orders):
+        name = it.get("product_name") or it.get("product_name_default") or it.get("product_code")
+        if not name:
+            continue
+        agg[name] = agg.get(name, 0.0) + amt
     top = sorted(agg.items(), key=lambda kv: kv[1], reverse=True)[:top_n]
     return [{"date": date, "source": "cafe24", "metric": "product_sales",
              "value": round(v, 2), "dims": {"product": name}} for name, v in top]
@@ -148,19 +168,20 @@ def build_category_map(client) -> dict[int, str]:
 
 
 def category_sales(date: str, orders: list[dict], catmap: dict[int, str]) -> list[dict]:
-    """주문 items → 카테고리별 매출. 매핑 없는 상품은 '기타'."""
+    """주문 items → 카테고리별 매출. 매핑 없는 상품은 '기타'.
+
+    실결제액을 품목에 비례배분해 집계(합계가 매출과 일치)."""
     agg: dict[str, float] = {}
-    for o in orders:
-        for it in (o.get("items") or []):
-            pno = it.get("product_no")
-            cat = None
-            if pno is not None:
-                try:
-                    cat = catmap.get(int(pno))
-                except (TypeError, ValueError):
-                    cat = None
-            cat = cat or "기타"
-            agg[cat] = agg.get(cat, 0.0) + _item_amount(it)
+    for it, amt in _allocated_items(orders):
+        pno = it.get("product_no")
+        cat = None
+        if pno is not None:
+            try:
+                cat = catmap.get(int(pno))
+            except (TypeError, ValueError):
+                cat = None
+        cat = cat or "기타"
+        agg[cat] = agg.get(cat, 0.0) + amt
     return [{"date": date, "source": "cafe24", "metric": "category_sales",
              "value": round(v, 2), "dims": {"category": c}} for c, v in agg.items()]
 

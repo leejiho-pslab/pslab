@@ -1,4 +1,17 @@
 {
-  "checkedAt": "2026-06-29T05:14:25.327Z",
-  "tokens": []
+  "checkedAt": "2026-06-29T02:49:23.681Z",
+  "tokens": [
+    {
+      "label": "Instagram",
+      "platform": "instagram",
+      "ok": true,
+      "warn": false
+    },
+    {
+      "label": "Threads",
+      "platform": "threads",
+      "ok": true,
+      "warn": false
+    }
+  ]
 }
