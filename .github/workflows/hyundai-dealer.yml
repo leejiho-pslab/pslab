@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: hyundai-dealer-build
@@ -89,3 +90,15 @@ jobs:
             sleep 3
           done
           echo "::error::docs/home 발행 실패"; exit 1
+
+      - name: Trigger Pages deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GITHUB_TOKEN 으로 푸시한 변경은 다른 워크플로를 자동 트리거하지 않으므로
+          # pages-deploy 를 명시적으로 디스패치한다.
+          curl -sS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/workflows/pages-deploy.yml/dispatches" \
+            -d "{\"ref\":\"${DEFAULT_BRANCH}\"}" && echo "pages-deploy 디스패치 완료"
