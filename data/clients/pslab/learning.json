@@ -1,11 +1,43 @@
 {
-  "generatedAt": "2026-06-29T06:50:50.851Z",
-  "sampleSize": 0,
-  "variants": [],
-  "channels": [],
-  "hours": [],
-  "motifs": [],
+  "generatedAt": "2026-06-29T12:28:40.343Z",
+  "sampleSize": 1,
+  "variants": [
+    {
+      "key": "A",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
+    }
+  ],
+  "channels": [
+    {
+      "key": "instagram",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
+    }
+  ],
+  "hours": [
+    {
+      "key": "21:00",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
+    }
+  ],
+  "motifs": [
+    {
+      "key": "lock",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
+    }
+  ],
   "hints": [
-    "아직 성과 표본이 0건뿐 — 더 쌓이면 디자인·시간대 학습이 정교해집니다."
+    "아직 성과 표본이 1건뿐 — 더 쌓이면 디자인·시간대 학습이 정교해집니다."
   ]
 }

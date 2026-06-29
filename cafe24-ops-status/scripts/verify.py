@@ -32,6 +32,10 @@ from cafe24_ops.store import Store  # noqa: E402
 
 load_secrets()
 
+import logging  # noqa: E402
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 # 디바이스/신규재구매 합은 매출과 '정확히' 일치해야 함(같은 order_amount 기반).
 # 주문당 반올림 1원 정도만 허용.
 EXACT_TOL_RATIO = 0.001
@@ -158,7 +162,40 @@ def check_db(store: Store, start: _date, end: _date) -> int:
     print(f"  총매출   : {tot_gross:,.0f} 원")
     print(f"  총주문   : {tot_orders:,.0f} 건")
     print(f"  평균객단 : {(tot_gross / tot_orders) if tot_orders else 0:,.0f} 원")
+
+    # 5) 광고 채널 성과(최근 7일) — ROAS/전환매출 건강도 추적 -----------
+    _ads_report(store, end)
     return 0
+
+
+def _ads_report(store: Store, end: _date) -> None:
+    """최근 7일 광고 채널별 광고비/전환매출/ROAS + 매출대비 광고비율."""
+    wfrom = (end - timedelta(days=6)).isoformat()
+    wto = end.isoformat()
+    by_ch: dict[str, dict] = {}
+    for r in store.get_facts(wfrom, wto, source="ads"):
+        ch = r["dims"].get("channel") or "?"
+        m = by_ch.setdefault(ch, {})
+        m[r["metric"]] = m.get(r["metric"], 0.0) + float(r["value"])
+    print(f"\n[5] 광고 채널 성과 ({wfrom}~{wto}, 7일)")
+    if not by_ch:
+        print("  (광고 데이터 없음 — 채널 자격증명/수집 확인)")
+        return
+    tot_cost = tot_sales = 0.0
+    for ch, m in sorted(by_ch.items()):
+        cost = m.get("ad_cost", 0.0)
+        sales = m.get("ad_sales", 0.0)
+        conv = m.get("conversions", 0.0)
+        tot_cost += cost
+        tot_sales += sales
+        roas = f"{sales / cost:.2f}" if cost else "—"
+        flag = " ⚠전환매출0(전환추적 확인)" if cost > 0 and sales == 0 else ""
+        print(f"  {ch:6} 광고비 {cost:,.0f} · 전환매출 {sales:,.0f} · 전환 {conv:,.0f} · ROAS {roas}{flag}")
+    gross7 = sum(r["value"] for r in store.get_daily(wfrom, wto) if r["metric"] == "gross_sales")
+    print(f"  합계   광고비 {tot_cost:,.0f} · 전환매출 {tot_sales:,.0f} · "
+          f"종합ROAS {(tot_sales / tot_cost):.2f}" if tot_cost else "  합계   광고비 0")
+    if gross7 > 0 and tot_cost > 0:
+        print(f"         매출대비 광고비(7일) {tot_cost / gross7 * 100:.1f}%")
 
 
 def check_api(store: Store, config, sample_dates: list[str]) -> int:

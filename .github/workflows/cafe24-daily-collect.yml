@@ -23,7 +23,7 @@ name: ops daily collect (all channels)
 
 on:
   schedule:
-    - cron: "10 22 * * *" # 07:10 KST (UTC+9)
+    - cron: "0 23 * * *" # 08:00 KST (UTC+9)
   workflow_dispatch:
     inputs:
       days:
