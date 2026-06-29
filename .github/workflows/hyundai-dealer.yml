@@ -1,19 +1,13 @@
 name: hyundai-dealer build
 
-# 러너에서 홈페이지를 빌드(현대 공식 이미지 + 유튜브 RSS 자동 수집)하고,
-# 결과를 기본 브랜치의 docs/home 으로 발행한다.
-# 그 push 가 pages-deploy.yml 을 트리거해 GitHub Pages(Actions)로 게시된다.
-#   - 홈페이지: https://leejiho-pslab.github.io/pslab/home/
+# 러너에서 홈페이지를 빌드해 기본 브랜치 docs/home 으로 발행한다.
+#
+# ⚠️ 다른 작업(공유 기본 브랜치)과의 충돌을 막기 위해 자동 트리거(push/schedule)를
+#    중단하고 '수동 실행(workflow_dispatch)' 전용으로 둔다. 더는 공유 브랜치에
+#    자동으로 쓰지 않는다. (전용 저장소로 이전하면 이 워크플로는 불필요)
 
 on:
-  push:
-    branches: [claude/hyundai-dealer-homepage-oukndu]
-    paths:
-      - 'hyundai-dealer/**'
-      - '.github/workflows/hyundai-dealer.yml'
   workflow_dispatch:
-  schedule:
-    - cron: '0 21 * * *' # 매일 06:00 KST — 유튜브/이미지 갱신
 
 permissions:
   contents: write
