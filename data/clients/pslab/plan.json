@@ -69,7 +69,7 @@
       ],
       "scheduledFor": "2026-07-01T10:00:00.000Z",
       "score": 89,
-      "status": "planned",
+      "status": "published",
       "kicker": "Agency Behind",
       "headline": "대행사를 쓰면<br>매출이 오른다는 *착각*",
       "sub": "대행이 할 수 있는 것과 없는 것, 솔직하게 말합니다.",
@@ -109,7 +109,16 @@
         "cards/pslab/w1-wed-4.png",
         "cards/pslab/w1-wed-5.png"
       ],
-      "cardImage": "cards/pslab/w1-wed-1.png"
+      "cardImage": "cards/pslab/w1-wed-1.png",
+      "publishedUrl": "https://www.instagram.com/p/DaK2fegjYUt/",
+      "publishedAt": "2026-06-29T12:19:41.176Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "18085628183634141",
+          "url": "https://www.instagram.com/p/DaK2fegjYUt/"
+        }
+      ]
     },
     {
       "id": "w1-fri",
