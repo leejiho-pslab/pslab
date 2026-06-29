@@ -144,8 +144,12 @@ class Cafe24Client:
                 return
 
     # ---- 엔드포인트 -------------------------------------------------
-    def list_orders(self, start_date: str, end_date: str, limit: int = PAGE_LIMIT) -> list[dict]:
+    def list_orders(self, start_date: str, end_date: str, limit: int = PAGE_LIMIT,
+                    embed: str | None = "items") -> list[dict]:
+        # embed=items → 주문에 품목(베스트상품/카테고리 집계용)을 포함해 받는다.
         params = {"start_date": start_date, "end_date": end_date, "date_type": "order_date"}
+        if embed:
+            params["embed"] = embed
         return list(self.iter_pages("/api/v2/admin/orders", params, "orders", limit=limit))
 
     def count_orders(self, start_date: str, end_date: str) -> int:
@@ -154,6 +158,99 @@ class Cafe24Client:
             {"start_date": start_date, "end_date": end_date, "date_type": "order_date"},
         )
         return int(data.get("count", 0) or 0)
+
+    def list_boards(self) -> list[dict]:
+        """게시판 목록. 실패 시 빈 리스트."""
+        try:
+            data = self.get("/api/v2/admin/boards", {})
+            return data.get("boards", []) or []
+        except httpx.HTTPStatusError:
+            return []
+
+    # 후기 게시판 번호는 몰마다 다르므로 1회 탐지해 캐시한다.
+    _review_board_no: int | None = None
+    _review_board_resolved = False
+
+    def review_board_no(self) -> int | None:
+        """후기 게시판 board_no 를 결정한다.
+
+        우선순위: CAFE24_REVIEW_BOARD_NO 환경변수 → 게시판 목록에서 이름에
+        '후기/review/리뷰' 포함 → 기본 4(상품 사용후기). 1회 탐지 후 캐시.
+        """
+        if Cafe24Client._review_board_resolved:
+            return Cafe24Client._review_board_no
+        env = os.environ.get("CAFE24_REVIEW_BOARD_NO")
+        if env:
+            try:
+                Cafe24Client._review_board_no = int(env)
+                Cafe24Client._review_board_resolved = True
+                return Cafe24Client._review_board_no
+            except ValueError:
+                pass
+        bno = None
+        for b in self.list_boards():
+            name = str(b.get("board_name") or b.get("name") or "")
+            if any(k in name.lower() for k in ("후기", "review", "리뷰")):
+                try:
+                    bno = int(b.get("board_no"))
+                    break
+                except (TypeError, ValueError):
+                    continue
+        Cafe24Client._review_board_no = bno if bno is not None else 4
+        Cafe24Client._review_board_resolved = True
+        return Cafe24Client._review_board_no
+
+    def count_reviews(self, start_date: str, end_date: str, board_no: int | None = None) -> int | None:
+        """기간 내 상품후기 수(게시판 글). 실패 시 None.
+
+        board_no 미지정 시 후기 게시판을 자동 탐지(review_board_no).
+        /articles/count 가 없으면 /articles 목록을 기간 필터로 세는 폴백을 쓴다.
+        """
+        bno = board_no if board_no is not None else self.review_board_no()
+        if bno is None:
+            return None
+        try:
+            data = self.get(
+                f"/api/v2/admin/boards/{bno}/articles/count",
+                {"start_date": start_date, "end_date": end_date},
+            )
+            return int(data.get("count", 0) or 0)
+        except httpx.HTTPStatusError:
+            pass
+        # 폴백: 목록을 기간 필터로 받아 건수를 센다(count 엔드포인트 부재 대응).
+        try:
+            rows = list(self.iter_pages(
+                f"/api/v2/admin/boards/{bno}/articles",
+                {"start_date": start_date, "end_date": end_date},
+                "articles", limit=100,
+            ))
+            return len(rows)
+        except httpx.HTTPStatusError:
+            return None
+
+    def list_categories(self) -> list[dict]:
+        return list(self.iter_pages("/api/v2/admin/categories", {}, "categories", limit=100))
+
+    def list_category_product_nos(self, category_no: int) -> list[int]:
+        rows = self.iter_pages(
+            f"/api/v2/admin/categories/{category_no}/products", {}, "products", limit=100)
+        out = []
+        for r in rows:
+            pno = r.get("product_no")
+            if pno is not None:
+                try:
+                    out.append(int(pno))
+                except (TypeError, ValueError):
+                    pass
+        return out
+
+    def count_soldout(self) -> int | None:
+        """현재 품절(sold_out=T) 상품 수. 실패 시 None."""
+        try:
+            data = self.get("/api/v2/admin/products/count", {"sold_out": "T"})
+            return int(data.get("count", 0) or 0)
+        except httpx.HTTPStatusError:
+            return None
 
     # 몰/토큰권한에 따라 신규고객 엔드포인트가 없을 수 있다. 한 번 실패하면 프로세스
     # 내에서 더 호출하지 않아(백필 시 매일 404/422 반복 방지) 속도를 아낀다.

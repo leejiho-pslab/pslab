@@ -95,6 +95,76 @@ def order_breakdowns(date: str, orders: list[dict]) -> list[dict]:
     return out
 
 
+def _item_amount(it: dict) -> float:
+    """주문 품목 결제금액 — 가능한 필드를 순서대로 시도(가격×수량 폴백)."""
+    for k in ("payment_amount", "product_price_amount", "actual_payment_amount"):
+        v = it.get(k)
+        if v not in (None, ""):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                pass
+    try:
+        qty = float(it.get("quantity", 0) or 0)
+        price = float(it.get("product_price", it.get("price", 0)) or 0)
+        opt = float(it.get("option_price", 0) or 0)
+        return (price + opt) * qty
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def best_products(date: str, orders: list[dict], top_n: int = 10) -> list[dict]:
+    """주문 items 집계 → 베스트상품(product_sales) 상위 N. embed=items 필요."""
+    agg: dict[str, float] = {}
+    for o in orders:
+        for it in (o.get("items") or []):
+            name = it.get("product_name") or it.get("product_name_default") or it.get("product_code")
+            if not name:
+                continue
+            agg[name] = agg.get(name, 0.0) + _item_amount(it)
+    top = sorted(agg.items(), key=lambda kv: kv[1], reverse=True)[:top_n]
+    return [{"date": date, "source": "cafe24", "metric": "product_sales",
+             "value": round(v, 2), "dims": {"product": name}} for name, v in top]
+
+
+def build_category_map(client) -> dict[int, str]:
+    """product_no → 카테고리명. categories + 카테고리별 상품으로 구축(1회 캐시 권장)."""
+    m: dict[int, str] = {}
+    try:
+        cats = client.list_categories()
+    except Exception:
+        return m
+    for cat in cats:
+        cno = cat.get("category_no")
+        cname = cat.get("full_category_name") or cat.get("category_name")
+        if cno is None or not cname:
+            continue
+        try:
+            for pno in client.list_category_product_nos(cno):
+                m.setdefault(pno, cname)  # 여러 카테고리면 첫 번째(상위)로
+        except Exception:
+            continue
+    return m
+
+
+def category_sales(date: str, orders: list[dict], catmap: dict[int, str]) -> list[dict]:
+    """주문 items → 카테고리별 매출. 매핑 없는 상품은 '기타'."""
+    agg: dict[str, float] = {}
+    for o in orders:
+        for it in (o.get("items") or []):
+            pno = it.get("product_no")
+            cat = None
+            if pno is not None:
+                try:
+                    cat = catmap.get(int(pno))
+                except (TypeError, ValueError):
+                    cat = None
+            cat = cat or "기타"
+            agg[cat] = agg.get(cat, 0.0) + _item_amount(it)
+    return [{"date": date, "source": "cafe24", "metric": "category_sales",
+             "value": round(v, 2), "dims": {"category": c}} for c, v in agg.items()]
+
+
 MOCK_PRODUCTS = [
     "keek Pillow", "Filovely Basic Windbreaker", "keek Recovery Slipper",
     "keek Travel Pouch", "HOODIE Oversfit", "keek Neck Cushion",
@@ -190,6 +260,11 @@ class Cafe24Collector(BaseCollector):
                 count = client.count_orders(date, date)
                 visitors = client.get_visitor_count(date)    # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
+                reviews = client.count_reviews(date, date)   # 상품후기 수(board 4)
+                soldout = client.count_soldout()             # 현재 품절 상품 수(스냅샷)
+                # 상품→카테고리 매핑은 프로세스당 1회만 구축(백필 시 매일 재구축 방지)
+                if getattr(self, "_catmap", None) is None:
+                    self._catmap = build_category_map(client)
             finally:
                 client.close()
             # 갱신(회전)되었을 수 있는 토큰을 DB 에 저장 → 다음 실행이 이어받음
@@ -198,9 +273,19 @@ class Cafe24Collector(BaseCollector):
                 kv.set_kv("cafe24_refresh_token", client.refresh_token)
         finally:
             kv.close()
+        extra = []
+        if reviews is not None:
+            extra.append({"date": date, "source": "cafe24", "metric": "crm_count",
+                          "value": float(reviews), "dims": {"channel": "reviews"}})
+        if soldout is not None:
+            extra.append({"date": date, "source": "cafe24", "metric": "soldout_count",
+                          "value": float(soldout)})
         return (
             orders_to_metrics(date, orders, count)
             + visitor_metrics(date, count, visitors)
             + signup_metrics(date, signups)
             + order_breakdowns(date, orders)
+            + best_products(date, orders)
+            + category_sales(date, orders, getattr(self, "_catmap", None) or {})
+            + extra
         )

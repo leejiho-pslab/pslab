@@ -37,6 +37,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--start", default="2025-01-01", help="백필 시작일(커서 없을 때)")
     p.add_argument("--budget-min", type=float, default=40.0, help="이번 실행 최대 작업시간(분)")
     p.add_argument("--skip", default="competitor,creative", help="제외 채널 콤마목록")
+    p.add_argument("--reset", action="store_true",
+                   help="커서를 초기화해 start 부터 다시 채움(신규 지표 과거 반영용)")
     args = p.parse_args(argv)
 
     config = load_config()
@@ -44,6 +46,8 @@ def main(argv: list[str] | None = None) -> int:
 
     end = _date.fromisoformat(yesterday())
     start = _date.fromisoformat(args.start)
+    if args.reset:
+        store.set_kv(CURSOR_KEY, "")
     cursor = store.get_kv(CURSOR_KEY)
     begin = max(start, _date.fromisoformat(cursor) + timedelta(days=1)) if cursor else start
 

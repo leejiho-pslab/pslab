@@ -1,0 +1,48 @@
+[
+  {
+    "weekOf": "2026-06-22",
+    "generatedAt": "2026-06-29T00:34:37.538Z",
+    "range": {
+      "from": "2026-06-21T15:00:00.000Z",
+      "to": "2026-06-28T15:00:00.000Z"
+    },
+    "postsCount": 2,
+    "channels": [
+      {
+        "channel": "instagram",
+        "label": "인스타그램",
+        "posts": 1,
+        "avgEngagement": 0,
+        "totalViews": 0,
+        "totalLikes": 0,
+        "totalComments": 0
+      },
+      {
+        "channel": "threads",
+        "label": "스레드",
+        "posts": 1,
+        "avgEngagement": 0,
+        "totalViews": 0,
+        "totalLikes": 0,
+        "totalComments": 0
+      }
+    ],
+    "top": {
+      "id": "w1-mon",
+      "title": "광고비를 태우기 전에 반드시 점검할 3가지",
+      "label": "인스타그램",
+      "engagementRate": 0
+    },
+    "worst": {
+      "id": "threads-07-04",
+      "title": "광고비 태우기 전 점검 3가지",
+      "label": "스레드",
+      "engagementRate": 0
+    },
+    "summary": "지난주 2건 발행. '인스타그램'가 평균 참여율 0.0%로 가장 좋았습니다. 최고 성과는 [인스타그램] \"광고비를 태우기 전에 반드시 점검할 3가지\"(참여율 0.0%). 반대로 \"광고비 태우기 전 점검 3가지\"는 반응이 약했습니다.",
+    "recommendations": [
+      "\"광고비를 태우기 전에 반드시 점검할 3가지\" 톤·구성을 변주해 후속편을 만드세요.",
+      "\"광고비 태우기 전 점검 3가지\" 유형은 첫 슬라이드 후킹/결론 우선을 강화하세요."
+    ]
+  }
+]

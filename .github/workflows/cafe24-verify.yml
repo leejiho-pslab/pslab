@@ -1,0 +1,52 @@
+name: ops verify (data accuracy)
+
+# 데이터 정확도 검수 — 수동 실행(Run workflow).
+#  - mode=db  : DB만 점검(커버리지·내부정합성). 토큰 미사용 → 백필과 동시 실행 안전.
+#  - mode=api : 위 + 카페24 API 원천 대조. 토큰을 회전시키므로
+#               ⚠ 백필이 도는 중에는 실행 금지(토큰 경합). 백필 끝난 뒤 실행.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "검수 모드 (db=안전 / api=원천대조, 백필중 금지)"
+        required: false
+        default: "db"
+      start_date:
+        description: "검수 시작일"
+        required: false
+        default: "2025-01-01"
+      samples:
+        description: "api 모드 표본 날짜 수"
+        required: false
+        default: "8"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Verify
+        env:
+          CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
+        run: |
+          python scripts/verify.py \
+            --mode "${{ github.event.inputs.mode || 'db' }}" \
+            --start "${{ github.event.inputs.start_date || '2025-01-01' }}" \
+            --samples "${{ github.event.inputs.samples || '8' }}"
