@@ -1,0 +1,43 @@
+name: pages deploy (docs)
+
+# docs/ 폴더(대시보드 + /home 홈페이지)를 GitHub Pages 로 배포한다.
+# Pages 소스가 "GitHub Actions" 인 경우 이 워크플로가 게시한다.
+# (소스가 "Deploy from a branch /docs" 이면 GitHub 기본 빌드가 자동 게시하므로 이 잡은 실패해도 무방)
+#   - 대시보드: https://leejiho-pslab.github.io/pslab/
+#   - 홈페이지: https://leejiho-pslab.github.io/pslab/home/
+
+on:
+  push:
+    branches: [claude/eager-lamport-mX0eT]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
