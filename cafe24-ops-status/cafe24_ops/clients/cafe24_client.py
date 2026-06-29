@@ -116,11 +116,22 @@ class Cafe24Client:
             self.token_store.write_text(json.dumps(tok, ensure_ascii=False), encoding="utf-8")
 
     # ---- 요청 -------------------------------------------------------
-    def get(self, path: str, params: dict | None = None, _retry: bool = True) -> dict:
+    def get(self, path: str, params: dict | None = None, _retry: bool = True,
+            _429_retries: int = 4) -> dict:
         resp = self._http.get(path, params=params, headers=self._headers())
+        # 429(레이트리밋): Retry-After(없으면 점증 백오프) 만큼 쉬고 재시도.
+        if resp.status_code == 429 and _429_retries > 0:
+            import time
+            ra = resp.headers.get("Retry-After")
+            try:
+                delay = float(ra) if ra else (5 - _429_retries) * 0.5 + 0.5
+            except (TypeError, ValueError):
+                delay = 1.0
+            time.sleep(min(max(delay, 0.5), 5.0))
+            return self.get(path, params, _retry=_retry, _429_retries=_429_retries - 1)
         if resp.status_code == 401 and _retry and self.refresh_token:
             self._refresh()
-            return self.get(path, params, _retry=False)
+            return self.get(path, params, _retry=False, _429_retries=_429_retries)
         if resp.status_code >= 400:
             # 카페24 에러 본문(원인 메시지)을 예외에 실어 로그에서 바로 보이게 한다.
             raise httpx.HTTPStatusError(
