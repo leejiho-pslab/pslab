@@ -120,15 +120,15 @@
         }
       ],
       "metrics": {
-        "views": 0,
-        "likes": 0,
+        "views": 1,
+        "likes": 1,
         "comments": 0,
         "shares": 0,
-        "engagementRate": 0
+        "engagementRate": 1
       },
-      "metricsAt": "2026-06-29T12:28:40.342Z",
-      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-06-29T12:28:40.344Z"
+      "metricsAt": "2026-06-29T13:00:54.208Z",
+      "insightComment": "참여율 100.0% — 평균 수준입니다. 좋아요 1·댓글 0. 다음엔 댓글을 유도하는 질문형 마무리를 시도해보세요.",
+      "insightAt": "2026-06-29T13:00:54.210Z"
     },
     {
       "id": "w1-fri",
@@ -686,12 +686,9 @@
       "rationale": "계약 전 체크리스트 — 15년차 솔직 후기.",
       "slides": [],
       "slideImages": [
-        "blog/naver-blog-07-02/fig-1.png",
-        "blog/naver-blog-07-02/fig-2.png",
-        "blog/naver-blog-07-02/fig-3.png",
-        "blog/naver-blog-07-02/fig-4.png"
+        "cards/pslab/naver-blog-07-02-1.png"
       ],
-      "cardImage": "blog/naver-blog-07-02/fig-1.png",
+      "cardImage": "cards/pslab/naver-blog-07-02-1.png",
       "tags": [
         "광고대행사",
         "마케팅대행",
@@ -721,12 +718,9 @@
       "rationale": "전환율 점검 가이드 — 새는 곳을 찾아라.",
       "slides": [],
       "slideImages": [
-        "blog/naver-blog-07-09/fig-1.png",
-        "blog/naver-blog-07-09/fig-2.png",
-        "blog/naver-blog-07-09/fig-3.png",
-        "blog/naver-blog-07-09/fig-4.png"
+        "cards/pslab/naver-blog-07-09-1.png"
       ],
-      "cardImage": "blog/naver-blog-07-09/fig-1.png",
+      "cardImage": "cards/pslab/naver-blog-07-09-1.png",
       "tags": [
         "전환율",
         "랜딩페이지",
@@ -756,12 +750,9 @@
       "rationale": "브랜드 메시지 설계법.",
       "slides": [],
       "slideImages": [
-        "blog/naver-blog-07-16/fig-1.png",
-        "blog/naver-blog-07-16/fig-2.png",
-        "blog/naver-blog-07-16/fig-3.png",
-        "blog/naver-blog-07-16/fig-4.png"
+        "cards/pslab/naver-blog-07-16-1.png"
       ],
-      "cardImage": "blog/naver-blog-07-16/fig-1.png",
+      "cardImage": "cards/pslab/naver-blog-07-16-1.png",
       "tags": [
         "브랜딩",
         "스몰브랜드",
@@ -791,12 +782,9 @@
       "rationale": "실전 적용 가이드.",
       "slides": [],
       "slideImages": [
-        "blog/naver-blog-07-23/fig-1.png",
-        "blog/naver-blog-07-23/fig-2.png",
-        "blog/naver-blog-07-23/fig-3.png",
-        "blog/naver-blog-07-23/fig-4.png"
+        "cards/pslab/naver-blog-07-23-1.png"
       ],
-      "cardImage": "blog/naver-blog-07-23/fig-1.png",
+      "cardImage": "cards/pslab/naver-blog-07-23-1.png",
       "tags": [
         "광고예산",
         "예산배분",
@@ -1192,12 +1180,9 @@
       "rationale": "계약 전 체크리스트 — 15년차 솔직 후기.",
       "slides": [],
       "slideImages": [
-        "blog/blogger-07-02/fig-1.png",
-        "blog/blogger-07-02/fig-2.png",
-        "blog/blogger-07-02/fig-3.png",
-        "blog/blogger-07-02/fig-4.png"
+        "cards/pslab/blogger-07-02-1.png"
       ],
-      "cardImage": "blog/blogger-07-02/fig-1.png",
+      "cardImage": "cards/pslab/blogger-07-02-1.png",
       "tags": [
         "광고대행사",
         "마케팅",
@@ -1227,12 +1212,9 @@
       "rationale": "전환율 점검 가이드 — 새는 곳을 찾아라.",
       "slides": [],
       "slideImages": [
-        "blog/blogger-07-09/fig-1.png",
-        "blog/blogger-07-09/fig-2.png",
-        "blog/blogger-07-09/fig-3.png",
-        "blog/blogger-07-09/fig-4.png"
+        "cards/pslab/blogger-07-09-1.png"
       ],
-      "cardImage": "blog/blogger-07-09/fig-1.png",
+      "cardImage": "cards/pslab/blogger-07-09-1.png",
       "tags": [
         "랜딩페이지",
         "전환율",
@@ -1262,12 +1244,9 @@
       "rationale": "브랜드 메시지 설계법.",
       "slides": [],
       "slideImages": [
-        "blog/blogger-07-16/fig-1.png",
-        "blog/blogger-07-16/fig-2.png",
-        "blog/blogger-07-16/fig-3.png",
-        "blog/blogger-07-16/fig-4.png"
+        "cards/pslab/blogger-07-16-1.png"
       ],
-      "cardImage": "blog/blogger-07-16/fig-1.png",
+      "cardImage": "cards/pslab/blogger-07-16-1.png",
       "tags": [
         "스몰브랜드",
         "마케팅전략",
@@ -1297,12 +1276,9 @@
       "rationale": "실전 적용 가이드.",
       "slides": [],
       "slideImages": [
-        "blog/blogger-07-23/fig-1.png",
-        "blog/blogger-07-23/fig-2.png",
-        "blog/blogger-07-23/fig-3.png",
-        "blog/blogger-07-23/fig-4.png"
+        "cards/pslab/blogger-07-23-1.png"
       ],
-      "cardImage": "blog/blogger-07-23/fig-1.png",
+      "cardImage": "cards/pslab/blogger-07-23-1.png",
       "tags": [
         "소액광고",
         "광고예산",
