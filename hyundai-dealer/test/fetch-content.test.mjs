@@ -4,6 +4,8 @@ import {
   normalizeYouTube,
   normalizeInstagram,
   mergeFeed,
+  parseYouTubeRss,
+  extractChannelId,
 } from '../scripts/fetch-content.mjs';
 
 test('normalizeYouTube: 영상 항목을 평탄한 스키마로 변환', () => {
@@ -108,4 +110,59 @@ test('mergeFeed: 한쪽만 신규일 때 다른쪽은 기존 보존', () => {
 test('mergeFeed: 기존이 비정상이어도 안전하게 동작', () => {
   const out = mergeFeed(null, { youtube: [], instagram: [] }, 'now');
   assert.deepEqual(out, { updatedAt: null, youtube: [], instagram: [] });
+});
+
+test('parseYouTubeRss: entry 를 정규화하고 썸네일/링크 구성', () => {
+  const xml = `<feed>
+    <entry>
+      <yt:videoId>abc123</yt:videoId>
+      <title>신차 출고 브이로그 &amp; 리뷰</title>
+      <published>2026-06-01T00:00:00+00:00</published>
+      <media:group><media:thumbnail url="https://i.ytimg.com/vi/abc123/hqdefault.jpg" width="480" height="360"/></media:group>
+    </entry>
+    <entry>
+      <yt:videoId>def456</yt:videoId>
+      <title>아이오닉5 시승기</title>
+      <published>2026-05-20T00:00:00+00:00</published>
+    </entry>
+  </feed>`;
+  const out = parseYouTubeRss(xml, 6);
+  assert.equal(out.length, 2);
+  assert.deepEqual(out[0], {
+    id: 'abc123',
+    title: '신차 출고 브이로그 & 리뷰',
+    thumbnail: 'https://i.ytimg.com/vi/abc123/hqdefault.jpg',
+    url: 'https://www.youtube.com/watch?v=abc123',
+    publishedAt: '2026-06-01T00:00:00+00:00',
+  });
+  // 썸네일 없는 항목은 videoId 기반으로 구성
+  assert.equal(out[1].thumbnail, 'https://i.ytimg.com/vi/def456/hqdefault.jpg');
+});
+
+test('parseYouTubeRss: max 개수 제한', () => {
+  const xml = Array.from({ length: 10 }, (_, i) =>
+    `<entry><yt:videoId>v${i}</yt:videoId><title>t${i}</title></entry>`,
+  ).join('');
+  assert.equal(parseYouTubeRss(xml, 3).length, 3);
+});
+
+test('parseYouTubeRss: 빈 입력은 빈 배열', () => {
+  assert.deepEqual(parseYouTubeRss('', 6), []);
+  assert.deepEqual(parseYouTubeRss('<feed></feed>', 6), []);
+});
+
+test('extractChannelId: channel URL 에서 직접 추출', () => {
+  assert.equal(
+    extractChannelId('https://www.youtube.com/channel/UCabc-123_x'),
+    'UCabc-123_x',
+  );
+});
+
+test('extractChannelId: HTML 본문에서 추출 (@handle 페이지)', () => {
+  const html = 'var ytcfg={};...{"channelId":"UCxyz789ABC"}...';
+  assert.equal(extractChannelId('https://www.youtube.com/@hyundai_moomoo', html), 'UCxyz789ABC');
+});
+
+test('extractChannelId: 없으면 null', () => {
+  assert.equal(extractChannelId('https://www.youtube.com/@x', '<html></html>'), null);
 });

@@ -40,6 +40,41 @@ export function normalizeYouTube(json) {
     .filter(Boolean);
 }
 
+/** YouTube 채널 RSS(XML) → 정규화된 영상 배열 (API 키 불필요) */
+export function parseYouTubeRss(xml, max = 6) {
+  const entries = String(xml).split('<entry>').slice(1);
+  const out = [];
+  for (const e of entries) {
+    const id = (e.match(/<yt:videoId>([^<]+)<\/yt:videoId>/) || [])[1];
+    if (!id) continue;
+    const title = decodeEntities((e.match(/<title>([\s\S]*?)<\/title>/) || [])[1] || '');
+    const published = (e.match(/<published>([^<]+)<\/published>/) || [])[1] || null;
+    const thumb =
+      (e.match(/<media:thumbnail[^>]*\burl="([^"]+)"/) || [])[1] ||
+      `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    out.push({
+      id,
+      title,
+      thumbnail: thumb,
+      url: `https://www.youtube.com/watch?v=${id}`,
+      publishedAt: published,
+    });
+    if (out.length >= max) break;
+  }
+  return out;
+}
+
+/** 채널 URL(@handle 등)에서 channelId(UC...)를 추출한다 */
+export function extractChannelId(input, html = '') {
+  const fromUrl = String(input || '').match(/channel\/(UC[\w-]+)/);
+  if (fromUrl) return fromUrl[1];
+  const m =
+    html.match(/"channelId":"(UC[\w-]+)"/) ||
+    html.match(/channel\/(UC[\w-]+)/) ||
+    html.match(/"externalId":"(UC[\w-]+)"/);
+  return m ? m[1] : null;
+}
+
 /** Instagram Graph API /media 응답 → 정규화된 게시물 배열 */
 export function normalizeInstagram(json) {
   const data = json?.data ?? [];
@@ -86,21 +121,44 @@ function decodeEntities(str) {
     .replace(/&gt;/g, '>');
 }
 
+const UA = 'Mozilla/5.0 (compatible; hyundai-dealer build)';
+
+/** @handle 등 채널 URL → channelId 해석 (RSS 용) */
+async function resolveChannelId(channelUrl) {
+  const fromUrl = extractChannelId(channelUrl);
+  if (fromUrl) return fromUrl;
+  if (!channelUrl) return null;
+  const res = await fetch(channelUrl, { headers: { 'user-agent': UA, 'accept-language': 'ko-KR' } });
+  if (!res.ok) throw new Error(`채널 페이지 ${res.status}`);
+  return extractChannelId(channelUrl, await res.text());
+}
+
 async function fetchYouTube() {
   const key = process.env.YT_API_KEY;
-  const channelId = process.env.YT_CHANNEL_ID;
-  const max = process.env.YT_MAX_RESULTS || '6';
-  if (!key || !channelId) {
-    console.warn('[youtube] YT_API_KEY/YT_CHANNEL_ID 미설정 — 건너뜀');
+  let channelId = process.env.YT_CHANNEL_ID;
+  const channelUrl = process.env.YT_CHANNEL_URL || 'https://www.youtube.com/@hyundai_moomoo';
+  const max = Number(process.env.YT_MAX_RESULTS || '6');
+
+  // 1) API 키 + 채널ID 가 있으면 YouTube Data API
+  if (key && channelId) {
+    const url =
+      `https://www.googleapis.com/youtube/v3/search?key=${key}` +
+      `&channelId=${channelId}&part=snippet&order=date&type=video&maxResults=${max}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`YouTube API ${res.status}`);
+    return normalizeYouTube(await res.json());
+  }
+
+  // 2) 키가 없으면 공개 RSS 로 수집 (채널ID 는 핸들에서 자동 해석)
+  if (!channelId) channelId = await resolveChannelId(channelUrl);
+  if (!channelId) {
+    console.warn('[youtube] 채널ID 해석 실패 — 건너뜀');
     return [];
   }
-  const url =
-    `https://www.googleapis.com/youtube/v3/search?key=${key}` +
-    `&channelId=${channelId}&part=snippet&order=date&type=video&maxResults=${max}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`YouTube API ${res.status}`);
-  const json = await res.json();
-  return normalizeYouTube(json);
+  const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`;
+  const res = await fetch(rssUrl, { headers: { 'user-agent': UA } });
+  if (!res.ok) throw new Error(`YouTube RSS ${res.status}`);
+  return parseYouTubeRss(await res.text(), max);
 }
 
 async function fetchInstagram() {
