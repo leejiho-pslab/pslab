@@ -9,7 +9,9 @@ name: ops backfill (history)
 
 on:
   schedule:
-    - cron: "0 */2 * * *" # 2시간마다 자동 이어받기
+    # 과거 이력은 이미 다 채움 → 매일 1회 안전망으로만 실행(빠진 날 자가치유).
+    # 일일수집(23:00 UTC) 직후 23:40 UTC(=08:40 KST)에 점검 → 토큰경합/불필요실행 최소화.
+    - cron: "40 23 * * *"
   workflow_dispatch:
     inputs:
       start_date:
