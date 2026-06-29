@@ -118,7 +118,17 @@
           "remoteId": "18085628183634141",
           "url": "https://www.instagram.com/p/DaK2fegjYUt/"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-06-29T12:28:40.342Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-06-29T12:28:40.344Z"
     },
     {
       "id": "w1-fri",
@@ -1146,9 +1156,9 @@
       "rationale": "계약 전 체크리스트 — 15년차 솔직 후기.",
       "slides": [],
       "slideImages": [
-        "cards/pslab/naver-blog-07-02-1.png"
+        "cards/pslab/blogger-07-02-1.png"
       ],
-      "cardImage": "cards/pslab/naver-blog-07-02-1.png"
+      "cardImage": "cards/pslab/blogger-07-02-1.png"
     },
     {
       "id": "blogger-07-09",
@@ -1172,9 +1182,9 @@
       "rationale": "전환율 점검 가이드 — 새는 곳을 찾아라.",
       "slides": [],
       "slideImages": [
-        "cards/pslab/naver-blog-07-09-1.png"
+        "cards/pslab/blogger-07-09-1.png"
       ],
-      "cardImage": "cards/pslab/naver-blog-07-09-1.png"
+      "cardImage": "cards/pslab/blogger-07-09-1.png"
     },
     {
       "id": "blogger-07-16",
@@ -1198,9 +1208,9 @@
       "rationale": "브랜드 메시지 설계법.",
       "slides": [],
       "slideImages": [
-        "cards/pslab/naver-blog-07-16-1.png"
+        "cards/pslab/blogger-07-16-1.png"
       ],
-      "cardImage": "cards/pslab/naver-blog-07-16-1.png"
+      "cardImage": "cards/pslab/blogger-07-16-1.png"
     },
     {
       "id": "blogger-07-23",
@@ -1224,9 +1234,9 @@
       "rationale": "실전 적용 가이드.",
       "slides": [],
       "slideImages": [
-        "cards/pslab/naver-blog-07-23-1.png"
+        "cards/pslab/blogger-07-23-1.png"
       ],
-      "cardImage": "cards/pslab/naver-blog-07-23-1.png"
+      "cardImage": "cards/pslab/blogger-07-23-1.png"
     }
   ]
 }
