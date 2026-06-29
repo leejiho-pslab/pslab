@@ -144,8 +144,12 @@ class Cafe24Client:
                 return
 
     # ---- 엔드포인트 -------------------------------------------------
-    def list_orders(self, start_date: str, end_date: str, limit: int = PAGE_LIMIT) -> list[dict]:
+    def list_orders(self, start_date: str, end_date: str, limit: int = PAGE_LIMIT,
+                    embed: str | None = "items") -> list[dict]:
+        # embed=items → 주문에 품목(베스트상품/카테고리 집계용)을 포함해 받는다.
         params = {"start_date": start_date, "end_date": end_date, "date_type": "order_date"}
+        if embed:
+            params["embed"] = embed
         return list(self.iter_pages("/api/v2/admin/orders", params, "orders", limit=limit))
 
     def count_orders(self, start_date: str, end_date: str) -> int:
