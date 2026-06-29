@@ -39,6 +39,8 @@ jobs:
       PSLAB_THREADS_THREADS_USER_ID: ${{ secrets.PSLAB_THREADS_THREADS_USER_ID }}
       PSLAB_LINKEDIN_ACCESS_TOKEN: ${{ secrets.PSLAB_LINKEDIN_ACCESS_TOKEN }}
       PSLAB_LINKEDIN_AUTHOR_URN: ${{ secrets.PSLAB_LINKEDIN_AUTHOR_URN }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

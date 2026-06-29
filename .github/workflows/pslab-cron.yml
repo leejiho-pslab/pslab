@@ -65,6 +65,9 @@ jobs:
       # --- LinkedIn ---
       PSLAB_LINKEDIN_ACCESS_TOKEN: ${{ secrets.PSLAB_LINKEDIN_ACCESS_TOKEN }}
       PSLAB_LINKEDIN_AUTHOR_URN: ${{ secrets.PSLAB_LINKEDIN_AUTHOR_URN }}
+      # --- 푸시 알림 (텔레그램) ---
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -90,10 +93,20 @@ jobs:
         continue-on-error: true
         run: node dist/cli.js publish-plan --client pslab --due
 
-      # 3) 성과 수집 + 자체 학습 — 반응도로 디자인·소재를 스스로 발전
+      # 3) 성과 수집 + 인사이트 코멘트 + 자체 학습
       - name: 성과 수집·학습 (collect-insights)
         continue-on-error: true
         run: node dist/cli.js collect-insights --client pslab
+
+      # 3-1) 매주 월요일 — 지난주 종합 평가 리포트 + 텔레그램 푸시 (멱등: 주1회만 푸시)
+      - name: 주간 리포트 (월요일)
+        continue-on-error: true
+        run: |
+          if [ "$(date +%u)" = "1" ]; then
+            node dist/cli.js weekly-report --client pslab
+          else
+            echo "월요일 아님 — 주간 리포트 생략"
+          fi
 
       # 4) 카드 렌더 (Chromium 없으면 자동 skip → 커밋된 카드 유지)
       - name: 매거진 카드 렌더
