@@ -5,8 +5,9 @@ import { img } from '../lib/img';
 import { localImage } from '../lib/localImage';
 const { title, body, stats } = site.about;
 const titleLines = title.split('\n');
-const profilePhoto =
-  img(images.profile ?? localImage('profile')) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
+const profileSrc = images.profile ?? localImage('profile');
+const hasProfilePhoto = Boolean(img(profileSrc));
+const profilePhoto = img(profileSrc) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
 ---
 
 <section class="section section--dark" id="about">
@@ -14,7 +15,7 @@ const profilePhoto =
     <div class="about__intro">
       <figure class="about__photo" data-reveal>
         <img src={profilePhoto} alt="딜러 프로필" loading="lazy" />
-        <figcaption>{site.dealer.name} · {site.dealer.role}</figcaption>
+        {!hasProfilePhoto && <figcaption>{site.dealer.name} · {site.dealer.role}</figcaption>}
       </figure>
 
       <div class="about__head">

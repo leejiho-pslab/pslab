@@ -6,8 +6,9 @@ import { localImage } from '../lib/localImage';
 const { eyebrow, title, subtitle, backgroundImage } = site.hero;
 // 합성 히어로: 차량 이미지(배경) + 딜러 사진(전면 포트레이트)
 const heroCar = img(images.hero ?? localImage('hero') ?? backgroundImage ?? images.models?.grandeur);
-const dealerPhoto =
-  img(images.profile ?? localImage('profile')) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
+const dealerSrc = images.profile ?? localImage('profile');
+const hasDealerPhoto = Boolean(img(dealerSrc));
+const dealerPhoto = img(dealerSrc) ?? `${import.meta.env.BASE_URL}images/dealer-profile.svg`;
 const titleLines = title.split('\n');
 const subtitleLines = subtitle.split('\n');
 ---
@@ -52,10 +53,12 @@ const subtitleLines = subtitle.split('\n');
 
     <figure class="hero__dealer" data-reveal data-reveal-delay="2">
       <img src={dealerPhoto} alt="담당 딜러" />
-      <figcaption>
-        <strong>{site.dealer.name} <em>{site.dealer.role}</em></strong>
-        <span>{site.dealer.dealership}</span>
-      </figcaption>
+      {!hasDealerPhoto && (
+        <figcaption>
+          <strong>{site.dealer.name} <em>{site.dealer.role}</em></strong>
+          <span>{site.dealer.dealership}</span>
+        </figcaption>
+      )}
     </figure>
   </div>
 
