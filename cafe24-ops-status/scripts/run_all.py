@@ -25,6 +25,11 @@ from cafe24_ops.store import Store  # noqa: E402
 
 load_secrets()  # config/secrets.env → 환경변수 (live 모드 자격증명)
 
+# httpx 가 요청 URL 전체를 INFO 로 찍어 토큰(예: Meta fb_exchange_token 쿼리)이 공개
+# 로그에 남는 것을 방지 — 라이브러리 요청 로깅을 끈다.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 
 def _fmt(metric: str, value: float) -> str:
     if metric in ("conversion_rate", "ad_cost_ratio"):

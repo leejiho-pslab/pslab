@@ -283,9 +283,24 @@ class Cafe24Collector(BaseCollector):
                 signups = client.count_new_customers(date, date)
                 reviews = client.count_reviews(date, date)   # 상품후기 수(board 4)
                 soldout = client.count_soldout()             # 현재 품절 상품 수(스냅샷)
-                # 상품→카테고리 매핑은 프로세스당 1회만 구축(백필 시 매일 재구축 방지)
+                # 상품→카테고리 매핑: DB 캐시 우선(매 수집마다 재구축 → cafe24 429 방지).
+                # 프로세스당 1회 로드/구축하고, 새로 만들면 DB(app_kv)에 영속해 재사용.
+                # 강제 갱신: CAFE24_REFRESH_CATEGORY_MAP=1
                 if getattr(self, "_catmap", None) is None:
-                    self._catmap = build_category_map(client)
+                    import json as _json
+                    import os as _os
+                    cached = kv.get_kv("category_map")
+                    if cached and _os.environ.get("CAFE24_REFRESH_CATEGORY_MAP") != "1":
+                        try:
+                            self._catmap = {int(k): v for k, v in _json.loads(cached).items()}
+                        except (ValueError, TypeError):
+                            self._catmap = None
+                    if not getattr(self, "_catmap", None):
+                        self._catmap = build_category_map(client)
+                        if self._catmap:
+                            kv.set_kv("category_map", _json.dumps(
+                                {str(k): v for k, v in self._catmap.items()},
+                                ensure_ascii=False))
             finally:
                 client.close()
             # 갱신(회전)되었을 수 있는 토큰을 DB 에 저장 → 다음 실행이 이어받음

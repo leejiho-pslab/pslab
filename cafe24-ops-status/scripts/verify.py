@@ -32,6 +32,10 @@ from cafe24_ops.store import Store  # noqa: E402
 
 load_secrets()
 
+import logging  # noqa: E402
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 # 디바이스/신규재구매 합은 매출과 '정확히' 일치해야 함(같은 order_amount 기반).
 # 주문당 반올림 1원 정도만 허용.
 EXACT_TOL_RATIO = 0.001

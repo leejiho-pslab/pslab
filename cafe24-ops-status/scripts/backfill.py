@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import time
 from datetime import date as _date
 from datetime import timedelta
@@ -28,6 +29,10 @@ from cafe24_ops.secrets import load_secrets  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
 
 load_secrets()
+
+# 토큰이 URL 로 로깅되는 것 방지(공개 Actions 로그 유출 차단)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 CURSOR_KEY = "backfill_cursor"
 
