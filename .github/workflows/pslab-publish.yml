@@ -55,18 +55,22 @@ jobs:
         run: node dist/cli.js publish-plan --client pslab --id "${{ github.event.inputs.id }}"
       - name: 대시보드 갱신 + 커밋
         if: ${{ github.event.inputs.dry_run == 'false' }}
+        continue-on-error: true
         run: |
           node dist/cli.js dashboard --out docs/index.html
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
           git add -f data/ docs/index.html docs/.nojekyll 2>/dev/null || true
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
-            git push
-          else
-            echo "변경 없음"
+          if git diff --cached --quiet; then
+            echo "변경 없음"; exit 0
           fi
+          git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin claude/eager-lamport-mX0eT && git push && { echo "push 성공"; exit 0; }
+            echo "push 재시도 $i"; sleep 4
+          done
+          echo "push 실패 — Pages 배포는 진행"
 
       # 실제 발행 시 라이브 Pages 배포 (Settings → Pages → Source = "GitHub Actions")
       - name: Pages 설정
