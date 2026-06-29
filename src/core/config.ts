@@ -11,6 +11,7 @@ import type { PlatformId, PluginCredentials } from './types.js';
 const CREDENTIAL_KEYS: Record<PlatformId, string[]> = {
   youtube: ['clientId', 'clientSecret', 'refreshToken', 'channelId'],
   'naver-blog': ['clientId', 'clientSecret', 'accessToken', 'blogId'],
+  blogger: ['clientId', 'clientSecret', 'refreshToken', 'blogId'],
   instagram: ['accessToken', 'igUserId'],
   threads: ['accessToken', 'threadsUserId'],
   linkedin: ['accessToken', 'authorUrn'],

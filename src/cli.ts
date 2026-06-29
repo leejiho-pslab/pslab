@@ -399,7 +399,14 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         tags: [],
       };
       console.log(`\n▶ 발행: [${autoChannels.join(',')}] ${content.title} (${imgs.length}장)`);
-      const result = await app.publisher.publish(content, { targets: autoChannels });
+      // 한 항목 발행 실패가 나머지 항목 발행을 막지 않도록 격리
+      let result;
+      try {
+        result = await app.publisher.publish(content, { targets: autoChannels });
+      } catch (err) {
+        console.log(`  ⚠️ ${it.id} 발행 건너뜀 (${err instanceof Error ? err.message : err})`);
+        continue;
+      }
       printResults(`📤 ${it.id}`, result.results);
       if (dryRun) {
         console.log('  (시뮬레이션 — 플랜 상태는 변경하지 않음)');

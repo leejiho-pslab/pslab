@@ -23,6 +23,7 @@ const CHANNELS: Array<{ key: PlatformId; label: string; icon: string }> = [
   { key: 'instagram', label: '인스타그램', icon: '📸' },
   { key: 'threads', label: '스레드', icon: '🧵' },
   { key: 'naver-blog', label: '네이버 블로그', icon: '📝' },
+  { key: 'blogger', label: '구글 블로그', icon: '🅱️' },
   { key: 'youtube', label: '유튜브', icon: '▶️' },
   { key: 'linkedin', label: '링크드인', icon: '💼' },
 ];
@@ -265,6 +266,7 @@ export function renderDashboard(
     instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
     linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
+    blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
   };
   const data = {
     generatedAt: new Date().toISOString(),
@@ -589,10 +591,11 @@ function setupPanel(){
     row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
     row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
     row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
+    row(s.blogger,'구글 블로그 자동발행','선택 — Blogger OAuth(클라이언트/리프레시 토큰/블로그ID) 시크릿',settingsUrl)+
     row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
     row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
     '</table>'+
-    '<div class="muted" style="margin-top:8px">네이버 블로그·유튜브는 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다. 각 채널 탭에서 완성된 글을 복사해 올리세요.</div>'+
+    '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
     '</div>';
 }
 function overview(client){
