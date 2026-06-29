@@ -12,6 +12,7 @@ import { ContentPipeline } from './core/content.js';
 import type { PluginContext, SnsPlugin } from './core/plugin.js';
 import { YouTubePlugin } from './plugins/youtube.js';
 import { NaverBlogPlugin } from './plugins/naver-blog.js';
+import { BloggerPlugin } from './plugins/blogger.js';
 import { InstagramPlugin } from './plugins/instagram.js';
 import { ThreadsPlugin } from './plugins/threads.js';
 import { LinkedInPlugin } from './plugins/linkedin.js';
@@ -34,6 +35,7 @@ export { Analytics } from './core/analytics.js';
 export { ContentPipeline } from './core/content.js';
 export { BasePlugin } from './core/plugin.js';
 export type { SnsPlugin, PluginContext } from './core/plugin.js';
+export { BloggerPlugin, markdownToHtml } from './plugins/blogger.js';
 
 // 자동화 강화 계층 (설계도 둥근 벨트)
 export { MarketResearch } from './core/research.js';
@@ -100,6 +102,7 @@ export function defaultPlugins(ctx: PluginContext): SnsPlugin[] {
   return [
     new YouTubePlugin(ctx),
     new NaverBlogPlugin(ctx),
+    new BloggerPlugin(ctx),
     new InstagramPlugin(ctx),
     new ThreadsPlugin(ctx),
     new LinkedInPlugin(ctx),

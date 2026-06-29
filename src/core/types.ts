@@ -9,6 +9,7 @@
 export type PlatformId =
   | 'youtube'
   | 'naver-blog'
+  | 'blogger'
   | 'instagram'
   | 'threads'
   | 'linkedin';
