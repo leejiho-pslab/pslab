@@ -175,6 +175,31 @@ def check_api(store: Store, config, sample_dates: list[str]) -> int:
     idx = _facts_index(store, min(sample_dates), max(sample_dates))
     mismatch = 0
     try:
+        # 진단 A) 후기 게시판 자동탐지 결과
+        try:
+            boards = client.list_boards()
+            bno = client.review_board_no()
+            names = ", ".join(f"{b.get('board_no')}:{b.get('board_name')}" for b in boards[:12])
+            print(f"  [진단] 후기 게시판 탐지 → board_no={bno}")
+            print(f"         게시판목록: {names or '(목록 조회 실패)'}")
+        except Exception as e:  # noqa: BLE001
+            print(f"  [진단] 게시판 탐지 오류: {type(e).__name__}: {str(e)[:120]}")
+
+        # 진단 B) 카테고리/베스트 비율 원인 — 최근 표본일 품목 필드 덤프
+        for d in reversed(sample_dates):
+            try:
+                ods = client.list_orders(d, d)
+            except Exception:
+                continue
+            its = [it for o in ods for it in (o.get("items") or [])]
+            if not its:
+                continue
+            it = its[0]
+            keys = [k for k in ("payment_amount", "product_price_amount", "actual_payment_amount",
+                                "product_price", "option_price", "quantity") if k in it]
+            print(f"  [진단] {d} 품목필드 존재: {keys}")
+            print(f"         items[0]: " + ", ".join(f"{k}={it.get(k)}" for k in keys))
+            break
         for d in sample_dates:
             try:
                 orders = client.list_orders(d, d)
