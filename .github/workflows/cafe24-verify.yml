@@ -1,11 +1,14 @@
 name: ops verify (data accuracy)
 
-# 데이터 정확도 검수 — 수동 실행(Run workflow).
-#  - mode=db  : DB만 점검(커버리지·내부정합성). 토큰 미사용 → 백필과 동시 실행 안전.
-#  - mode=api : 위 + 카페24 API 원천 대조. 토큰을 회전시키므로
-#               ⚠ 백필이 도는 중에는 실행 금지(토큰 경합). 백필 끝난 뒤 실행.
+# 데이터 정확도 검수.
+#  - 매일 자동(schedule): mode=db 로 커버리지·내부정합성 점검 → Actions 로그에 리포트.
+#    DB만 읽어 토큰을 안 써서 백필/수집과 동시 실행해도 안전(경합 없음).
+#    → GitHub 연동 토큰 만료와 무관하게 검수가 계속 돌고 결과가 쌓인다(인력 0).
+#  - 수동(Run workflow): mode=api 로 카페24 원천대조도 가능(토큰 회전 → 백필중 금지).
 
 on:
+  schedule:
+    - cron: "30 23 * * *" # 매일 1회 db 검수 자동 실행
   workflow_dispatch:
     inputs:
       mode:
