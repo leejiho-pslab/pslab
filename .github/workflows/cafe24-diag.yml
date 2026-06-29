@@ -23,13 +23,13 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install minimal deps
-        run: pip install "httpx>=0.27" "psycopg[binary]>=3.1" PyYAML
-      - name: Dump order schema
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Probe endpoints (방문자/상품/카테고리/후기/장바구니)
         env:
           CAFE24_OPS_MODE: live
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
           CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
           CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
-        run: python scripts/diag_order.py --date "${{ github.event.inputs.date }}"
+        run: python scripts/diag_endpoints.py
