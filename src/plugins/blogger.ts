@@ -172,8 +172,14 @@ export function markdownToHtml(body: string, title?: string): string {
   };
   for (const raw of lines) {
     const t = raw.trim();
+    const img = t.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
     if (t === '') {
       flush();
+    } else if (img) {
+      flush();
+      out.push(
+        `<p><img src="${img[2]}" alt="${esc(img[1])}" style="max-width:100%;height:auto;border-radius:8px"/></p>`,
+      );
     } else if (t.startsWith('## ')) {
       flush();
       out.push(`<h2>${inline(t.slice(3))}</h2>`);
