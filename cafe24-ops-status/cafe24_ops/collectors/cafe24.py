@@ -95,6 +95,38 @@ def order_breakdowns(date: str, orders: list[dict]) -> list[dict]:
     return out
 
 
+def _item_amount(it: dict) -> float:
+    """주문 품목 결제금액 — 가능한 필드를 순서대로 시도(가격×수량 폴백)."""
+    for k in ("payment_amount", "product_price_amount", "actual_payment_amount"):
+        v = it.get(k)
+        if v not in (None, ""):
+            try:
+                return float(v)
+            except (TypeError, ValueError):
+                pass
+    try:
+        qty = float(it.get("quantity", 0) or 0)
+        price = float(it.get("product_price", it.get("price", 0)) or 0)
+        opt = float(it.get("option_price", 0) or 0)
+        return (price + opt) * qty
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def best_products(date: str, orders: list[dict], top_n: int = 10) -> list[dict]:
+    """주문 items 집계 → 베스트상품(product_sales) 상위 N. embed=items 필요."""
+    agg: dict[str, float] = {}
+    for o in orders:
+        for it in (o.get("items") or []):
+            name = it.get("product_name") or it.get("product_name_default") or it.get("product_code")
+            if not name:
+                continue
+            agg[name] = agg.get(name, 0.0) + _item_amount(it)
+    top = sorted(agg.items(), key=lambda kv: kv[1], reverse=True)[:top_n]
+    return [{"date": date, "source": "cafe24", "metric": "product_sales",
+             "value": round(v, 2), "dims": {"product": name}} for name, v in top]
+
+
 MOCK_PRODUCTS = [
     "keek Pillow", "Filovely Basic Windbreaker", "keek Recovery Slipper",
     "keek Travel Pouch", "HOODIE Oversfit", "keek Neck Cushion",
@@ -203,4 +235,5 @@ class Cafe24Collector(BaseCollector):
             + visitor_metrics(date, count, visitors)
             + signup_metrics(date, signups)
             + order_breakdowns(date, orders)
+            + best_products(date, orders)
         )
