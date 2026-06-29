@@ -554,6 +554,26 @@ async function cmdWeeklyReport(args: Args): Promise<void> {
   }
 }
 
+async function cmdNotifyTest(args: Args): Promise<void> {
+  const msg =
+    typeof args.message === 'string'
+      ? args.message
+      : '🔔 <b>pslab 알림 테스트</b>\n텔레그램 연결이 정상입니다. 앞으로 발행 완료·주간 리포트가 여기로 옵니다.';
+  const notifier = createNotifier();
+  if (!notifier.enabled()) {
+    console.log('❌ 텔레그램 미설정 — TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID 시크릿을 확인하세요.');
+    process.exitCode = 1;
+    return;
+  }
+  const ok = await notifier.send(msg);
+  if (ok) {
+    console.log('✅ 텔레그램 테스트 메시지 전송 성공 — 휴대폰을 확인하세요.');
+  } else {
+    console.log('❌ 전송 실패 — 봇에게 먼저 말을 걸었는지(START), 토큰/chat id가 맞는지 확인하세요.');
+    process.exitCode = 1;
+  }
+}
+
 function printHelp(): void {
   console.log(
     [
@@ -575,6 +595,7 @@ function printHelp(): void {
       '  collect-insights      발행물 성과 수집 + 인사이트 코멘트 + 자체 학습 갱신',
       '  check-tokens          SNS 토큰 상태·만료 점검 (만료 전 경고)',
       '  weekly-report         주간 종합 평가 리포트 생성 + 텔레그램 푸시 (--no-push)',
+      '  notify-test           텔레그램 연결 테스트 메시지 전송',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -643,6 +664,9 @@ async function main(): Promise<void> {
       break;
     case 'weekly-report':
       await cmdWeeklyReport(args);
+      break;
+    case 'notify-test':
+      await cmdNotifyTest(args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);

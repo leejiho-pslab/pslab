@@ -1,0 +1,27 @@
+name: pslab 텔레그램 테스트
+
+# 텔레그램 연결을 확인하는 1회성 테스트 (수동 트리거 전용).
+# TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID 시크릿 등록 후 실행하면
+# 휴대폰으로 테스트 메시지가 옵니다.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  notify-test:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: 의존성 설치 + 빌드
+        run: |
+          npm ci
+          npm run build
+      - name: 텔레그램 테스트 전송
+        run: node dist/cli.js notify-test
