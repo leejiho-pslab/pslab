@@ -98,6 +98,19 @@ async function download(name, url) {
   }
 }
 
+/**
+ * url 이 문자열이면 그대로, 배열이면 후보를 순서대로 시도해
+ * 처음 성공한 이미지를 사용한다(현대닷컴 → 폴백 이미지 순 등).
+ */
+async function downloadFirst(name, urlOrList) {
+  const candidates = (Array.isArray(urlOrList) ? urlOrList : [urlOrList]).filter(Boolean);
+  for (const u of candidates) {
+    const rel = await download(name, u);
+    if (rel) return rel;
+  }
+  return null;
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
@@ -116,12 +129,12 @@ async function main() {
   // 다운로드 실패 시 이전에 받아둔 파일이 있으면 보존
   const keep = (val) => (val && existsSync(resolve(ROOT, 'public', val)) ? val : null);
 
-  const hero = (await download('hero', sources.hero)) ?? keep(prev.hero);
-  const profile = (await download('profile', sources.profile)) ?? keep(prev.profile);
+  const hero = (await downloadFirst('hero', sources.hero)) ?? keep(prev.hero);
+  const profile = (await downloadFirst('profile', sources.profile)) ?? keep(prev.profile);
 
   const models = {};
   for (const [id, url] of Object.entries(sources.models ?? {})) {
-    models[id] = (await download(`model-${id}`, url)) ?? keep(prev.models?.[id]);
+    models[id] = (await downloadFirst(`model-${id}`, url)) ?? keep(prev.models?.[id]);
   }
 
   const manifest = { hero, profile, models };
