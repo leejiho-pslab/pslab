@@ -14,6 +14,7 @@ import type { DesignStore } from './design.js';
 import type { PlanStore } from './plan.js';
 import type { LearningStore } from './learning.js';
 import type { TokenHealthStore } from './token-health.js';
+import type { WeeklyReportStore } from './weekly.js';
 import type { PlatformId } from './types.js';
 
 const REPO = process.env.PSLAB_REPO ?? 'leejiho-pslab/pslab';
@@ -62,6 +63,8 @@ interface PendingCard {
   status?: string;
   publishedUrl?: string;
   metrics?: { views?: number; likes?: number; comments?: number; engagementRate?: number };
+  insightComment?: string;
+  publishedAt?: string;
 }
 
 function buildChannel(
@@ -168,12 +171,14 @@ function buildClientData(
   planStore: PlanStore,
   learnStore?: LearningStore,
   tokenStore?: TokenHealthStore,
+  reportStore?: WeeklyReportStore,
 ) {
   const history = store.read(client.id);
   const design = designStore.load(client.id);
   const plan = planStore.load(client.id);
   const learning = learnStore?.load(client.id);
   const tokenHealth = tokenStore?.load(client.id);
+  const weeklyReport = reportStore?.latest(client.id);
   const heldCount = history.filter((h) => !h.published && h.review?.pending).length;
 
   const toCard = (it: (typeof plan.items)[number]): PendingCard => ({
@@ -194,6 +199,8 @@ function buildClientData(
     status: it.status,
     publishedUrl: it.publishedUrl,
     metrics: it.metrics,
+    insightComment: it.insightComment,
+    publishedAt: it.publishedAt,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -235,6 +242,7 @@ function buildClientData(
     blog,
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
+    weeklyReport: weeklyReport ?? null,
   };
 }
 
@@ -245,13 +253,14 @@ export function renderDashboard(
   planStore: PlanStore,
   learnStore?: LearningStore,
   tokenStore?: TokenHealthStore,
+  reportStore?: WeeklyReportStore,
 ): string {
   const data = {
     generatedAt: new Date().toISOString(),
     repo: REPO,
     channels: CHANNELS,
     clients: clients.map((c) =>
-      buildClientData(c, store, designStore, planStore, learnStore, tokenStore),
+      buildClientData(c, store, designStore, planStore, learnStore, tokenStore, reportStore),
     ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
@@ -418,12 +427,17 @@ function openDetail(id){
   const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':chDef.key==='linkedin'?'💼 링크드인 포스트':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
+  const m=it.metrics;
+  const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#2d3a5a"><div class="caphd">📊 성과 데이터</div>'+
+    '<div class="met" style="font-size:13px"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>참여율 '+pct(m.engagementRate||0)+'</span></div>'+
+    (it.insightComment?'<div style="color:#9fe6b0;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
   document.getElementById('mbody').innerHTML=
     '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+'</div>'+
     '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
     '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · '+chDef.icon+' '+esc(chDef.label)+' · <span class="badge b-plan">발행 대기</span></div>'+
     '<div class="carou">'+slides+'</div>'+
     (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
+    perf+
     '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');
@@ -465,6 +479,8 @@ function channelDetail(client, c){
     kpi(c.stats.totalViews,'누적 조회')+
     kpi(c.stats.totalLikes,'누적 좋아요')+'</div>';
   if(c.series&&c.series.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %)</h3>'+sparkline(c.series)+'</div>';}
+  // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트)
+  h+=pubDataRows(c.pending);
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기
@@ -523,8 +539,35 @@ function learningPanel(client){
   h+='<div class="muted" style="margin-top:10px">이 학습은 다음 기획 생성 때 디자인 선택·소재 방향에 자동 반영됩니다(자체 디벨롭).</div></div>';
   return h;
 }
+function weeklyPanel(client){
+  const w=client.weeklyReport; if(!w) return '';
+  const chRows=(w.channels||[]).map(c=>'<tr><td>'+esc(c.label)+'</td><td>'+c.posts+'</td><td>'+pct(c.avgEngagement)+'</td><td>'+c.totalViews+'</td><td>'+c.totalLikes+'</td></tr>').join('');
+  const recs=(w.recommendations||[]).map(r=>'<li>'+esc(r)+'</li>').join('');
+  const top=w.top?'<div class="muted" style="margin:6px 0">🏆 최고 성과: <b>['+esc(w.top.label)+'] '+esc(w.top.title)+'</b> ('+pct(w.top.engagementRate)+')</div>':'';
+  return '<div class="panel" style="border-color:#2d3a5a;background:#121a26">'+
+    '<div class="sect-h" style="margin:0 0 10px"><h3>📅 주간 종합 리포트</h3><span class="muted">'+esc(w.weekOf)+' 주 · 발행 '+w.postsCount+'건 · '+ftime(w.generatedAt)+'</span></div>'+
+    '<div class="mcap" style="font-size:14px;margin-bottom:8px">'+esc(w.summary)+'</div>'+top+
+    (chRows?'<table style="margin:8px 0"><tr><th>채널</th><th>발행</th><th>평균 참여율</th><th>조회</th><th>좋아요</th></tr>'+chRows+'</table>':'')+
+    (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#9fe6b0;font-size:13px">'+recs+'</ul>':'')+
+    '</div>';
+}
+function pubDataRows(items){
+  // 발행된 콘텐츠의 채널별 성과 데이터 + 인사이트 코멘트
+  const pub=items.filter(it=>it.status==='published'&&it.metrics);
+  if(!pub.length) return '';
+  pub.sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
+  const rows=pub.map(it=>{const m=it.metrics||{};
+    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
+      (it.insightComment?'<div style="color:#9fe6b0;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
+      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
+      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
+  }).join('');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📊 발행 콘텐츠 데이터</h3><span class="muted">'+pub.length+'건 · 성과+인사이트</span></div>'+
+    '<table><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows+'</table></div>';
+}
 function overview(client){
   let h=tokenBanner(client);
+  h+=weeklyPanel(client);
   h+='<div class="kpis">'+
     kpi(client.totalCycles,'총 사이클')+
     kpi(client.totalPublished,'총 발행')+

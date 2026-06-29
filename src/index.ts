@@ -78,6 +78,12 @@ export { LearningEngine, LearningStore } from './core/learning.js';
 export type { LearningSummary, GroupStat } from './core/learning.js';
 export { checkTokens, TokenHealthStore } from './core/token-health.js';
 export type { TokenHealth, TokenStatus } from './core/token-health.js';
+export { makeInsightComment, ruleComment } from './core/insight.js';
+export { TelegramNotifier, createNotifier } from './core/notify.js';
+export type { Notifier } from './core/notify.js';
+export { WeeklyReportEngine, WeeklyReportStore, mondayOf } from './core/weekly.js';
+export type { WeeklyReport, WeeklyChannelStat } from './core/weekly.js';
+export { claudeText, claudeKey } from './core/claude.js';
 export { ContentGenerator, createContentGenerator, CONTENT_DOCTRINE } from './core/generate.js';
 export type { GenerateOptions } from './core/generate.js';
 export {

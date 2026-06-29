@@ -31,6 +31,9 @@ import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
+import { makeInsightComment } from './core/insight.js';
+import { createNotifier } from './core/notify.js';
+import { WeeklyReportEngine, WeeklyReportStore } from './core/weekly.js';
 import { createContentGenerator } from './core/generate.js';
 import type { PlatformId as PlatformIdT } from './core/types.js';
 import type { CycleRecord } from './core/orchestrator.js';
@@ -285,7 +288,8 @@ async function cmdDashboard(args: Args): Promise<void> {
   const planStore = new PlanStore(dataDir);
   const learnStore = new LearningStore(dataDir);
   const tokenStore = new TokenHealthStore(dataDir);
-  const html = renderDashboard(clients, store, designStore, planStore, learnStore, tokenStore);
+  const reportStore = new WeeklyReportStore(dataDir);
+  const html = renderDashboard(clients, store, designStore, planStore, learnStore, tokenStore, reportStore);
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html, 'utf8');
   console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
@@ -346,6 +350,7 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
 
   const clients = loadClients(dir).filter((c) => !only || c.id === only);
   const store = new PlanStore(dataDir);
+  const notifier = createNotifier();
   const now = Date.now();
 
   for (const client of clients) {
@@ -411,6 +416,14 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
           remoteId: r.remoteId!,
           url: r.url,
         }));
+        // 발행 후 푸시 알림 (텔레그램) — 설정 없으면 자동 생략
+        const title = (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
+        const chs = okResults.map((r) => r.platform).join(', ');
+        const link = okResults[0].url ? `\n🔗 ${okResults[0].url}` : '';
+        const pushed = await notifier.send(
+          `✅ <b>발행 완료</b> [${chs}]\n${title}${link}`,
+        );
+        if (pushed) console.log('  📲 텔레그램 알림 전송');
       }
     }
     store.save(client.id, plan);
@@ -469,6 +482,15 @@ async function cmdCollectInsights(app: App, args: Args): Promise<void> {
     learnStore.save(client.id, summary);
     console.log(`  🧠 학습 갱신: 표본 ${summary.sampleSize}건` + (summary.bestVariant ? `, 우세 디자인 ${summary.bestVariant}안` : ''));
     for (const h of summary.hints) console.log(`     · ${h}`);
+
+    // 인사이트 코멘트 — 성과를 본 후 콘텐츠 디벨롭 방향 (AI 우선, 규칙 폴백)
+    for (const it of published) {
+      if (!it.metrics) continue;
+      it.insightComment = await makeInsightComment(client, it, summary);
+      it.insightAt = new Date().toISOString();
+    }
+    store.save(client.id, plan);
+    console.log(`  💬 인사이트 코멘트 ${published.filter((it) => it.insightComment).length}건 작성`);
   }
 }
 
@@ -483,6 +505,52 @@ async function cmdCheckTokens(args: Args): Promise<void> {
     const icon = t.ok ? (t.warn ? '🟡' : '🟢') : '🔴';
     const exp = t.expiresInDays != null ? ` (만료 ${t.expiresInDays}일 후)` : '';
     console.log(`  ${icon} ${t.label.padEnd(12)} ${t.ok ? '정상' : '오류'}${exp} ${t.detail ?? ''}`);
+  }
+}
+
+async function cmdWeeklyReport(args: Args): Promise<void> {
+  const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
+  const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
+  const only = typeof args.client === 'string' ? args.client : undefined;
+  // --no-push 면 푸시 생략 (대시보드만 갱신)
+  const noPush = args.push === false || args['no-push'] === true;
+
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  const store = new PlanStore(dataDir);
+  const learnStore = new LearningStore(dataDir);
+  const reportStore = new WeeklyReportStore(dataDir);
+  const engine = new WeeklyReportEngine();
+  const notifier = createNotifier();
+  const now = new Date();
+
+  for (const client of clients) {
+    const plan = store.load(client.id);
+    const learning = learnStore.load(client.id);
+    const report = await engine.build(client, plan, learning, now);
+    console.log(`\n📅 주간 리포트 — ${client.name} (${report.weekOf} 주, 발행 ${report.postsCount}건)`);
+    console.log(`  ${report.summary}`);
+    for (const r of report.recommendations) console.log(`  → ${r}`);
+
+    // 같은 주에 이미 푸시했으면 중복 전송 생략 (cron이 하루 2회 도는 멱등 처리)
+    const prev = reportStore.latest(client.id);
+    const alreadyPushed = prev?.weekOf === report.weekOf && Boolean(prev?.pushedAt);
+    if (!noPush && !alreadyPushed && report.postsCount > 0) {
+      const chLines = report.channels
+        .map((c) => `· ${c.label}: ${c.posts}건, 참여율 ${(c.avgEngagement * 100).toFixed(1)}%`)
+        .join('\n');
+      const recLines = report.recommendations.map((r) => `• ${r}`).join('\n');
+      const top = report.top ? `\n🏆 최고: [${report.top.label}] ${report.top.title} (${(report.top.engagementRate * 100).toFixed(1)}%)` : '';
+      const ok = await notifier.send(
+        `📅 <b>주간 리포트</b> (${report.weekOf} 주)\n발행 ${report.postsCount}건\n\n${report.summary}\n\n${chLines}${top}\n\n<b>다음 주</b>\n${recLines}`,
+      );
+      if (ok) {
+        report.pushedAt = new Date().toISOString();
+        console.log('  📲 텔레그램 주간 리포트 전송');
+      }
+    } else if (alreadyPushed) {
+      report.pushedAt = prev!.pushedAt; // 이미 보낸 주 — 상태 유지
+    }
+    reportStore.save(client.id, report);
   }
 }
 
@@ -504,8 +572,9 @@ function printHelp(): void {
       '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
       '  generate-plan         AI 기획 생성 (--channel instagram --count 6, 발행 전 검수)',
       '  publish-plan          승인된 기획안 발행 (--id <항목> | --due, 카드는 Pages URL 사용)',
-      '  collect-insights      발행물 성과 수집 + 자체 학습 갱신 (반응도 기반 자기발전)',
+      '  collect-insights      발행물 성과 수집 + 인사이트 코멘트 + 자체 학습 갱신',
       '  check-tokens          SNS 토큰 상태·만료 점검 (만료 전 경고)',
+      '  weekly-report         주간 종합 평가 리포트 생성 + 텔레그램 푸시 (--no-push)',
       '',
       '옵션: --topic --title --tone --link --targets a,b --video <p> --image <p>',
       '      --clients-dir ./clients --client <id> --data-dir ./data/clients',
@@ -571,6 +640,9 @@ async function main(): Promise<void> {
       break;
     case 'check-tokens':
       await cmdCheckTokens(args);
+      break;
+    case 'weekly-report':
+      await cmdWeeklyReport(args);
       break;
     default:
       console.error(`알 수 없는 명령: ${command}\n`);

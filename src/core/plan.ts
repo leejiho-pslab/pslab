@@ -70,6 +70,10 @@ export interface PlanItem {
   metrics?: PlanMetrics;
   /** 성과 수집 시각 (ISO) */
   metricsAt?: string;
+  /** 성과 데이터를 본 인사이트 코멘트 (왜 잘됐나/다음 방향) */
+  insightComment?: string;
+  /** 인사이트 코멘트 생성 시각 (ISO) */
+  insightAt?: string;
 }
 
 /** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */
