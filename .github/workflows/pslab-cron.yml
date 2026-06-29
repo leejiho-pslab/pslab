@@ -118,6 +118,11 @@ jobs:
         continue-on-error: true
         run: node scripts/render-cards.mjs --client pslab
 
+      # 블로그 본문 이미지 렌더 (네이버/구글 블로그 삽입용)
+      - name: 블로그 이미지 렌더
+        continue-on-error: true
+        run: node scripts/render-blog-images.mjs --client pslab
+
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
@@ -133,7 +138,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi

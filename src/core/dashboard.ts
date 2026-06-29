@@ -359,6 +359,7 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
 .md-quote{background:#16202e;border-left:3px solid #ffb454;padding:8px 12px;color:#e6e8ee;font-size:14px}
 .md-quote+.md-quote{padding-top:0}
 .md-tags{color:#6db3ff;font-size:13px;margin-top:12px}
+.md-img{display:block;width:100%;border-radius:10px;margin:12px 0;border:1px solid #222838}
 .mcap b{color:#fff}
 .thumbwrap{position:relative}
 .b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#e6e8ee;border:1px solid #2d3346}
@@ -463,6 +464,8 @@ function mdInline(x){ return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>');
 function fmtCaption(s){
   return String(s||'').split('\\n').map(line=>{
     const t=line.trim();
+    const img=t.match(/^!\\[([^\\]]*)\\]\\(([^)]+)\\)$/);
+    if(img) return '<img class="md-img" src="'+esc(img[2])+'" alt="'+esc(img[1])+'" loading="lazy"/>';
     if(t.startsWith('## ')) return '<h4 class="md-h">'+mdInline(t.slice(3))+'</h4>';
     if(t.startsWith('# ')) return '<h3 class="md-h1">'+mdInline(t.slice(2))+'</h3>';
     if(t==='>'||t.startsWith('> ')) return '<div class="md-quote">'+mdInline(t.replace(/^>\\s?/,''))+'</div>';
