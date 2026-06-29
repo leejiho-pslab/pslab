@@ -222,6 +222,8 @@ class Cafe24Collector(BaseCollector):
                 count = client.count_orders(date, date)
                 visitors = client.get_visitor_count(date)    # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
+                reviews = client.count_reviews(date, date)   # 상품후기 수(board 4)
+                soldout = client.count_soldout()             # 현재 품절 상품 수(스냅샷)
             finally:
                 client.close()
             # 갱신(회전)되었을 수 있는 토큰을 DB 에 저장 → 다음 실행이 이어받음
@@ -230,10 +232,18 @@ class Cafe24Collector(BaseCollector):
                 kv.set_kv("cafe24_refresh_token", client.refresh_token)
         finally:
             kv.close()
+        extra = []
+        if reviews is not None:
+            extra.append({"date": date, "source": "cafe24", "metric": "crm_count",
+                          "value": float(reviews), "dims": {"channel": "reviews"}})
+        if soldout is not None:
+            extra.append({"date": date, "source": "cafe24", "metric": "soldout_count",
+                          "value": float(soldout)})
         return (
             orders_to_metrics(date, orders, count)
             + visitor_metrics(date, count, visitors)
             + signup_metrics(date, signups)
             + order_breakdowns(date, orders)
             + best_products(date, orders)
+            + extra
         )

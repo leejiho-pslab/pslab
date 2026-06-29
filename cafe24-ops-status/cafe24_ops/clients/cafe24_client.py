@@ -159,6 +159,27 @@ class Cafe24Client:
         )
         return int(data.get("count", 0) or 0)
 
+    def count_reviews(self, start_date: str, end_date: str, board_no: int | None = None) -> int | None:
+        """기간 내 상품후기 수(게시판 글). 실패 시 None. board_no 기본 4(상품후기)."""
+        import os
+        bno = board_no or int(os.environ.get("CAFE24_REVIEW_BOARD_NO", "4"))
+        try:
+            data = self.get(
+                f"/api/v2/admin/boards/{bno}/articles/count",
+                {"start_date": start_date, "end_date": end_date},
+            )
+            return int(data.get("count", 0) or 0)
+        except httpx.HTTPStatusError:
+            return None
+
+    def count_soldout(self) -> int | None:
+        """현재 품절(sold_out=T) 상품 수. 실패 시 None."""
+        try:
+            data = self.get("/api/v2/admin/products/count", {"sold_out": "T"})
+            return int(data.get("count", 0) or 0)
+        except httpx.HTTPStatusError:
+            return None
+
     # 몰/토큰권한에 따라 신규고객 엔드포인트가 없을 수 있다. 한 번 실패하면 프로세스
     # 내에서 더 호출하지 않아(백필 시 매일 404/422 반복 방지) 속도를 아낀다.
     _new_customers_unavailable = False
