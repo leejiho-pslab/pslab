@@ -172,6 +172,22 @@ class Cafe24Client:
         except httpx.HTTPStatusError:
             return None
 
+    def list_categories(self) -> list[dict]:
+        return list(self.iter_pages("/api/v2/admin/categories", {}, "categories", limit=100))
+
+    def list_category_product_nos(self, category_no: int) -> list[int]:
+        rows = self.iter_pages(
+            f"/api/v2/admin/categories/{category_no}/products", {}, "products", limit=100)
+        out = []
+        for r in rows:
+            pno = r.get("product_no")
+            if pno is not None:
+                try:
+                    out.append(int(pno))
+                except (TypeError, ValueError):
+                    pass
+        return out
+
     def count_soldout(self) -> int | None:
         """현재 품절(sold_out=T) 상품 수. 실패 시 None."""
         try:
