@@ -1,0 +1,57 @@
+name: media-automation
+
+# 원본 영상을 media-automation/input/ 에 올리면(push) 자동으로
+# 유튜브/인스타 편집본 + 썸네일을 만들어 다운로드 가능한 아티팩트로 올린다.
+#
+# 설치 위치: 대상 저장소 루트의 .github/workflows/media-automation.yml
+# (media-automation/ 폴더는 저장소 루트에 둔다)
+
+on:
+  push:
+    paths:
+      - 'media-automation/input/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: media-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install deps
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install -r media-automation/requirements.txt
+      - name: Process new videos
+        run: |
+          cd media-automation
+          shopt -s nullglob nocaseglob
+          found=0
+          for v in input/*.mp4 input/*.mov input/*.m4v; do
+            found=1
+            name=$(basename "${v%.*}")
+            out="output/$name"
+            mkdir -p "$out"
+            echo "::group::$name"
+            python scripts/make_thumbnail.py "$v" "$out"
+            python scripts/edit_video.py "$v" "$out"
+            rm -rf "$out/_work"
+            echo "::endgroup::"
+          done
+          [ "$found" = 0 ] && echo "처리할 영상이 input/ 에 없습니다." || true
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: media-output
+          path: media-automation/output/**
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,9 @@
+# 대용량 미디어는 커밋하지 않는다 (블로그 .md 초안은 예외로 추적)
+input/*
+!input/.gitkeep
+output/*
+!output/.gitkeep
+!output/blog/**
+**/_work/
+*.pyc
+__pycache__/

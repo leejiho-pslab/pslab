@@ -1,0 +1,21 @@
+{
+  "dealership": "현대자동차 대전선화대리점",
+  "name": "김무겸",
+  "role": "카마스터 CAR MASTER",
+  "phone": "010-8033-3522",
+  "office": "042-254-9000",
+  "youtube_handle": "@hyundai_moomoo",
+  "colors": {
+    "accent": "#00AAD2",
+    "deep": "#002C5F",
+    "ink": "#0A0A0C",
+    "paper": "#FFFFFF"
+  },
+  "hooks": {
+    "youtube_main": "대전 현대차,\n무겸이 다 해드립니다",
+    "youtube_sub": "신차 · 법인 · 리스 · 출고까지",
+    "instagram_main": "대전 현대차는\n무겸이지",
+    "instagram_sub": "지금 바로 상담 DM"
+  },
+  "tagline": "신차 상담부터 출고·사후관리까지, 카마스터 김무겸"
+}
