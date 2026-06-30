@@ -243,8 +243,9 @@ class Cafe24Client:
         return list(self.iter_pages("/api/v2/admin/categories", {}, "categories", limit=100))
 
     def list_category_product_nos(self, category_no: int) -> list[int]:
+        # /categories/{no}/products 는 422(detail category 전용) → /products?category=N 사용.
         rows = self.iter_pages(
-            f"/api/v2/admin/categories/{category_no}/products", {}, "products", limit=100)
+            "/api/v2/admin/products", {"category": category_no}, "products", limit=100)
         out = []
         for r in rows:
             pno = r.get("product_no")
