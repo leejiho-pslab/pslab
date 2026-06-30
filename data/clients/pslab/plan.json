@@ -1167,7 +1167,7 @@
       ],
       "scheduledFor": "2026-07-03T09:00:00.000Z",
       "score": 82,
-      "status": "planned",
+      "status": "published",
       "kicker": "Agency",
       "headline": "대행사와 3년 일하며 후회한 것, 잘한 것",
       "sub": "결론부터: 대행사는 \"맡기는 것\"이 아니라 \"같이 운영하는 것\"입니다. 통째로 맡기면 반드시 후회합니다.",
@@ -1188,6 +1188,15 @@
         "마케팅",
         "협업",
         "성과관리"
+      ],
+      "publishedUrl": "https://pslab2026.blogspot.com/2026/06/3.html",
+      "publishedAt": "2026-06-30T02:24:22.852Z",
+      "published": [
+        {
+          "platform": "blogger",
+          "remoteId": "717397760903308671",
+          "url": "https://pslab2026.blogspot.com/2026/06/3.html"
+        }
       ]
     },
     {
