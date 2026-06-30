@@ -106,6 +106,21 @@ function headlineHTML(s) {
 }
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
+// 카드 배경 — docs/bg/<id>.jpg 가 있으면 인물·상황·배경 사진을 카드 배경으로 깔고
+// 어두운 그라데이션(텍스트 가독성)을 위에 얹는다. 없으면 단색(fallback).
+// 레이어가 아니라 .card 배경 자체로 넣어 z-index 문제 없이 모든 텍스트가 위에 온다.
+function cardBg(itemId, v, strong) {
+  const f = join(ROOT, 'docs/bg', `${itemId}.jpg`);
+  if (!existsSync(f)) return v.bg;
+  try {
+    const b64 = readFileSync(f).toString('base64');
+    const g = strong
+      ? 'rgba(8,12,20,.78) 0%,rgba(8,12,20,.70) 40%,rgba(8,12,20,.92) 100%'
+      : 'rgba(8,12,20,.64) 0%,rgba(8,12,20,.50) 38%,rgba(8,12,20,.90) 100%';
+    return `${v.bg};background-image:linear-gradient(180deg,${g}),url(data:image/jpeg;base64,${b64});background-size:cover;background-position:center`;
+  } catch { return v.bg; }
+}
+
 function cardHTML(item, no, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
   const rule = `rgba(255,255,255,.16)`;
@@ -149,7 +164,7 @@ html,body{width:1080px;height:1350px}
 /* 세이프존: 모든 텍스트는 이 여백 안에 둔다. 인스타 프로필 그리드는 4:5를
    1:1 중앙으로 크롭(상하 135px 잘림)하므로 핵심 텍스트는 중앙 밴드에 배치. */
 :root{--safe-x:96px;--safe-t:120px;--safe-b:130px}
-.card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
+.card{width:1080px;height:1350px;background:${cardBg(item.id, v)};color:${v.fg};font-family:'Pretendard';
   padding:var(--safe-t) var(--safe-x) var(--safe-b);display:flex;flex-direction:column;position:relative;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center;z-index:2}
 .kicker{font-weight:600;font-size:30px;letter-spacing:.22em;color:${v.accent};text-transform:uppercase}
@@ -188,7 +203,7 @@ html,body{width:1080px;height:1350px}
 /* 세이프존: 모든 텍스트는 이 여백 안에 둔다. 인스타 프로필 그리드는 4:5를
    1:1 중앙으로 크롭(상하 135px 잘림)하므로 핵심 텍스트는 중앙 밴드에 배치. */
 :root{--safe-x:96px;--safe-t:120px;--safe-b:130px}
-.card{width:1080px;height:1350px;background:${v.bg};color:${v.fg};font-family:'Pretendard';
+.card{width:1080px;height:1350px;background:${cardBg(item.id, v)};color:${v.fg};font-family:'Pretendard';
   padding:var(--safe-t) var(--safe-x) var(--safe-b);display:flex;flex-direction:column;position:relative;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center}
 .kicker{font-weight:600;font-size:27px;letter-spacing:.2em;color:${v.muted};text-transform:uppercase}
