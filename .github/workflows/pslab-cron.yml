@@ -127,6 +127,9 @@ jobs:
       - name: 쇼츠 슬라이드 렌더
         continue-on-error: true
         run: node scripts/render-shorts.mjs --client pslab
+      - name: ffmpeg 설치 (영상 합성용)
+        continue-on-error: true
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: 쇼츠 영상 합성 (ffmpeg)
         continue-on-error: true
         run: node scripts/build-shorts-video.mjs --client pslab
