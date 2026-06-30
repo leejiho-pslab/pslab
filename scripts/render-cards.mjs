@@ -121,6 +121,20 @@ function cardBg(itemId, v, strong) {
   } catch { return v.bg; }
 }
 
+// #rrggbb → rgba(r,g,b,a)
+function hexA(hex, a) {
+  const h = String(hex).replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+// 내용 슬라이드 배경 — 사진을 반복하지 않고, 슬라이드마다 미묘하게 변하는 단색.
+// 액센트를 아주 옅게 깐 라디얼 그라데이션 위치를 슬라이드 번호로 회전시킨다.
+function slideBg(v, n) {
+  const pos = ['118% -12%', '-18% 112%', '112% 118%', '-12% -12%', '50% -22%', '120% 55%'];
+  const p = pos[(Math.max(1, n) - 1) % pos.length];
+  return `${v.bg};background-image:radial-gradient(70% 55% at ${p}, ${hexA(v.accent, 0.13)} 0%, transparent 62%)`;
+}
+
 function cardHTML(item, no, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
   const rule = `rgba(255,255,255,.16)`;
@@ -203,7 +217,7 @@ html,body{width:1080px;height:1350px}
 /* 세이프존: 모든 텍스트는 이 여백 안에 둔다. 인스타 프로필 그리드는 4:5를
    1:1 중앙으로 크롭(상하 135px 잘림)하므로 핵심 텍스트는 중앙 밴드에 배치. */
 :root{--safe-x:96px;--safe-t:120px;--safe-b:130px}
-.card{width:1080px;height:1350px;background:${cardBg(item.id, v)};color:${v.fg};font-family:'Pretendard';
+.card{width:1080px;height:1350px;background:${slideBg(v, n)};color:${v.fg};font-family:'Pretendard';
   padding:var(--safe-t) var(--safe-x) var(--safe-b);display:flex;flex-direction:column;position:relative;overflow:hidden}
 .top{display:flex;justify-content:space-between;align-items:center}
 .kicker{font-weight:600;font-size:27px;letter-spacing:.2em;color:${v.muted};text-transform:uppercase}
