@@ -18,7 +18,12 @@ def _by_creative(store, date_from: str, date_to: str) -> dict[str, dict]:
         if not cid:
             continue
         e = agg.setdefault(cid, {"name": r["dims"].get("name", cid),
-                                 "channel": r["dims"].get("channel"), "m": {}})
+                                 "channel": r["dims"].get("channel"), "thumb": "", "m": {}})
+        # 소재명/이미지는 최신(비어있지 않은) 값으로 갱신
+        if r["dims"].get("name"):
+            e["name"] = r["dims"]["name"]
+        if r["dims"].get("thumb"):
+            e["thumb"] = r["dims"]["thumb"]
         e["m"][r["metric"]] = e["m"].get(r["metric"], 0.0) + float(r["value"])
     return agg
 
@@ -29,11 +34,13 @@ def _derive(cid: str, e: dict) -> dict:
     cost, sales = m.get("ad_cost", 0.0), m.get("ad_sales", 0.0)
     return {
         "creative_id": cid, "name": e["name"], "channel": e["channel"],
+        "thumb": e.get("thumb") or None,
         "impressions": impr, "clicks": clicks, "conversions": conv,
         "ad_cost": cost, "ad_sales": sales,
         "ctr": round(clicks / impr * 100, 2) if impr else None,
         "roas": round(sales / cost, 2) if cost else None,
         "cvr": round(conv / clicks * 100, 2) if clicks else None,
+        "cpc": round(cost / clicks) if clicks else None,
     }
 
 

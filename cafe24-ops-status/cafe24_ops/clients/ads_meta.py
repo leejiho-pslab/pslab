@@ -58,6 +58,37 @@ def meta_insights_to_facts(date: str, raw: dict) -> list[dict]:
     ]
 
 
+def meta_ad_insights_to_facts(date: str, raw: dict, thumbs: dict | None = None) -> list[dict]:
+    """ad-level Insights 응답 → 소재(ad)별 표준 metric 레코드(source='creative').
+
+    dims = {creative_id(ad_id), name(ad_name), channel='meta', thumb(이미지URL)}.
+    광고 히스토리(소재 카드)용. 구매수/구매전환값/노출/클릭/비용을 담는다.
+    """
+    thumbs = thumbs or {}
+    rows = (raw or {}).get("data") or []
+    out: list[dict] = []
+    for d in rows:
+        ad_id = str(d.get("ad_id") or d.get("id") or "")
+        if not ad_id:
+            continue
+        dims = {
+            "creative_id": ad_id,
+            "name": d.get("ad_name") or ad_id,
+            "channel": "meta",
+            "thumb": thumbs.get(ad_id, ""),
+        }
+        values = {
+            "ad_cost": float(d.get("spend", 0) or 0),
+            "impressions": float(d.get("impressions", 0) or 0),
+            "clicks": float(d.get("clicks", 0) or 0),
+            "conversions": _action_value(d.get("actions"), PURCHASE_ACTION_TYPES),
+            "ad_sales": _action_value(d.get("action_values"), PURCHASE_ACTION_TYPES),
+        }
+        out += [{"date": date, "source": "creative", "metric": k, "value": v, "dims": dims}
+                for k, v in values.items()]
+    return out
+
+
 class MetaAdsClient:
     def __init__(
         self,
@@ -119,6 +150,44 @@ class MetaAdsClient:
 
     def fetch_facts(self, date: str) -> list[dict]:
         return meta_insights_to_facts(date, self.insights(date))
+
+    # ---- 소재(ad) 단위 — 광고 히스토리용 -----------------------------
+    def ad_insights(self, date: str) -> dict:
+        path = f"/{self.version}/act_{self.account_id}/insights"
+        params = {
+            "level": "ad",
+            "fields": "ad_id,ad_name,spend,impressions,clicks,actions,action_values",
+            "time_range[since]": date,
+            "time_range[until]": date,
+            "limit": 200,
+        }
+        r = self._http.get(path, params=params,
+                           headers={"Authorization": f"Bearer {self.access_token}"})
+        r.raise_for_status()
+        return r.json()
+
+    def ad_thumbnails(self) -> dict:
+        """ad_id → 소재 이미지 URL(image_url 우선, 없으면 thumbnail_url). 실패 시 빈 dict."""
+        path = f"/{self.version}/act_{self.account_id}/ads"
+        params = {"fields": "id,creative{thumbnail_url,image_url}", "limit": 400}
+        try:
+            r = self._http.get(path, params=params,
+                               headers={"Authorization": f"Bearer {self.access_token}"})
+            r.raise_for_status()
+        except Exception:  # noqa: BLE001
+            return {}
+        out: dict = {}
+        for a in (r.json() or {}).get("data", []) or []:
+            cr = a.get("creative") or {}
+            url = cr.get("image_url") or cr.get("thumbnail_url")
+            if a.get("id") and url:
+                out[str(a["id"])] = url
+        return out
+
+    def fetch_creatives(self, date: str) -> list[dict]:
+        """소재별 성과 facts(source='creative') — 이미지 포함."""
+        thumbs = self.ad_thumbnails()
+        return meta_ad_insights_to_facts(date, self.ad_insights(date), thumbs)
 
     def close(self) -> None:
         self._http.close()

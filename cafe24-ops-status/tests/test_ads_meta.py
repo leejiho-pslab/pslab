@@ -75,3 +75,20 @@ def test_meta_client_fetch_with_mock_transport():
     facts = {f["metric"]: f["value"] for f in client.fetch_facts("2026-06-17")}
     assert facts["ad_cost"] == 120000.0 and facts["ad_sales"] == 560000.0
     client.close()
+
+
+def test_meta_ad_insights_to_facts():
+    from cafe24_ops.clients.ads_meta import meta_ad_insights_to_facts
+    raw = {"data": [{
+        "ad_id": "123", "ad_name": "겨울 아우터 A",
+        "spend": "344662", "impressions": "10000", "clicks": "411",
+        "actions": [{"action_type": "omni_purchase", "value": "28"}],
+        "action_values": [{"action_type": "omni_purchase", "value": "1237385"}],
+    }]}
+    facts = meta_ad_insights_to_facts("2026-06-28", raw, {"123": "http://img/a.jpg"})
+    assert all(f["source"] == "creative" for f in facts)
+    m = {f["metric"]: f["value"] for f in facts}
+    assert m["ad_cost"] == 344662 and m["conversions"] == 28 and m["ad_sales"] == 1237385
+    d0 = facts[0]["dims"]
+    assert d0["creative_id"] == "123" and d0["name"] == "겨울 아우터 A" and d0["thumb"] == "http://img/a.jpg"
+    assert meta_ad_insights_to_facts("2026-06-28", {"data": []}) == []
