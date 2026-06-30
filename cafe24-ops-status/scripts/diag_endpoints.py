@@ -95,15 +95,21 @@ def main() -> int:
         for c in cats[:5]:
             print(f"    no={c.get('category_no')} name={c.get('category_name')} "
                   f"full={c.get('full_category_name')}")
-        # 처음 몇 개 카테고리에 대해 products 엔드포인트 동작/건수 확인
+        # (A) /categories/{no}/products 전체 에러메시지 + (B) /products?category=N 필터 시도
         for c in cats[:6]:
             cno = c.get("category_no")
             try:
-                pnos = client.list_category_product_nos(int(cno))
-                print(f"    /categories/{cno}/products → {len(pnos)}개 product_no "
-                      f"(예: {pnos[:5]})")
+                d = client.get(f"/api/v2/admin/categories/{cno}/products", {"limit": 100})
+                pnos = [r.get("product_no") for r in (d.get("products") or [])]
+                print(f"    /categories/{cno}/products → {len(pnos)}개 (예: {pnos[:5]})")
             except Exception as e:
-                print(f"    /categories/{cno}/products → ERROR {type(e).__name__}: {str(e)[:120]}")
+                print(f"    /categories/{cno}/products → {type(e).__name__}: {str(e)[:240]}")
+            try:
+                d2 = client.get("/api/v2/admin/products", {"category": cno, "limit": 100})
+                pnos2 = [r.get("product_no") for r in (d2.get("products") or [])]
+                print(f"    /products?category={cno} → {len(pnos2)}개 (예: {pnos2[:5]})")
+            except Exception as e:
+                print(f"    /products?category={cno} → {type(e).__name__}: {str(e)[:160]}")
     except Exception as e:
         print(f"  list_categories ERROR: {type(e).__name__}: {str(e)[:150]}")
     # 상품 객체의 카테고리 필드 확인 (대안 매핑 경로 탐색)
