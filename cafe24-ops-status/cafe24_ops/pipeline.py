@@ -74,6 +74,10 @@ def run_pipeline(
 
     # 3) 집계 + 저장 --------------------------------------------------
     log.info("③ 집계 + 저장")
+    # 이번에 수집된 소스만 해당 일자 facts 를 비우고 다시 넣는다(차원 변경된 낡은 행 제거).
+    # 수집 실패/스킵 소스(facts 없음)는 건드리지 않아 기존 데이터를 보존한다.
+    for src in {f.source for f in facts}:
+        store.delete_facts(date, src)
     store.upsert_facts(facts)
     kpi = aggregate_daily(date, facts, config.metrics)
     store.upsert_kpi(date, kpi)

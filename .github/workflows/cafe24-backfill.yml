@@ -26,6 +26,10 @@ on:
         description: "커서 초기화(신규 지표를 과거에 다시 채움) true/false"
         required: false
         default: "false"
+      skip:
+        description: "제외 채널 콤마목록 (예: competitor,creative,ads → cafe24만)"
+        required: false
+        default: "competitor,creative"
 
 jobs:
   backfill:
@@ -62,4 +66,5 @@ jobs:
           python scripts/backfill.py \
             --start "${{ github.event.inputs.start_date || '2025-01-01' }}" \
             --budget-min "${{ github.event.inputs.budget_min || '40' }}" \
+            --skip "${{ github.event.inputs.skip || 'competitor,creative' }}" \
             ${{ github.event.inputs.reset == 'true' && '--reset' || '' }}
