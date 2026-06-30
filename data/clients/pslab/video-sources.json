@@ -1,0 +1,6 @@
+{
+  "note": "Higgsfield(kling2_6)로 생성한 주제별 모션 클립. build-shorts-video가 CI에서 받아 docs/shorts/<id>/clip.mp4로 저장하고, 부메랑 배경+오버레이로 합성한다. URL 없는 항목은 슬라이드쇼 폴백.",
+  "clips": {
+    "youtube-07-05": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_072713_6418c356-a169-43bc-85c2-9343e8923f8f.mp4"
+  }
+}
