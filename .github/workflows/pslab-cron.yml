@@ -73,6 +73,8 @@ jobs:
       # --- 푸시 알림 (텔레그램) ---
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      # 배경 실사진(선택) — 없으면 무료 Pollinations AI 사용
+      PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
     steps:
       - uses: actions/checkout@v4
 
@@ -113,7 +115,12 @@ jobs:
             echo "월요일 아님 — 주간 리포트 생략"
           fi
 
-      # 4) 카드 렌더 (Chromium 없으면 자동 skip → 커밋된 카드 유지)
+      # 4) 배경 사진 수집 (인물·배경·상황) — Pexels(키 있으면) → Pollinations(무료)
+      - name: 배경 사진 수집
+        continue-on-error: true
+        run: node scripts/fetch-photos.mjs --client pslab
+
+      # 카드 렌더 (배경 사진 위에 텍스트 합성. Chromium 없으면 skip → 커밋본 유지)
       - name: 매거진 카드 렌더
         continue-on-error: true
         run: node scripts/render-cards.mjs --client pslab
@@ -149,7 +156,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi
