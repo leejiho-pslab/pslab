@@ -83,5 +83,13 @@ def run_pipeline(
     store.upsert_kpi(date, kpi)
     result.kpi = kpi
 
+    # 수집 상태를 DB에 남겨 자가모니터링(수집 실패 알림)에 사용한다.
+    import json as _json
+    try:
+        store.set_kv(f"collect_status:{date}", _json.dumps(
+            {"per_source": result.per_source, "errors": result.errors}, ensure_ascii=False))
+    except Exception:  # noqa: BLE001 - 상태 기록 실패가 파이프라인을 막지 않게
+        pass
+
     log.info("완료: raw=%d, facts=%d, kpi=%d", result.raw_count, result.fact_count, len(kpi))
     return result
