@@ -1,43 +1,59 @@
 {
-  "generatedAt": "2026-06-29T14:02:31.261Z",
-  "sampleSize": 1,
+  "generatedAt": "2026-06-30T02:36:40.280Z",
+  "sampleSize": 2,
   "variants": [
     {
       "key": "A",
-      "posts": 1,
+      "posts": 2,
       "avgEngagement": 1,
       "avgLikes": 1,
-      "avgViews": 1
+      "avgViews": 0.5
     }
   ],
   "channels": [
     {
       "key": "instagram",
       "posts": 1,
-      "avgEngagement": 1,
-      "avgLikes": 1,
+      "avgEngagement": 2,
+      "avgLikes": 2,
       "avgViews": 1
+    },
+    {
+      "key": "blogger",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     }
   ],
   "hours": [
     {
       "key": "21:00",
       "posts": 1,
-      "avgEngagement": 1,
-      "avgLikes": 1,
+      "avgEngagement": 2,
+      "avgLikes": 2,
       "avgViews": 1
+    },
+    {
+      "key": "11:00",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     }
   ],
   "motifs": [
     {
       "key": "lock",
-      "posts": 1,
+      "posts": 2,
       "avgEngagement": 1,
       "avgLikes": 1,
-      "avgViews": 1
+      "avgViews": 0.5
     }
   ],
+  "bestHour": "21:00",
   "hints": [
-    "아직 성과 표본이 1건뿐 — 더 쌓이면 디자인·시간대 학습이 정교해집니다."
+    "아직 성과 표본이 2건뿐 — 더 쌓이면 디자인·시간대 학습이 정교해집니다.",
+    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에."
   ]
 }
