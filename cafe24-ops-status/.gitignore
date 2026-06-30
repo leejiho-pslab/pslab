@@ -4,6 +4,12 @@ __pycache__/
 .venv/
 # 비밀값 / 수집 데이터 / 토큰(로컬)
 config/secrets.env
+.env
+*.env
+# GA4/구글 서비스계정 키 등 자격증명 파일은 절대 커밋 금지(공개 저장소)
+*service-account*.json
+*-credentials*.json
+gha-creds-*.json
 store/
 *.db
 
