@@ -143,6 +143,8 @@ export interface Creative {
   ctr: number | null;
   roas: number | null;
   cvr: number | null;
+  cpc?: number | null;
+  thumb?: string | null;
 }
 
 export interface CreativeSummary {

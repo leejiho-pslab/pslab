@@ -51,5 +51,30 @@ class CreativeCollector(BaseCollector):
         return records
 
     def collect_live(self, date: str) -> list[dict]:
-        # TODO(Phase 3): DA 채널 소재별 리포트 연동
-        raise NotImplementedError("[creative] 소재별 성과 연동은 Phase 3에서 구현됩니다.")
+        """Meta 소재(ad)별 성과 + 이미지. (구글/네이버/카카오 소재는 추후)"""
+        import os
+
+        from ..store import Store
+
+        records: list[dict] = []
+        collected = False
+        kv = Store(self.config.data_dir)
+        try:
+            db_token = kv.get_kv("meta_access_token")
+            if os.environ.get("META_ACCESS_TOKEN") or db_token:
+                from ..clients.ads_meta import MetaAdsClient
+
+                acc = next((a for a in self.config.sources.ads if a.get("channel") == "meta"), {})
+                client = MetaAdsClient.from_account(acc)
+                if db_token:
+                    client.access_token = db_token  # DB 장기토큰 우선(ads 수집기가 갱신·저장)
+                try:
+                    records += client.fetch_creatives(date)
+                    collected = True
+                finally:
+                    client.close()
+        finally:
+            kv.close()
+        if not collected:
+            raise NotImplementedError("[creative] Meta 자격증명이 없습니다(설정 시 소재별 수집).")
+        return records
