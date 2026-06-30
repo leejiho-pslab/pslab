@@ -105,6 +105,7 @@ def check_db(store: Store, start: _date, end: _date) -> int:
     print(f"  신규/재구매  : {sum(1 for d in have_sales if 'cust_sum' in idx.get(d, {}))}/{len(have_sales)}일")
     print(f"  후기/CRM     : {cnt('has_crm')}/{len(have_sales)}일")
     print(f"  방문자수     : {sum(1 for d in have_sales if idx.get(d, {}).get('visitors'))}/{len(have_sales)}일 (GA4 미연동 시 0 정상)")
+    _etc_share(store, start, end)
 
     # 3) 내부 정합성 --------------------------------------------------
     print("\n[3] 내부 정합성 (매출 있는 날 전수 검사)")
@@ -166,6 +167,27 @@ def check_db(store: Store, start: _date, end: _date) -> int:
     # 5) 광고 채널 성과(최근 7일) — ROAS/전환매출 건강도 추적 -----------
     _ads_report(store, end)
     return 0
+
+
+def _etc_share(store: Store, start: _date, end: _date) -> None:
+    """카테고리 매출 중 '기타'(미매핑) 비중 + 상위 카테고리 — 매핑 품질 점검."""
+    total = etc = 0.0
+    by_cat: dict[str, float] = {}
+    for r in store.get_facts(start.isoformat(), end.isoformat(), metric="category_sales"):
+        v = float(r["value"])
+        cat = r["dims"].get("category") or "기타"
+        total += v
+        by_cat[cat] = by_cat.get(cat, 0.0) + v
+        if cat == "기타":
+            etc += v
+    if total <= 0:
+        print("  카테고리 '기타' 비중 : (데이터 없음)")
+        return
+    share = etc / total * 100
+    flag = " ⚠매핑개선 권장(≥25%)" if share >= 25 else ""
+    print(f"  카테고리 '기타' 비중 : {share:.1f}%  ({etc:,.0f} / {total:,.0f}원){flag}")
+    top = sorted(by_cat.items(), key=lambda kv: -kv[1])[:5]
+    print("  상위 카테고리: " + ", ".join(f"{c} {v/total*100:.0f}%" for c, v in top))
 
 
 def _ads_report(store: Store, end: _date) -> None:

@@ -1,40 +1,40 @@
 {
-  "generatedAt": "2026-06-29T12:28:40.343Z",
+  "generatedAt": "2026-06-29T14:02:31.261Z",
   "sampleSize": 1,
   "variants": [
     {
       "key": "A",
       "posts": 1,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 0
+      "avgEngagement": 1,
+      "avgLikes": 1,
+      "avgViews": 1
     }
   ],
   "channels": [
     {
       "key": "instagram",
       "posts": 1,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 0
+      "avgEngagement": 1,
+      "avgLikes": 1,
+      "avgViews": 1
     }
   ],
   "hours": [
     {
       "key": "21:00",
       "posts": 1,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 0
+      "avgEngagement": 1,
+      "avgLikes": 1,
+      "avgViews": 1
     }
   ],
   "motifs": [
     {
       "key": "lock",
       "posts": 1,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 0
+      "avgEngagement": 1,
+      "avgLikes": 1,
+      "avgViews": 1
     }
   ],
   "hints": [

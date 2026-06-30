@@ -86,6 +86,50 @@ def main() -> int:
         except Exception as e:
             msg = str(e)[:200]
             print(f"\n=== {name} :: ERROR ===\n  {type(e).__name__}: {msg}")
+
+    # === 카테고리 매핑 진단 (기타 100% 원인 추적) ============================
+    print("\n##### 카테고리 매핑 진단 #####")
+    try:
+        cats = client.list_categories()
+        print(f"  list_categories(): {len(cats)}개")
+        for c in cats[:5]:
+            print(f"    no={c.get('category_no')} name={c.get('category_name')} "
+                  f"full={c.get('full_category_name')}")
+        # (A) /categories/{no}/products 전체 에러메시지 + (B) /products?category=N 필터 시도
+        for c in cats[:6]:
+            cno = c.get("category_no")
+            try:
+                d = client.get(f"/api/v2/admin/categories/{cno}/products", {"limit": 100})
+                pnos = [r.get("product_no") for r in (d.get("products") or [])]
+                print(f"    /categories/{cno}/products → {len(pnos)}개 (예: {pnos[:5]})")
+            except Exception as e:
+                print(f"    /categories/{cno}/products → {type(e).__name__}: {str(e)[:240]}")
+            try:
+                d2 = client.get("/api/v2/admin/products", {"category": cno, "limit": 100})
+                pnos2 = [r.get("product_no") for r in (d2.get("products") or [])]
+                print(f"    /products?category={cno} → {len(pnos2)}개 (예: {pnos2[:5]})")
+            except Exception as e:
+                print(f"    /products?category={cno} → {type(e).__name__}: {str(e)[:160]}")
+    except Exception as e:
+        print(f"  list_categories ERROR: {type(e).__name__}: {str(e)[:150]}")
+    # 상품 객체의 카테고리 필드 확인 (대안 매핑 경로 탐색)
+    try:
+        prods = client.get("/api/v2/admin/products", {"limit": 2})
+        for p in (prods.get("products") or [])[:2]:
+            catlike = {k: p.get(k) for k in p.keys() if "categor" in k.lower()}
+            print(f"  product_no={p.get('product_no')} 카테고리관련필드={catlike}")
+        # 상품별 카테고리 전용 엔드포인트 시도
+        pno0 = (prods.get("products") or [{}])[0].get("product_no")
+        if pno0:
+            try:
+                pc = client.get(f"/api/v2/admin/products/{pno0}/categories", {})
+                print(f"  /products/{pno0}/categories → top={list(pc.keys())} "
+                      f"sample={json.dumps(pc, ensure_ascii=False)[:300]}")
+            except Exception as e:
+                print(f"  /products/{pno0}/categories → ERROR {type(e).__name__}: {str(e)[:120]}")
+    except Exception as e:
+        print(f"  products 카테고리 필드 ERROR: {type(e).__name__}: {str(e)[:150]}")
+
     client.close()
     kv.close()
     return 0
