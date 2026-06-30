@@ -68,6 +68,12 @@ class Store:
         )
         self.db.commit()
 
+    def delete_kv(self, key: str) -> int:
+        """키-값 삭제(토큰 회전 시 DB의 옛 토큰 제거용). 삭제 행수 반환."""
+        cur = self.db.execute("DELETE FROM app_kv WHERE key=?", (key,))
+        self.db.commit()
+        return getattr(cur, "rowcount", 0) or 0
+
     # ---- 쓰기 -------------------------------------------------------
     def save_raw(self, date: str, source: str, records: list[dict]) -> None:
         now = datetime.now(timezone.utc).isoformat()
