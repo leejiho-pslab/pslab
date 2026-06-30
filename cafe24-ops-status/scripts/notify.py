@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from cafe24_ops.alerts import build_alerts  # noqa: E402
+from cafe24_ops.alerts import build_alerts, build_digest  # noqa: E402
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.pipeline import yesterday  # noqa: E402
 from cafe24_ops.secrets import load_secrets  # noqa: E402
@@ -47,21 +47,29 @@ def main(argv: list[str] | None = None) -> int:
     store = Store(cfg.data_dir)
     date = args.date or (store.list_dates()[-1] if store.list_dates() else yesterday())
 
+    digest = build_digest(store, date)
     alerts = build_alerts(store, date)
     store.close()
 
-    print(f"== 알림 ({date}) ==")
-    if not alerts:
-        print("  특이사항 없음")
-        return 0
-
-    lines = []
-    for a in alerts:
-        line = f"{ICON.get(a['level'], '•')} {a['message']}"
+    print(f"== 일일 브리핑 ({date}) ==")
+    for line in digest:
         print(" ", line)
-        lines.append(line)
+    if not digest:
+        print("  (요약 데이터 없음)")
 
-    if push_slack(f"*keek 운영 알림 ({date})*\n" + "\n".join(lines)):
+    alert_lines = [f"{ICON.get(a['level'], '•')} {a['message']}" for a in alerts]
+    if alert_lines:
+        print("  -- 알림 --")
+        for line in alert_lines:
+            print(" ", line)
+    else:
+        print("  특이사항 없음")
+
+    # Slack: 브리핑 + 알림을 한 메시지로
+    body = "\n".join(digest)
+    if alert_lines:
+        body += "\n\n*알림*\n" + "\n".join(alert_lines)
+    if body and push_slack(f"*keek 일일 브리핑 ({date})*\n" + body):
         print("\n  → Slack 전송 완료")
     return 0
 
