@@ -50,3 +50,21 @@ def test_build_digest_summarizes_day(tmp_path):
         assert build_digest(store, "2099-01-01") == []
     finally:
         store.close()
+
+
+def test_collection_health_alert(tmp_path):
+    from cafe24_ops.alerts import collection_health_alert
+    store = Store(tmp_path)
+    try:
+        # 오류 없음 → None
+        store.set_kv("collect_status:2026-06-20", '{"per_source": {"cafe24": 10}, "errors": {}}')
+        assert collection_health_alert(store, "2026-06-20") is None
+        # 오류 있음 → 경고
+        store.set_kv("collect_status:2026-06-21",
+                     '{"per_source": {"cafe24": 10}, "errors": {"ads": "HTTPStatusError: 401"}}')
+        a = collection_health_alert(store, "2026-06-21")
+        assert a is not None and a["type"] == "collect_error" and "ads" in a["message"]
+        # 상태 없음 → None
+        assert collection_health_alert(store, "2099-01-01") is None
+    finally:
+        store.close()

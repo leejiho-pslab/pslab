@@ -122,9 +122,27 @@ def build_digest(store, date: str) -> list[str]:
     return lines
 
 
+def collection_health_alert(store, date: str) -> dict | None:
+    """수집 실패 자가감지 — 해당 일자에 오류로 빠진 채널이 있으면 경고(무인 운영 보호)."""
+    import json
+    raw = store.get_kv(f"collect_status:{date}")
+    if not raw:
+        return None
+    try:
+        status = json.loads(raw)
+    except (ValueError, TypeError):
+        return None
+    errors = status.get("errors") or {}
+    if not errors:
+        return None
+    chans = ", ".join(sorted(errors))
+    return {"level": "warning", "type": "collect_error",
+            "message": f"수집 실패 채널: {chans} (토큰/연동 점검 필요)"}
+
+
 def build_alerts(store, date: str) -> list[dict]:
     alerts: list[dict] = []
-    for fn in (sales_anomaly, top_creative_alert):
+    for fn in (sales_anomaly, top_creative_alert, collection_health_alert):
         a = fn(store, date)
         if a:
             alerts.append(a)
