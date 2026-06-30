@@ -1,4 +1,4 @@
-from cafe24_ops.alerts import build_alerts, sales_anomaly, top_creative_alert
+from cafe24_ops.alerts import build_alerts, build_digest, sales_anomaly, top_creative_alert
 from cafe24_ops.config import load_config
 from cafe24_ops.pipeline import run_pipeline
 from cafe24_ops.store import Store
@@ -32,5 +32,21 @@ def test_build_alerts_includes_top_creative(tmp_path):
         assert top_creative_alert(store, "2026-06-17") is not None
         alerts = build_alerts(store, "2026-06-17")
         assert any(a["type"] == "top_creative" for a in alerts)
+    finally:
+        store.close()
+
+
+def test_build_digest_summarizes_day(tmp_path):
+    cfg = load_config()
+    store = Store(tmp_path)
+    try:
+        run_pipeline("2026-06-17", cfg, store, mode="mock")
+        lines = build_digest(store, "2026-06-17")
+        text = "\n".join(lines)
+        assert any("매출" in ln for ln in lines)        # 핵심 KPI 라인
+        assert any("카테고리" in ln for ln in lines)     # 카테고리 요약
+        assert any("광고비" in ln for ln in lines)       # 광고 요약
+        # 데이터 없는 날은 빈 요약
+        assert build_digest(store, "2099-01-01") == []
     finally:
         store.close()

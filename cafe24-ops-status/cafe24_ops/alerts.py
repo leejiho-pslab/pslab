@@ -60,6 +60,68 @@ def competitor_alerts(store, date: str) -> list[dict]:
     return out
 
 
+def _pct_vs_7d_avg(store, date: str) -> float | None:
+    base = _date.fromisoformat(date)
+    prior = [r["value"] for r in store.get_daily(
+        (base - timedelta(days=7)).isoformat(), (base - timedelta(days=1)).isoformat())
+        if r["metric"] == "gross_sales"]
+    today = store.get_kpi(date).get("gross_sales")
+    if today is None or not prior:
+        return None
+    avg = sum(prior) / len(prior)
+    return (today - avg) / avg * 100 if avg > 0 else None
+
+
+def build_digest(store, date: str) -> list[str]:
+    """하루 핵심 요약(아침 브리핑) — 대시보드 안 봐도 한눈에. 사람이 읽는 라인 목록."""
+    from .etl.ads_metrics import ads_summary
+    from .etl.breakdown import (
+        best_products, category_breakdown, crm_counts, device_breakdown, new_returning_trend,
+    )
+
+    k = store.get_kpi(date)
+    gross, oc, aov = k.get("gross_sales"), k.get("order_count"), k.get("aov")
+    lines: list[str] = []
+    if gross is not None:
+        chg = _pct_vs_7d_avg(store, date)
+        chg_s = f" ({chg:+.0f}% vs 7일평균)" if chg is not None else ""
+        lines.append(f"💰 매출 ₩{gross:,.0f} · 주문 {oc or 0:,.0f}건 · 객단가 ₩{aov or 0:,.0f}{chg_s}")
+
+    dev = {d["key"]: d["value"] for d in device_breakdown(store, date)}
+    dtot = sum(dev.values())
+    if dtot > 0:
+        lines.append(f"📱 모바일 {dev.get('mobile', 0) / dtot * 100:.0f}% · "
+                     f"PC {dev.get('pc', 0) / dtot * 100:.0f}%")
+
+    nr = new_returning_trend(store, date, date)
+    if nr:
+        n, r = nr[0]["new"], nr[0]["returning"]
+        if n + r > 0:
+            lines.append(f"👥 신규 {n / (n + r) * 100:.0f}% · 재구매 {r / (n + r) * 100:.0f}%")
+
+    cats = category_breakdown(store, date)[:3]
+    if cats:
+        lines.append("🏷️ 카테고리 " + ", ".join(f"{c['key']} ₩{c['value']:,.0f}" for c in cats))
+
+    bp = best_products(store, date, top_n=3)
+    if bp:
+        lines.append("🏆 베스트 " + ", ".join(str(c["key"]) for c in bp))
+
+    a = ads_summary(store, date)
+    if a.get("ad_cost"):
+        roas, share = a.get("roas"), a.get("ad_share")
+        lines.append(f"📣 광고비 ₩{a['ad_cost']:,.0f} · ROAS {roas if roas is not None else '—'}"
+                     f"{f' · 매출대비 {share}%' if share is not None else ''}")
+
+    crm = crm_counts(store, date)
+    if crm.get("reviews"):
+        lines.append(f"📝 후기 {crm['reviews']:,.0f}건")
+    soldout = sum(float(r["value"]) for r in store.get_facts(date, date, metric="soldout_count"))
+    if soldout:
+        lines.append(f"⛔ 품절 {soldout:,.0f}개")
+    return lines
+
+
 def build_alerts(store, date: str) -> list[dict]:
     alerts: list[dict] = []
     for fn in (sales_anomaly, top_creative_alert):
