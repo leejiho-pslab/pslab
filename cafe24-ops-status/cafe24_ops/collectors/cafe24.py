@@ -147,24 +147,44 @@ def best_products(date: str, orders: list[dict], top_n: int = 10) -> list[dict]:
              "value": round(v, 2), "dims": {"product": name}} for name, v in top]
 
 
+def _category_name_depth(cat: dict) -> tuple[str | None, int]:
+    """카테고리 표시명과 깊이. full_category_name 은 {'1':'SHOP','2':'Pillowdy',...} dict.
+
+    최하위(가장 구체적) 레벨명을 쓰고, 비어있지 않은 레벨 수를 깊이로 본다.
+    """
+    fcn = cat.get("full_category_name")
+    if isinstance(fcn, dict):
+        vals = [v for _, v in sorted(fcn.items()) if v]
+        if vals:
+            return vals[-1], len(vals)
+    if isinstance(fcn, str) and fcn:
+        return fcn, 1
+    return cat.get("category_name"), 1
+
+
 def build_category_map(client) -> dict[int, str]:
-    """product_no → 카테고리명. categories + 카테고리별 상품으로 구축(1회 캐시 권장)."""
-    m: dict[int, str] = {}
+    """product_no → 카테고리명. /products?category=N 로 구축(1회 캐시 권장).
+
+    상품이 여러 카테고리에 속하면 '가장 구체적인(깊은)' 카테고리를 채택한다.
+    """
+    best: dict[int, tuple[int, str]] = {}  # pno -> (depth, name)
     try:
         cats = client.list_categories()
     except Exception:
-        return m
+        return {}
     for cat in cats:
         cno = cat.get("category_no")
-        cname = cat.get("full_category_name") or cat.get("category_name")
-        if cno is None or not cname:
+        name, depth = _category_name_depth(cat)
+        if cno is None or not name:
             continue
         try:
             for pno in client.list_category_product_nos(cno):
-                m.setdefault(pno, cname)  # 여러 카테고리면 첫 번째(상위)로
+                prev = best.get(pno)
+                if prev is None or depth > prev[0]:
+                    best[pno] = (depth, name)
         except Exception:
             continue
-    return m
+    return {pno: nm for pno, (_, nm) in best.items()}
 
 
 def category_sales(date: str, orders: list[dict], catmap: dict[int, str]) -> list[dict]:
@@ -292,7 +312,9 @@ class Cafe24Collector(BaseCollector):
                     cached = kv.get_kv("category_map")
                     if cached and _os.environ.get("CAFE24_REFRESH_CATEGORY_MAP") != "1":
                         try:
-                            self._catmap = {int(k): v for k, v in _json.loads(cached).items()}
+                            parsed = {int(k): v for k, v in _json.loads(cached).items()}
+                            # 빈 맵(과거 429로 비어 저장됨)은 무시하고 재구축(자가치유)
+                            self._catmap = parsed or None
                         except (ValueError, TypeError):
                             self._catmap = None
                     if not getattr(self, "_catmap", None):
