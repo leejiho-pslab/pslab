@@ -68,25 +68,52 @@ async function fromPollinations(prompt, seed) {
   } catch { return null; }
 }
 
+async function fromUrl(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  } catch { return null; }
+}
+
+// 미리 생성한 장면 이미지 URL 목록 (Higgsfield 등) — 있으면 최우선 사용
+function loadSources() {
+  const f = join(ROOT, 'data/clients', clientId, 'bg-sources.json');
+  if (!existsSync(f)) return [];
+  try {
+    const j = JSON.parse(readFileSync(f, 'utf8'));
+    return Array.isArray(j.urls) ? j.urls.filter((u) => typeof u === 'string' && /^https?:\/\//.test(u)) : [];
+  } catch { return []; }
+}
+
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
 const outDir = join(ROOT, 'docs/bg');
 mkdirSync(outDir, { recursive: true });
 
+const sources = loadSources();
 const usePexels = Boolean(process.env.PEXELS_API_KEY);
-console.log(`배경 사진 소스: ${usePexels ? 'Pexels(실사진)' : 'Pollinations(무료 AI)'}`);
+console.log(
+  `배경 사진 소스: ${sources.length ? `미리생성 ${sources.length}장(Higgsfield 등)` : usePexels ? 'Pexels(실사진)' : 'Pollinations(무료 AI)'}`,
+);
 
 let got = 0, skipped = 0;
 for (const it of plan.items) {
   const out = join(outDir, `${it.id}.jpg`);
   if (existsSync(out) && !force) { skipped++; continue; }
   const scene = SCENES[hash(it.id) % SCENES.length];
-  let buf = await fromPexels(scene.q);
-  if (!buf) buf = await fromPollinations(scene.p, hash(it.id) % 100000);
+  let buf = null, label = '';
+  // 우선순위: 미리생성 장면 URL → Pexels → Pollinations
+  if (sources.length) {
+    buf = await fromUrl(sources[hash(it.id) % sources.length]);
+    label = 'scene';
+  }
+  if (!buf) { buf = await fromPexels(scene.q); if (buf) label = scene.q.slice(0, 28); }
+  if (!buf) { buf = await fromPollinations(scene.p, hash(it.id) % 100000); if (buf) label = scene.q.slice(0, 28); }
   if (buf && buf.length > 1000) {
     writeFileSync(out, buf);
     got++;
-    console.log(`  ${it.id}: ${scene.q.slice(0, 30)}… (${Math.round(buf.length / 1024)}KB)`);
+    console.log(`  ${it.id}: ${label} (${Math.round(buf.length / 1024)}KB)`);
   } else {
     console.log(`  ${it.id}: 사진 실패 → 단색 배경 유지`);
   }
