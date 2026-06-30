@@ -299,7 +299,15 @@ class Cafe24Collector(BaseCollector):
             try:
                 orders = client.list_orders(date, date)
                 count = client.count_orders(date, date)
-                visitors = client.get_visitor_count(date)    # CAFE24_VISITORS_PATH 설정 시
+                # 방문자수: GA4 우선(설정 시), 없으면 카페24 경로 폴백(둘 다 없으면 None).
+                # GA4 클라이언트/토큰은 프로세스당 1회만 생성(백필 시 매일 재발급 방지).
+                if not hasattr(self, "_ga4"):
+                    from ..clients.ga4 import GA4Client
+                    self._ga4 = GA4Client.from_env()
+                if self._ga4 is not None:
+                    visitors = self._ga4.daily_visitors(date)
+                else:
+                    visitors = client.get_visitor_count(date)  # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
                 reviews = client.count_reviews(date, date)   # 상품후기 수(board 4)
                 soldout = client.count_soldout()             # 현재 품절 상품 수(스냅샷)
