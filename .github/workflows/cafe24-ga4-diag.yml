@@ -1,0 +1,25 @@
+name: ga4 diag (연결 진단)
+
+# GA4 토큰 발급/권한/데이터 유무를 그대로 출력(연결 확인용, 1회성).
+on:
+  workflow_dispatch:
+
+jobs:
+  ga4diag:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: GA4 diag
+        env:
+          GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        run: python scripts/ga4_diag.py
