@@ -67,6 +67,9 @@ interface PendingCard {
   insightComment?: string;
   publishedAt?: string;
   videoFile?: string;
+  ytTitle?: string;
+  ytDescription?: string;
+  ytTags?: string[];
 }
 
 function buildChannel(
@@ -204,6 +207,9 @@ function buildClientData(
     insightComment: it.insightComment,
     publishedAt: it.publishedAt,
     videoFile: it.videoFile,
+    ytTitle: it.ytTitle,
+    ytDescription: it.ytDescription,
+    ytTags: it.ytTags,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -467,19 +473,32 @@ function manualHelper(it, chDef){
   if(chDef.key!=='naver-blog' && chDef.key!=='youtube') return '';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const dls=imgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('');
-  const hasVideo=chDef.key==='youtube'&&it.videoFile;
-  const guide=chDef.key==='youtube'
-    ? (hasVideo?'쇼츠 영상이 자동 제작됐습니다. 다운로드해 유튜브에 업로드하고, 대본을 설명란에 붙여넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)':'아래 대본을 복사해 영상 제작에 쓰고, 썸네일 이미지를 내려받으세요.')
+  const isYt=chDef.key==='youtube';
+  const hasVideo=isYt&&it.videoFile;
+  const guide=isYt
+    ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
     : '“본문 전체 복사”로 네이버 글쓰기에 붙여넣고, 본문 속 [📷 이미지N] 위치에 내려받은 이미지를 순서대로 삽입하세요.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#2a1530;border-color:#7a3a6a;color:#ffb0e0">🎬 쇼츠 영상 다운로드</a>':'';
+  // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
+  const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
+    '<div style="margin-top:10px;border-top:1px solid #2a3417;padding-top:10px">'+
+    (it.ytTitle?'<div class="muted" style="font-size:11px">제목</div><div class="mcap" style="font-size:13px;margin-bottom:8px">'+esc(it.ytTitle)+'</div>':'')+
+    (it.ytDescription?'<div class="muted" style="font-size:11px">설명(멘션)</div><div class="mcap" style="font-size:12px;white-space:pre-wrap;max-height:9em;overflow:auto;background:#0f1219;border:1px solid #222838;border-radius:8px;padding:8px;margin-bottom:8px">'+esc(it.ytDescription)+'</div>':'')+
+    (it.ytTags&&it.ytTags.length?'<div class="muted" style="font-size:11px">태그</div><div style="margin-bottom:4px">'+it.ytTags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>':'')+
+    '</div>'):'';
+  const ytBtns=isYt?(
+    (it.ytTitle?'<button class="btn" id="yttitle-'+esc(it.id)+'" onclick="copyField(\\''+esc(it.id)+'\\',\\'ytTitle\\',this.id)">🏷 제목 복사</button>':'')+
+    (it.ytDescription?'<button class="btn fb" id="ytdesc-'+esc(it.id)+'" onclick="copyField(\\''+esc(it.id)+'\\',\\'ytDescription\\',this.id)">📝 설명(멘션) 복사</button>':'')+
+    (it.ytTags&&it.ytTags.length?'<button class="btn" id="yttags-'+esc(it.id)+'" onclick="copyTags(\\''+esc(it.id)+'\\',this.id)"># 태그 복사</button>':'')
+  ):'';
   return '<div class="capbox" style="margin-top:12px;border-color:#3a4a1f;background:#14180e">'+
     '<div class="caphd">📋 수동 발행 도우미 ('+esc(chDef.label)+')</div>'+
     '<div class="muted" style="margin-bottom:10px">'+guide+'</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    videoBtn+
-    '<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 '+(chDef.key==='youtube'?'대본 복사':'본문 전체 복사')+'</button>'+
+    videoBtn+ytBtns+
+    (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>')+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
-    dls+'</div></div>';
+    dls+'</div>'+ytPack+'</div>';
 }
 // 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
 function plainPostText(it){
@@ -502,6 +521,14 @@ function copyPost(id){
 function copyTitle(id){
   const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
   navigator.clipboard.writeText(plainHead(it)).then(()=>flash('titlebtn-'+id,'✅ 복사됨!')).catch(()=>{});
+}
+function copyField(id,field,btnId){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it||!it[field]) return;
+  navigator.clipboard.writeText(it[field]).then(()=>flash(btnId,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 직접 복사하세요.'));
+}
+function copyTags(id,btnId){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it||!it.ytTags) return;
+  navigator.clipboard.writeText(it.ytTags.join(', ')).then(()=>flash(btnId,'✅ 복사됨!')).catch(()=>{});
 }
 // 블로그/대본 등 본문의 가벼운 마크다운(## 소제목, [HOOK] 등)을 보기 좋게
 function mdInline(x){ return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>'); }
