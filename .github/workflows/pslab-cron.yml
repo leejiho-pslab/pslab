@@ -1,15 +1,16 @@
 name: pslab autopilot
 
-# 무인 선순환 루프 (하루 2회): 토큰점검 → 예약 자동발행 → 성과수집·학습 → 대시보드
+# 무인 선순환 루프: 토큰점검 → 예약 자동발행 → 성과수집·학습 → 대시보드
 #  1) check-tokens     : 토큰 만료 임박 시 대시보드에 경고
-#  2) publish-plan --due: 예정시각 지난 승인 기획안 자동 발행 (DRY_RUN=false일 때만 실제)
+#  2) publish-plan --due: 예정시각(매일 18:00 KST) 지난 항목 자동 발행 (DRY_RUN=false일 때만 실제)
 #  3) collect-insights : 발행물 성과 수집 + 디자인/소재 자체 학습 갱신
 #  4) dashboard        : 결과를 대시보드(GitHub Pages)에 반영
-# 한국시간 11:00 / 19:00 에 자동 실행 (GitHub cron은 UTC 기준 → KST-9)
+# 매일 한국시간 18:00 에 자동발행 (GitHub cron은 UTC 기준 → KST-9)
+#  18:00 발행 + 18:30 보정(누락 대비·대시보드 갱신). publish-plan은 멱등이라 중복발행 없음.
 on:
   schedule:
-    - cron: '0 2 * * *'    # 02:00 UTC = 11:00 KST
-    - cron: '0 10 * * *'   # 10:00 UTC = 19:00 KST
+    - cron: '0 9 * * *'    # 09:00 UTC = 18:00 KST — 매일 자동발행
+    - cron: '30 9 * * *'   # 09:30 UTC = 18:30 KST — 누락 시 보정·대시보드 갱신
   workflow_dispatch: {}     # 저장소에서 수동 실행 버튼
 
 permissions:
