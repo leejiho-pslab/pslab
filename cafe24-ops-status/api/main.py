@@ -17,6 +17,7 @@ from fastapi import FastAPI, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
+from cafe24_ops.alerts import build_alerts, build_digest  # noqa: E402
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.etl.breakdown import (  # noqa: E402
     best_products,
@@ -139,6 +140,24 @@ def period_compare(date: str | None = Query(default=None, description="YYYY-MM-D
         if not target:
             return {"date": None, "rows": []}
         return {"date": target, "rows": period_comparison(store, target, _config.metrics)}
+    finally:
+        store.close()
+
+
+@app.get("/api/digest")
+def digest(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> dict:
+    """일일 브리핑 — 핵심 KPI 요약 라인 + 이상치 알림(대시보드 상단 배너용)."""
+    store = _store()
+    try:
+        dates = store.list_dates()
+        target = date or (dates[-1] if dates else None)
+        if not target:
+            return {"date": None, "lines": [], "alerts": []}
+        return {
+            "date": target,
+            "lines": build_digest(store, target),
+            "alerts": build_alerts(store, target),
+        }
     finally:
         store.close()
 

@@ -231,3 +231,15 @@ export interface BestChange {
   new_entries: string[];
   rank_changes: RankChange[];
 }
+
+export interface DigestAlert {
+  level: string;
+  type: string;
+  message: string;
+  value?: number;
+}
+export interface DigestResponse {
+  date: string | null;
+  lines: string[];
+  alerts: DigestAlert[];
+}

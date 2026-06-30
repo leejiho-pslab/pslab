@@ -15,6 +15,7 @@ import type {
   CreativeOverview,
   DailyDetailResponse,
   DailyResponse,
+  DigestResponse,
   MetricsConfig,
   PeriodResponse,
   SummaryResponse,
@@ -34,6 +35,9 @@ const q = (date?: string) => (date ? `?date=${date}` : "");
 export const api = {
   metricsConfig: () => get<MetricsConfig>("/api/config/metrics"),
   dates: () => get<{ dates: string[] }>("/api/dates"),
+
+  // 일일 브리핑(상단 배너)
+  digest: (date?: string) => get<DigestResponse>(`/api/digest${q(date)}`),
 
   // 카페24 어드민
   summary: (date?: string) => get<SummaryResponse>(`/api/summary${q(date)}`),

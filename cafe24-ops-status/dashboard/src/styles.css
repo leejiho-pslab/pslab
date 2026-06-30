@@ -282,3 +282,14 @@ button { cursor: pointer; }
   .hbar-val { display: none; }
   .tabs button { padding: 8px 12px; font-size: 13px; }
 }
+
+/* 일일 브리핑 배너 */
+.briefing { margin: 12px 0; border-left: 4px solid #4f46e5; }
+.briefing-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 8px; }
+.briefing-title { font-weight: 700; font-size: 15px; }
+.briefing-lines { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.briefing-lines li { font-size: 14px; white-space: nowrap; }
+.briefing-alerts { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px; }
+.briefing-alerts .chip { font-size: 13px; border-radius: 999px; padding: 3px 10px; }
+.briefing-alerts .chip-warn { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.briefing-alerts .chip-info { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }

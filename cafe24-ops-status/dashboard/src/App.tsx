@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import type { MetricsConfig } from "./types";
+import { BriefingBanner } from "./components/BriefingBanner";
 import { Cafe24Page } from "./pages/Cafe24Page";
 import { AdsPage } from "./pages/AdsPage";
 import { CreativePage } from "./pages/CreativePage";
@@ -80,6 +81,8 @@ export default function App() {
           </button>
         ))}
       </nav>
+
+      <BriefingBanner date={date} />
 
       {tab === "cafe24" && <Cafe24Page date={date} config={config} />}
       {tab === "ads" && <AdsPage date={date} />}
