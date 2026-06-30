@@ -454,11 +454,50 @@ function openDetail(id){
     (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
     perf+
     '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
+    manualHelper(it,chDef)+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');
   const car=document.querySelector('.carou'); if(car) car.scrollLeft=0;
 }
 function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+// 수동 채널(네이버 블로그·유튜브) 발행 도우미 — 본문 복사 + 이미지 다운로드
+function manualHelper(it, chDef){
+  if(chDef.key!=='naver-blog' && chDef.key!=='youtube') return '';
+  const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const dls=imgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('');
+  const guide=chDef.key==='youtube'
+    ? '아래 대본을 복사해 영상 제작에 쓰고, 썸네일 이미지를 내려받으세요.'
+    : '“본문 전체 복사”로 네이버 글쓰기에 붙여넣고, 본문 속 [📷 이미지N] 위치에 내려받은 이미지를 순서대로 삽입하세요.';
+  return '<div class="capbox" style="margin-top:12px;border-color:#3a4a1f;background:#14180e">'+
+    '<div class="caphd">📋 수동 발행 도우미 ('+esc(chDef.label)+')</div>'+
+    '<div class="muted" style="margin-bottom:10px">'+guide+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    '<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>'+
+    (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
+    dls+'</div></div>';
+}
+// 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
+function plainPostText(it){
+  let n=0;
+  return String(it.captionBody||'').split('\\n').map(line=>{
+    const t=line.trim();
+    const img=t.match(/^!\\[([^\\]]*)\\]\\(([^)]+)\\)$/);
+    if(img){ n++; return '\\n[📷 이미지'+n+' 삽입]\\n'; }
+    if(t.startsWith('## ')) return '\\n■ '+t.slice(3);
+    if(t.startsWith('# ')) return t.slice(2);
+    if(t==='>'||t.startsWith('> ')) return t.replace(/^>\\s?/,'');
+    return line.replace(/\\*\\*([^*]+)\\*\\*/g,'$1');
+  }).join('\\n').replace(/\\n{3,}/g,'\\n\\n').trim();
+}
+function flash(id,msg){ const b=document.getElementById(id); if(b){const o=b.textContent;b.textContent=msg;setTimeout(()=>b.textContent=o,1500);} }
+function copyPost(id){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
+  navigator.clipboard.writeText(plainPostText(it)).then(()=>flash('copybtn-'+id,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 본문을 길게 눌러 직접 복사하세요.'));
+}
+function copyTitle(id){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
+  navigator.clipboard.writeText(plainHead(it)).then(()=>flash('titlebtn-'+id,'✅ 복사됨!')).catch(()=>{});
+}
 // 블로그/대본 등 본문의 가벼운 마크다운(## 소제목, [HOOK] 등)을 보기 좋게
 function mdInline(x){ return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>'); }
 function fmtCaption(s){
