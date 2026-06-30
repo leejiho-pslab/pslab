@@ -123,6 +123,14 @@ jobs:
         continue-on-error: true
         run: node scripts/render-blog-images.mjs --client pslab
 
+      # 유튜브 쇼츠 슬라이드 렌더 + 영상 합성 (ffmpeg, 다운로드용)
+      - name: 쇼츠 슬라이드 렌더
+        continue-on-error: true
+        run: node scripts/render-shorts.mjs --client pslab
+      - name: 쇼츠 영상 합성 (ffmpeg)
+        continue-on-error: true
+        run: node scripts/build-shorts-video.mjs --client pslab
+
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
@@ -138,7 +146,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi

@@ -74,6 +74,8 @@ export interface PlanItem {
   insightComment?: string;
   /** 인사이트 코멘트 생성 시각 (ISO) */
   insightAt?: string;
+  /** 유튜브 쇼츠: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
+  videoFile?: string;
 }
 
 /** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */

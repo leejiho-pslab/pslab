@@ -66,6 +66,7 @@ interface PendingCard {
   metrics?: { views?: number; likes?: number; comments?: number; engagementRate?: number };
   insightComment?: string;
   publishedAt?: string;
+  videoFile?: string;
 }
 
 function buildChannel(
@@ -202,6 +203,7 @@ function buildClientData(
     metrics: it.metrics,
     insightComment: it.insightComment,
     publishedAt: it.publishedAt,
+    videoFile: it.videoFile,
   });
 
   const channels = CHANNELS.map((c) => {
@@ -465,14 +467,17 @@ function manualHelper(it, chDef){
   if(chDef.key!=='naver-blog' && chDef.key!=='youtube') return '';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const dls=imgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('');
+  const hasVideo=chDef.key==='youtube'&&it.videoFile;
   const guide=chDef.key==='youtube'
-    ? '아래 대본을 복사해 영상 제작에 쓰고, 썸네일 이미지를 내려받으세요.'
+    ? (hasVideo?'쇼츠 영상이 자동 제작됐습니다. 다운로드해 유튜브에 업로드하고, 대본을 설명란에 붙여넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)':'아래 대본을 복사해 영상 제작에 쓰고, 썸네일 이미지를 내려받으세요.')
     : '“본문 전체 복사”로 네이버 글쓰기에 붙여넣고, 본문 속 [📷 이미지N] 위치에 내려받은 이미지를 순서대로 삽입하세요.';
+  const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#2a1530;border-color:#7a3a6a;color:#ffb0e0">🎬 쇼츠 영상 다운로드</a>':'';
   return '<div class="capbox" style="margin-top:12px;border-color:#3a4a1f;background:#14180e">'+
     '<div class="caphd">📋 수동 발행 도우미 ('+esc(chDef.label)+')</div>'+
     '<div class="muted" style="margin-bottom:10px">'+guide+'</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-    '<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>'+
+    videoBtn+
+    '<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 '+(chDef.key==='youtube'?'대본 복사':'본문 전체 복사')+'</button>'+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
     dls+'</div></div>';
 }
