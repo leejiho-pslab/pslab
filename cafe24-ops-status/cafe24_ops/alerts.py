@@ -87,6 +87,11 @@ def build_digest(store, date: str) -> list[str]:
         chg_s = f" ({chg:+.0f}% vs 7일평균)" if chg is not None else ""
         lines.append(f"💰 매출 ₩{gross:,.0f} · 주문 {oc or 0:,.0f}건 · 객단가 ₩{aov or 0:,.0f}{chg_s}")
 
+    vis, cr = k.get("visitors"), k.get("conversion_rate")
+    if vis:
+        cr_s = f" · 전환율 {cr:.2f}%" if cr is not None else ""
+        lines.append(f"👀 방문자 {vis:,.0f}{cr_s}")
+
     dev = {d["key"]: d["value"] for d in device_breakdown(store, date)}
     dtot = sum(dev.values())
     if dtot > 0:
