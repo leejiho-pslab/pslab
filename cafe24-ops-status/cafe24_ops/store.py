@@ -91,6 +91,16 @@ class Store:
         self.db.commit()
         return len(rows)
 
+    def delete_facts(self, date: str, source: str) -> int:
+        """해당 일자·소스의 기존 facts 삭제(재수집 시 차원이 바뀐 낡은 행 제거).
+
+        예: 카테고리 매핑이 바뀌면 dims(category)가 달라져 upsert 로는 옛 '기타' 행이
+        남아 합계가 중복된다. 재삽입 전에 비워서 깨끗이 교체한다.
+        """
+        cur = self.db.execute("DELETE FROM facts WHERE date=? AND source=?", (date, source))
+        self.db.commit()
+        return getattr(cur, "rowcount", 0) or 0
+
     def upsert_kpi(self, date: str, kpis: dict[str, float]) -> int:
         rows = [(date, k, float(v)) for k, v in kpis.items()]
         self.db.executemany(
