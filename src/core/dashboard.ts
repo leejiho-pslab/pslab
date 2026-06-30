@@ -387,6 +387,23 @@ footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
   <div class="mwrap"><button class="mx" onclick="closeModal()">✕</button><div id="mbody"></div></div>
 </div>
 <script>
+/* 안전장치: 아래 메인 스크립트가 (구형 브라우저 파싱오류 등으로) 깨져도
+   빈 화면 대신 오류 내용과 새로고침 버튼을 보여준다. */
+window.onerror = function (m) {
+  try {
+    var v = document.getElementById('view');
+    if (v && !(v.innerHTML && v.innerHTML.replace(/\\s/g, ''))) {
+      v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#ffb4b4">'
+        + '화면을 그리는 중 문제가 생겼어요.<br>'
+        + '<span style="color:#9aa6bd;font-size:13px">' + String(m) + '</span><br><br>'
+        + '<button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button>'
+        + '</div>';
+    }
+  } catch (e) {}
+  return false;
+};
+</script>
+<script>
 const DATA = ${json};
 const REPO = DATA.repo;
 let ci = 0, ch = 'all';
@@ -723,7 +740,14 @@ function renderView(){
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
 function setCh(k){ch=k;renderTabs();renderView();window.scrollTo(0,0);}
-renderClients();renderTabs();renderView();
+try {
+  renderClients(); renderTabs(); renderView();
+} catch (e) {
+  var v = document.getElementById('view');
+  if (v) v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#ffb4b4">표시 중 오류: '
+    + ((e && e.message) || e)
+    + '<br><br><button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button></div>';
+}
 </script>
 </body>
 </html>`;
