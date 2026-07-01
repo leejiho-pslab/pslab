@@ -19,11 +19,15 @@ import { CategoryBar } from "../components/CategoryBar";
 import { BestTable } from "../components/BestTable";
 import { CRMCards } from "../components/CRMCards";
 import { VisitorDetailCard } from "../components/VisitorDetailCard";
+import { VisitorChart } from "../components/VisitorChart";
 import { NewReturningChart } from "../components/NewReturningChart";
 import { AdCostChart } from "../components/AdCostChart";
 import { PlannedGroups } from "../components/PlannedGroups";
 import { RangePicker } from "../components/RangePicker";
 import { Loading, ErrorState } from "../components/States";
+
+// 방문자 추이 그래프는 2026년 6월부터 전체를 보여준다(상단 기간 선택과 별개, 장기 흐름용).
+const VISITOR_TREND_FROM = "2026-06-01";
 
 export function Cafe24Page({ date, config }: { date: string; config: MetricsConfig }) {
   const [from, setFrom] = useState(() => daysBefore(date, 13));
@@ -84,6 +88,7 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
             <VisitorDetailCard v={detail?.visitor ?? ({} as never)} />
             <CRMCards crm={detail?.crm ?? {}} />
           </div>
+          <VisitorChart from={VISITOR_TREND_FROM} to={to} />
           <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
           <BestTable items={detail?.best ?? []} />
           <DailyTable rows={daily} metrics={config.summary_cards} />

@@ -84,6 +84,17 @@ def crm_counts(store, date: str) -> dict[str, float]:
     return _sum_by_dim(store, date, "crm_count", "channel")
 
 
+def visitor_trend(store, date_from: str, date_to: str) -> list[dict]:
+    """일별 방문자 추이 — 전체방문/신규방문/재방문(그래프용). 값 없는 날은 키 생략."""
+    by_date: dict[str, dict] = {}
+    for metric, key in (("visitors", "visitors"), ("visitors_new", "new"),
+                        ("visitors_returning", "returning")):
+        for r in store.get_facts(date_from, date_to, metric=metric):
+            slot = by_date.setdefault(r["date"], {"date": r["date"]})
+            slot[key] = slot.get(key, 0.0) + float(r["value"])
+    return [by_date[d] for d in sorted(by_date)]
+
+
 def new_returning_trend(store, date_from: str, date_to: str) -> list[dict]:
     by_date: dict[str, dict] = {}
     for r in store.get_facts(date_from, date_to, metric="customer_sales"):

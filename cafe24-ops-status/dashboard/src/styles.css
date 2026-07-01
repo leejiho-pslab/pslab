@@ -139,6 +139,8 @@ button { cursor: pointer; }
 }
 .chart-tip .tip-date { font-weight: 700; margin-bottom: 2px; }
 .chart-tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+.chart-legend { display: flex; gap: 16px; margin-top: 8px; font-size: 12.5px; color: var(--sub); }
+.chart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
 
 /* 로딩 스켈레톤 / 빈 상태 */
 .skel { background: #eef2f7; border-radius: 6px; position: relative; overflow: hidden; }

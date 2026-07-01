@@ -27,6 +27,7 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
     device_perf,
     new_returning_trend,
     visitor_detail,
+    visitor_trend,
 )
 from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_by_channel,
@@ -231,6 +232,20 @@ def trend(
                 "returning_sales": nr.get(d, {}).get("returning"),
             })
         return {"from": date_from, "to": date_to, "rows": rows}
+    finally:
+        store.close()
+
+
+@app.get("/api/visitor-trend")
+def visitor_trend_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    """일별 방문자 추이(전체/신규/재방문) — 그래프용."""
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to,
+                "rows": visitor_trend(store, date_from, date_to)}
     finally:
         store.close()
 

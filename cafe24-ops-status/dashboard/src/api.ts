@@ -20,6 +20,7 @@ import type {
   PeriodResponse,
   SummaryResponse,
   TrendResponse,
+  VisitorTrendResponse,
 } from "./types";
 
 const BASE = import.meta.env.VITE_API_BASE ?? "";
@@ -46,6 +47,8 @@ export const api = {
   daily: (from: string, to: string) => get<DailyResponse>(`/api/daily?from=${from}&to=${to}`),
   dailyDetail: (date?: string) => get<DailyDetailResponse>(`/api/daily-detail${q(date)}`),
   trend: (from: string, to: string) => get<TrendResponse>(`/api/trend?from=${from}&to=${to}`),
+  visitorTrend: (from: string, to: string) =>
+    get<VisitorTrendResponse>(`/api/visitor-trend?from=${from}&to=${to}`),
 
   // 광고
   adsSummary: (date?: string) => get<AdsSummary>(`/api/ads/summary${q(date)}`),

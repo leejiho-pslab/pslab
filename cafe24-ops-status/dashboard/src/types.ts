@@ -76,6 +76,18 @@ export interface DailyDetailResponse {
   crm: Record<string, number>;
 }
 
+export interface VisitorTrendRow {
+  date: string;
+  visitors?: number;
+  new?: number;
+  returning?: number;
+}
+export interface VisitorTrendResponse {
+  from: string;
+  to: string;
+  rows: VisitorTrendRow[];
+}
+
 export interface TrendRow {
   date: string;
   gross_sales: number | null;
