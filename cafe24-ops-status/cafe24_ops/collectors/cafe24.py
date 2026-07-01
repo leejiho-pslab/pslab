@@ -80,15 +80,21 @@ def order_breakdowns(date: str, orders: list[dict]) -> list[dict]:
       (마켓/비회원 주문은 first_order 가 null 이라 '신규'로 집계 — 합계가 매출과 일치)
     """
     dev = {"mobile": 0.0, "pc": 0.0}
+    dev_count = {"mobile": 0, "pc": 0}
     cust = {"new": 0.0, "returning": 0.0}
     for o in orders:
         amt = order_amount(o)
-        dev["mobile" if o.get("order_from_mobile") == "T" else "pc"] += amt
+        d = "mobile" if o.get("order_from_mobile") == "T" else "pc"
+        dev[d] += amt
+        dev_count[d] += 1
         cust["returning" if o.get("first_order") == "F" else "new"] += amt
     out = []
     for d, v in dev.items():
         out.append({"date": date, "source": "cafe24", "metric": "device_sales",
                     "value": round(v, 2), "dims": {"device": d}})
+    for d, c in dev_count.items():
+        out.append({"date": date, "source": "cafe24", "metric": "device_order_count",
+                    "value": float(c), "dims": {"device": d}})
     for c, v in cust.items():
         out.append({"date": date, "source": "cafe24", "metric": "customer_sales",
                     "value": round(v, 2), "dims": {"customer_type": c}})
@@ -259,10 +265,14 @@ class Cafe24Collector(BaseCollector):
             out.append({"date": date, "source": self.source, "metric": metric,
                         "value": float(value), "dims": dims})
 
-        # 디바이스 매출 비중
-        mobile = round(gross_sales * r.uniform(0.55, 0.80))
+        # 디바이스 매출 비중(+ 주문건수 — 매출 비중과 동일 비율로 근사)
+        mobile_share = r.uniform(0.55, 0.80)
+        mobile = round(gross_sales * mobile_share)
         f("device_sales", mobile, device="mobile")
         f("device_sales", gross_sales - mobile, device="pc")
+        mobile_orders = round(order_count * mobile_share)
+        f("device_order_count", mobile_orders, device="mobile")
+        f("device_order_count", order_count - mobile_orders, device="pc")
 
         # 신규 vs 재구매 매출
         new_sales = round(gross_sales * r.uniform(0.30, 0.60))

@@ -49,9 +49,18 @@ export interface BreakdownItem {
   value: number;
 }
 
+export interface DevicePerf {
+  device: string;
+  sales: number;
+  order_count: number;
+  aov: number | null;
+  share: number | null;
+}
+
 export interface DailyDetailResponse {
   date: string | null;
   device: BreakdownItem[];
+  device_perf: DevicePerf[];
   category: BreakdownItem[];
   best: BreakdownItem[];
   crm: Record<string, number>;

@@ -3,6 +3,7 @@ const LABEL: Record<string, string> = {
   alimtalk: "알림톡",
   kakao: "카카오",
   reviews: "후기수",
+  new_signups: "신규가입수",
 };
 
 export function CRMCards({ crm }: { crm: Record<string, number> }) {
