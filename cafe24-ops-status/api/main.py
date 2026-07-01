@@ -26,6 +26,7 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
     device_breakdown,
     device_perf,
     new_returning_trend,
+    visitor_detail,
 )
 from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_by_channel,
@@ -34,7 +35,7 @@ from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_summary,
     ads_trend,
 )
-from cafe24_ops.etl.compare import period_comparison  # noqa: E402
+from cafe24_ops.etl.compare import period_comparison, summary_cards_range  # noqa: E402
 from cafe24_ops.etl.competitor_metrics import (  # noqa: E402
     bestseller_changes,
     competitor_ad_creatives,
@@ -116,9 +117,18 @@ def metrics_config() -> dict:
 
 
 @app.get("/api/summary")
-def summary(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> dict:
+def summary(
+    date: str | None = Query(default=None, description="YYYY-MM-DD"),
+    date_from: str | None = Query(default=None, alias="from"),
+    date_to: str | None = Query(default=None, alias="to"),
+) -> dict:
+    """요약 카드. from/to 가 오면 그 기간 합계(파생지표는 재계산), 없으면 단일일 값."""
     store = _store()
     try:
+        # 기간이 지정되면 기간 합계 카드(상단 요약이 '기간 비교' 표와 일치)
+        if date_from and date_to:
+            cards = summary_cards_range(store, date_from, date_to, _config.metrics)
+            return {"date": date_to, "from": date_from, "to": date_to, "cards": cards}
         dates = store.list_dates()
         target = date or (dates[-1] if dates else None)
         kpi = store.get_kpi(target) if target else {}
@@ -182,11 +192,13 @@ def daily_detail(date: str | None = Query(default=None, description="YYYY-MM-DD"
         dates = store.list_dates()
         target = date or (dates[-1] if dates else None)
         if not target:
-            return {"date": None, "device": [], "device_perf": [], "category": [], "best": [], "crm": {}}
+            return {"date": None, "device": [], "device_perf": [], "visitor": {},
+                    "category": [], "best": [], "crm": {}}
         return {
             "date": target,
             "device": device_breakdown(store, target),
             "device_perf": device_perf(store, target),
+            "visitor": visitor_detail(store, target),
             "category": category_breakdown(store, target),
             "best": best_products(store, target, _best_top_n()),
             "crm": crm_counts(store, target),

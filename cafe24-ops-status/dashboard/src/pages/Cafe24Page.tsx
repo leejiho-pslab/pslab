@@ -18,6 +18,7 @@ import { DevicePerfTable } from "../components/DevicePerfTable";
 import { CategoryBar } from "../components/CategoryBar";
 import { BestTable } from "../components/BestTable";
 import { CRMCards } from "../components/CRMCards";
+import { VisitorDetailCard } from "../components/VisitorDetailCard";
 import { NewReturningChart } from "../components/NewReturningChart";
 import { AdCostChart } from "../components/AdCostChart";
 import { PlannedGroups } from "../components/PlannedGroups";
@@ -42,7 +43,7 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
 
   useEffect(() => {
     Promise.all([
-      api.summary(to),
+      api.summary(from, to),
       api.periodComparison(to),
       api.daily(from, to),
       api.dailyDetail(to),
@@ -79,11 +80,12 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
             <DeviceDonut items={detail?.device ?? []} />
             <DevicePerfTable items={detail?.device_perf ?? []} />
           </div>
-          <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
           <div className="two-col">
-            <BestTable items={detail?.best ?? []} />
+            <VisitorDetailCard v={detail?.visitor ?? ({} as never)} />
             <CRMCards crm={detail?.crm ?? {}} />
           </div>
+          <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
+          <BestTable items={detail?.best ?? []} />
           <DailyTable rows={daily} metrics={config.summary_cards} />
           <PlannedGroups config={config} />
         </>

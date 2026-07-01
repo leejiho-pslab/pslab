@@ -57,10 +57,20 @@ export interface DevicePerf {
   share: number | null;
 }
 
+export interface VisitorDetail {
+  visitors: number | null;
+  new: number | null;
+  returning: number | null;
+  return_rate: number | null;
+  signups: number | null;
+  signup_rate: number | null;
+}
+
 export interface DailyDetailResponse {
   date: string | null;
   device: BreakdownItem[];
   device_perf: DevicePerf[];
+  visitor: VisitorDetail;
   category: BreakdownItem[];
   best: BreakdownItem[];
   crm: Record<string, number>;

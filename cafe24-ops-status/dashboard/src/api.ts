@@ -39,8 +39,9 @@ export const api = {
   // 일일 브리핑(상단 배너)
   digest: (date?: string) => get<DigestResponse>(`/api/digest${q(date)}`),
 
-  // 카페24 어드민
-  summary: (date?: string) => get<SummaryResponse>(`/api/summary${q(date)}`),
+  // 카페24 어드민 — from/to 주면 그 기간 합계 요약(상단 카드가 기간 비교표와 일치)
+  summary: (from: string, to: string) =>
+    get<SummaryResponse>(`/api/summary?from=${from}&to=${to}`),
   periodComparison: (date?: string) => get<PeriodResponse>(`/api/period-comparison${q(date)}`),
   daily: (from: string, to: string) => get<DailyResponse>(`/api/daily?from=${from}&to=${to}`),
   dailyDetail: (date?: string) => get<DailyDetailResponse>(`/api/daily-detail${q(date)}`),
