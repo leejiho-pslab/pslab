@@ -259,8 +259,16 @@ export interface DigestAlert {
   message: string;
   value?: number;
 }
+export interface DigestCommentary {
+  headline: string;
+  core: string[];
+  movers: string[];
+  anomalies: string[];
+  ads: string[];
+}
 export interface DigestResponse {
   date: string | null;
   lines: string[];
   alerts: DigestAlert[];
+  commentary?: DigestCommentary;
 }
