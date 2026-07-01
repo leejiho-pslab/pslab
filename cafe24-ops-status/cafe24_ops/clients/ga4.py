@@ -36,6 +36,27 @@ def ga4_report_to_visitors(raw: dict) -> int | None:
         return None
 
 
+def ga4_report_to_new_returning(raw: dict) -> dict | None:
+    """newVsReturning 차원 runReport 응답 → {'new': n, 'returning': m}. 행 없으면 None.
+
+    GA4 는 신규/재방문을 'new'/'returning'(또는 빈문자=미상)으로 준다. 미상은 신규로 합산.
+    """
+    rows = (raw or {}).get("rows") or []
+    if not rows:
+        return None
+    out = {"new": 0, "returning": 0}
+    for r in rows:
+        dims = r.get("dimensionValues") or [{}]
+        vals = r.get("metricValues") or [{}]
+        seg = (dims[0].get("value") or "").lower()
+        try:
+            v = int(float(vals[0].get("value", 0) or 0))
+        except (TypeError, ValueError):
+            v = 0
+        out["returning" if seg.startswith("return") else "new"] += v
+    return out
+
+
 class GA4Client:
     def __init__(
         self,
@@ -100,6 +121,28 @@ class GA4Client:
             if resp.status_code != 200:
                 return None
             return ga4_report_to_visitors(resp.json())
+        return None
+
+    def daily_new_returning(self, date: str) -> dict | None:
+        """일자 신규/재방문 방문자수({'new','returning'}). 실패 시 None. 401 이면 토큰 1회 재발급."""
+        body = {
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "newVsReturning"}],
+            "metrics": [{"name": "totalUsers"}],
+        }
+        path = f"/v1beta/properties/{self.property_id}:runReport"
+        for attempt in (1, 2):
+            try:
+                resp = self._http.post(
+                    path, headers={"Authorization": f"Bearer {self._access_token()}"}, json=body)
+            except Exception:  # noqa: BLE001
+                return None
+            if resp.status_code == 401 and attempt == 1:
+                self._token = None
+                continue
+            if resp.status_code != 200:
+                return None
+            return ga4_report_to_new_returning(resp.json())
         return None
 
     def close(self) -> None:

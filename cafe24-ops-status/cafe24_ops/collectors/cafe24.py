@@ -66,6 +66,20 @@ def visitor_metrics(date: str, order_count: int, visitors: int | None) -> list[d
     ]
 
 
+def visitor_segment_metrics(date: str, seg: dict | None) -> list[dict]:
+    """GA4 신규/재방문 방문자수 → visitors_new / visitors_returning facts (있을 때만)."""
+    if not seg:
+        return []
+    out = []
+    if seg.get("new") is not None:
+        out.append({"date": date, "source": "cafe24", "metric": "visitors_new",
+                    "value": float(seg["new"])})
+    if seg.get("returning") is not None:
+        out.append({"date": date, "source": "cafe24", "metric": "visitors_returning",
+                    "value": float(seg["returning"])})
+    return out
+
+
 def signup_metrics(date: str, new_signups: int | None) -> list[dict]:
     if new_signups is None:
         return []
@@ -239,6 +253,8 @@ class Cafe24Collector(BaseCollector):
         gross_sales = order_count * aov
         ad_cost = round(gross_sales * r.uniform(0.05, 0.40))
         ad_sales = round(gross_sales * r.uniform(0.20, 0.60))
+        new_visitors = round(visitors * r.uniform(0.55, 0.80))   # 신규방문
+        new_signups = round(order_count * r.uniform(0.3, 1.2))   # 신규가입수
 
         values = {
             "gross_sales": float(gross_sales),
@@ -247,6 +263,9 @@ class Cafe24Collector(BaseCollector):
             "aov": float(aov),
             "conversion_rate": round(order_count / visitors * 100, 2),  # %
             "visitors": float(visitors),
+            "visitors_new": float(new_visitors),                 # 신규방문
+            "visitors_returning": float(visitors - new_visitors),  # 재방문
+            "new_signups": float(new_signups),                   # 신규가입수
             "ad_cost": float(ad_cost),
             "ad_cost_ratio": round(ad_cost / gross_sales * 100, 2),     # %
         }
@@ -314,8 +333,10 @@ class Cafe24Collector(BaseCollector):
                 if not hasattr(self, "_ga4"):
                     from ..clients.ga4 import GA4Client
                     self._ga4 = GA4Client.from_env()
+                seg = None
                 if self._ga4 is not None:
                     visitors = self._ga4.daily_visitors(date)
+                    seg = self._ga4.daily_new_returning(date)  # 신규/재방문 세그먼트
                 else:
                     visitors = client.get_visitor_count(date)  # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
@@ -359,6 +380,7 @@ class Cafe24Collector(BaseCollector):
         return (
             orders_to_metrics(date, orders, count)
             + visitor_metrics(date, count, visitors)
+            + visitor_segment_metrics(date, seg)
             + signup_metrics(date, signups)
             + order_breakdowns(date, orders)
             + best_products(date, orders)

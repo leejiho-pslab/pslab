@@ -64,6 +64,23 @@ def _agg(metric: str, sums: dict[str, float]) -> float | None:
     return None
 
 
+def summary_cards_range(store, date_from: str, date_to: str, metrics) -> list[dict]:
+    """선택 기간[from,to] 합계로 요약 카드 값을 만든다(단일일이면 그날 값).
+
+    합산형은 기간 합, 파생형(객단가/전환율/광고비율)은 합산 기반 재계산 →
+    상단 요약 카드와 '핵심 지표 기간 비교' 표의 같은 기간 값이 일치한다.
+    """
+    rows = store.get_daily(date_from, date_to)
+    sums: dict[str, float] = {}
+    for r in rows:
+        sums[r["metric"]] = sums.get(r["metric"], 0.0) + float(r["value"])
+    return [
+        {"key": c["key"], "label": c["label"], "format": c.get("format"),
+         "value": _agg(c["key"], sums)}
+        for c in metrics.summary_cards
+    ]
+
+
 def period_comparison(store, base_date: str, metrics) -> list[dict]:
     """metrics.period_comparison_rows 각 지표에 대해 윈도우별 값 + 최근7일 증감률을 만든다."""
     base = _date.fromisoformat(base_date)

@@ -20,6 +20,34 @@ def _ranked(agg: dict[str, float]) -> list[dict]:
     return [{"key": k, "value": v} for k, v in sorted(agg.items(), key=lambda x: -x[1])]
 
 
+def _scalar(store, date: str, metric: str) -> float | None:
+    """dims 없는 단일 지표 합(없으면 None)."""
+    rows = store.get_facts(date, date, metric=metric)
+    if not rows:
+        return None
+    return sum(float(r["value"]) for r in rows)
+
+
+def visitor_detail(store, date: str) -> dict:
+    """방문자 상세 — 전체/신규/재방문·재방문율·신규가입수·회원가입율. 없는 값은 None.
+
+    신규/재방문은 GA4 newVsReturning(visitors_new/returning), 가입율은 new_signups/visitors.
+    """
+    total = _scalar(store, date, "visitors")
+    new = _scalar(store, date, "visitors_new")
+    ret = _scalar(store, date, "visitors_returning")
+    signups = _scalar(store, date, "new_signups")
+    seg_total = (new or 0) + (ret or 0)
+    return {
+        "visitors": total,
+        "new": new,
+        "returning": ret,
+        "return_rate": round(ret / seg_total * 100, 1) if ret is not None and seg_total else None,
+        "signups": signups,
+        "signup_rate": round(signups / total * 100, 2) if signups is not None and total else None,
+    }
+
+
 def device_breakdown(store, date: str) -> list[dict]:
     return _ranked(_sum_by_dim(store, date, "device_sales", "device"))
 
@@ -52,11 +80,8 @@ def best_products(store, date: str, top_n: int = 10) -> list[dict]:
 
 
 def crm_counts(store, date: str) -> dict[str, float]:
-    """CRM 채널별 발송/후기 수 + 신규가입수(수집은 되지만 dims 없는 지표라 별도 병합)."""
-    out = _sum_by_dim(store, date, "crm_count", "channel")
-    for r in store.get_facts(date, date, metric="new_signups"):
-        out["new_signups"] = out.get("new_signups", 0.0) + float(r["value"])
-    return out
+    """CRM 채널별 발송/후기 수(문자/알림톡/카카오/후기). 신규가입수는 방문자 상세로 이동."""
+    return _sum_by_dim(store, date, "crm_count", "channel")
 
 
 def new_returning_trend(store, date_from: str, date_to: str) -> list[dict]:

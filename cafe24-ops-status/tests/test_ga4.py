@@ -2,7 +2,11 @@ import json
 
 import httpx
 
-from cafe24_ops.clients.ga4 import GA4Client, ga4_report_to_visitors
+from cafe24_ops.clients.ga4 import (
+    GA4Client,
+    ga4_report_to_new_returning,
+    ga4_report_to_visitors,
+)
 
 
 def test_ga4_report_to_visitors_mapping():
@@ -10,6 +14,19 @@ def test_ga4_report_to_visitors_mapping():
     assert ga4_report_to_visitors({"rows": []}) is None      # 데이터 없음
     assert ga4_report_to_visitors({}) is None
     assert ga4_report_to_visitors({"rows": [{"metricValues": []}]}) is None
+
+
+def test_ga4_report_to_new_returning_mapping():
+    raw = {"rows": [
+        {"dimensionValues": [{"value": "new"}], "metricValues": [{"value": "700"}]},
+        {"dimensionValues": [{"value": "returning"}], "metricValues": [{"value": "300"}]},
+    ]}
+    assert ga4_report_to_new_returning(raw) == {"new": 700, "returning": 300}
+    # 빈문자(미상) 세그먼트는 신규로 합산
+    raw2 = {"rows": [{"dimensionValues": [{"value": ""}], "metricValues": [{"value": "50"}]}]}
+    assert ga4_report_to_new_returning(raw2) == {"new": 50, "returning": 0}
+    assert ga4_report_to_new_returning({"rows": []}) is None
+    assert ga4_report_to_new_returning({}) is None
 
 
 def test_from_env_gating(monkeypatch):
