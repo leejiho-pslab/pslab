@@ -48,6 +48,7 @@ jobs:
           check "/api/daily?from=$F&to=$B"
           check "/api/daily-detail?date=$B"
           check "/api/trend?from=$F&to=$B"
+          check "/api/visitor-trend?from=$F&to=$B"
           check "/api/ads/summary?date=$B"
           check "/api/ads/channels?date=$B"
           check "/api/ads/trend?from=$F&to=$B"
