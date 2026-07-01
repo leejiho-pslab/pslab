@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-01T12:01:36.683Z",
+  "updatedAt": "2026-07-01T12:07:34.610Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-06-30T13:03:39.850Z",
-      "insightComment": "참여율 200.0%로 평균(100.0%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-06-30T13:03:40.138Z"
+      "metricsAt": "2026-07-01T12:03:19.509Z",
+      "insightComment": "참여율 200.0%로 평균(66.7%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-01T12:03:20.620Z"
     },
     {
       "id": "w1-fri",
@@ -139,7 +139,7 @@
       ],
       "scheduledFor": "2026-07-01T09:00:00.000Z",
       "score": 88,
-      "status": "planned",
+      "status": "published",
       "kicker": "Brand Strategy",
       "headline": "팔리는 브랜드는<br>‘무엇’이 아니라 *‘왜’*를 판다",
       "sub": "작은 브랜드일수록 더 중요한 메시지 설계 이야기.",
@@ -179,7 +179,26 @@
         "cards/pslab/w1-fri-4.png",
         "cards/pslab/w1-fri-5.png"
       ],
-      "cardImage": "cards/pslab/w1-fri-1.png"
+      "cardImage": "cards/pslab/w1-fri-1.png",
+      "publishedUrl": "https://www.instagram.com/p/DaP-NdfDv3F/",
+      "publishedAt": "2026-07-01T12:03:17.068Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "18106452167047945",
+          "url": "https://www.instagram.com/p/DaP-NdfDv3F/"
+        }
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-01T12:03:20.365Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-01T12:03:20.788Z"
     },
     {
       "id": "w2-mon",
@@ -673,7 +692,7 @@
       ],
       "scheduledFor": "2026-07-01T09:00:00.000Z",
       "score": 82,
-      "status": "planned",
+      "status": "manual",
       "kicker": "Agency",
       "headline": "광고대행사에 맡기기 전, 반드시 확인할 5가지",
       "sub": "대행사를 잘못 만나면 돈만 태웁니다. 계약 전 \"이 다섯 가지\"를 물어보면 80%는 거를 수 있습니다.",
@@ -1265,9 +1284,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-06-30T13:03:39.850Z",
+      "metricsAt": "2026-07-01T12:03:20.365Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-06-30T13:03:40.279Z"
+      "insightAt": "2026-07-01T12:03:21.072Z"
     },
     {
       "id": "blogger-07-09",
