@@ -17,6 +17,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i >= 0 ? process.argv[i + 1] : d; };
 const clientId = arg('client', 'pslab');
 const startArg = arg('start', '');
+const perDay = Math.max(1, Number(arg('perday', '1'))); // 하루 몇 건 발행할지
 
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
@@ -51,10 +52,10 @@ while (added) {
   }
 }
 
-// 하루 한 개씩 18:00 KST 배정
+// 하루 perDay 개씩 18:00 KST 배정 (i번째 항목 → start + floor(i/perDay)일)
 ordered.forEach((it, i) => {
   const d = new Date(start.getTime());
-  d.setUTCDate(d.getUTCDate() + i);
+  d.setUTCDate(d.getUTCDate() + Math.floor(i / perDay));
   it.scheduledFor = d.toISOString();
   // 다시 검수 흐름을 타도록 manual/approved였던 것도 planned로(미발행만 대상)
   if (it.status !== 'manual') it.status = 'planned';
@@ -63,5 +64,6 @@ ordered.forEach((it, i) => {
 plan.updatedAt = new Date().toISOString();
 writeFileSync(FILE, JSON.stringify(plan, null, 2), 'utf8');
 
-console.log(`일일 재배치 완료: ${ordered.length}건, 시작 ${start.toISOString()} (18:00 KST), 하루 1개씩`);
-ordered.slice(0, 8).forEach((it) => console.log(`  ${it.scheduledFor.slice(0, 10)} 18:00 · ${it.channels[0]} · ${it.id}`));
+const days = Math.ceil(ordered.length / perDay);
+console.log(`일일 재배치 완료: ${ordered.length}건, 시작 ${start.toISOString()} (18:00 KST), 하루 ${perDay}건씩 · ${days}일치`);
+ordered.slice(0, 10).forEach((it) => console.log(`  ${it.scheduledFor.slice(0, 10)} 18:00 · ${it.channels[0]} · ${it.id}`));

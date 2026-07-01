@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-30T13:08:02.630Z",
+  "updatedAt": "2026-07-01T12:01:36.683Z",
   "items": [
     {
       "id": "w1-mon",
@@ -188,7 +188,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-07T09:00:00.000Z",
+      "scheduledFor": "2026-07-04T09:00:00.000Z",
       "score": 87,
       "status": "planned",
       "kicker": "Decision",
@@ -239,7 +239,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-13T09:00:00.000Z",
+      "scheduledFor": "2026-07-07T09:00:00.000Z",
       "score": 86,
       "status": "planned",
       "kicker": "Ad Ops",
@@ -290,7 +290,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-19T09:00:00.000Z",
+      "scheduledFor": "2026-07-10T09:00:00.000Z",
       "score": 85,
       "status": "planned",
       "kicker": "Startup",
@@ -341,7 +341,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-24T09:00:00.000Z",
+      "scheduledFor": "2026-07-12T09:00:00.000Z",
       "score": 84,
       "status": "planned",
       "kicker": "Agency Behind",
@@ -398,7 +398,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-26T09:00:00.000Z",
+      "scheduledFor": "2026-07-13T09:00:00.000Z",
       "score": 83,
       "status": "planned",
       "kicker": "Brand Strategy",
@@ -449,7 +449,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-27T09:00:00.000Z",
+      "scheduledFor": "2026-07-14T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Marketing Insight",
@@ -500,7 +500,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-28T09:00:00.000Z",
+      "scheduledFor": "2026-07-14T09:00:00.000Z",
       "score": 81,
       "status": "planned",
       "kicker": "Ad Ops",
@@ -557,7 +557,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-29T09:00:00.000Z",
+      "scheduledFor": "2026-07-15T09:00:00.000Z",
       "score": 80,
       "status": "planned",
       "kicker": "Decision",
@@ -614,7 +614,7 @@
       "channels": [
         "instagram"
       ],
-      "scheduledFor": "2026-07-30T09:00:00.000Z",
+      "scheduledFor": "2026-07-15T09:00:00.000Z",
       "score": 79,
       "status": "planned",
       "kicker": "Growth",
@@ -671,7 +671,7 @@
       "channels": [
         "naver-blog"
       ],
-      "scheduledFor": "2026-07-02T09:00:00.000Z",
+      "scheduledFor": "2026-07-01T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Agency",
@@ -703,7 +703,7 @@
       "channels": [
         "naver-blog"
       ],
-      "scheduledFor": "2026-07-08T09:00:00.000Z",
+      "scheduledFor": "2026-07-04T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Conversion",
@@ -735,7 +735,7 @@
       "channels": [
         "naver-blog"
       ],
-      "scheduledFor": "2026-07-14T09:00:00.000Z",
+      "scheduledFor": "2026-07-07T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Brand",
@@ -767,7 +767,7 @@
       "channels": [
         "naver-blog"
       ],
-      "scheduledFor": "2026-07-20T09:00:00.000Z",
+      "scheduledFor": "2026-07-10T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Budget",
@@ -799,7 +799,7 @@
       "channels": [
         "linkedin"
       ],
-      "scheduledFor": "2026-07-03T09:00:00.000Z",
+      "scheduledFor": "2026-07-02T09:00:00.000Z",
       "score": 80,
       "status": "planned",
       "kicker": "Insight",
@@ -825,7 +825,7 @@
       "channels": [
         "linkedin"
       ],
-      "scheduledFor": "2026-07-09T09:00:00.000Z",
+      "scheduledFor": "2026-07-05T09:00:00.000Z",
       "score": 79,
       "status": "planned",
       "kicker": "Decision",
@@ -851,7 +851,7 @@
       "channels": [
         "linkedin"
       ],
-      "scheduledFor": "2026-07-15T09:00:00.000Z",
+      "scheduledFor": "2026-07-08T09:00:00.000Z",
       "score": 78,
       "status": "planned",
       "kicker": "Branding",
@@ -877,7 +877,7 @@
       "channels": [
         "linkedin"
       ],
-      "scheduledFor": "2026-07-21T09:00:00.000Z",
+      "scheduledFor": "2026-07-11T09:00:00.000Z",
       "score": 77,
       "status": "planned",
       "kicker": "Growth",
@@ -931,7 +931,7 @@
       "channels": [
         "threads"
       ],
-      "scheduledFor": "2026-07-04T09:00:00.000Z",
+      "scheduledFor": "2026-07-02T09:00:00.000Z",
       "score": 79,
       "status": "planned",
       "kicker": "Threads",
@@ -957,7 +957,7 @@
       "channels": [
         "threads"
       ],
-      "scheduledFor": "2026-07-10T09:00:00.000Z",
+      "scheduledFor": "2026-07-05T09:00:00.000Z",
       "score": 78,
       "status": "planned",
       "kicker": "Threads",
@@ -983,7 +983,7 @@
       "channels": [
         "threads"
       ],
-      "scheduledFor": "2026-07-16T09:00:00.000Z",
+      "scheduledFor": "2026-07-08T09:00:00.000Z",
       "score": 77,
       "status": "planned",
       "kicker": "Threads",
@@ -1009,7 +1009,7 @@
       "channels": [
         "threads"
       ],
-      "scheduledFor": "2026-07-22T09:00:00.000Z",
+      "scheduledFor": "2026-07-11T09:00:00.000Z",
       "score": 76,
       "status": "planned",
       "kicker": "Threads",
@@ -1035,7 +1035,7 @@
       "channels": [
         "threads"
       ],
-      "scheduledFor": "2026-07-25T09:00:00.000Z",
+      "scheduledFor": "2026-07-13T09:00:00.000Z",
       "score": 75,
       "status": "planned",
       "kicker": "Threads",
@@ -1061,7 +1061,7 @@
       "channels": [
         "youtube"
       ],
-      "scheduledFor": "2026-07-05T09:00:00.000Z",
+      "scheduledFor": "2026-07-03T09:00:00.000Z",
       "score": 80,
       "status": "planned",
       "kicker": "Shorts",
@@ -1102,7 +1102,7 @@
       "channels": [
         "youtube"
       ],
-      "scheduledFor": "2026-07-11T09:00:00.000Z",
+      "scheduledFor": "2026-07-06T09:00:00.000Z",
       "score": 79,
       "status": "planned",
       "kicker": "Shorts",
@@ -1143,7 +1143,7 @@
       "channels": [
         "youtube"
       ],
-      "scheduledFor": "2026-07-17T09:00:00.000Z",
+      "scheduledFor": "2026-07-09T09:00:00.000Z",
       "score": 78,
       "status": "planned",
       "kicker": "Shorts",
@@ -1184,7 +1184,7 @@
       "channels": [
         "youtube"
       ],
-      "scheduledFor": "2026-07-23T09:00:00.000Z",
+      "scheduledFor": "2026-07-12T09:00:00.000Z",
       "score": 77,
       "status": "planned",
       "kicker": "Shorts",
@@ -1276,7 +1276,7 @@
       "channels": [
         "blogger"
       ],
-      "scheduledFor": "2026-07-06T09:00:00.000Z",
+      "scheduledFor": "2026-07-03T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Landing",
@@ -1308,7 +1308,7 @@
       "channels": [
         "blogger"
       ],
-      "scheduledFor": "2026-07-12T09:00:00.000Z",
+      "scheduledFor": "2026-07-06T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Strategy",
@@ -1340,7 +1340,7 @@
       "channels": [
         "blogger"
       ],
-      "scheduledFor": "2026-07-18T09:00:00.000Z",
+      "scheduledFor": "2026-07-09T09:00:00.000Z",
       "score": 82,
       "status": "planned",
       "kicker": "Budget",
