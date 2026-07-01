@@ -488,13 +488,18 @@ function closeModal(){ document.getElementById('modal').classList.remove('on'); 
 // 수동 채널(네이버 블로그·유튜브) 발행 도우미 — 본문 복사 + 이미지 다운로드
 function manualHelper(it, chDef){
   if(chDef.key!=='naver-blog' && chDef.key!=='youtube') return '';
-  const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
-  const dls=imgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('');
+  const isNaver=chDef.key==='naver-blog';
+  // 네이버: 본문에 실제로 들어가는 이미지(마커 [📷 이미지N]과 1:1)를 받게 한다. 유튜브: 커버 썸네일.
+  const bodyImgs=String(it.captionBody||'').split('\\n').map(function(l){var m=l.trim().match(/^!\\[[^\\]]*\\]\\(([^)]+)\\)$/);return m?m[1]:null;}).filter(Boolean);
+  const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
+  const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
+    +((isNaver&&bodyImgs.length&&coverImgs.length)?'<a class="btn" href="'+esc(imgv(coverImgs[0]))+'" download="'+esc(it.id+'-cover.png')+'">⬇ 커버(썸네일)</a>':'');
   const isYt=chDef.key==='youtube';
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '“본문 전체 복사”로 네이버 글쓰기에 붙여넣고, 본문 속 [📷 이미지N] 위치에 내려받은 이미지를 순서대로 삽입하세요.';
+    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 아래 “이미지N”을 받아 그 위치에 넣으세요. (네이버는 외부 이미지가 붙여넣기로 따라오지 않아 직접 삽입해야 합니다.)';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#2a1530;border-color:#7a3a6a;color:#ffb0e0">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
