@@ -44,11 +44,47 @@ function fontFaces() {
 
 // 채널별 테마 (서로 다른 비주얼)
 const THEMES = {
-  naver: { bg: '#f7f4ee', panel: '#ffffff', fg: '#1c2533', muted: '#6a7689', accent: '#1f6feb', accent2: '#0aa37a', line: '#e6e0d6' },
-  blogger: { bg: '#101826', panel: '#16202f', fg: '#f1f5fb', muted: '#90a0b8', accent: '#ff8a3d', accent2: '#36d6c4', line: '#26303f' },
+  naver: { bg: '#f7f4ee', panel: '#ffffff', fg: '#1c2533', muted: '#6a7689', accent: '#1f6feb', accent2: '#0aa37a', line: '#e6e0d6', accentCover: '#5aa0ff' },
+  blogger: { bg: '#101826', panel: '#16202f', fg: '#f1f5fb', muted: '#90a0b8', accent: '#ff8a3d', accent2: '#36d6c4', line: '#26303f', accentCover: '#ff9d52' },
 };
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// 가로 16:9 대표이미지(커버) — 배경사진은 오른쪽, 제목은 왼쪽 어두운 안전영역(인물과 안 겹침)
+function coverHtml(title, kicker, t, bgB64) {
+  const bg = bgB64
+    ? `background-image:linear-gradient(90deg,rgba(9,13,22,.97) 0%,rgba(9,13,22,.92) 34%,rgba(9,13,22,.55) 62%,rgba(9,13,22,.15) 88%,rgba(9,13,22,.05) 100%),url(data:image/jpeg;base64,${bgB64});background-size:cover;background-position:right center;`
+    : `background:linear-gradient(135deg,#0d1526 0%,#101a2c 100%);`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+${fontFaces()}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
+html,body{width:1600px;height:900px}
+.cover{width:1600px;height:900px;position:relative;overflow:hidden;${bg}color:#f4f7fb;font-family:'Pretendard';
+  display:flex;flex-direction:column;justify-content:center;padding:0 720px 0 104px}
+.bar{position:absolute;left:0;top:0;bottom:0;width:16px;background:${t.accentCover}}
+.kicker{font-weight:700;font-size:30px;letter-spacing:.16em;color:${t.accentCover};text-transform:uppercase;margin-bottom:26px}
+.title{font-weight:800;font-size:82px;line-height:1.2;letter-spacing:-.03em;max-width:780px;text-shadow:0 4px 26px rgba(0,0,0,.6)}
+.brand{position:absolute;left:104px;bottom:60px;font-weight:700;font-size:34px;color:#e3e9f4;opacity:.92;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+</style></head><body><div class="cover"><div class="bar"></div>
+  <div class="kicker">${esc(kicker)}</div>
+  <div class="title">${esc(title)}</div>
+  <div class="brand">@_pslab</div>
+</div></body></html>`;
+}
+
+// 기획안에서 글 제목 확보 (headline → captionBody 첫 # → topic)
+function loadTitles() {
+  const f = join(ROOT, 'data/clients', clientId, 'plan.json');
+  const map = {};
+  try {
+    const plan = JSON.parse(readFileSync(f, 'utf8'));
+    for (const it of plan.items) {
+      const h = (String(it.captionBody || '').split('\n').find((l) => l.trim().startsWith('# ')) || '').replace(/^#\s*/, '').trim();
+      map[it.id] = (it.headline || h || it.topic || '').replace(/<br>/g, ' ').replace(/\*/g, '').trim();
+    }
+  } catch { /* ignore */ }
+  return map;
+}
 
 function figureHtml(fig, t) {
   const head = (kicker, title) =>
@@ -143,6 +179,9 @@ if (!chromium) {
   process.exit(0);
 }
 
+const titles = loadTitles();
+const KICKER = { 'naver-blog': 'pslab · 광고 인사이트', naver: 'pslab · 광고 인사이트', blogger: 'pslab journal' };
+
 let n = 0;
 for (const post of specs) {
   const t = THEMES[post.channel] ?? THEMES.naver;
@@ -159,7 +198,17 @@ for (const post of specs) {
     ], { stdio: 'pipe' });
     n++;
   });
+  // 가로 16:9 대표이미지(커버) — 네이버 대표이미지/블로그 헤더용
+  const bgFile = join(ROOT, 'docs/bg', `${post.id}.jpg`);
+  const bgB64 = existsSync(bgFile) ? readFileSync(bgFile).toString('base64') : '';
+  const title = titles[post.id] || post.id;
+  writeFileSync(tmp, coverHtml(title, KICKER[post.channel] || 'pslab', t, bgB64));
+  execFileSync(chromium, [
+    '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
+    '--force-device-scale-factor=1', '--window-size=1600,900',
+    `--screenshot=${join(outDir, 'cover.png')}`, `file://${tmp}`,
+  ], { stdio: 'pipe' });
   try { rmSync(tmp); } catch { /* ignore */ }
-  console.log(`  ${post.id} (${post.channel}): ${post.figures.length}장`);
+  console.log(`  ${post.id} (${post.channel}): ${post.figures.length}장 + 커버`);
 }
 console.log(`블로그 이미지 ${n}장 렌더 완료 → docs/blog/`);

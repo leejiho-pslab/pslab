@@ -494,12 +494,12 @@ function manualHelper(it, chDef){
   const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
   const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
-    +((isNaver&&bodyImgs.length&&coverImgs.length)?'<a class="btn" href="'+esc(imgv(coverImgs[0]))+'" download="'+esc(it.id+'-cover.png')+'">⬇ 커버(썸네일)</a>':'');
+    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#12233d;border-color:#2b5aa0;color:#bcd6ff">⬇ 대표이미지(가로)</a>':'');
   const isYt=chDef.key==='youtube';
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 아래 “이미지N”을 받아 그 위치에 넣으세요. (네이버는 외부 이미지가 붙여넣기로 따라오지 않아 직접 삽입해야 합니다.)';
+    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(가로)”를 받아 네이버 대표사진으로 지정(가로 16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#2a1530;border-color:#7a3a6a;color:#ffb0e0">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
