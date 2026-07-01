@@ -10,16 +10,18 @@ description: 카페24 자사몰 통합 자동화 운영현황 대시보드. 데�
 
 설계도면: [`docs/afe24-ops-dashboard/`](../../docs/afe24-ops-dashboard/) (저장소 루트 기준)
 
-## 현재 상태 — 4대 대시보드 + 자동화 골격 완성
+## 현재 상태 — 라이브 운영 중 (무료 스택 전체 가동)
 
-수집 → 정규화 → 집계 → 저장 → API → React(4탭) 전체가 동작한다.
+수집 → 정규화 → 집계 → Neon 저장 → API → React(4탭) 전체가 **실데이터로** 동작한다.
+업체 온보딩/오류 대응 런북은 스킬 **`카페24-운영현황`**(`.claude/skills/카페24-운영현황/`) 참고.
 
-- **4대 대시보드**: 카페24 어드민 / 광고 / 광고 히스토리(소재) / 경쟁사 모니터링
-- `mock` 모드(기본): 샘플 데이터, 같은 날짜는 항상 같은 값 (연동 전 전체 흐름 검증용)
-- `live` 모드: 카페24 Admin API(주문→매출/주문수/객단가, +방문자/전환/가입) 실수집
-  (광고/소재/경쟁사 live 연동은 Phase 2~3 에서 채울 자리 — 현재 mock)
-- **자동화**: GitHub Actions 데일리 워크플로(`.github/workflows/cafe24-daily-collect.yml`),
-  알림(`scripts/notify.py`, 이상치/Top소재/경쟁사 변화 → 선택적 Slack)
+- **4대 대시보드**: 카페24 어드민 / 광고 / 광고 히스토리(소재 이미지+성과) / 경쟁사 모니터링
+- **live 연동(가동)**: 카페24 Admin API(매출/주문/객단가 + GA4 방문자·전환 + 가입/후기/품절/카테고리/디바이스),
+  Meta 광고(계정 + 소재별 이미지·성과), 네이버 검색광고(ROAS), 경쟁사(네이버 DataLab/검색)
+- `mock` 모드: 샘플 데이터(같은 날짜=같은 값) — 연동 전 흐름 검증용
+- **무료 스택**: Neon Postgres(영속) · Render Web(웹/API) · GitHub Actions(데일리 수집 + 10분 keepalive)
+- **자동화**: `cafe24-daily-collect.yml`(08:00 KST) · `keek-dashboard-keepalive.yml`(콜드스타트 방지) ·
+  `cafe24-verify.yml`(정확도) · `keek-api-smoke.yml`(엔드포인트 200 점검) · 알림(`scripts/notify.py`, Slack 홀딩)
 
 ### 주요 API
 ```
@@ -99,9 +101,16 @@ cafe24-ops-status/
 └── dashboard/     React 대시보드 (Phase 1)
 ```
 
-## 다음 단계
+## 완료된 연동 (Phase 1~4 전부 가동)
 
-- **Phase 1**: `collectors/cafe24.py`의 `collect_live` 에 카페24 Admin API 연동 + React 어드민 대시보드
-- **Phase 2**: 광고 플랫폼 API(`ads.py`)
-- **Phase 3**: 소재(`creative.py`)·경쟁사(`competitor.py`)
-- **Phase 4**: 스케줄러 무인 운영 + 알림
+- ✅ 카페24 Admin API(매출/주문/객단가/방문자/전환/가입/후기/품절/카테고리/디바이스)
+- ✅ 광고: Meta(계정+소재 이미지·성과), 네이버 검색광고(ROAS) — Google/Kakao는 키만 넣으면 대기 중
+- ✅ 소재(광고 히스토리): Meta ad-level insights + 썸네일, 기간별 성과 카드
+- ✅ 경쟁사: 네이버 DataLab/검색 트렌드
+- ✅ GA4 방문자·전환율, GitHub Actions 무인 데일리 + keepalive + 알림
+
+## 다음 후보
+
+- Google Ads / Kakao Moment 토큰 승인(키만 채우면 커넥터 대기 중)
+- 순매출/환불·취소, GA4 신규·재방문 세그먼트 등 `metrics.yaml`의 ⛔ 미연동 지표
+- 신규 업체 온보딩은 스킬 `카페24-운영현황` 런북대로 진행
