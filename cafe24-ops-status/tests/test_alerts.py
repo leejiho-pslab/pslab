@@ -1,7 +1,36 @@
-from cafe24_ops.alerts import build_alerts, build_digest, sales_anomaly, top_creative_alert
+from cafe24_ops.alerts import (
+    build_alerts,
+    build_commentary,
+    build_digest,
+    sales_anomaly,
+    top_creative_alert,
+)
 from cafe24_ops.config import load_config
 from cafe24_ops.pipeline import run_pipeline
 from cafe24_ops.store import Store
+
+
+def test_build_commentary_sections(tmp_path):
+    cfg = load_config()
+    store = Store(tmp_path)
+    try:
+        # 15일치 mock → 전일/전주/평균 비교와 광고 섹션이 채워진다
+        for d in range(10, 25):
+            run_pipeline(f"2026-06-{d:02d}", cfg, store, mode="mock")
+        c = build_commentary(store, "2026-06-24")
+        assert c["headline"]                       # 임원 요약 존재
+        # 핵심지표에 매출/전환율 라인 포함, 전일·전주 비교 문구 포함
+        joined = " ".join(c["core"])
+        assert "매출" in joined and "전일" in joined and "전주" in joined
+        assert c["movers"]                          # 급등락 또는 '특이 없음' 문구
+        # 광고 섹션: 광고비/ROAS 라인
+        ads = " ".join(c["ads"])
+        assert "광고비" in ads and "ROAS" in ads and "CTR" in ads
+        # 데이터 없는 날짜는 빈 구조 반환(에러 없이)
+        empty = build_commentary(store, "2026-01-01")
+        assert empty["core"] == [] and empty["ads"] == []
+    finally:
+        store.close()
 
 
 def test_sales_anomaly_detects_drop(tmp_path):

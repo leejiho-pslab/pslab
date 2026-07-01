@@ -17,7 +17,7 @@ from fastapi import FastAPI, Query  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
-from cafe24_ops.alerts import build_alerts, build_digest  # noqa: E402
+from cafe24_ops.alerts import build_alerts, build_commentary, build_digest  # noqa: E402
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.etl.breakdown import (  # noqa: E402
     best_products,
@@ -168,6 +168,7 @@ def digest(date: str | None = Query(default=None, description="YYYY-MM-DD")) -> 
             "date": target,
             "lines": build_digest(store, target),
             "alerts": build_alerts(store, target),
+            "commentary": build_commentary(store, target),
         }
     finally:
         store.close()
