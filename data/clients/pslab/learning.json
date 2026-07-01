@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-07-01T12:03:20.367Z",
+  "generatedAt": "2026-07-01T12:13:25.454Z",
   "sampleSize": 3,
   "variants": [
     {
       "key": "A",
       "posts": 3,
-      "avgEngagement": 0.6666666666666666,
-      "avgLikes": 0.6666666666666666,
+      "avgEngagement": 1,
+      "avgLikes": 1,
       "avgViews": 0.3333333333333333
     }
   ],
@@ -14,8 +14,8 @@
     {
       "key": "instagram",
       "posts": 2,
-      "avgEngagement": 1,
-      "avgLikes": 1,
+      "avgEngagement": 1.5,
+      "avgLikes": 1.5,
       "avgViews": 0.5
     },
     {
@@ -30,8 +30,8 @@
     {
       "key": "21:00",
       "posts": 2,
-      "avgEngagement": 1,
-      "avgLikes": 1,
+      "avgEngagement": 1.5,
+      "avgLikes": 1.5,
       "avgViews": 0.5
     },
     {
@@ -53,8 +53,8 @@
     {
       "key": "compass",
       "posts": 1,
-      "avgEngagement": 0,
-      "avgLikes": 0,
+      "avgEngagement": 1,
+      "avgLikes": 1,
       "avgViews": 0
     }
   ],
