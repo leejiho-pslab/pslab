@@ -24,6 +24,7 @@ from cafe24_ops.etl.breakdown import (  # noqa: E402
     category_breakdown,
     crm_counts,
     device_breakdown,
+    device_perf,
     new_returning_trend,
 )
 from cafe24_ops.etl.ads_metrics import (  # noqa: E402
@@ -181,10 +182,11 @@ def daily_detail(date: str | None = Query(default=None, description="YYYY-MM-DD"
         dates = store.list_dates()
         target = date or (dates[-1] if dates else None)
         if not target:
-            return {"date": None, "device": [], "category": [], "best": [], "crm": {}}
+            return {"date": None, "device": [], "device_perf": [], "category": [], "best": [], "crm": {}}
         return {
             "date": target,
             "device": device_breakdown(store, target),
+            "device_perf": device_perf(store, target),
             "category": category_breakdown(store, target),
             "best": best_products(store, target, _best_top_n()),
             "crm": crm_counts(store, target),

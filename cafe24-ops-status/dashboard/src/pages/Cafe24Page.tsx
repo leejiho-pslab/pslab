@@ -14,6 +14,7 @@ import { PeriodTable } from "../components/PeriodTable";
 import { DailyTable } from "../components/DailyTable";
 import { SalesChart } from "../components/SalesChart";
 import { DeviceDonut } from "../components/DeviceDonut";
+import { DevicePerfTable } from "../components/DevicePerfTable";
 import { CategoryBar } from "../components/CategoryBar";
 import { BestTable } from "../components/BestTable";
 import { CRMCards } from "../components/CRMCards";
@@ -76,8 +77,9 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
           </div>
           <div className="two-col">
             <DeviceDonut items={detail?.device ?? []} />
-            <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
+            <DevicePerfTable items={detail?.device_perf ?? []} />
           </div>
+          <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
           <div className="two-col">
             <BestTable items={detail?.best ?? []} />
             <CRMCards crm={detail?.crm ?? {}} />
