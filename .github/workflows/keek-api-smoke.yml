@@ -51,7 +51,7 @@ jobs:
           check "/api/ads/summary?date=$B"
           check "/api/ads/channels?date=$B"
           check "/api/ads/trend?from=$F&to=$B"
-          check "/api/ads/overview?from=$F&to=$B&sort=roas"
+          check "/api/ads/overview?from=$F&to=$B&cmp_from=$F&cmp_to=$B&sort=roas"
           check "/api/ads/channel-trend?from=$F&to=$B"
           check "/api/creatives/overview?from=$F&to=$B&sort=roas"
           check "/api/creatives/fatigue?date=$B"
@@ -59,6 +59,8 @@ jobs:
           check "/api/competitors/trend?from=$F&to=$B"
           check "/api/competitors/best-changes?date=$B"
           check "/"
+          echo "----- 배포된 프론트 번들 확인(index.html 이 참조하는 assets 해시) -----"
+          curl -s --max-time 60 "$HOST/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.\(js\|css\)' || echo "(assets 참조를 찾지 못함)"
           echo "-----"
           if [ "$fail" = "1" ]; then
             echo "::error::하나 이상의 엔드포인트가 200 이 아님 — 위 FAIL 라인 참고"
