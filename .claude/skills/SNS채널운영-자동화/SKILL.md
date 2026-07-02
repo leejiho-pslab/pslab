@@ -1,14 +1,15 @@
 ---
-name: sns-auto-operation
+name: SNS채널운영-자동화
 description: >-
   SNS 채널 자동 운영 시스템 — 브랜드/업체의 SNS(인스타그램·스레드·구글블로그·네이버블로그·유튜브·링크드인)를
-  24시간 무인 자동 운영하는 시스템을 새 업체에 세팅할 때 사용. 매일 정해진 시각 자동발행,
-  AI(클로드) 글 생성, 한글 카드/블로그 이미지 렌더, 유튜브 쇼츠 모션영상(힉스필드)+무료 BGM,
-  실시간 대시보드(GitHub Pages), 성과 자체학습 선순환까지 포함. "다른 업체에도 적용", "새 클라이언트
-  SNS 자동화 세팅", "SNS 무인 운영 붙여줘" 같은 요청에 사용.
+  24시간 무인 자동 운영하는 시스템을 새 업체에 세팅하거나 점검/수정할 때 사용. 매일 정해진 시각 자동발행,
+  AI(클로드) 글 생성, 한글 카드/블로그 이미지 렌더(대표이미지 포함), 유튜브 쇼츠 모션영상(힉스필드)+무료 BGM,
+  실시간 대시보드(GitHub Pages, 채널 바로가기 포함), 성과 자체학습 선순환까지 포함. "다른 업체에도 적용",
+  "새 클라이언트 SNS 자동화 세팅", "SNS 무인 운영 붙여줘", "대시보드가 안 뜬다", "발행이 멈췄다" 같은
+  요청에 사용.
 ---
 
-# SNS 채널 자동 운영 시스템 (SNS Auto-Operation System)
+# SNS 채널 자동 운영 시스템 (SNS 채널운영 자동화)
 
 브랜드 하나의 SNS를 **무료로 24시간 무인 운영**하는 완성형 시스템. 이 저장소(`pslab`)가
 레퍼런스 구현이며, 아래 절차대로 **새 업체(client)를 추가**하면 그대로 재사용된다.
@@ -61,7 +62,12 @@ description: >-
 
 **클라이언트 데이터** (`data/clients/<id>/`): `plan.json`(기획안), `design.json`, `learning.json`,
 `bg-sources.json`(힉스필드 배경 URL), `video-sources.json`(쇼츠 모션클립 URL),
-`weekly-reports.json`, `token-health.json`.
+`blog-figures.json`(블로그 본문 삽입 이미지 시드), `weekly-reports.json`, `token-health.json`.
+**이 폴더는 기본 gitignore 대상이니, 시드 파일은 반드시 `git add -f`로 강제 커밋할 것** (§8 참고 — 안 하면 CI가 조용히 렌더를 건너뛴다).
+
+**설정표** (`clients/<id>.json`): `ClientConfig` — `accounts`(채널별 계정 핸들, 표시용),
+`channelLinks`(대시보드 "채널 바로가기" 카드용 채널별 관리/프로필 URL. 없으면 채널별 기본
+관리콘솔로 자동 폴백 — `dashboard.ts`의 `defaultManageUrl()` 참고).
 
 ---
 
@@ -72,9 +78,11 @@ description: >-
 > 공유해 배포 충돌 난 사례 있음 → §8 참고).
 
 1. **브랜드 정보 수집**: 브랜드명, 톤, 핵심 주제, 타깃, 채널 계정, 발행 시각(예: 매일 18시).
-2. **클라이언트 설정 생성**: `data/clients/<id>/`에 클라이언트 config + `design.json` 팔레트.
-   기존 `demo-cafe`/`pslab`을 템플릿으로 복사해 값만 교체. `normalizeClientConfig`는 `reviewMode`
-   필드가 필요하니 누락 금지.
+2. **클라이언트 설정 생성**: `clients/<id>.json`(`ClientConfig`) + `data/clients/<id>/`에
+   `design.json` 팔레트. 기존 `demo-cafe`/`pslab`을 템플릿으로 복사해 값만 교체.
+   `normalizeClientConfig`는 `reviewMode` 필드가 필요하니 누락 금지. `accounts`에 채널별 핸들,
+   필요하면 `channelLinks`에 채널별 관리/프로필 URL도 채워 대시보드 "채널 바로가기" 카드가
+   정확한 곳으로 연결되게 한다(비워도 기본 관리콘솔로 폴백은 됨).
 3. **초기 기획안 생성**: `seed-plan.mjs`/`generate.ts`로 주제·슬라이드 생성 → `plan.json`
    (status=`planned`). 채널·주제는 브랜드에 맞게.
 4. **채널 시크릿 등록**: GitHub 저장소 Settings → Secrets에 채널별 토큰(§4). **코드에 절대 넣지 말 것.**
@@ -116,6 +124,15 @@ description: >-
   세이프존: 쇼츠는 상단 320/하단 480 피해 중앙 밴드. **AI 이미지로 한글 텍스트를 만들지 말 것.**
 - **인물·배경 사진**: 힉스필드(`soul_2`, 9:16)로 장면 생성 → URL을 `bg-sources.json`에 저장 →
   **CI에서 다운로드**(개발환경은 외부 호스트 접근 불가, cloudfront 403). `fetch-photos.mjs`가 CI에서 받음.
+- **블로그 대표이미지(커버)**: `render-blog-images.mjs`가 `docs/bg/<id>.jpg`를 배경으로 1600×900
+  **가로형** `cover.png` 렌더(`coverHtml()`). 제목은 좌측 고정폭(`padding:0 720px 0 104px`)에
+  배치하고 우측은 어두운 스크림(`background-position:right center` + 좌측 그라데이션)만 깔아
+  **인물 사진과 제목 텍스트가 절대 겹치지 않게** 함. 네이버 등 플랫폼별 대표이미지 규격(가로형)에 맞출 것 —
+  세로 카드 이미지를 그대로 대표이미지로 쓰면 사이즈가 안 맞는다.
+- **네이버 블로그 본문 이미지**: 네이버는 발행 API가 없어 대시보드에서 "복붙+이미지 다운로드"로
+  운영한다. 다운로드 버튼은 `captionBody`의 `![](url)` 마크다운 이미지 참조를 전부 파싱해서
+  만들어야 함(대표이미지 1장만 보여주면 본문 삽입 이미지가 빠짐 — `dashboard.ts`의
+  `manualHelper`가 `bodyImgs` 정규식 파싱으로 처리).
 - **유튜브 쇼츠 모션영상**:
   1) 힉스필드 시작이미지(`soul_2`) → `kling2_6` 이미지→영상(9:16, 5초, ~10크레딧, 무음).
   2) URL을 `video-sources.json`에 저장.
@@ -132,7 +149,8 @@ description: >-
   `PSLAB_DRY_RUN=true`면 상태 변경 없이 시뮬레이션(가짜 '발행됨' 방지).
 - **일일 18시**: `schedule-daily.mjs`로 미발행 항목을 하루 1개씩 18:00 KST 재배치(채널 라운드로빈).
   cron `0 9 * * *` + `30 9 * * *`(보정). publish-plan은 멱등이라 중복발행 없음.
-- **대시보드**(`dashboard.ts`): 채널현황·발행/대기·성과·오픈 체크리스트·주간리포트·네이버/유튜브 도우미.
+- **대시보드**(`dashboard.ts`): 채널현황·발행/대기·성과·오픈 체크리스트·주간리포트·네이버/유튜브 도우미·
+  **채널 바로가기**(개요 탭 상단, 채널별 그라데이션 카드 → 클릭 시 관리/프로필로 이동. `channelLinksPanel()`).
   5분 자동 새로고침. **빈 화면 방지**: 메인 스크립트 앞 `window.onerror` + 렌더 try/catch로 오류를 화면에 표시.
 
 ---
@@ -161,18 +179,28 @@ description: >-
 - **힉스필드 큐 지연** 가능(starter 플랜). 급하면 다른 모델(seedance/grok)로 재시도하되 큐가 풀리면
   추가 비용 없이 완료되기도 함.
 - **AI 텍스트가 대시보드 데이터에 들어가도** JSON.stringify + `<` 이스케이프(`<`)로 안전.
+- **`data/clients/**` 는 기본 gitignore 대상**. `blog-figures.json` 같은 시드 파일을 안 넣고
+  넘어가면 CI에서 렌더 스크립트가 입력 없이 **0초만에 조용히 종료**되고, 그 결과 다운로드 링크가
+  404("사용할 수 없는 파일")로 깨진다. 새 시드 데이터 파일을 추가하면 항상 `git add -f`로
+  강제 커밋했는지 확인할 것.
+- **"발행이 며칠째 안 된다"는 보고를 받으면**, 먼저 cron/토큰이 실제로 죽었는지부터 의심하지 말고
+  ① 다음 예정 스케줄이 실제로 지났는지(`scheduledFor` 확인), ② 재배치 간격이 너무 널널하지 않은지
+  (예: 하루 1개뿐이면 대기 체감이 길다), ③ Pages/저장소 visibility가 바뀌어 대시보드 확인 자체가
+  막힌 건 아닌지부터 순서대로 점검. 실제 자동발행 로직은 멱등이라 재실행해도 중복 발행되지 않으므로
+  `schedule-daily.mjs --perday 2` 등으로 재배치 후 워크플로 수동 트리거로 즉시 검증 가능.
 
 ---
 
 ## 9. 빠른 시작 체크리스트 (새 업체)
 
 ```
-[ ] data/clients/<id>/ 설정 + design.json (템플릿 복사)
+[ ] clients/<id>.json 설정 (accounts, channelLinks, scheduleTimes 등)
+[ ] data/clients/<id>/ 설정 + design.json (템플릿 복사, 시드파일은 git add -f)
 [ ] seed-plan/generate 로 plan.json 생성
 [ ] 채널 토큰 → GitHub Secrets
 [ ] ANTHROPIC_API_KEY (+ PSLAB_CLAUDE_MODEL=claude-haiku-4-5)
 [ ] schedule-daily.mjs 로 매일 18시 배치
 [ ] Variables PSLAB_DRY_RUN=false
 [ ] Settings→Pages→Source=GitHub Actions (repo는 public)
-[ ] 워크플로 수동 실행 → 대시보드 5/5 확인 → 첫 발행·텔레그램 확인
+[ ] 워크플로 수동 실행 → 대시보드 5/5 확인 + 채널 바로가기 링크 클릭 확인 → 첫 발행·텔레그램 확인
 ```
