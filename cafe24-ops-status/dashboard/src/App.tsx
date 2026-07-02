@@ -52,7 +52,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div>
-          <h1>keek 운영 대시보드</h1>
+          <h1>메종YS 운영 대시보드</h1>
           <span className="sub">
             자사몰 통합 자동화 · 데일리 수집 ({config.collection.granularity}, {config.collection.run_at})
           </span>

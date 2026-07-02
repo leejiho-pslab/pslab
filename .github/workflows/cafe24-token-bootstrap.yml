@@ -23,7 +23,7 @@ on:
       redirect_uri:
         description: "앱에 등록한 Redirect URI"
         required: true
-        default: "https://coversomeone1.cafe24.com/"
+        default: "https://maisonys.com/"
 
 jobs:
   bootstrap:

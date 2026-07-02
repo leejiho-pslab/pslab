@@ -16,7 +16,7 @@
 
 services:
   - type: web
-    name: keek-ops-dashboard
+    name: maisonys-ops-dashboard
     runtime: docker
     plan: free
     region: singapore

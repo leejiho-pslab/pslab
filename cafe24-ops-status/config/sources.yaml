@@ -3,8 +3,10 @@
 
 shop:
   platform: cafe24
-  mall_id: coversomeone1   # 실제 카페24 mall_id (App URL: coversomeone1.cafe24.com)
-  brand: keek
+  mall_id: maisonys        # TODO(연결): 실제 카페24 mall_id 로 교체. maisonys.com 은 커스텀 도메인이라
+                           #   내부 mall_id 가 다를 수 있음(카페24 어드민 > 쇼핑몰설정에서 확인).
+                           #   이 값은 참고/표시용 — 실제 수집은 GitHub Secret CAFE24_MALL_ID 사용.
+  brand: 메종YS            # MAISON YS — (주)와이에스콜렉션 (샤틴·에스블랑·헌치 공식 온라인 스토어)
 
 ads:
   - { channel: meta,   account_id: "" }
@@ -13,5 +15,6 @@ ads:
   - { channel: kakao,  account_id: "" }
 
 competitors:             # 핵심 경쟁사 — name 은 네이버 트렌드/쇼핑 검색어로 사용됨
-  - { name: 산산기어, url: "https://sansangear.com/" }
-  - { name: 살로몬,   url: "https://salomon.co.kr/" }
+                         # TODO(연결): 메종YS 실제 경쟁 브랜드로 교체(컨템포러리 여성복). 아래는 예시.
+  - { name: 논로컬,   url: "https://nonlocal.co.kr/" }
+  - { name: 아모멘토, url: "https://amomento.kr/" }
