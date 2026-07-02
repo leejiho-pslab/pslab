@@ -9,7 +9,7 @@
 ## 1. 카페24 (매출·주문)
 | 변수 | 종류 | 위치 |
 |---|---|---|
-| `CAFE24_MALL_ID` | 🔎 | 쇼핑몰 주소 `keek.cafe24.com` 의 `keek` |
+| `CAFE24_MALL_ID` | 🔎 | 카페24 어드민 > 쇼핑몰설정에서 확인되는 실제 mall_id (예: `xxxxx.cafe24.com` 의 `xxxxx`). 메종YS는 커스텀 도메인(maisonys.com)이라 도메인명과 다를 수 있음 |
 | `CAFE24_CLIENT_ID` / `CAFE24_CLIENT_SECRET` | 🔎 | **developers.cafe24.com** → 내 앱 → 앱 선택 → "앱 정보/인증 정보"의 Client ID, Secret |
 | `CAFE24_ACCESS_TOKEN` / `CAFE24_REFRESH_TOKEN` | 🔧 | 콘솔에 없음 → `python scripts/cafe24_auth.py` 로 OAuth 발급 |
 

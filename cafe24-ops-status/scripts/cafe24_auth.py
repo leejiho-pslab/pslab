@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--code", help="인가 후 받은 code 값")
     p.add_argument("--redirect-uri", default="https://localhost", help="앱에 등록한 Redirect URI")
     p.add_argument("--scope", default=DEFAULT_SCOPE, help=f"권한 scope (기본: {DEFAULT_SCOPE})")
-    p.add_argument("--state", default="keek", help="state 값")
+    p.add_argument("--state", default="cafe24-ops", help="state 값")
     p.add_argument("--to-db", action="store_true",
                    help="발급 토큰을 DATABASE_URL 의 app_kv 에 영속화(무인 수집용)")
     args = p.parse_args(argv)

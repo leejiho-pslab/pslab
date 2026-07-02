@@ -69,7 +69,8 @@ def main(argv: list[str] | None = None) -> int:
     body = "\n".join(digest)
     if alert_lines:
         body += "\n\n*알림*\n" + "\n".join(alert_lines)
-    if body and push_slack(f"*keek 일일 브리핑 ({date})*\n" + body):
+    brand = cfg.shop.get("brand", "운영")
+    if body and push_slack(f"*{brand} 일일 브리핑 ({date})*\n" + body):
         print("\n  → Slack 전송 완료")
     return 0
 

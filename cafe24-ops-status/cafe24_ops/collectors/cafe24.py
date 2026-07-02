@@ -1,6 +1,6 @@
 """카페24 Admin API 수집기.
 
-- mock: 기존 keek 운영 대시보드와 동일한 KPI 셋을 일자별로 생성 (결정적)
+- mock: 메종YS 운영 대시보드와 동일한 KPI 셋을 일자별로 생성 (결정적)
 - live: 카페24 Admin API(주문)를 호출해 매출/주문수/객단가를 산출
 
 방문자·전환율 등 주문 외 지표는 별도 통계/연동이 필요하므로 Phase 1 에서는
@@ -227,10 +227,10 @@ def category_sales(date: str, orders: list[dict], catmap: dict[int, str]) -> lis
 
 
 MOCK_PRODUCTS = [
-    "keek Pillow", "Filovely Basic Windbreaker", "keek Recovery Slipper",
-    "keek Travel Pouch", "HOODIE Oversfit", "keek Neck Cushion",
-    "Filovely Logo Tee", "keek Pillow U V2", "Recovery Band", "Travel Organizer",
-    "keek Hoodie Zip-up", "Filovely Utility Vest",
+    "샤틴 플라워 레이스 퍼프 블라우스", "에스블랑 로맨틱 니트 가디건", "헌치 Non fade Straight Denim Pants",
+    "샤틴 하이넥 레이스 니트", "헌치 Leather H-line Skirt", "에스블랑 시어 스모킹 자켓",
+    "샤틴 프릴넥 블라우스", "헌치 Over-fit Single Jacket", "에스블랑 데일리 원피스", "샤틴 니트 베스트",
+    "헌치 Leather Out-Pocket Half Jacket", "에스블랑 트위드 자켓",
 ]
 MOCK_CRM_CHANNELS = ["sms", "alimtalk", "kakao", "reviews"]
 

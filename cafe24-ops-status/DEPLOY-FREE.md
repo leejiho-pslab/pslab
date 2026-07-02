@@ -25,7 +25,7 @@
 1. https://developers.cafe24.com → 앱 생성 → Client ID/Secret
 2. Redirect URI `https://localhost`, scope `mall.read_order`,`mall.read_customer`
 3. 토큰 발급: `python scripts/cafe24_auth.py --authorize` → 승인 → `--code <코드>`
-4. 시크릿 등록: `CAFE24_MALL_ID`(=coversomeone1), `CAFE24_CLIENT_ID`, `CAFE24_CLIENT_SECRET`,
+4. 시크릿 등록: `CAFE24_MALL_ID`(카페24 어드민에서 확인한 실제 mall_id), `CAFE24_CLIENT_ID`, `CAFE24_CLIENT_SECRET`,
    `CAFE24_ACCESS_TOKEN`, `CAFE24_REFRESH_TOKEN`
    > 상세: CONNECT-GUIDE.md STEP1
 
@@ -33,16 +33,16 @@
 - https://developers.facebook.com → 액세스 토큰(`ads_read`) + 광고계정 ID
 - 시크릿: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID`
 
-### 3. 네이버 경쟁사 자동수집 — 산산기어/살로몬 (5분)
+### 3. 네이버 경쟁사 자동수집 — 논로컬/아모멘토 (5분)
 - https://developers.naver.com → 앱 등록(검색어트렌드+검색 API)
 - 시크릿: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`
-- 경쟁사는 이미 `config/sources.yaml` 에 **산산기어 / 살로몬** 으로 설정됨.
+- 경쟁사는 이미 `config/sources.yaml` 에 **논로컬 / 아모멘토**(예시)로 설정됨 — 실제 경쟁 브랜드로 교체 권장.
 
 ### 4. 배포 (Render, 20분) — URL 로 접속 가능한 대시보드
 1. https://render.com 가입(깃허브 로그인)
 2. **New → Blueprint** → 이 저장소 연결 → 기본 브랜치 선택
 3. `render.yaml` 자동 인식 → 시크릿 입력란에 **최소 `DATABASE_URL`** (+ 위에서 만든 키들) 붙여넣기
-4. **Deploy** → `https://keek-ops-dashboard.onrender.com` 발급
+4. **Deploy** → `https://maisonys-ops-dashboard.onrender.com` 발급
    > GitHub Actions 와 같은 `DATABASE_URL` 을 쓰면, 수집한 실데이터가 그대로 화면에 뜬다.
 
 ### 5. (후순위) 카카오모먼트 / 구글애즈

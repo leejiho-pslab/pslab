@@ -12,12 +12,12 @@ from .base import BaseCollector
 
 # (creative_id, 소재명, 채널)
 MOCK_CREATIVES = [
-    ("AD-001", "keek Pillow 후킹", "meta"),
-    ("AD-002", "Recovery 슬리퍼 할인", "meta"),
-    ("AD-003", "Travel 파우치 신상", "google"),
-    ("AD-004", "Filovely 윈드브레이커", "google"),
-    ("AD-005", "HOODIE 가을 무드", "naver"),
-    ("AD-006", "Neck Cushion UGC", "kakao"),
+    ("AD-001", "샤틴 레이스 블라우스 후킹", "meta"),
+    ("AD-002", "헌치 데님 팬츠 할인", "meta"),
+    ("AD-003", "에스블랑 니트 신상", "google"),
+    ("AD-004", "샤틴 하이넥 니트", "google"),
+    ("AD-005", "헌치 자켓 가을 무드", "naver"),
+    ("AD-006", "에스블랑 원피스 UGC", "kakao"),
 ]
 
 

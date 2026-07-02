@@ -31,8 +31,8 @@
 | Secret | 값 | 채널 |
 |---|---|---|
 | `DATABASE_URL` | STEP1 의 Postgres URL | **공통(필수)** |
-| `CAFE24_MALL_ID` | `coversomeone1` | cafe24 |
-| `CAFE24_CLIENT_ID` | `SFifOfmzX0Nh635bOfavxH` | cafe24 |
+| `CAFE24_MALL_ID` | 카페24 어드민에서 확인한 실제 mall_id | cafe24 |
+| `CAFE24_CLIENT_ID` | (앱의 Client ID) | cafe24 |
 | `CAFE24_CLIENT_SECRET` | (앱의 Client Secret) | cafe24 |
 | `CAFE24_ACCESS_TOKEN` / `CAFE24_REFRESH_TOKEN` | STEP3 에서 발급 | cafe24(최초 1회) |
 | `META_ACCESS_TOKEN` | 시스템 사용자 토큰(ads_read) | Meta |
@@ -55,11 +55,11 @@ cafe24 access 토큰은 2시간, refresh 토큰은 2주 만료되며 갱신 시 
 인가코드는 발급 후 ~1분 만료라 로컬이 안전합니다.
 ```bash
 # 1) 인가 URL 생성 → 브라우저 승인 → 주소창 code= 복사
-python scripts/cafe24_auth.py --authorize --redirect-uri "https://coversomeone1.cafe24.com/"
+python scripts/cafe24_auth.py --authorize --redirect-uri "https://maisonys.com/"
 # 2) 코드 교환 + Postgres 에 저장 (DATABASE_URL 은 STEP1 값)
 DATABASE_URL="postgresql://..." \
-CAFE24_MALL_ID=coversomeone1 CAFE24_CLIENT_ID=... CAFE24_CLIENT_SECRET=... \
-python scripts/cafe24_auth.py --code <코드> --redirect-uri "https://coversomeone1.cafe24.com/" --to-db
+CAFE24_MALL_ID=maisonys CAFE24_CLIENT_ID=... CAFE24_CLIENT_SECRET=... \
+python scripts/cafe24_auth.py --code <코드> --redirect-uri "https://maisonys.com/" --to-db
 ```
 → 이러면 `CAFE24_ACCESS_TOKEN/REFRESH_TOKEN` Secret 없이도 DB에서 바로 동작.
 
@@ -102,8 +102,8 @@ DATABASE_URL="postgresql://..." uvicorn api.main:app
 
 # 부록 — 활성 3채널 정확한 발급 절차
 
-## A. 카페24 (✓ 정보 확보됨)
-- `CAFE24_MALL_ID=coversomeone1`, `CAFE24_CLIENT_ID`, `CAFE24_CLIENT_SECRET` 확보.
+## A. 카페24
+- `CAFE24_MALL_ID`(카페24 어드민 > 쇼핑몰설정에서 확인), `CAFE24_CLIENT_ID`, `CAFE24_CLIENT_SECRET` 확보 필요.
 - 남은 건 **최초 토큰 발급**(STEP 3) 한 번. 이후 access(2h)/refresh(2주) 회전은 DB가 자동 보존.
 - 수집 지표: 매출(gross_sales)·주문수·객단가·신규가입. (방문자/전환율은 `CAFE24_VISITORS_PATH` 지정 시)
 
@@ -116,14 +116,14 @@ DATABASE_URL="postgresql://..." uvicorn api.main:app
    - `NAVER_SA_CUSTOMER_ID` (계정 우상단의 CUSTOMER_ID 숫자)
 - 커넥터: 캠페인 목록 → /stats 로 노출·클릭·광고비·전환·전환매출 집계(100개 단위 청크).
 
-## C. 메타 (광고계정 ID = 1513093573064263 확보, 토큰만 남음)
+## C. 메타
 **시스템 사용자 토큰(장수명)** 발급 — 무인 운영에 최적:
-1. **business.facebook.com/settings** (Coversomeone Corporation 비즈니스)
+1. **business.facebook.com/settings** (메종YS 비즈니스)
 2. 좌측 **사용자 → 시스템 사용자** → 없으면 **추가**(이름 아무거나, 역할 관리자/직원)
-3. 만든 시스템 사용자 선택 → **자산 할당** → 광고계정 **keek2** 에 권한 부여(관리/보기)
+3. 만든 시스템 사용자 선택 → **자산 할당** → 메종YS 광고계정에 권한 부여(관리/보기)
 4. **앱 할당**: 앱이 없으면 developers.facebook.com 에서 앱 1개 생성 후 이 비즈니스에 연결
 5. **토큰 생성(Generate token)** → 앱 선택 → 권한 **`ads_read`** 체크 → 생성
-6. 나온 토큰을 `META_ACCESS_TOKEN` Secret 에, `META_AD_ACCOUNT_ID=1513093573064263`
+6. 나온 토큰을 `META_ACCESS_TOKEN` Secret 에, 광고계정 ID를 `META_AD_ACCOUNT_ID` Secret 에 등록.
 - 커넥터: act_계정/insights(level=account)로 spend·impressions·clicks·구매전환·전환매출.
   (구매 전환은 omni_purchase→pixel 순으로 인식)
 
