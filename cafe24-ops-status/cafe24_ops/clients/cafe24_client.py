@@ -274,13 +274,16 @@ class Cafe24Client:
     def _is_structural_http_error(exc: httpx.HTTPStatusError) -> bool:
         """재시도해도 소용없는 영구적 상태인가.
 
+        401(재발급 후에도 미인가 — scope 누락 시 카페24가 403 대신 401을 주기도 함)·
         403(scope 부족)·404/405(경로없음)·501(미구현)은 몰/토큰 설정이 바뀌기
         전까지 계속 실패 → 이후 호출을 생략한다. 반면 429/5xx/네트워크 오류는
         일시적이므로 latch 하지 않는다(그 날짜만 None, 다음 날짜는 정상 재시도).
+        get()이 401을 이미 한 번 refresh+재시도한 뒤 넘어온 예외이므로, 이 시점의
+        401은 "토큰 만료"가 아니라 "재발급해도 권한 없음"을 뜻한다.
         """
         resp = getattr(exc, "response", None)
         code = resp.status_code if resp is not None else 0
-        return code in (403, 404, 405, 501)
+        return code in (401, 403, 404, 405, 501)
 
     def count_new_customers(self, start_date: str, end_date: str) -> int | None:
         """기간 내 신규 가입 회원수.
@@ -308,10 +311,11 @@ class Cafe24Client:
             ))
             return len(rows)
         except httpx.HTTPStatusError as exc:
+            # 진단용으로 항상 마지막 실패 사유를 남긴다(구조적이 아니어도).
+            Cafe24Client._new_customers_last_error = str(exc)[:300]
             # 권한부족/경로없음일 때만 영구 비활성화. 일시적 오류는 다음 날짜 재시도.
             if Cafe24Client._is_structural_http_error(exc):
                 Cafe24Client._new_customers_unavailable = True
-                Cafe24Client._new_customers_last_error = str(exc)[:300]
             return None
 
     def get_visitor_count(self, date: str) -> int | None:
