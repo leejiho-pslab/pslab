@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Hit every dashboard endpoint
         run: |
-          HOST=https://dbrick-ads-dashboard.onrender.com
+          HOST=https://dbrick-ads-dashboard-5eco.onrender.com
           B="${{ github.event.inputs.base || '2026-06-30' }}"
           F="${{ github.event.inputs.from || '2026-06-16' }}"
           fail=0

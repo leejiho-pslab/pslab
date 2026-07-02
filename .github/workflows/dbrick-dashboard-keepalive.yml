@@ -16,7 +16,7 @@ jobs:
       - name: Ping dashboard /health
         run: |
           code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 60 \
-            https://dbrick-ads-dashboard.onrender.com/health || echo "000")
+            https://dbrick-ads-dashboard-5eco.onrender.com/health || echo "000")
           echo "status=$code"
           cat /tmp/health.json 2>/dev/null || true
           if [ "$code" != "200" ]; then
