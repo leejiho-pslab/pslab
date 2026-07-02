@@ -1,0 +1,87 @@
+name: dbrick ads daily collect
+
+# 디브릭(인테리어 디자인) 광고 성과 매일 1회 수집 — 자사몰 없음(광고 채널만 대상).
+#
+# 영속화: DBRICK_DATABASE_URL(무료 Postgres: Neon) 를 Secret 으로 넣을 것.
+#   없으면 러너 SQLite 에 수집되지만 잡 종료와 함께 사라진다.
+#
+# 주의(중요): GitHub 저장소 Secrets 는 저장소 전체에서 공유된다(워크플로별로 분리되지
+#   않음). 이 저장소에는 keek 용 cafe24-daily-collect.yml 이 이미 META_ACCESS_TOKEN,
+#   NAVER_SA_API_KEY, NAVER_CLIENT_ID 등을 사용 중이므로, 같은 이름으로 dbrick 시크릿을
+#   등록하면 keek 의 실제 광고계정 자격증명을 덮어쓰게 된다. 그래서 dbrick 전용 Secret
+#   이름은 전부 DBRICK_ 접두어를 쓴다(컨테이너 내부 환경변수 이름 자체는 원래 이름 그대로
+#   매핑되므로 앱 코드 수정은 필요 없음).
+#
+# 필요한 Secrets (있는 채널만 채우면 됨):
+#   공통:    DBRICK_DATABASE_URL
+#   Meta:    DBRICK_META_ACCESS_TOKEN, DBRICK_META_AD_ACCOUNT_ID
+#            (+ DBRICK_META_APP_ID/DBRICK_META_APP_SECRET 로 장기토큰 자동 갱신)
+#   NaverSA: DBRICK_NAVER_SA_API_KEY, DBRICK_NAVER_SA_SECRET_KEY, DBRICK_NAVER_SA_CUSTOMER_ID
+#   Naver:   DBRICK_NAVER_CLIENT_ID, DBRICK_NAVER_CLIENT_SECRET   (경쟁사 트렌드/검색)
+#   Google:  DBRICK_GOOGLE_ADS_DEVELOPER_TOKEN, DBRICK_GOOGLE_ADS_ACCESS_TOKEN,
+#            DBRICK_GOOGLE_ADS_CUSTOMER_ID, DBRICK_GOOGLE_ADS_LOGIN_CUSTOMER_ID (후순위)
+#   Kakao:   DBRICK_KAKAO_ACCESS_TOKEN, DBRICK_KAKAO_AD_ACCOUNT_ID (후순위)
+#   알림:    DBRICK_SLACK_WEBHOOK_URL (선택)
+#
+# 주의: schedule 은 기본 브랜치(main)에서만 동작 → 이 워크플로를 main 에 머지할 것.
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 08:00 KST (UTC+9)
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "최근 N일 백필 (기본 1)"
+        required: false
+        default: "1"
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dbrick-ads-status
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run daily pipeline (live)
+        env:
+          CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DBRICK_DATABASE_URL }}
+          # Meta (APP_ID/SECRET 있으면 매 실행 장기토큰 자동 갱신 → DB 영속)
+          META_ACCESS_TOKEN: ${{ secrets.DBRICK_META_ACCESS_TOKEN }}
+          META_AD_ACCOUNT_ID: ${{ secrets.DBRICK_META_AD_ACCOUNT_ID }}
+          META_APP_ID: ${{ secrets.DBRICK_META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.DBRICK_META_APP_SECRET }}
+          # Google Ads
+          GOOGLE_ADS_DEVELOPER_TOKEN: ${{ secrets.DBRICK_GOOGLE_ADS_DEVELOPER_TOKEN }}
+          GOOGLE_ADS_ACCESS_TOKEN: ${{ secrets.DBRICK_GOOGLE_ADS_ACCESS_TOKEN }}
+          GOOGLE_ADS_CUSTOMER_ID: ${{ secrets.DBRICK_GOOGLE_ADS_CUSTOMER_ID }}
+          GOOGLE_ADS_LOGIN_CUSTOMER_ID: ${{ secrets.DBRICK_GOOGLE_ADS_LOGIN_CUSTOMER_ID }}
+          # Naver SearchAd
+          NAVER_SA_API_KEY: ${{ secrets.DBRICK_NAVER_SA_API_KEY }}
+          NAVER_SA_SECRET_KEY: ${{ secrets.DBRICK_NAVER_SA_SECRET_KEY }}
+          NAVER_SA_CUSTOMER_ID: ${{ secrets.DBRICK_NAVER_SA_CUSTOMER_ID }}
+          # Kakao Moment
+          KAKAO_ACCESS_TOKEN: ${{ secrets.DBRICK_KAKAO_ACCESS_TOKEN }}
+          KAKAO_AD_ACCOUNT_ID: ${{ secrets.DBRICK_KAKAO_AD_ACCOUNT_ID }}
+          # Naver DataLab/Search (경쟁사)
+          NAVER_CLIENT_ID: ${{ secrets.DBRICK_NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.DBRICK_NAVER_CLIENT_SECRET }}
+        run: |
+          python scripts/run_all.py --mode live --days "${{ github.event.inputs.days || '1' }}"
+
+      - name: Alerts (optional Slack)
+        if: ${{ always() }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.DBRICK_SLACK_WEBHOOK_URL }}
+          DATABASE_URL: ${{ secrets.DBRICK_DATABASE_URL }}
+        run: python scripts/notify.py || true

@@ -59,3 +59,42 @@ services:
       # ── 알림(선택) ──
       - key: SLACK_WEBHOOK_URL
         sync: false
+
+  - type: web
+    name: dbrick-ads-dashboard
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./dbrick-ads-status/Dockerfile
+    dockerContext: ./dbrick-ads-status
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # live 모드: Postgres(DATABASE_URL)에 GitHub Actions 가 적재한 실데이터를 읽어 서빙
+      - key: CAFE24_OPS_MODE
+        value: live
+      # ── 영속 DB (필수) — Neon 무료 Postgres 연결문자열 (keek 과 별개 프로젝트 권장) ──
+      - key: DATABASE_URL
+        sync: false
+      # ── 광고/수집 키 (있는 채널만 입력, 없으면 자동 스킵) ──
+      - key: META_ACCESS_TOKEN
+        sync: false
+      - key: META_AD_ACCOUNT_ID
+        sync: false
+      - key: META_APP_ID
+        sync: false
+      - key: META_APP_SECRET
+        sync: false
+      - key: NAVER_SA_API_KEY
+        sync: false
+      - key: NAVER_SA_SECRET_KEY
+        sync: false
+      - key: NAVER_SA_CUSTOMER_ID
+        sync: false
+      - key: NAVER_CLIENT_ID
+        sync: false
+      - key: NAVER_CLIENT_SECRET
+        sync: false
+      # ── 알림(선택) ──
+      - key: SLACK_WEBHOOK_URL
+        sync: false

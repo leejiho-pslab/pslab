@@ -1,0 +1,24 @@
+name: dbrick dashboard keep-alive
+
+# Render 무료 웹서비스는 15분간 요청이 없으면 슬립 상태로 전환되고, 다음 요청은
+# 콜드스타트(수십초~1분)로 응답한다 — 사용자에게는 "서버 오류/응답 없음"으로 보인다.
+# 10분 간격으로 /health 를 호출해 항상 깨어있게 유지한다(무료: GitHub Actions 크론 + curl).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping dashboard /health
+        run: |
+          code=$(curl -s -o /tmp/health.json -w "%{http_code}" --max-time 60 \
+            https://dbrick-ads-dashboard.onrender.com/health || echo "000")
+          echo "status=$code"
+          cat /tmp/health.json 2>/dev/null || true
+          if [ "$code" != "200" ]; then
+            echo "::warning::keep-alive ping got HTTP $code (서버가 슬립에서 깨어나는 중일 수 있음)"
+          fi

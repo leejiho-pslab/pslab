@@ -1,0 +1,10 @@
+[project]
+name = "cafe24-ops-status"
+version = "0.0.0"
+description = "카페24 자사몰 통합 자동화 운영현황 대시보드 (Phase 0 스켈레톤)"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
