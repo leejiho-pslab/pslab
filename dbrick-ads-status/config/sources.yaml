@@ -8,7 +8,7 @@ shop:
 
 ads:
   - { channel: meta,   account_id: "1800216167435143" }   # D.Brick_official — 인스타그램/페이스북
-  - { channel: naver,  account_id: "" }   # 네이버 검색광고(파워링크) — "OO동 인테리어" 검색 수요
+  - { channel: naver,  account_id: "3465901" }   # 네이버 검색광고(파워링크) — "OO동 인테리어" 검색 수요
   - { channel: google, account_id: "" }   # 후순위
   - { channel: kakao,  account_id: "" }   # 후순위
 
