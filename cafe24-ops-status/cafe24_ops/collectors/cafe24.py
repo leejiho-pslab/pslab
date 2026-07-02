@@ -343,12 +343,14 @@ class Cafe24Collector(BaseCollector):
                 else:
                     visitors = client.get_visitor_count(date)  # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
-                if signups is None and Cafe24Client._new_customers_unavailable:
-                    # 구조적 실패(권한/경로없음)로 이번 프로세스 내내 비활성화됨.
+                if signups is None and Cafe24Client._new_customers_last_error:
+                    # latch 여부와 무관하게 실패 사유가 있으면(구조적/일시적 모두)
                     # 운영 로그에서 바로 원인을 보도록 최초 1회만 남긴다.
                     if not getattr(self, "_signups_error_logged", False):
+                        latched = Cafe24Client._new_customers_unavailable
                         log.warning(
-                            "신규가입수 수집 비활성화(구조적 오류): %s",
+                            "신규가입수 수집 실패(%s): %s",
+                            "구조적, 이후 생략" if latched else "일시적, 재시도 예정",
                             Cafe24Client._new_customers_last_error,
                         )
                         self._signups_error_logged = True

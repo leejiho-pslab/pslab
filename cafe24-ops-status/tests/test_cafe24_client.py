@@ -170,6 +170,27 @@ def test_count_new_customers_transient_5xx_does_not_latch():
     Cafe24Client._new_customers_unavailable = False
 
 
+def test_count_new_customers_401_latches_and_records_reason():
+    """재발급 후에도 401(scope 누락 등 실제 라이브 관찰 사례)은 구조적 → latch.
+
+    latch 여부와 무관하게 _new_customers_last_error 에 사유가 남아야
+    운영 로그에서 진단 가능하다(진단 경고 추가의 회귀 테스트).
+    """
+    Cafe24Client._new_customers_unavailable = False
+    Cafe24Client._new_customers_last_error = None
+
+    def handler(req):
+        return httpx.Response(401, json={"error": "insufficient scope"})
+
+    c = _client(handler)  # refresh_token 없음 → 401 그대로 예외로 전파
+    assert c.count_new_customers("2026-06-17", "2026-06-17") is None
+    assert Cafe24Client._new_customers_unavailable is True
+    assert Cafe24Client._new_customers_last_error is not None
+    assert "401" in Cafe24Client._new_customers_last_error
+    Cafe24Client._new_customers_unavailable = False
+    Cafe24Client._new_customers_last_error = None
+
+
 def test_count_new_customers_403_latches():
     """권한부족(403)은 구조적 → 이후 호출을 생략(latch)한다."""
     Cafe24Client._new_customers_unavailable = False
