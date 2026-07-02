@@ -9,9 +9,12 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import random
 
 from .base import BaseCollector
+
+log = logging.getLogger(__name__)
 
 
 def _rng(date: str) -> random.Random:
@@ -340,6 +343,15 @@ class Cafe24Collector(BaseCollector):
                 else:
                     visitors = client.get_visitor_count(date)  # CAFE24_VISITORS_PATH 설정 시
                 signups = client.count_new_customers(date, date)
+                if signups is None and Cafe24Client._new_customers_unavailable:
+                    # 구조적 실패(권한/경로없음)로 이번 프로세스 내내 비활성화됨.
+                    # 운영 로그에서 바로 원인을 보도록 최초 1회만 남긴다.
+                    if not getattr(self, "_signups_error_logged", False):
+                        log.warning(
+                            "신규가입수 수집 비활성화(구조적 오류): %s",
+                            Cafe24Client._new_customers_last_error,
+                        )
+                        self._signups_error_logged = True
                 reviews = client.count_reviews(date, date)   # 상품후기 수(board 4)
                 soldout = client.count_soldout()             # 현재 품절 상품 수(스냅샷)
                 # 상품→카테고리 매핑: DB 캐시 우선(매 수집마다 재구축 → cafe24 429 방지).

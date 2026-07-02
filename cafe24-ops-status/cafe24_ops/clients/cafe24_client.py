@@ -267,6 +267,8 @@ class Cafe24Client:
     # 몰/토큰권한에 따라 신규고객 엔드포인트가 아예 없을 수 있다. 그 경우에만 프로세스
     # 내에서 더 호출하지 않아(백필 시 매일 404/403 반복 방지) 속도를 아낀다.
     _new_customers_unavailable = False
+    # latch 원인 진단용(운영 로그에서 403/404 등 실제 사유를 바로 보기 위함).
+    _new_customers_last_error: str | None = None
 
     @staticmethod
     def _is_structural_http_error(exc: httpx.HTTPStatusError) -> bool:
@@ -309,6 +311,7 @@ class Cafe24Client:
             # 권한부족/경로없음일 때만 영구 비활성화. 일시적 오류는 다음 날짜 재시도.
             if Cafe24Client._is_structural_http_error(exc):
                 Cafe24Client._new_customers_unavailable = True
+                Cafe24Client._new_customers_last_error = str(exc)[:300]
             return None
 
     def get_visitor_count(self, date: str) -> int | None:
