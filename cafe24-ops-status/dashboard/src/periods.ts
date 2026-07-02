@@ -32,10 +32,10 @@ export function computeRanges(base: string, preset: Preset): Ranges {
   const d = parse(base);
   switch (preset) {
     case "yesterday":
-      // "어제"(전일) 실적을 그 전날과 비교 — 다른 탭 RangePicker 의 "어제"와 동일한 하루 단위
+      // 조회일(base)은 곧 '어제'(최근 완료일) → 그날 실적을 전일과 비교. RangePicker "어제"와 동일.
       return {
-        selFrom: addDays(base, -1), selTo: addDays(base, -1),
-        cmpFrom: addDays(base, -2), cmpTo: addDays(base, -2),
+        selFrom: base, selTo: base,
+        cmpFrom: addDays(base, -1), cmpTo: addDays(base, -1),
       };
     case "week":
       return { selFrom: addDays(base, -6), selTo: base, cmpFrom: addDays(base, -13), cmpTo: addDays(base, -7) };
