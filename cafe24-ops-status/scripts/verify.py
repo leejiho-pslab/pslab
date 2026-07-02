@@ -41,6 +41,7 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 EXACT_TOL_RATIO = 0.001
 # 카테고리/베스트 합은 품목 기준이라 배송비·할인으로 매출과 다름 → 비율만 본다.
 ITEM_RATIO_LO, ITEM_RATIO_HI = 0.40, 1.60
+NEW_SIGNUPS_HELP = "count_new_customers: 403/404/405/501 이면 latch, 429/5xx는 날짜별 재시도"
 
 
 def _daterange(start: _date, end: _date):
@@ -71,6 +72,8 @@ def _facts_index(store: Store, dfrom: str, dto: str) -> dict[str, dict]:
             d["has_product"] = True
         elif m == "crm_count":
             d["has_crm"] = True
+        elif m == "new_signups":
+            d["new_signups"] = v
     return idx
 
 
@@ -105,6 +108,12 @@ def check_db(store: Store, start: _date, end: _date) -> int:
     print(f"  신규/재구매  : {sum(1 for d in have_sales if 'cust_sum' in idx.get(d, {}))}/{len(have_sales)}일")
     print(f"  후기/CRM     : {cnt('has_crm')}/{len(have_sales)}일")
     print(f"  방문자수     : {sum(1 for d in have_sales if idx.get(d, {}).get('visitors'))}/{len(have_sales)}일 (GA4 미연동 시 0 정상)")
+    signup_dates = [d for d in have_sales if idx.get(d, {}).get("new_signups") is not None]
+    print(f"  신규가입수   : {len(signup_dates)}/{len(have_sales)}일"
+          f" (미연동/권한없음이면 0 정상 — {NEW_SIGNUPS_HELP})")
+    if signup_dates:
+        recent = signup_dates[-5:]
+        print("    최근값 : " + ", ".join(f"{d}={idx[d]['new_signups']:.0f}" for d in recent))
     _etc_share(store, start, end)
 
     # 3) 내부 정합성 --------------------------------------------------
