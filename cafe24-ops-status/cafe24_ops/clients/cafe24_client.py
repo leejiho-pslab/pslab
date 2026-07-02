@@ -294,14 +294,15 @@ class Cafe24Client:
         """
         if Cafe24Client._new_customers_unavailable:
             return None
+        count_error = None
         try:
             data = self.get(
                 "/api/v2/admin/customers/count",
                 {"created_start_date": start_date, "created_end_date": end_date},
             )
             return int(data.get("count", 0) or 0)
-        except httpx.HTTPStatusError:
-            pass
+        except httpx.HTTPStatusError as exc:
+            count_error = str(exc)[:300]
         # 폴백: 목록을 기간 필터로 받아 건수를 센다.
         try:
             rows = list(self.iter_pages(
@@ -312,7 +313,10 @@ class Cafe24Client:
             return len(rows)
         except httpx.HTTPStatusError as exc:
             # 진단용으로 항상 마지막 실패 사유를 남긴다(구조적이 아니어도).
-            Cafe24Client._new_customers_last_error = str(exc)[:300]
+            # count 엔드포인트 실패 사유도 함께 남겨 두 경로 모두의 원인을 보이게 한다.
+            Cafe24Client._new_customers_last_error = (
+                f"count: {count_error} | list: {str(exc)[:300]}"
+            )
             # 권한부족/경로없음일 때만 영구 비활성화. 일시적 오류는 다음 날짜 재시도.
             if Cafe24Client._is_structural_http_error(exc):
                 Cafe24Client._new_customers_unavailable = True
