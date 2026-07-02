@@ -50,3 +50,26 @@ def test_period_comparison_recent7d_sums(tmp_path):
         assert abs(rows["aov"]["values"]["recent_7d"] - g / o) < 1e-6
     finally:
         store.close()
+
+
+def test_period_comparison_signup_metrics(tmp_path):
+    """신규회원가입수(합산형)·회원가입율(신규가입수/방문자, 파생형)이 표에 포함된다."""
+    cfg = load_config()
+    store = Store(tmp_path)
+    try:
+        for d in range(4, 18):
+            run_pipeline(f"2026-06-{d:02d}", cfg, store, mode="mock")
+
+        rows = {r["key"]: r for r in period_comparison(store, "2026-06-17", cfg.metrics)}
+        assert "new_signups" in rows
+        assert "signup_rate" in rows
+
+        daily = {d["date"]: d["value"] for d in store.get_daily("2026-06-11", "2026-06-17")
+                  if d["metric"] == "new_signups"}
+        assert rows["new_signups"]["values"]["recent_7d"] == sum(daily.values())
+
+        s = rows["new_signups"]["values"]["recent_7d"]
+        v = rows["visitors"]["values"]["recent_7d"]
+        assert abs(rows["signup_rate"]["values"]["recent_7d"] - s / v * 100) < 1e-6
+    finally:
+        store.close()

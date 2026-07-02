@@ -33,6 +33,8 @@ period_comparison:
     - { key: aov,             label: 객단가 }
     - { key: conversion_rate, label: 구매전환율 }
     - { key: visitors,        label: 방문자 }
+    - { key: new_signups,     label: 신규회원가입수 }
+    - { key: signup_rate,     label: 회원가입율 }
     - { key: ad_cost,         label: 광고비용 }
     - { key: ad_cost_ratio,   label: 매출대비 광고비율 }
 

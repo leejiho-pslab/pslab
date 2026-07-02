@@ -17,7 +17,7 @@ export function formatValue(value: number | null | undefined, format?: MetricFor
 // 기간 비교 표는 지표 키로 포맷을 추정한다.
 export function formatByKey(value: number | null | undefined, key: string): string {
   if (value === null || value === undefined) return "—";
-  if (key === "conversion_rate" || key === "ad_cost_ratio")
+  if (key === "conversion_rate" || key === "ad_cost_ratio" || key === "signup_rate")
     return value.toFixed(2) + "%";
   if (["gross_sales", "ad_sales", "ad_cost", "aov"].includes(key))
     return "₩" + Math.round(value).toLocaleString("ko-KR");

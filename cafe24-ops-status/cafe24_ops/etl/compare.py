@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date as _date
 from datetime import timedelta
 
-SUM_METRICS = {"gross_sales", "order_count", "visitors", "ad_cost", "ad_sales"}
+SUM_METRICS = {"gross_sales", "order_count", "visitors", "new_signups", "ad_cost", "ad_sales"}
 
 
 def _window_ranges(base: _date) -> dict[str, tuple[_date, _date]]:
@@ -58,6 +58,9 @@ def _agg(metric: str, sums: dict[str, float]) -> float | None:
     if metric == "conversion_rate":
         o, v = sums.get("order_count"), sums.get("visitors")
         return (o / v * 100) if o is not None and v else None
+    if metric == "signup_rate":
+        s, v = sums.get("new_signups"), sums.get("visitors")
+        return (s / v * 100) if s is not None and v else None
     if metric == "ad_cost_ratio":
         c, g = sums.get("ad_cost"), sums.get("gross_sales")
         return (c / g * 100) if c is not None and g else None

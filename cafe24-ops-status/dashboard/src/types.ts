@@ -81,6 +81,7 @@ export interface VisitorTrendRow {
   visitors?: number;
   new?: number;
   returning?: number;
+  signups?: number;
 }
 export interface VisitorTrendResponse {
   from: string;

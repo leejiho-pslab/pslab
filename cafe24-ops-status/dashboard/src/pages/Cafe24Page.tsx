@@ -17,9 +17,9 @@ import { DeviceDonut } from "../components/DeviceDonut";
 import { DevicePerfTable } from "../components/DevicePerfTable";
 import { CategoryBar } from "../components/CategoryBar";
 import { BestTable } from "../components/BestTable";
-import { CRMCards } from "../components/CRMCards";
 import { VisitorDetailCard } from "../components/VisitorDetailCard";
 import { VisitorChart } from "../components/VisitorChart";
+import { SignupTrendChart } from "../components/SignupTrendChart";
 import { NewReturningChart } from "../components/NewReturningChart";
 import { AdCostChart } from "../components/AdCostChart";
 import { PlannedGroups } from "../components/PlannedGroups";
@@ -86,7 +86,7 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
           </div>
           <div className="two-col">
             <VisitorDetailCard v={detail?.visitor ?? ({} as never)} />
-            <CRMCards crm={detail?.crm ?? {}} />
+            <SignupTrendChart from={from} to={to} />
           </div>
           <VisitorChart from={VISITOR_TREND_FROM} to={to} />
           <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
