@@ -102,11 +102,13 @@ dbrick-ads-status/
 
 ## 남은 일 (사용자가 직접 연결)
 
-- [ ] `DATABASE_URL`(Neon) — GitHub Secrets
-- [ ] `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (+선택 `META_APP_ID/SECRET`)
-- [ ] `NAVER_SA_API_KEY/SECRET_KEY/CUSTOMER_ID`
-- [ ] `NAVER_CLIENT_ID/SECRET` + `config/sources.yaml`의 `competitors` 실제 확정
-- [ ] Render Blueprint 배포
+GitHub Secrets 는 저장소가 keek 과 공유라 전부 `DBRICK_` 접두어를 쓴다(자세히는 `DBRICK-CONNECT-GUIDE.md`).
+
+- [ ] `DBRICK_DATABASE_URL`(Neon) — GitHub Secrets
+- [ ] `DBRICK_META_ACCESS_TOKEN`, `DBRICK_META_AD_ACCOUNT_ID` (+선택 `DBRICK_META_APP_ID/SECRET`)
+- [ ] `DBRICK_NAVER_SA_API_KEY/SECRET_KEY/CUSTOMER_ID`
+- [ ] `DBRICK_NAVER_CLIENT_ID/SECRET` + `config/sources.yaml`의 `competitors` 실제 확정
+- [ ] Render Blueprint 배포 (Render 는 서비스별 분리 저장이라 접두어 없이 원래 이름 그대로)
 - [ ] (후순위) Google Ads / Kakao Moment
 
 순서/발급 방법은 [`DBRICK-CONNECT-GUIDE.md`](DBRICK-CONNECT-GUIDE.md) 참고.
