@@ -37,9 +37,9 @@ description: >-
 | 인스타그램 | ✅ | Instagram Graph API (캐러셀) |
 | 스레드 | ✅ | Threads API |
 | 구글 블로그 | ✅ | Blogger API v3 (OAuth2 refresh token) |
-| 링크드인 | ✅ | LinkedIn API |
+| 링크드인 | ✅ | LinkedIn Posts API (REST, 이미지는 Images API로 별도 업로드 후 첨부) |
+| 유튜브 | ✅ | YouTube Data API v3 재개형(resumable) 업로드. 구글 앱 미검수 상태면 refresh token이 7일마다 만료 — 검수 전엔 담당자가 주기적으로 재로그인 필요 |
 | 네이버 블로그 | ❌ 수동 | 공식 발행 API 없음 → 대시보드에서 본문 복사 + 이미지 다운로드 |
-| 유튜브 | ❌ 수동 | 미검증 앱 업로드는 비공개 고정 → 영상 다운로드 + 제목/설명/태그 복사 |
 
 ---
 
@@ -107,9 +107,18 @@ description: >-
   `PSLAB_THREADS_THREADS_USER_ID`. (앱ID/시크릿 넣으면 토큰 만료일 계산·경고 가능)
 - **구글 블로그(Blogger)**: Google Cloud 프로젝트 → Blogger API 활성화 → OAuth 클라이언트 →
   OAuth Playground로 `refresh_token` 발급. `PSLAB_BLOGGER_CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN/BLOG_ID`.
-- **링크드인**: `PSLAB_LINKEDIN_ACCESS_TOKEN`, `PSLAB_LINKEDIN_AUTHOR_URN`.
+- **링크드인**: LinkedIn 개발자 앱(Developer Portal) → "Share on LinkedIn"/"Sign In with LinkedIn"
+  제품 추가 → OAuth로 사용자 접근 토큰 발급(보통 60일 만료, 자동 갱신 불가 — 만료 전 재발급 필요).
+  `PSLAB_LINKEDIN_ACCESS_TOKEN`, `PSLAB_LINKEDIN_AUTHOR_URN`(`urn:li:person:...` 또는
+  `urn:li:organization:...`).
+- **유튜브**: Google Cloud 프로젝트 → YouTube Data API v3 활성화 → OAuth 클라이언트 →
+  OAuth Playground로 `refresh_token` 발급(스코프 `youtube.upload`). `PSLAB_YOUTUBE_CLIENT_ID/
+  CLIENT_SECRET/REFRESH_TOKEN/CHANNEL_ID`. **구글 앱을 검수(인증)받지 않으면 OAuth 동의가
+  "테스트" 상태로 남아 refresh token이 7일마다 만료** — 그때마다 OAuth Playground에서
+  재발급해 시크릿을 갱신해야 무인 업로드가 이어진다. 완전 무인을 원하면 앱 검수(개인정보처리방침
+  페이지 필요, 보통 며칠~몇 주 소요)를 받을 것.
 - **텔레그램 알림**: @BotFather로 봇 생성 → `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`.
-- **네이버·유튜브**: 자동발행 불가(위 표). 대시보드 복사/다운로드 도우미로 담당자가 직접 게시.
+- **네이버 블로그**: 자동발행 불가(위 표). 대시보드 복사/다운로드 도우미로 담당자가 직접 게시.
 - **AI/이미지**: `ANTHROPIC_API_KEY`(글). 배경 실사진(선택) `PEXELS_API_KEY`.
 
 담당자 가이드는 항상 **화면 캡처를 요청받으면 어디를 누를지 짚어주는** 방식으로. `오픈-가이드.md`,
