@@ -60,13 +60,20 @@ def values_to_region(values: list[list[str]]) -> dict:
 
 
 def _service_account_credentials() -> dict | None:
+    """환경변수가 아예 없으면 None(→ 공개 CSV 로 폴백). 있는데 JSON 파싱이 안 되면
+    예외를 던져서 명확한 에러로 알린다(등록값이 깨졌는데 조용히 공개 CSV 로 숨어버리는
+    것을 막기 위함 — 그러면 "왜 서비스계정을 등록했는데도 공개 링크 에러가 나지?" 같은
+    혼란스러운 상황이 생긴다)."""
     raw = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
     if not raw:
         return None
     try:
         return json.loads(raw)
-    except (ValueError, TypeError):
-        return None
+    except (ValueError, TypeError) as e:
+        raise ValueError(
+            f"GOOGLE_APPLICATION_CREDENTIALS_JSON 값이 올바른 JSON이 아닙니다"
+            f"(복사/붙여넣기 중 잘렸거나 깨졌을 수 있음): {e}"
+        ) from e
 
 
 def _sheets_access_token(credentials_info: dict) -> str:
@@ -79,6 +86,16 @@ def _sheets_access_token(credentials_info: dict) -> str:
     return creds.token
 
 
+def _raise_with_body(resp: httpx.Response) -> None:
+    """raise_for_status 는 응답 본문(구글 API 의 실제 에러 사유)을 안 보여줘서 진단이 어렵다
+    — 본문을 메시지에 붙여서 재발생시킨다(예: 403 PERMISSION_DENIED 인지, API 미활성화인지 등)."""
+    try:
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        body = resp.text[:300]
+        raise httpx.HTTPStatusError(f"{e} — 응답: {body}", request=e.request, response=e.response) from e
+
+
 def fetch_via_sheets_api(sheet_id: str, gid: str, credentials_info: dict, timeout: float = 15.0) -> dict:
     """서비스계정 인증으로 Sheets API 조회 — 시트를 공개할 필요 없음(서비스계정에만 뷰어 공유)."""
     token = _sheets_access_token(credentials_info)
@@ -89,7 +106,7 @@ def fetch_via_sheets_api(sheet_id: str, gid: str, credentials_info: dict, timeou
         params={"fields": "sheets.properties(sheetId,title)"},
         headers=headers, timeout=timeout,
     )
-    meta.raise_for_status()
+    _raise_with_body(meta)
     title = pick_sheet_title(meta.json(), gid)
     if not title:
         raise ValueError(f"gid={gid} 에 해당하는 시트 탭을 찾을 수 없습니다")
@@ -98,7 +115,7 @@ def fetch_via_sheets_api(sheet_id: str, gid: str, credentials_info: dict, timeou
         f"{SHEETS_API_BASE}/{sheet_id}/values/{title}",
         headers=headers, timeout=timeout,
     )
-    values_resp.raise_for_status()
+    _raise_with_body(values_resp)
     return values_to_region(values_resp.json().get("values", []))
 
 
@@ -122,8 +139,8 @@ def fetch_region_status(sheet_id: str, gid: str, timeout: float = 15.0) -> dict:
     if cached and now - cached[0] < _CACHE_TTL_SECONDS:
         return cached[1]
 
-    credentials_info = _service_account_credentials()
     try:
+        credentials_info = _service_account_credentials()
         if credentials_info:
             data = fetch_via_sheets_api(sheet_id, gid, credentials_info, timeout)
         else:

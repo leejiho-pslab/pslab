@@ -80,3 +80,18 @@ def test_fetch_region_status_falls_back_to_csv_without_credentials(monkeypatch):
     out = fetch_region_status("SHEET2", "2")
     assert calls == {"sheets_api": 0, "csv": 1}
     assert out["headers"] == ["A"]
+
+
+def test_fetch_region_status_reports_broken_credentials_instead_of_silent_fallback(monkeypatch):
+    # 환경변수는 있는데 JSON 파싱이 안 되면(복사/붙여넣기 깨짐 등), 공개 CSV 로 조용히
+    # 폴백하지 말고 원인을 명확히 알려야 한다(그래야 "서비스계정 등록했는데 왜 공개 링크
+    # 에러가 나지?" 같은 혼란이 안 생긴다).
+    monkeypatch.setenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "{이건 유효한 JSON이 아님")
+    calls = {"csv": 0}
+    monkeypatch.setattr(region_sheet, "fetch_via_csv_export",
+                        lambda *a, **k: calls.__setitem__("csv", calls["csv"] + 1))
+    region_sheet._CACHE.clear()
+
+    out = fetch_region_status("SHEET3", "3")
+    assert calls["csv"] == 0                 # CSV 로 폴백하지 않아야 함
+    assert "JSON" in out["error"]
