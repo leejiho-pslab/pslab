@@ -48,17 +48,16 @@
 
 ## 5. 남은 일 / 알려진 갭
 
-- **신규가입수·회원가입율 "—" — 근본 원인 확정, 카페24 Admin API로는 불가능(라이브 검증 완료)**:
-  - latch 버그(일시적 오류에 프로세스 전체 영구비활성화) 수정, 401/403/404/405/422/501을 구조적 오류로 분류(422도 포함 — 재시도해도 100% 반복 실패 확인됨).
-  - **라이브에서 두 엔드포인트 모두 확정적으로 실패 확인**:
-    `count: 404 for /api/v2/admin/customers/count :: {"error":{"code":404,"message":"No API found."}}`
-    `list: 422 for /api/v2/admin/customers :: {"error":{"code":422,"message":"Please enter the cellphone or member_id parameter."}}`
-    → `/customers/count`는 API 자체가 존재하지 않고, `/customers`(목록)는 `member_id`/`cellphone` 필수라 기간별 대량조회를 지원하지 않는다. **파라미터 수정으로 고칠 수 있는 문제가 아니다.**
-  - **GA4 대안도 확인해봤으나 불가**: `cafe24-ga4-diag.yml`로 최근 8일 이벤트명 전수 확인(`page_view, session_start, 클릭, first_visit, 제품분류_클릭, buy_now_버튼_클릭, user_engagement, 장바구니_보기, 구매하기_버튼_클릭, 장바구니_버튼_클릭, 결제완료, 관심상품_버튼_클릭` — 12개) → **회원가입 관련 이벤트가 전혀 없음**. 스토어프론트에 가입완료 시 GA4 이벤트를 새로 심어야 하는데(관리자 페이지/GTM 편집, 이 프로젝트 범위 밖), 사용자가 보류.
-  - **다음 세션 TODO — 사용자 액션 필요**: 카페24 Admin API와 별개인 **"카페24 Analytics API"**(`cafe24data`, 도메인 `ca-api.cafe24data.com`, scope `mall.analytics`)가 존재하며 "회원/비회원 구분 통계"를 제공한다고 함 — 신규가입수 소스가 될 가능성. 단, **기존 admin 앱과 별도의 OAuth 2.0 인증/앱등록이 필요**(공식 문서: "별도의 OAuth 2.0 인증 프로세스로만 접근 가능"). 에이전트 샌드박스에서 `developers.cafe24.com` 계열 전 도메인이 WebFetch 403으로 막혀 정확한 등록 절차·엔드포인트 스펙을 확인 못함.
-    1. 사용자가 직접 https://developers.cafe24.com/data/front/cafe24dataapi 에서 Analytics API 개발사 등록 + OAuth 인증을 완료해 client_id/secret(or access_token) 확보
-    2. 확보한 자격증명 + 실제 엔드포인트 문서(회원 통계 관련 섹션)를 다음 세션에 공유하면 `cafe24_ops/clients/cafe24data.py` 클라이언트 신규 작성 + 수집기 연동 진행
-    3. 그전까지는 신규가입수는 정직하게 "—"(미연동) 상태 유지가 맞음(추측성 코드 작성 지양).
+- **신규가입수·회원가입율 — ⛔ 미연동 확정(조사 종결, 사용자 확인 완료)**: 4가지 경로를 전부 라이브로 확인했고 모두 불가.
+  1. **카페24 Admin API** `/customers`, `/customers/count` — 구조적으로 불가.
+     `count: 404 for /api/v2/admin/customers/count :: {"error":{"code":404,"message":"No API found."}}`
+     `list: 422 for /api/v2/admin/customers :: {"error":{"code":422,"message":"Please enter the cellphone or member_id parameter."}}`
+     → count 엔드포인트 자체가 없고, list는 `member_id`/`cellphone` 필수라 기간별 대량조회 미지원. 파라미터 수정으로 해결 불가.
+  2. **GA4** — `cafe24-ga4-diag.yml`로 최근 8일 이벤트 12종 전수 확인(`page_view, session_start, 클릭, first_visit, 제품분류_클릭, buy_now_버튼_클릭, user_engagement, 장바구니_보기, 구매하기_버튼_클릭, 장바구니_버튼_클릭, 결제완료, 관심상품_버튼_클릭`) → 회원가입 이벤트 없음. (스토어프론트에 가입완료 시 커스텀 이벤트를 새로 심으면 가능하지만 이 프로젝트 범위 밖 — 보류)
+  3. **카페24 Analytics API**(`cafe24data`) — 사용자가 직접 개발자센터에서 앱 생성·전체 엔드포인트 카탈로그 확인(`Adeffect, Carts, Members sales, Pages, Products, Sales, Visitors, Visitpaths` 등 22개) → 가입/등록 관련 엔드포인트 전무("Members sales"는 회원/비회원 매출 구분이지 가입수 아님). 게다가 공식 문서상 "카페24의 **승인을 받은 제휴사**에만 제공"이라 일반 쇼핑몰 계정으로는 애초에 대상이 아님.
+  4. **카페24 관리자 "통계 > 고객분석 > 요일별/시간별 분석"** — 관리자 화면에는 "신규가입자" 컬럼이 존재(사용자가 직접 캡처 확인)하지만, 이건 내부 리포팅 시스템이며 공개 Admin API로 노출되지 않음(있었다면 애초에 1번 문제가 없었을 것).
+  → **latch 버그 수정(422/401 구조적 분류 포함)은 유지**하되, `count_new_customers` 자체를 더 고치려 시도하지 않기로 사용자와 합의. 대시보드에는 다른 미연동 지표(순매출·환불 등)와 동일하게 **`PlannedGroups.tsx`의 STATUS를 `missing`으로 표시**해 정직하게 노출 중(핵심 지표 표/신규가입 흐름 차트는 UI만 유지, 값은 항상 "—").
+  → 재추진하려면: (a) 스토어프론트에 GA4 `sign_up` 커스텀 이벤트 추가(프론트엔드 별도 작업) 또는 (b) 카페24에 Analytics API 제휴사 신청 절차 문의, 둘 중 하나가 필요.
   - 진단 인프라는 준비됨: `log.warning("신규가입수 수집 실패(...): ...")`가 latch 여부와 무관하게 매번 실제 HTTP 상태/사유(count+list 조합)를 노출(`cafe24-daily-collect.yml` 로그). `cafe24-verify.yml`(mode=db)도 커버리지/최근값 리포트. `scripts/ga4_diag.py`는 이벤트명별 건수까지 진단.
 - **⛔ 미연동 지표**(정직하게 표시 중): 순매출·취소/환불(환불 API), 문자·알림톡·카카오 발송(발송 솔루션), 장바구니·재고·입고·외부채널(카페24 재고/장바구니 API). 필요 API 붙이면 채워짐.
 - **도메인 완전 분리 배포**(선택): 지금은 미연동 소스 자동 스킵으로 한 대시보드에 공존. 업체별 별도 URL 원하면 `App.tsx`의 `TABS` 축소 + `render.yaml` 서비스명 분리 필요.

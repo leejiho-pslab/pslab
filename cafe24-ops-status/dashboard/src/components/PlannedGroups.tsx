@@ -9,9 +9,10 @@ const STATUS: Record<string, Status> = {
   // 매출·주문
   매출합계: "live", 주문수: "live", 객단가: "live", 구매전환율: "live",
   순매출: "missing", "취소·환불금액": "missing", 환불주문수: "missing",
-  // 방문자 (신규/재방문·재방문율은 GA4, 회원가입율은 신규가입수/방문자)
-  전체방문: "live", 신규가입수: "live",
-  신규방문: "live", 재방문: "live", 재방문율: "live", 회원가입율: "live",
+  // 방문자 (신규/재방문·재방문율은 GA4). 신규가입수/회원가입율은 조사 결과 미연동 확정.
+  전체방문: "live",
+  신규방문: "live", 재방문: "live", 재방문율: "live",
+  신규가입수: "missing", 회원가입율: "missing",
   // CRM
   후기수: "live",
   문자: "missing", 알림톡: "missing", 카카오: "missing",
@@ -26,6 +27,8 @@ const REASON: Record<string, string> = {
   순매출: "환불/취소 API 미연동",
   "취소·환불금액": "환불/취소 API 미연동",
   환불주문수: "환불/취소 API 미연동",
+  신규가입수: "카페24 Admin API(/customers)·GA4·Analytics API(제휴사 전용) 전부 미지원 확정",
+  회원가입율: "카페24 Admin API(/customers)·GA4·Analytics API(제휴사 전용) 전부 미지원 확정",
   문자: "SMS 발송 API(NHN Toast 등) 미연동",
   알림톡: "알림톡 발송 API 미연동",
   카카오: "카카오 채널 발송 API 미연동",
