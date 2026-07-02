@@ -36,6 +36,19 @@ def main() -> int:
     resp = c._http.post(path, headers={"Authorization": f"Bearer {tok}"}, json=body)
     print(f"runReport status = {resp.status_code}")
     print("body:", resp.text[:1500])
+
+    # 3) 최근 8일 이벤트명 × 건수 — 회원가입(sign_up 등) 이벤트가 실제 잡히는지 확인.
+    #    카페24 신규가입수를 카페24 API 대신 GA4 이벤트로 낼 수 있는지 판단하는 용도.
+    ev_body = {
+        "dateRanges": [{"startDate": "8daysAgo", "endDate": "yesterday"}],
+        "dimensions": [{"name": "eventName"}],
+        "metrics": [{"name": "eventCount"}],
+        "orderBys": [{"metric": {"metricName": "eventCount"}, "desc": True}],
+        "limit": 50,
+    }
+    resp2 = c._http.post(path, headers={"Authorization": f"Bearer {tok}"}, json=ev_body)
+    print(f"\n이벤트명별 건수 status = {resp2.status_code}")
+    print("body:", resp2.text[:3000])
     c.close()
     return 0
 
