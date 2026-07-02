@@ -63,10 +63,11 @@ test('학습: 저장소 왕복', () => {
   }
 });
 
-test('수동 채널: 네이버블로그·유튜브만이면 수동 발행 대상', () => {
+test('수동 채널: 네이버블로그만 수동 발행 대상 (유튜브는 API 연동으로 자동 처리)', () => {
   assert.ok(isManualOnly(['naver-blog']));
-  assert.ok(isManualOnly(['naver-blog', 'youtube']));
+  assert.ok(!isManualOnly(['youtube']));
+  assert.ok(!isManualOnly(['naver-blog', 'youtube'])); // 자동 채널 섞이면 자동 처리
   assert.ok(!isManualOnly(['instagram']));
-  assert.ok(!isManualOnly(['naver-blog', 'instagram'])); // 자동 채널 섞이면 자동 처리
-  assert.deepEqual(MANUAL_CHANNELS, ['naver-blog', 'youtube']);
+  assert.ok(!isManualOnly(['naver-blog', 'instagram']));
+  assert.deepEqual(MANUAL_CHANNELS, ['naver-blog']);
 });

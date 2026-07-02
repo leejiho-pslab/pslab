@@ -101,8 +101,8 @@ export interface PlanMetrics {
   engagementRate?: number;
 }
 
-/** 자동 발행을 지원하지 않는 수동 채널 (복붙 발행) */
-export const MANUAL_CHANNELS: PlatformId[] = ['naver-blog', 'youtube'];
+/** 자동 발행을 지원하지 않는 수동 채널 (복붙 발행) — 네이버 블로그는 공식 발행 API가 없다. */
+export const MANUAL_CHANNELS: PlatformId[] = ['naver-blog'];
 
 /** 해당 항목이 전부 수동 채널로만 구성됐는지 */
 export function isManualOnly(channels: PlatformId[]): boolean {

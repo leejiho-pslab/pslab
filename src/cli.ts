@@ -376,27 +376,42 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         );
         continue;
       }
+      // 자동 채널만 추려 발행 (수동 채널이 섞여 있으면 제외)
+      const autoChannels = it.channels.filter((c) => !MANUAL_CHANNELS.includes(c));
+      const includesYoutube = autoChannels.includes('youtube');
       const imgs = it.slideImages?.length
         ? it.slideImages
         : it.cardImage
           ? [it.cardImage]
           : [];
-      if (imgs.length === 0) {
+      // 유튜브 쇼츠 항목은 카드 이미지가 아니라 영상 파일로 발행하므로 이미지가 없어도 통과.
+      if (imgs.length === 0 && !(includesYoutube && it.videoFile)) {
         console.log(`  ${it.id}: 카드 이미지 없음 → 건너뜀`);
         continue;
       }
-      // 자동 채널만 추려 발행 (수동 채널이 섞여 있으면 제외)
-      const autoChannels = it.channels.filter((c) => !MANUAL_CHANNELS.includes(c));
+      // 유튜브는 SEO용 별도 제목/설명/태그(ytTitle 등)가 있으면 그것을 우선 사용.
+      const title = includesYoutube && it.ytTitle
+        ? it.ytTitle
+        : (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
+      const body = includesYoutube && it.ytDescription
+        ? it.ytDescription
+        : (it.captionBody ?? it.captionNote ?? it.topic);
+      const media: PostContent['media'] = imgs.map((p) => ({
+        kind: 'image' as const,
+        source: `${pages}/${p}`,
+        alt: it.topic,
+      }));
+      if (includesYoutube && it.videoFile) {
+        // 영상은 공개 URL이 아니라 CI 작업 디렉터리의 로컬 파일을 직접 읽어 업로드한다
+        // (Pages 배포 반영 지연에 의존하지 않기 위함 — docs/는 같은 체크아웃에 이미 존재).
+        media.push({ kind: 'video' as const, source: `docs/${it.videoFile}` });
+      }
       const content: PostContent = {
         id: it.id,
-        title: (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, ''),
-        body: it.captionBody ?? it.captionNote ?? it.topic,
-        media: imgs.map((p) => ({
-          kind: 'image' as const,
-          source: `${pages}/${p}`,
-          alt: it.topic,
-        })),
-        tags: [],
+        title,
+        body,
+        media,
+        tags: includesYoutube && it.ytTags?.length ? it.ytTags : [],
       };
       console.log(`\n▶ 발행: [${autoChannels.join(',')}] ${content.title} (${imgs.length}장)`);
       // 한 항목 발행 실패가 나머지 항목 발행을 막지 않도록 격리
