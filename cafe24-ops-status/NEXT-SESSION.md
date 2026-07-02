@@ -65,7 +65,7 @@
 
 ## 6. 운영/검증 워크플로 (GitHub Actions, 수동 실행 가능)
 
-- `cafe24-daily-collect.yml` — 매일 08:00 KST 전 채널 수집(수동 `days:N` 백필). **기본 브랜치에서 실행.**
+- `cafe24-daily-collect.yml` — 매일 07:00 KST 전 채널 수집(수동 `days:N` 백필). **기본 브랜치에서 실행.**
 - `keek-api-smoke.yml` — 라이브 20+ 엔드포인트 200 점검 + 배포 번들 해시 출력.
 - `keek-dashboard-keepalive.yml` — 10분마다 `/health` 핑(슬립 방지).
 - `cafe24-verify.yml` — 데이터 정확도 리포트. `cafe24-ga4-diag.yml` — GA4 진단.

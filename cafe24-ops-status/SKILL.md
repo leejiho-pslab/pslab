@@ -20,7 +20,7 @@ description: 카페24 자사몰 통합 자동화 운영현황 대시보드. 데�
   Meta 광고(계정 + 소재별 이미지·성과), 네이버 검색광고(ROAS), 경쟁사(네이버 DataLab/검색)
 - `mock` 모드: 샘플 데이터(같은 날짜=같은 값) — 연동 전 흐름 검증용
 - **무료 스택**: Neon Postgres(영속) · Render Web(웹/API) · GitHub Actions(데일리 수집 + 10분 keepalive)
-- **자동화**: `cafe24-daily-collect.yml`(08:00 KST) · `keek-dashboard-keepalive.yml`(콜드스타트 방지) ·
+- **자동화**: `cafe24-daily-collect.yml`(07:00 KST) · `keek-dashboard-keepalive.yml`(콜드스타트 방지) ·
   `cafe24-verify.yml`(정확도) · `keek-api-smoke.yml`(엔드포인트 200 점검) · 알림(`scripts/notify.py`, Slack 홀딩)
 
 ### 주요 API
