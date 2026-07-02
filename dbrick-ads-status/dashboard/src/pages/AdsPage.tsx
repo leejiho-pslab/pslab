@@ -10,7 +10,14 @@ import { AdsTrendChart } from "../components/AdsTrendChart";
 import { Loading, ErrorState } from "../components/States";
 
 const CH_LABEL: Record<string, string> = {
-  meta: "Meta", google: "Google", naver: "Naver", kakao: "Kakao",
+  meta: "Meta",
+  google: "Google",
+  naver: "Naver",              // 구 데이터 호환(유형 분리 전 수집분)
+  naver_powerlink: "네이버 파워링크",
+  naver_place: "네이버 플레이스",
+  naver_other: "네이버 기타(쇼핑/브랜드검색 등)",
+  kakao: "Kakao",
+  ga4_unmapped: "GA4 미분류(채널 매핑 필요)",
 };
 const won = (v: number) => formatValue(v, "currency");
 const num = (v: number) => Math.round(v).toLocaleString("ko-KR");

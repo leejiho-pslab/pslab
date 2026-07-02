@@ -8,7 +8,8 @@ shop:
 
 ads:
   - { channel: meta,   account_id: "1800216167435143" }   # D.Brick_official — 인스타그램/페이스북
-  - { channel: naver,  account_id: "3465901" }   # 네이버 검색광고(파워링크) — "OO동 인테리어" 검색 수요
+  - { channel: naver,  account_id: "3465901" }   # 네이버 검색광고 계정(파워링크+플레이스 캠페인 모두 포함) — "OO동 인테리어" 검색 수요
+                                                  # 대시보드에서는 campaignTp 기준으로 naver_powerlink/naver_place 로 자동 분리 표시됨
   - { channel: google, account_id: "" }   # 후순위
   - { channel: kakao,  account_id: "" }   # 후순위
 
@@ -17,3 +18,9 @@ competitors:             # 실제 비교 대상 확정 (name 은 네이버 트�
   - { name: 한건축, url: "https://hanarchitecture.co.kr/company" }
   - { name: DDB인테리어스튜디오, url: "https://ddb-interior-studio.imweb.me/process" }
   - { name: 뮤지엄오브모던키친, url: "https://museumofmodernkitchen.com/" }
+
+# 대시보드 하단 "온라인 인입 지역 현황" 표 — 대표님이 직접 관리하는 구글 시트를 그대로 노출.
+# 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"여야 API 키 없이 조회 가능(비공개면 조회 실패).
+region_status:
+  sheet_id: "18dafF2keO5xW59eH9WcQbgcRpX7M6Jmn62ySA3NkdoM"
+  gid: "1478961985"

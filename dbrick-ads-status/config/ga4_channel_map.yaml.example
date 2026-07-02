@@ -1,0 +1,17 @@
+# GA4 sessionSourceMedium("naver / cpc" 같은 "소스 / 매체" 문자열) → 대시보드 광고 채널 키.
+# 복사해서 config/ga4_channel_map.yaml 로 저장하면 기본 매핑(ga4.py 의
+# DEFAULT_SOURCE_MEDIUM_CHANNEL) 위에 이 파일 값이 덮어써진다.
+#
+# 실제 GA4 속성의 [탐색 > 트래픽 획득 보고서]에서 디브릭 광고가 어떤 source/medium 으로
+# 잡히는지 먼저 확인한 뒤 아래처럼 채워 넣을 것 — 특히 네이버 파워링크/플레이스는
+# UTM(utm_source/utm_medium)을 구분해서 태깅해야 자동 분리된다(안 하면 둘 다
+# "naver / cpc" 로 잡혀 파워링크로만 집계됨).
+#
+# 매칭 안 되는 source/medium 은 "ga4_unmapped" 채널로 남아 대시보드에서 확인 가능.
+
+"facebook / cpc": meta
+"instagram / cpc": meta
+"naver / cpc": naver_powerlink
+"naver_place / cpc": naver_place
+"google / cpc": google
+"kakao / cpc": kakao

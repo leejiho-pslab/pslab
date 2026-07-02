@@ -2,6 +2,8 @@
 
 인증: HMAC-SHA256 서명(X-API-KEY/X-Customer/X-Timestamp/X-Signature).
 계정 전체 통계는 캠페인 id 목록을 받아 /stats 로 집계한다.
+캠페인 유형(campaignTp)별로 파워링크(WEB_SITE)/플레이스(PLACE)를 분리 집계해
+별도 채널(naver_powerlink / naver_place)로 대시보드에 노출한다.
 HTTP는 실 키로 검증 필요, 서명/매핑은 단위 테스트로 검증한다.
 
 참고: https://naver.github.io/searchad-apidoc/
@@ -18,6 +20,13 @@ import httpx
 
 NAVER_SA_BASE = "https://api.searchad.naver.com"
 
+# campaignTp(네이버 SA API) → 대시보드 채널 키
+CAMPAIGN_TYPE_CHANNEL = {
+    "WEB_SITE": "naver_powerlink",   # 파워링크
+    "PLACE": "naver_place",          # 플레이스
+}
+DEFAULT_CHANNEL = "naver_other"      # 쇼핑검색/파워컨텐츠/브랜드검색 등 기타 유형
+
 
 def sign(secret_key: str, timestamp: str, method: str, path: str) -> str:
     message = f"{timestamp}.{method}.{path}"
@@ -25,8 +34,8 @@ def sign(secret_key: str, timestamp: str, method: str, path: str) -> str:
     return base64.b64encode(digest).decode()
 
 
-def naver_sa_to_facts(date: str, raw: dict) -> list[dict]:
-    """SA /stats 응답 → 표준 metric 레코드(dims.channel=naver)."""
+def naver_sa_to_facts(date: str, raw: dict, channel: str = "naver") -> list[dict]:
+    """SA /stats 응답 → 표준 metric 레코드(dims.channel=channel)."""
     rows = (raw or {}).get("data") or []
     if not rows:
         return []
@@ -40,7 +49,7 @@ def naver_sa_to_facts(date: str, raw: dict) -> list[dict]:
     values = {"ad_cost": cost, "impressions": imp, "clicks": clk,
               "conversions": conv, "ad_sales": val}
     return [
-        {"date": date, "source": "ads", "metric": k, "value": v, "dims": {"channel": "naver"}}
+        {"date": date, "source": "ads", "metric": k, "value": v, "dims": {"channel": channel}}
         for k, v in values.items()
     ]
 
@@ -87,10 +96,18 @@ class NaverSearchAdClient:
         r.raise_for_status()
         return r.json()
 
-    def list_campaign_ids(self) -> list[str]:
+    def list_campaigns(self) -> list[dict]:
+        """캠페인 목록 — id + 유형(campaignTp: WEB_SITE=파워링크, PLACE=플레이스 등)."""
         data = self._get("/ncc/campaigns", {})
         items = data if isinstance(data, list) else data.get("data", [])
-        return [c.get("nccCampaignId") for c in items if c.get("nccCampaignId")]
+        return [
+            {"id": c.get("nccCampaignId"), "type": c.get("campaignTp")}
+            for c in items if c.get("nccCampaignId")
+        ]
+
+    def list_campaign_ids(self) -> list[str]:
+        """하위호환용 — 유형 구분 없이 전체 캠페인 id만 필요할 때."""
+        return [c["id"] for c in self.list_campaigns()]
 
     def stats(self, ids: list[str], date: str) -> dict:
         # ids 는 배열(반복 파라미터)로 전송해야 함 — 콤마 결합은 '잘못된 파라미터 형식' 오류.
@@ -101,15 +118,28 @@ class NaverSearchAdClient:
         }
         return self._get("/stats", params)
 
-    def fetch_facts(self, date: str) -> list[dict]:
-        ids = self.list_campaign_ids()
-        if not ids:
-            return []
+    def _stats_for_ids(self, ids: list[str], date: str) -> dict:
         # /stats 는 한 번에 최대 100개 id → 청크로 나눠 호출 후 합산
         data: list[dict] = []
         for i in range(0, len(ids), 100):
             data += (self.stats(ids[i:i + 100], date).get("data") or [])
-        return naver_sa_to_facts(date, {"data": data})
+        return {"data": data}
+
+    def fetch_facts(self, date: str) -> list[dict]:
+        """캠페인 유형별(파워링크/플레이스/기타)로 나눠 각각 채널 facts 를 생성."""
+        campaigns = self.list_campaigns()
+        if not campaigns:
+            return []
+        ids_by_channel: dict[str, list[str]] = {}
+        for c in campaigns:
+            channel = CAMPAIGN_TYPE_CHANNEL.get(c["type"], DEFAULT_CHANNEL)
+            ids_by_channel.setdefault(channel, []).append(c["id"])
+
+        records: list[dict] = []
+        for channel, ids in ids_by_channel.items():
+            raw = self._stats_for_ids(ids, date)
+            records += naver_sa_to_facts(date, raw, channel=channel)
+        return records
 
     def close(self) -> None:
         self._http.close()

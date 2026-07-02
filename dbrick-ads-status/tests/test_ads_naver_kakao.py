@@ -39,6 +39,41 @@ def test_naver_sa_client_flow():
     c.close()
 
 
+def test_naver_sa_splits_powerlink_and_place():
+    # 파워링크(WEB_SITE)와 플레이스(PLACE) 캠페인이 섞여 있으면 채널별로 분리 집계돼야 함
+    def handler(req):
+        if req.url.path == "/ncc/campaigns":
+            return httpx.Response(200, json=[
+                {"nccCampaignId": "pl-1", "campaignTp": "WEB_SITE"},
+                {"nccCampaignId": "pl-2", "campaignTp": "WEB_SITE"},
+                {"nccCampaignId": "place-1", "campaignTp": "PLACE"},
+                {"nccCampaignId": "shop-1", "campaignTp": "SHOPPING"},
+            ])
+        if req.url.path == "/stats":
+            ids = req.url.params.get_list("ids")
+            if ids == ["pl-1", "pl-2"]:
+                return httpx.Response(200, json={"data": [{"salesAmt": "1000", "convAmt": "5000"}]})
+            if ids == ["place-1"]:
+                return httpx.Response(200, json={"data": [{"salesAmt": "300", "convAmt": "900"}]})
+            if ids == ["shop-1"]:
+                return httpx.Response(200, json={"data": [{"salesAmt": "50", "convAmt": "0"}]})
+        return httpx.Response(404)
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    facts = c.fetch_facts("2026-06-17")
+    by_channel: dict[str, dict] = {}
+    for x in facts:
+        by_channel.setdefault(x["dims"]["channel"], {})[x["metric"]] = x["value"]
+    c.close()
+
+    assert by_channel["naver_powerlink"]["ad_cost"] == 1000.0
+    assert by_channel["naver_powerlink"]["ad_sales"] == 5000.0
+    assert by_channel["naver_place"]["ad_cost"] == 300.0
+    assert by_channel["naver_place"]["ad_sales"] == 900.0
+    assert by_channel["naver_other"]["ad_cost"] == 50.0  # SHOPPING 등 기타 유형
+
+
 def test_naver_sa_chunks_over_100_ids():
     calls = {"stats": 0}
 

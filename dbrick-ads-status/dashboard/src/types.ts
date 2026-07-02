@@ -265,6 +265,13 @@ export interface BestChange {
   rank_changes: RankChange[];
 }
 
+export interface RegionStatus {
+  headers: string[];
+  rows: string[][];
+  error: string | null;
+  fetched_at?: number;
+}
+
 export interface DigestAlert {
   level: string;
   type: string;

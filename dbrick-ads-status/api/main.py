@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from cafe24_ops.alerts import build_alerts, build_commentary, build_digest  # noqa: E402
+from cafe24_ops.clients.region_sheet import fetch_region_status  # noqa: E402
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.etl.breakdown import (  # noqa: E402
     best_products,
@@ -421,6 +422,16 @@ def dates() -> dict:
         return {"dates": store.list_dates()}
     finally:
         store.close()
+
+
+@app.get("/api/region-status")
+def region_status_ep() -> dict:
+    """대시보드 하단 '온라인 인입 지역 현황' — 구글 시트를 그대로 노출(수동 갱신, 5분 캐시)."""
+    cfg = _config.sources.region_status
+    sheet_id, gid = cfg.get("sheet_id"), cfg.get("gid")
+    if not sheet_id or not gid:
+        return {"headers": [], "rows": [], "error": "region_status 시트 설정 없음(config/sources.yaml)"}
+    return fetch_region_status(sheet_id, gid)
 
 
 # 빌드된 React 대시보드를 같은 서비스에서 서빙 (있을 때만).

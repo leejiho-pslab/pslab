@@ -120,4 +120,51 @@ class AdsCollector(BaseCollector):
             raise NotImplementedError(
                 "[ads] 광고 플랫폼 자격증명이 없습니다. META/GOOGLE/NAVER/KAKAO 설정 시 활성화됩니다."
             )
-        return records
+        return self._apply_ga4_conversions(date, records)
+
+    def _apply_ga4_conversions(self, date: str, records: list[dict]) -> list[dict]:
+        """GA4 전환 데이터가 연동돼 있으면(GA4_PROPERTY_ID + 서비스계정 키), 각 광고
+        플랫폼이 자체 보고한 conversions 를 GA4 기준 값으로 대체한다. 매핑 안 되는
+        source/medium 은 channel="ga4_unmapped" 로 남겨 유실 없이 확인 가능하게 한다.
+        GA4 미연동(env 없음)이면 아무 변경 없이 원본 그대로 반환한다.
+        """
+        from ..clients.ga4 import GA4Client
+
+        client = GA4Client.from_env()
+        if client is None:
+            return records
+        try:
+            mapping = self._ga4_channel_mapping()
+            by_channel = client.daily_channel_conversions(date, mapping)
+        finally:
+            client.close()
+        if not by_channel:
+            return records
+
+        kept = [r for r in records if r.get("metric") != "conversions"]
+        for channel, agg in by_channel.items():
+            kept.append({
+                "date": date, "source": self.source, "metric": "conversions",
+                "value": agg.get("conversions", 0.0), "dims": {"channel": channel},
+            })
+            if agg.get("ga4_conversion_value"):
+                kept.append({
+                    "date": date, "source": self.source, "metric": "ga4_conversion_value",
+                    "value": agg["ga4_conversion_value"], "dims": {"channel": channel},
+                })
+        return kept
+
+    def _ga4_channel_mapping(self) -> dict | None:
+        """config/ga4_channel_map.yaml 이 있으면 GA4 기본 매핑 위에 덮어써서 사용한다.
+        (디브릭 실제 UTM 태깅 규칙에 맞춰 조정할 때 코드 수정 없이 이 파일만 바꾸면 됨)
+        """
+        from ..clients.ga4 import DEFAULT_SOURCE_MEDIUM_CHANNEL
+        from ..config import CONFIG_DIR
+        import yaml
+
+        path = CONFIG_DIR / "ga4_channel_map.yaml"
+        if not path.exists():
+            return DEFAULT_SOURCE_MEDIUM_CHANNEL
+        with path.open(encoding="utf-8") as f:
+            override = yaml.safe_load(f) or {}
+        return {**DEFAULT_SOURCE_MEDIUM_CHANNEL, **override}

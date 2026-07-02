@@ -57,6 +57,46 @@ def ga4_report_to_new_returning(raw: dict) -> dict | None:
     return out
 
 
+# GA4 sessionSourceMedium("naver / cpc" 등) → 대시보드 광고 채널 키.
+# 디브릭 실제 UTM 태깅 규칙에 맞춰 config/ga4_channel_map.yaml 로 재정의 가능(없으면 이 기본값 사용).
+# 매칭 안 되는 source/medium 은 "ga4_unmapped" 로 남아 유실 없이 확인 가능하다.
+DEFAULT_SOURCE_MEDIUM_CHANNEL = {
+    "facebook / cpc": "meta",
+    "instagram / cpc": "meta",
+    "fb / cpc": "meta",
+    "ig / cpc": "meta",
+    "naver / cpc": "naver_powerlink",
+    "naver_powerlink / cpc": "naver_powerlink",
+    "naver_place / cpc": "naver_place",
+    "naver_place / referral": "naver_place",
+    "google / cpc": "google",
+    "kakao / cpc": "kakao",
+    "kakaomoment / cpc": "kakao",
+}
+
+
+def ga4_report_to_channel_conversions(raw: dict, mapping: dict | None = None) -> dict[str, dict]:
+    """sessionSourceMedium 차원 runReport(conversions, purchaseRevenue) →
+    {channel: {"conversions": n, "ga4_conversion_value": v}}.
+
+    매핑 안 되는 source/medium 은 channel="ga4_unmapped" 로 합산돼 유실 없이 노출된다.
+    """
+    mapping = mapping or DEFAULT_SOURCE_MEDIUM_CHANNEL
+    rows = (raw or {}).get("rows") or []
+    out: dict[str, dict] = {}
+    for r in rows:
+        dims = r.get("dimensionValues") or [{}]
+        vals = r.get("metricValues") or []
+        source_medium = (dims[0].get("value") or "").strip()
+        channel = mapping.get(source_medium, "ga4_unmapped")
+        conv = float(vals[0].get("value", 0) or 0) if len(vals) > 0 else 0.0
+        rev = float(vals[1].get("value", 0) or 0) if len(vals) > 1 else 0.0
+        agg = out.setdefault(channel, {"conversions": 0.0, "ga4_conversion_value": 0.0})
+        agg["conversions"] += conv
+        agg["ga4_conversion_value"] += rev
+    return out
+
+
 class GA4Client:
     def __init__(
         self,
@@ -143,6 +183,32 @@ class GA4Client:
             if resp.status_code != 200:
                 return None
             return ga4_report_to_new_returning(resp.json())
+        return None
+
+    def daily_channel_conversions(self, date: str, mapping: dict | None = None) -> dict[str, dict] | None:
+        """일자 채널(sessionSourceMedium)별 전환수/전환매출. 실패 시 None. 401 이면 토큰 1회 재발급.
+
+        광고 채널별 실제 전환은 각 광고 플랫폼 자체 보고값보다 GA4 값이 더 신뢰도 높은 경우가
+        많아, 이 값이 있으면 ads facts 의 conversions 를 이 값으로 대체한다(AdsCollector 참고).
+        """
+        body = {
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "sessionSourceMedium"}],
+            "metrics": [{"name": "conversions"}, {"name": "purchaseRevenue"}],
+        }
+        path = f"/v1beta/properties/{self.property_id}:runReport"
+        for attempt in (1, 2):
+            try:
+                resp = self._http.post(
+                    path, headers={"Authorization": f"Bearer {self._access_token()}"}, json=body)
+            except Exception:  # noqa: BLE001
+                return None
+            if resp.status_code == 401 and attempt == 1:
+                self._token = None
+                continue
+            if resp.status_code != 200:
+                return None
+            return ga4_report_to_channel_conversions(resp.json(), mapping)
         return None
 
     def close(self) -> None:

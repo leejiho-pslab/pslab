@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "./api";
 import type { MetricsConfig } from "./types";
 import { BriefingBanner } from "./components/BriefingBanner";
+import { RegionStatusTable } from "./components/RegionStatusTable";
 import { AdsPage } from "./pages/AdsPage";
 import { CreativePage } from "./pages/CreativePage";
 import { CompetitorPage } from "./pages/CompetitorPage";
@@ -85,6 +86,8 @@ export default function App() {
       {tab === "ads" && <AdsPage date={date} />}
       {tab === "creative" && <CreativePage date={date} />}
       {tab === "competitor" && <CompetitorPage date={date} />}
+
+      <RegionStatusTable />
 
       <footer className="foot">
         디브릭 광고 자동화 대시보드 · 지표 정의는 metrics.yaml 기반 · 데이터 mock/live 전환 가능

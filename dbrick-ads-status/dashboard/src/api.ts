@@ -10,6 +10,7 @@ import type {
   CompetitorTrendRow,
   NaverSearchItem,
   NaverTrend,
+  RegionStatus,
   Creative,
   CreativeFatigue,
   CreativeOverview,
@@ -88,4 +89,7 @@ export const api = {
     ),
   competitorsBestChanges: (date?: string) =>
     get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
+
+  // 대시보드 하단 — 온라인 인입 지역 현황(구글 시트)
+  regionStatus: () => get<RegionStatus>("/api/region-status"),
 };

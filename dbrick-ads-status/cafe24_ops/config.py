@@ -62,6 +62,11 @@ class SourcesConfig:
     competitors: list[dict]
     raw: dict
 
+    @property
+    def region_status(self) -> dict:
+        """대시보드 하단 '온라인 인입 지역 현황' 구글 시트 설정({sheet_id, gid}). 없으면 빈 dict."""
+        return dict(self.raw.get("region_status", {}) or {})
+
 
 @dataclass
 class AppConfig:

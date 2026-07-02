@@ -21,6 +21,8 @@ name: dbrick ads daily collect
 #   Google:  DBRICK_GOOGLE_ADS_DEVELOPER_TOKEN, DBRICK_GOOGLE_ADS_ACCESS_TOKEN,
 #            DBRICK_GOOGLE_ADS_CUSTOMER_ID, DBRICK_GOOGLE_ADS_LOGIN_CUSTOMER_ID (후순위)
 #   Kakao:   DBRICK_KAKAO_ACCESS_TOKEN, DBRICK_KAKAO_AD_ACCOUNT_ID (후순위)
+#   GA4:     DBRICK_GA4_PROPERTY_ID, DBRICK_GOOGLE_APPLICATION_CREDENTIALS_JSON
+#            (있으면 광고 conversions 를 GA4 채널별 값으로 대체 — 없어도 나머지는 정상 동작)
 #   알림:    DBRICK_SLACK_WEBHOOK_URL (선택)
 #
 # 주의: schedule 은 기본 브랜치(main)에서만 동작 → 이 워크플로를 main 에 머지할 것.
@@ -76,6 +78,9 @@ jobs:
           # Naver DataLab/Search (경쟁사)
           NAVER_CLIENT_ID: ${{ secrets.DBRICK_NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.DBRICK_NAVER_CLIENT_SECRET }}
+          # GA4 (광고 전환수 대체 소스)
+          GA4_PROPERTY_ID: ${{ secrets.DBRICK_GA4_PROPERTY_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.DBRICK_GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           python scripts/run_all.py --mode live --days "${{ github.event.inputs.days || '1' }}"
 

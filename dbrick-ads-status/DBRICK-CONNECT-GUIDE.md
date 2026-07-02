@@ -36,9 +36,12 @@
 5. `dbrick-ads-status/config/sources.yaml` 의 `ads[channel: meta].account_id` 도 같이 채워두면
    서빙 시 계정명 매칭이 더 안정적이다(선택).
 
-## 2. 네이버 검색광고(SA) — 파워링크 (10분)
+## 2. 네이버 검색광고(SA) — 파워링크 · 플레이스 (10분)
 "OO동 인테리어", "아파트 리모델링" 같은 지역/의도 검색 키워드가 핵심이라 인테리어 업종은
-네이버 파워링크 비중이 크다.
+네이버 파워링크·플레이스 비중이 크다. **대시보드는 캠페인 유형(campaignTp)을 기준으로
+파워링크(WEB_SITE)와 플레이스(PLACE)를 자동으로 분리해서 각각 별도 채널로 보여준다** —
+별도 설정 없이 아래 3개 값만 등록하면 API가 알려주는 유형 그대로 나뉜다(쇼핑검색/브랜드검색 등
+기타 유형은 "네이버 기타"로 합산).
 1. https://searchad.naver.com → 도구 → **API 사용 관리**에서 라이선스 발급(무료)
 2. 액세스 라이선스(API_KEY), 비밀키(SECRET_KEY), CUSTOMER_ID(광고주 ID) 확인
 3. 시크릿 등록: **`DBRICK_NAVER_SA_API_KEY`**, **`DBRICK_NAVER_SA_SECRET_KEY`**, **`DBRICK_NAVER_SA_CUSTOMER_ID`**
@@ -53,6 +56,26 @@
 토큰 승인 절차가 길다. 0~3번이 돌아가는 걸 먼저 확인한 뒤 여유 있을 때 진행해도 된다.
 - Google: `DBRICK_GOOGLE_ADS_DEVELOPER_TOKEN`, `DBRICK_GOOGLE_ADS_ACCESS_TOKEN`, `DBRICK_GOOGLE_ADS_CUSTOMER_ID`, `DBRICK_GOOGLE_ADS_LOGIN_CUSTOMER_ID`
 - Kakao: `DBRICK_KAKAO_ACCESS_TOKEN`, `DBRICK_KAKAO_AD_ACCOUNT_ID`
+
+## 4-1. GA4 전환 데이터 연동 (광고 전환수를 GA4 기준으로 대체)
+각 광고 플랫폼이 자체 보고하는 전환수 대신, **GA4(구글 애널리틱스)에서 집계한 전환수를
+우선 사용**하도록 연결돼 있다. 연동되면 채널별 `conversions`(전환율/CPA 계산에 쓰임)가
+GA4 값으로 자동 대체된다.
+1. GA4 속성 ID 확인: analytics.google.com → 디브릭 속성 → **관리 → 속성 설정** 상단의 속성 ID(숫자)
+2. 서비스계정 키 발급: console.cloud.google.com → 프로젝트 생성(무료) → **API 및 서비스 → 사용 설정**에서
+   "Google Analytics Data API" 활성화 → **사용자 인증 정보 → 서비스 계정 만들기** → 키(JSON) 다운로드
+3. 발급받은 서비스계정 이메일(`...@...iam.gserviceaccount.com`)을 GA4 → **관리 → 속성 액세스 관리**에
+   **뷰어** 권한으로 추가(이거 안 하면 403)
+4. 시크릿 등록:
+   - **`DBRICK_GA4_PROPERTY_ID`**: 1번의 속성 ID
+   - **`DBRICK_GOOGLE_APPLICATION_CREDENTIALS_JSON`**: 2번 JSON 파일 내용을 그대로 (한 줄로) 붙여넣기
+5. (선택, 정확도↑) GA4에서 실제로 잡히는 source/medium 값이 기본 매핑과 다르면
+   `dbrick-ads-status/config/ga4_channel_map.yaml.example` 을 참고해 `ga4_channel_map.yaml` 로
+   복사·수정 — 특히 **네이버 파워링크/플레이스는 UTM(utm_source/utm_medium)을 다르게 태깅해야**
+   GA4에서도 구분되고, 대시보드에서도 정확히 분리된다. 안 하면 광고는 정상 집계되지만 전환수만
+   "네이버(파워링크)"로 뭉뚱그려 잡힐 수 있음.
+6. 매칭 안 되는 source/medium 은 "GA4 미분류" 채널로 남아 유실 없이 확인 가능하다 — 계속 그렇게
+   뜨면 5번 매핑 파일을 조정하면 됨.
 
 ## 5. 배포 (Render, 20분) — URL 로 접속 가능한 대시보드
 1. https://render.com 가입(깃허브 로그인)
@@ -71,6 +94,14 @@
 ## 7. 검증
 - `dbrick api smoke (live onrender)` 워크플로 수동 실행 → 모든 엔드포인트 200 확인
 - `dbrick dashboard keep-alive` 는 10분마다 자동으로 돌며 Render 슬립을 방지(별도 설정 불필요, main 머지만 하면 됨)
+
+## 8. 온라인 인입 지역 현황(구글 시트) — 대시보드 하단
+대표님이 주신 구글 시트가 `config/sources.yaml`의 `region_status`에 이미 연결돼 있어
+별도 배포 작업은 필요 없다. 다만 아래 조건이 안 맞으면 조회 실패로 표시된다.
+1. 구글 시트 우측 상단 **공유** → **일반 액세스**를 **"링크가 있는 모든 사용자" → 뷰어**로 변경
+   (비공개로 두면 대시보드가 403으로 못 읽어옴)
+2. 대시보드 아무 탭에서나 맨 아래로 스크롤 → "온라인 인입 지역 현황" 표 확인
+3. 시트 내용을 수정하면 최대 5분 이내(캐시 TTL)에 반영됨
 
 ---
 
