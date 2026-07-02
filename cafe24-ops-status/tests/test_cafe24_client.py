@@ -133,8 +133,57 @@ def test_visitor_count_enabled_via_env(monkeypatch):
 
 
 def test_count_new_customers_graceful_404():
+    Cafe24Client._new_customers_unavailable = False
     def handler(req):
         return httpx.Response(404, json={"error": "not found"})
 
     c = _client(handler)
     assert c.count_new_customers("2026-06-17", "2026-06-17") is None
+    # 404(경로없음)는 구조적 → 이후 호출 생략(latch)
+    assert Cafe24Client._new_customers_unavailable is True
+    Cafe24Client._new_customers_unavailable = False
+
+
+def test_count_new_customers_transient_5xx_does_not_latch():
+    """일시적 5xx는 그 날짜만 None 이고, 다음 날짜는 정상 수집돼야 한다.
+
+    (백필 중 한 날 500이 나면 그 이후 모든 날짜가 '—'로 빠지던 버그 방지)
+    """
+    Cafe24Client._new_customers_unavailable = False
+    state = {"fail": True}
+
+    def handler(req):
+        # count 엔드포인트는 항상 404 → 목록 폴백으로 진입
+        if req.url.path.endswith("/customers/count"):
+            return httpx.Response(404, json={"error": "no count"})
+        if state["fail"]:
+            return httpx.Response(500, json={"error": "server error"})
+        return httpx.Response(200, json={"customers": [{"member_id": "a"}]})
+
+    c = _client(handler)
+    # 첫 날: 일시적 500 → None, 하지만 latch 되면 안 됨
+    assert c.count_new_customers("2026-06-17", "2026-06-17") is None
+    assert Cafe24Client._new_customers_unavailable is False
+    # 다음 날: 서버 정상화 → 정상 수집
+    state["fail"] = False
+    assert c.count_new_customers("2026-06-18", "2026-06-18") == 1
+    Cafe24Client._new_customers_unavailable = False
+
+
+def test_count_new_customers_403_latches():
+    """권한부족(403)은 구조적 → 이후 호출을 생략(latch)한다."""
+    Cafe24Client._new_customers_unavailable = False
+    calls = {"n": 0}
+
+    def handler(req):
+        calls["n"] += 1
+        return httpx.Response(403, json={"error": "insufficient scope"})
+
+    c = _client(handler)
+    assert c.count_new_customers("2026-06-17", "2026-06-17") is None
+    assert Cafe24Client._new_customers_unavailable is True
+    # latch 됐으므로 다음 호출은 네트워크 없이 즉시 None
+    before = calls["n"]
+    assert c.count_new_customers("2026-06-18", "2026-06-18") is None
+    assert calls["n"] == before
+    Cafe24Client._new_customers_unavailable = False

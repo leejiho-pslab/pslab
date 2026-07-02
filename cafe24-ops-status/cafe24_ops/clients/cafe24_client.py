@@ -264,15 +264,28 @@ class Cafe24Client:
         except httpx.HTTPStatusError:
             return None
 
-    # 몰/토큰권한에 따라 신규고객 엔드포인트가 없을 수 있다. 한 번 실패하면 프로세스
-    # 내에서 더 호출하지 않아(백필 시 매일 404/422 반복 방지) 속도를 아낀다.
+    # 몰/토큰권한에 따라 신규고객 엔드포인트가 아예 없을 수 있다. 그 경우에만 프로세스
+    # 내에서 더 호출하지 않아(백필 시 매일 404/403 반복 방지) 속도를 아낀다.
     _new_customers_unavailable = False
+
+    @staticmethod
+    def _is_structural_http_error(exc: httpx.HTTPStatusError) -> bool:
+        """재시도해도 소용없는 영구적 상태인가.
+
+        403(scope 부족)·404/405(경로없음)·501(미구현)은 몰/토큰 설정이 바뀌기
+        전까지 계속 실패 → 이후 호출을 생략한다. 반면 429/5xx/네트워크 오류는
+        일시적이므로 latch 하지 않는다(그 날짜만 None, 다음 날짜는 정상 재시도).
+        """
+        resp = getattr(exc, "response", None)
+        code = resp.status_code if resp is not None else 0
+        return code in (403, 404, 405, 501)
 
     def count_new_customers(self, start_date: str, end_date: str) -> int | None:
         """기간 내 신규 가입 회원수.
 
-        /customers/count(404 가능) → 목록(/customers) 폴백. 둘 다 실패하면 None 이며,
-        이후 호출은 즉시 None(반복 실패 호출 생략).
+        /customers/count(404 가능) → 목록(/customers) 폴백. 둘 다 실패하면 None.
+        구조적 실패(권한/경로없음)일 때만 이후 호출을 생략하고, 일시적 오류
+        (429/5xx)는 해당 날짜만 None 이며 다음 날짜에서 다시 시도한다.
         """
         if Cafe24Client._new_customers_unavailable:
             return None
@@ -292,8 +305,10 @@ class Cafe24Client:
                 "customers",
             ))
             return len(rows)
-        except httpx.HTTPStatusError:
-            Cafe24Client._new_customers_unavailable = True
+        except httpx.HTTPStatusError as exc:
+            # 권한부족/경로없음일 때만 영구 비활성화. 일시적 오류는 다음 날짜 재시도.
+            if Cafe24Client._is_structural_http_error(exc):
+                Cafe24Client._new_customers_unavailable = True
             return None
 
     def get_visitor_count(self, date: str) -> int | None:
