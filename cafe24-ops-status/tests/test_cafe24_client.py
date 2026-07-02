@@ -191,6 +191,30 @@ def test_count_new_customers_401_latches_and_records_reason():
     Cafe24Client._new_customers_last_error = None
 
 
+def test_count_new_customers_422_latches_real_live_scenario():
+    """실제 라이브 관찰 사례 재현: count=404 "No API found", list=422 "member_id/cellphone 필요".
+
+    두 응답 모두 재시도해도 절대 성공할 수 없는 API 계약 불일치이므로 latch 되어야
+    하고, 조합 메시지(count: ... | list: ...)에 두 사유가 모두 남아야 한다.
+    """
+    Cafe24Client._new_customers_unavailable = False
+    Cafe24Client._new_customers_last_error = None
+
+    def handler(req):
+        if req.url.path.endswith("/customers/count"):
+            return httpx.Response(404, json={"error": {"code": 404, "message": "No API found."}})
+        return httpx.Response(422, json={"error": {
+            "code": 422, "message": "Please enter the cellphone or member_id parameter."}})
+
+    c = _client(handler)
+    assert c.count_new_customers("2026-06-17", "2026-06-17") is None
+    assert Cafe24Client._new_customers_unavailable is True
+    assert "count: 404" in Cafe24Client._new_customers_last_error
+    assert "list: 422" in Cafe24Client._new_customers_last_error
+    Cafe24Client._new_customers_unavailable = False
+    Cafe24Client._new_customers_last_error = None
+
+
 def test_count_new_customers_403_latches():
     """권한부족(403)은 구조적 → 이후 호출을 생략(latch)한다."""
     Cafe24Client._new_customers_unavailable = False

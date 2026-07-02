@@ -48,11 +48,18 @@
 
 ## 5. 남은 일 / 알려진 갭
 
-- **신규가입수·회원가입율 "—" — 근본 원인 확정(라이브 검증 완료)**: latch 버그(일시적 오류에 프로세스 전체 영구비활성화)는 수정했고 401/403/404/405/501을 구조적으로 분류하도록 개선했지만, **실제 라이브 원인은 스코프가 아니라 API 사용법 오류**였다. 라이브 백필로 확인한 실제 오류:
-  `422 for /api/v2/admin/customers :: {"error":{"code":422,"message":"Please enter the cellphone or member_id parameter."}}`
-  → **`GET /api/v2/admin/customers`(목록) 엔드포인트는 `member_id` 또는 `cellphone`이 필수**이며, 코드가 가정한 `created_start_date`/`created_end_date` 기간필터 대량조회를 지원하지 않는다(`/customers/count`도 별도 사유로 실패 — 로그의 `count: ... | list: ...` 조합 메시지 참고).
-  **다음 세션 TODO**: 카페24 Admin API 문서에서 "기간 내 신규가입수"를 실제로 지원하는 엔드포인트/파라미터를 확인해 `cafe24_ops/clients/cafe24_client.py`의 `count_new_customers`를 올바른 호출로 교체. (미검증 상태로 파라미터명을 추측 수정하지 않았음 — 문서 확인 후 수정 권장.)
-  진단 인프라는 이미 준비됨: `log.warning("신규가입수 수집 실패(...): ...")`가 최초 1회 실제 HTTP 상태/사유를 노출하므로, `cafe24-daily-collect.yml` 로그에서 바로 확인 가능. `cafe24-verify.yml`(mode=db)도 신규가입수 커버리지/최근값을 리포트.
+- **신규가입수·회원가입율 "—" — 근본 원인 확정, 카페24 Admin API로는 불가능(라이브 검증 완료)**:
+  - latch 버그(일시적 오류에 프로세스 전체 영구비활성화) 수정, 401/403/404/405/422/501을 구조적 오류로 분류(422도 포함 — 재시도해도 100% 반복 실패 확인됨).
+  - **라이브에서 두 엔드포인트 모두 확정적으로 실패 확인**:
+    `count: 404 for /api/v2/admin/customers/count :: {"error":{"code":404,"message":"No API found."}}`
+    `list: 422 for /api/v2/admin/customers :: {"error":{"code":422,"message":"Please enter the cellphone or member_id parameter."}}`
+    → `/customers/count`는 API 자체가 존재하지 않고, `/customers`(목록)는 `member_id`/`cellphone` 필수라 기간별 대량조회를 지원하지 않는다. **파라미터 수정으로 고칠 수 있는 문제가 아니다.**
+  - **GA4 대안도 확인해봤으나 불가**: `cafe24-ga4-diag.yml`로 최근 8일 이벤트명 전수 확인(`page_view, session_start, 클릭, first_visit, 제품분류_클릭, buy_now_버튼_클릭, user_engagement, 장바구니_보기, 구매하기_버튼_클릭, 장바구니_버튼_클릭, 결제완료, 관심상품_버튼_클릭` — 12개) → **회원가입 관련 이벤트가 전혀 없음**. 스토어프론트에 가입완료 시 GA4 이벤트를 새로 심어야 하는데(관리자 페이지/GTM 편집, 이 프로젝트 범위 밖), 사용자가 보류.
+  - **다음 세션 TODO — 사용자 액션 필요**: 카페24 Admin API와 별개인 **"카페24 Analytics API"**(`cafe24data`, 도메인 `ca-api.cafe24data.com`, scope `mall.analytics`)가 존재하며 "회원/비회원 구분 통계"를 제공한다고 함 — 신규가입수 소스가 될 가능성. 단, **기존 admin 앱과 별도의 OAuth 2.0 인증/앱등록이 필요**(공식 문서: "별도의 OAuth 2.0 인증 프로세스로만 접근 가능"). 에이전트 샌드박스에서 `developers.cafe24.com` 계열 전 도메인이 WebFetch 403으로 막혀 정확한 등록 절차·엔드포인트 스펙을 확인 못함.
+    1. 사용자가 직접 https://developers.cafe24.com/data/front/cafe24dataapi 에서 Analytics API 개발사 등록 + OAuth 인증을 완료해 client_id/secret(or access_token) 확보
+    2. 확보한 자격증명 + 실제 엔드포인트 문서(회원 통계 관련 섹션)를 다음 세션에 공유하면 `cafe24_ops/clients/cafe24data.py` 클라이언트 신규 작성 + 수집기 연동 진행
+    3. 그전까지는 신규가입수는 정직하게 "—"(미연동) 상태 유지가 맞음(추측성 코드 작성 지양).
+  - 진단 인프라는 준비됨: `log.warning("신규가입수 수집 실패(...): ...")`가 latch 여부와 무관하게 매번 실제 HTTP 상태/사유(count+list 조합)를 노출(`cafe24-daily-collect.yml` 로그). `cafe24-verify.yml`(mode=db)도 커버리지/최근값 리포트. `scripts/ga4_diag.py`는 이벤트명별 건수까지 진단.
 - **⛔ 미연동 지표**(정직하게 표시 중): 순매출·취소/환불(환불 API), 문자·알림톡·카카오 발송(발송 솔루션), 장바구니·재고·입고·외부채널(카페24 재고/장바구니 API). 필요 API 붙이면 채워짐.
 - **도메인 완전 분리 배포**(선택): 지금은 미연동 소스 자동 스킵으로 한 대시보드에 공존. 업체별 별도 URL 원하면 `App.tsx`의 `TABS` 축소 + `render.yaml` 서비스명 분리 필요.
 - Slack 알림: 사용자 요청으로 **홀딩 중**.
