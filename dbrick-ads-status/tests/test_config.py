@@ -15,6 +15,7 @@ def test_metrics_config_loads_defaults():
 
 def test_sources_config_loads():
     cfg = load_config()
-    assert cfg.sources.shop.get("platform") == "cafe24"
+    # 디브릭은 자사몰이 없는 서비스 브랜드라 shop 수집기는 의도적으로 비활성화(platform=none).
+    assert cfg.sources.shop.get("platform") == "none"
     channels = {a["channel"] for a in cfg.sources.ads}
     assert {"meta", "google", "naver", "kakao"} <= channels

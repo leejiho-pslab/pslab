@@ -20,6 +20,9 @@ def test_kv_roundtrip_persists_across_instances(tmp_path):
 
 
 def test_from_config_prefers_override_over_env(monkeypatch):
+    # 디브릭 sources.yaml 은 자사몰이 없어 mall_id 가 비어있으므로, 카페24 클라이언트
+    # 자체(범용) 동작을 검증하기 위해 테스트에서만 mall_id 를 주입한다.
+    monkeypatch.setenv("CAFE24_MALL_ID", "test-mall")
     monkeypatch.setenv("CAFE24_ACCESS_TOKEN", "ENVTOK")
     monkeypatch.setenv("CAFE24_REFRESH_TOKEN", "ENVREF")
     cfg = load_config()
