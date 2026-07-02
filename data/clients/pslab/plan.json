@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-02T02:42:23.856Z",
+  "updatedAt": "2026-07-02T11:44:54.409Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-02T02:37:04.526Z",
-      "insightComment": "참여율 200.0%로 평균(133.3%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-02T02:37:05.963Z"
+      "metricsAt": "2026-07-02T11:39:27.783Z",
+      "insightComment": "참여율 200.0%로 평균(100.0%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-02T11:39:29.109Z"
     },
     {
       "id": "w1-fri",
@@ -196,9 +196,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-02T02:37:05.669Z",
-      "insightComment": "참여율 200.0%로 평균(133.3%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-02T02:37:06.070Z"
+      "metricsAt": "2026-07-02T11:39:28.584Z",
+      "insightComment": "참여율 200.0%로 평균(100.0%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-02T11:39:29.227Z"
     },
     {
       "id": "w2-mon",
@@ -952,7 +952,7 @@
       ],
       "scheduledFor": "2026-07-02T09:00:00.000Z",
       "score": 79,
-      "status": "planned",
+      "status": "published",
       "kicker": "Threads",
       "headline": "대행사가 *안 해주는* 말",
       "sub": "솔직한 비하인드.",
@@ -967,7 +967,26 @@
       "slideImages": [
         "cards/pslab/threads-07-07-1.png"
       ],
-      "cardImage": "cards/pslab/threads-07-07-1.png"
+      "cardImage": "cards/pslab/threads-07-07-1.png",
+      "publishedUrl": "https://www.threads.com/@_pslab/post/DaSgRE-IAw4",
+      "publishedAt": "2026-07-02T11:39:25.721Z",
+      "published": [
+        {
+          "platform": "threads",
+          "remoteId": "17908039653434276",
+          "url": "https://www.threads.com/@_pslab/post/DaSgRE-IAw4"
+        }
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-02T11:39:28.794Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-02T11:39:29.331Z"
     },
     {
       "id": "threads-07-11",
@@ -1284,9 +1303,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-02T02:37:05.669Z",
+      "metricsAt": "2026-07-02T11:39:28.794Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-02T02:37:06.197Z"
+      "insightAt": "2026-07-02T11:39:29.457Z"
     },
     {
       "id": "blogger-07-09",

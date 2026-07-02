@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-02T02:37:05.671Z",
-  "sampleSize": 3,
+  "generatedAt": "2026-07-02T11:39:28.795Z",
+  "sampleSize": 4,
   "variants": [
     {
       "key": "A",
@@ -8,6 +8,13 @@
       "avgEngagement": 1.3333333333333333,
       "avgLikes": 1.3333333333333333,
       "avgViews": 0.6666666666666666
+    },
+    {
+      "key": "B",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     }
   ],
   "channels": [
@@ -17,6 +24,13 @@
       "avgEngagement": 2,
       "avgLikes": 2,
       "avgViews": 1
+    },
+    {
+      "key": "threads",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     },
     {
       "key": "blogger",
@@ -33,6 +47,13 @@
       "avgEngagement": 2,
       "avgLikes": 2,
       "avgViews": 1
+    },
+    {
+      "key": "20:00",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     },
     {
       "key": "11:00",
@@ -52,14 +73,16 @@
     },
     {
       "key": "lock",
-      "posts": 2,
-      "avgEngagement": 1,
-      "avgLikes": 1,
-      "avgViews": 0.5
+      "posts": 3,
+      "avgEngagement": 0.6666666666666666,
+      "avgLikes": 0.6666666666666666,
+      "avgViews": 0.3333333333333333
     }
   ],
+  "bestVariant": "A",
   "bestHour": "21:00",
   "hints": [
+    "디자인 A안이 평균 참여율 133.3%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
     "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
