@@ -41,6 +41,8 @@ export interface ClientConfig {
   targets: PlatformId[];
   /** 플랫폼별 우리 계정 핸들 (참고/표시용; 실제 인증은 .env 자격 증명으로) */
   accounts?: Partial<Record<PlatformId, string>>;
+  /** 대시보드 "채널 바로가기" 링크 (채널키→관리/프로필 URL). 없으면 기본 관리콘솔 사용. */
+  channelLinks?: Record<string, string>;
   /** 발행 시간 (HH:mm, 24h) */
   scheduleTimes: string[];
   /**
@@ -92,6 +94,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     bannedWords: c.bannedWords ?? [],
     targets: c.targets!,
     accounts: c.accounts ?? {},
+    channelLinks: c.channelLinks ?? {},
     scheduleTimes: c.scheduleTimes ?? ['11:00', '19:00'],
     manualPlan: c.manualPlan ?? false,
     reviewMode: c.reviewMode!,
