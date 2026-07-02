@@ -22,7 +22,7 @@ description: 온라인 광고 성과 대시보드(광고 채널 성과·ROAS·CT
 
 | 역할 | 플랫폼 | 비고 |
 |---|---|---|
-| 매일 수집 | GitHub Actions | `cafe24-daily-collect.yml` (08:00 KST, 전 채널) |
+| 매일 수집 | GitHub Actions | `cafe24-daily-collect.yml` (07:00 KST, 전 채널) |
 | 데이터 영속 | Neon Postgres | `DATABASE_URL` |
 | 웹/API | Render Web Service | 무료(15분 무접속 슬립 → keepalive로 방지) |
 

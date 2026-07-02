@@ -24,7 +24,7 @@ description: 카페24 자사몰의 '운영현황'(매출·주문·객단가·구
 
 | 역할 | 플랫폼 | 비고 |
 |---|---|---|
-| 매일 수집 | GitHub Actions | `cafe24-daily-collect.yml` (08:00 KST) |
+| 매일 수집 | GitHub Actions | `cafe24-daily-collect.yml` (07:00 KST) |
 | 데이터 영속 | Neon Postgres | `DATABASE_URL` |
 | 웹/API | Render Web Service | 무료(15분 무접속 슬립 → keepalive로 방지) |
 

@@ -28,7 +28,7 @@
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | 다운로드한 **JSON 파일 내용 전체**를 그대로 붙여넣기 |
 
 ## 4. 끝 — 자동 반영
-- 다음 일일 수집(08:00 KST)부터 `visitors`(방문자수)와 `conversion_rate`(=구매건수/방문자수)가 자동 저장됩니다.
+- 다음 일일 수집(07:00 KST)부터 `visitors`(방문자수)와 `conversion_rate`(=구매건수/방문자수)가 자동 저장됩니다.
 - 일일 브리핑/대시보드/검수에 방문자·전환율이 나타납니다.
 - 과거 방문자도 채우려면(선택): Actions → **ops backfill** 수동 실행 시 `reset=true`, `skip=competitor,creative,ads`
   (cafe24 재수집 시 GA4 방문자도 일자별로 함께 기록됨).
