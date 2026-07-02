@@ -65,9 +65,10 @@ def test_visitor_trend(tmp_path):
     try:
         rows = visitor_trend(store, "2026-06-15", "2026-06-17")
         assert [r["date"] for r in rows] == ["2026-06-15", "2026-06-16", "2026-06-17"]
-        # mock 은 전체/신규/재방문을 모두 채운다
+        # mock 은 전체/신규/재방문/신규가입수를 모두 채운다
         r = rows[-1]
         assert r["visitors"] > 0 and r["new"] > 0 and r["returning"] > 0
+        assert r["signups"] > 0
         # 데이터 없는 기간은 빈 목록
         assert visitor_trend(store, "2025-01-01", "2025-01-03") == []
     finally:

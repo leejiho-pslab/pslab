@@ -11,9 +11,9 @@ def test_pipeline_end_to_end_mock(tmp_path):
 
         # 모든 소스가 수집을 시도했다.
         assert set(result.per_source) == {"cafe24", "ads", "creative", "competitor"}
-        # 카페24 mock 은 8개 요약 KPI(+차원 팩트)를 생성한다.
+        # 카페24 mock 은 9개 요약 KPI(+차원 팩트)를 생성한다(신규회원가입수 포함).
         assert result.per_source["cafe24"] >= 8
-        assert len(result.kpi) == 8
+        assert len(result.kpi) == 9
         # facts / kpi 가 저장됐다.
         assert store.count_facts() > 0
         assert "gross_sales" in result.kpi
