@@ -1,8 +1,14 @@
 """구글 시트 — 온라인 인입 지역 현황표 커넥터.
 
-대표님이 직접 관리하는 구글 시트(수동 갱신)를 CSV export 링크로 읽어와 그대로
-대시보드 하단에 표로 보여준다. 별도 API 키/서비스계정 없이 동작하려면 시트 공유
-설정이 "링크가 있는 모든 사용자 → 뷰어"로 되어 있어야 한다(비공개 시트면 403).
+두 가지 연결 방식을 지원한다(우선순위 순):
+
+1) (권장, 비공개) 서비스계정 방식 — GOOGLE_APPLICATION_CREDENTIALS_JSON 이 설정돼
+   있으면 Google Sheets API 로 읽는다. 시트를 "링크가 있는 모든 사용자"로 공개할
+   필요 없이, 서비스계정 이메일에만 뷰어 권한을 부여하면 된다(GA4 연동에 쓰는
+   서비스계정을 그대로 재사용 가능 — Cloud 프로젝트에서 Google Sheets API 도 함께
+   활성화해야 함).
+2) (대체, 공개 필요) CSV export 방식 — 서비스계정 미설정 시 폴백. 시트가
+   "링크가 있는 모든 사용자 → 뷰어"로 공개돼 있어야 동작한다.
 
 수집 파이프라인(daily facts)과 무관하게 요청 시점에 매번 조회하되, 과도한 조회를
 막기 위해 짧은 TTL 인메모리 캐시를 둔다.
@@ -11,12 +17,17 @@ from __future__ import annotations
 
 import csv
 import io
+import json
+import os
 import time
 
 import httpx
 
 _CACHE: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL_SECONDS = 300  # 5분 — 수동 갱신 시트라 자주 조회할 필요 없음
+
+SHEETS_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
+SHEETS_API_BASE = "https://sheets.googleapis.com/v4/spreadsheets"
 
 
 def sheet_csv_url(sheet_id: str, gid: str) -> str:
@@ -32,24 +43,96 @@ def parse_region_csv(text: str) -> dict:
     return {"headers": rows[0], "rows": rows[1:]}
 
 
+def pick_sheet_title(spreadsheet_meta: dict, gid: str) -> str | None:
+    """spreadsheets.get 응답(sheets.properties(sheetId,title)) → gid 에 해당하는 탭 이름."""
+    for s in (spreadsheet_meta or {}).get("sheets", []):
+        props = s.get("properties", {})
+        if str(props.get("sheetId")) == str(gid):
+            return props.get("title")
+    return None
+
+
+def values_to_region(values: list[list[str]]) -> dict:
+    """Sheets API values.get 응답의 "values" → {"headers": [...], "rows": [...]}."""
+    if not values:
+        return {"headers": [], "rows": []}
+    return {"headers": values[0], "rows": values[1:]}
+
+
+def _service_account_credentials() -> dict | None:
+    raw = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON")
+    if not raw:
+        return None
+    try:
+        return json.loads(raw)
+    except (ValueError, TypeError):
+        return None
+
+
+def _sheets_access_token(credentials_info: dict) -> str:
+    from google.oauth2 import service_account  # noqa: PLC0415
+    import google.auth.transport.requests as gtr  # noqa: PLC0415
+
+    creds = service_account.Credentials.from_service_account_info(
+        credentials_info, scopes=[SHEETS_SCOPE])
+    creds.refresh(gtr.Request())
+    return creds.token
+
+
+def fetch_via_sheets_api(sheet_id: str, gid: str, credentials_info: dict, timeout: float = 15.0) -> dict:
+    """서비스계정 인증으로 Sheets API 조회 — 시트를 공개할 필요 없음(서비스계정에만 뷰어 공유)."""
+    token = _sheets_access_token(credentials_info)
+    headers = {"Authorization": f"Bearer {token}"}
+
+    meta = httpx.get(
+        f"{SHEETS_API_BASE}/{sheet_id}",
+        params={"fields": "sheets.properties(sheetId,title)"},
+        headers=headers, timeout=timeout,
+    )
+    meta.raise_for_status()
+    title = pick_sheet_title(meta.json(), gid)
+    if not title:
+        raise ValueError(f"gid={gid} 에 해당하는 시트 탭을 찾을 수 없습니다")
+
+    values_resp = httpx.get(
+        f"{SHEETS_API_BASE}/{sheet_id}/values/{title}",
+        headers=headers, timeout=timeout,
+    )
+    values_resp.raise_for_status()
+    return values_to_region(values_resp.json().get("values", []))
+
+
+def fetch_via_csv_export(sheet_id: str, gid: str, timeout: float = 15.0) -> dict:
+    """공개 CSV export 조회 — 시트가 "링크가 있는 모든 사용자 → 뷰어"여야 동작."""
+    resp = httpx.get(sheet_csv_url(sheet_id, gid), timeout=timeout, follow_redirects=True)
+    resp.raise_for_status()
+    return parse_region_csv(resp.text)
+
+
 def fetch_region_status(sheet_id: str, gid: str, timeout: float = 15.0) -> dict:
-    """캐시 우선 조회 → 만료 시 구글 시트 CSV 재조회. 실패해도 예외 없이 error 필드로 알려준다."""
+    """캐시 우선 조회 → 만료 시 재조회.
+
+    GOOGLE_APPLICATION_CREDENTIALS_JSON(서비스계정)이 있으면 비공개 Sheets API 를
+    우선 사용하고, 없으면 공개 CSV export 로 폴백한다. 실패해도 예외 없이 error
+    필드로 알려주며, 직전 성공 캐시가 있으면 그거라도 보여준다.
+    """
     cache_key = f"{sheet_id}:{gid}"
     cached = _CACHE.get(cache_key)
     now = time.time()
     if cached and now - cached[0] < _CACHE_TTL_SECONDS:
         return cached[1]
 
-    url = sheet_csv_url(sheet_id, gid)
+    credentials_info = _service_account_credentials()
     try:
-        resp = httpx.get(url, timeout=timeout, follow_redirects=True)
-        resp.raise_for_status()
+        if credentials_info:
+            data = fetch_via_sheets_api(sheet_id, gid, credentials_info, timeout)
+        else:
+            data = fetch_via_csv_export(sheet_id, gid, timeout)
     except Exception as e:  # noqa: BLE001
-        # 이전에 성공한 캐시가 있으면 그거라도 보여주고, 없으면 에러만 반환.
         if cached:
             return cached[1]
         return {"headers": [], "rows": [], "error": f"시트 조회 실패: {e}"}
 
-    result = {**parse_region_csv(resp.text), "error": None, "fetched_at": int(now)}
+    result = {**data, "error": None, "fetched_at": int(now)}
     _CACHE[cache_key] = (now, result)
     return result

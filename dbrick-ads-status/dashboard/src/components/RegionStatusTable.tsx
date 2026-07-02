@@ -22,7 +22,8 @@ export function RegionStatusTable() {
         <p className="muted">
           시트를 불러오지 못했습니다: {data.error}
           <br />
-          구글 시트 공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지 확인해주세요.
+          서비스계정을 쓰는 경우 시트에 해당 이메일이 뷰어로 공유돼 있는지, 아니면 시트
+          공유 설정이 "링크가 있는 모든 사용자(뷰어)"인지 확인해주세요.
         </p>
       ) : data.headers.length === 0 ? (
         <p className="muted empty-state">표시할 데이터가 없습니다.</p>
