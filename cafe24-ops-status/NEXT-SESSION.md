@@ -1,7 +1,10 @@
 # 다음 세션 인수인계 (keek 운영/광고 대시보드)
 
-> 새 대화에서 이 파일부터 읽으면 전체 맥락이 복원된다.
-> 킥오프 한 줄: **"cafe24-ops-status/NEXT-SESSION.md 읽고 이어서 진행해줘"**
+> ⚠️ **반드시 이 저장소에서 새 세션을 시작할 것: `leejiho-pslab/pslab`**
+> (❌ `moomoo` 등 다른 저장소 아님 — 그러면 이 파일이 안 보인다)
+> 브랜치: 기본 **`claude/eager-lamport-mX0eT`** (또는 `claude/sweet-knuth-fypjml`) — 둘 다 이 파일 있음.
+> 새 대화 킥오프 한 줄:
+> **"leejiho-pslab/pslab 저장소에서 cafe24-ops-status/NEXT-SESSION.md 읽고 이어서 진행해줘"**
 
 ## 1. 프로젝트 한눈에
 
