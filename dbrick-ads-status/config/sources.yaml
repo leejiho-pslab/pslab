@@ -1,0 +1,17 @@
+# 수집 대상 정의 — 광고계정 / 경쟁사 (디브릭: 인테리어 디자인 브랜드, 자사몰 없음 → 광고만)
+# 실제 값은 운영하며 채워 넣는다. (비밀값은 secrets.env / GitHub Secrets)
+
+shop:
+  platform: none      # 디브릭은 자사몰(카페24 등) 없음 — 카페24 수집기는 자동 스킵됨
+  mall_id: ""
+  brand: dbrick
+
+ads:
+  - { channel: meta,   account_id: "" }   # 인스타그램/페이스북 — 포트폴리오 비주얼에 강점
+  - { channel: naver,  account_id: "" }   # 네이버 검색광고(파워링크) — "OO동 인테리어" 검색 수요
+  - { channel: google, account_id: "" }   # 후순위
+  - { channel: kakao,  account_id: "" }   # 후순위
+
+competitors:             # 초안 — 실제 비교 대상으로 확정/수정해서 사용 (네이버 트렌드/쇼핑 검색어로 쓰임)
+  - { name: 아파트멘터리, url: "https://apartmentary.com/" }
+  - { name: 한샘리하우스, url: "https://www.hanssem.com/" }
