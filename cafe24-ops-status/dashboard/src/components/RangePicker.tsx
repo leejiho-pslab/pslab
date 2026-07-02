@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { daysBefore } from "../util";
 
+// 조회일(base)은 데일리 수집 특성상 '어제'(가장 최근 완료일)이다. 그래서 "어제" = 조회일 당일.
 const PRESETS: [string, string, number, number][] = [
-  ["yesterday", "어제", 1, 1],
+  ["yesterday", "어제", 0, 0],
   ["7d", "최근 7일", 6, 0],
   ["14d", "최근 14일", 13, 0],
   ["30d", "최근 30일", 29, 0],
