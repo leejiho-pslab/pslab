@@ -217,6 +217,24 @@ function buildClientData(
     return { ...c, ...buildChannel(client, history, pending, c.key) };
   });
 
+  // 채널 바로가기 링크 (설정 override → 기본 관리콘솔). 핸들 있으면 프로필/표시용.
+  const defaultManageUrl = (key: string, handle?: string): string => {
+    switch (key) {
+      case 'instagram': return handle ? `https://www.instagram.com/${handle}` : 'https://www.instagram.com/';
+      case 'threads': return handle ? `https://www.threads.net/@${handle}` : 'https://www.threads.net/';
+      case 'naver-blog': return 'https://admin.blog.naver.com/';
+      case 'blogger': return 'https://www.blogger.com/';
+      case 'youtube': return 'https://studio.youtube.com/';
+      case 'linkedin': return handle ? `https://www.linkedin.com/in/${handle}` : 'https://www.linkedin.com/';
+      default: return '';
+    }
+  };
+  const channelLinks = CHANNELS.map((c) => {
+    const handle = client.accounts?.[c.key];
+    const url = client.channelLinks?.[c.key] || defaultManageUrl(c.key, handle);
+    return { key: c.key, label: c.label, icon: c.icon, url, sub: handle ? `@${handle}` : '관리 열기' };
+  }).filter((x) => x.url);
+
   // 클라이언트 전체 기획안(발행 예정순) — '전체' 탭에서 한눈에
   const planCards = plan.items
     .map(toCard)
@@ -248,6 +266,7 @@ function buildClientData(
     planUpdatedAt: plan.updatedAt,
     planCards,
     channels,
+    channelLinks,
     blog,
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
@@ -694,9 +713,25 @@ function setupPanel(){
     '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
     '</div>';
 }
+// 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
+function chGrad(key){
+  return ({youtube:'linear-gradient(135deg,#3a0d12,#5a1620)',instagram:'linear-gradient(135deg,#3a1140,#5a1a4a)',threads:'linear-gradient(135deg,#0f1c1e,#16282b)','naver-blog':'linear-gradient(135deg,#0e2417,#123a22)',blogger:'linear-gradient(135deg,#3a1e08,#5a2f0d)',linkedin:'linear-gradient(135deg,#0d1b33,#12294d)'})[key]||'linear-gradient(135deg,#161b26,#1c2434)';
+}
+function chBorder(key){ return ({youtube:'#7a2530',instagram:'#7a3a6a',threads:'#2b5a5f','naver-blog':'#2b7a4a',blogger:'#7a4a1f',linkedin:'#2b5aa0'})[key]||'#2b3550'; }
+function channelLinksPanel(client){
+  const links=client.channelLinks||[];
+  if(!links.length) return '';
+  const cards=links.map(l=>
+    '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" style="flex:1 1 200px;min-width:180px;text-decoration:none;border-radius:14px;padding:16px 18px;border:1px solid '+chBorder(l.key)+';background:'+chGrad(l.key)+';display:block">'+
+    '<div style="font-weight:800;font-size:18px;color:#f4f7fb;margin-bottom:4px">'+l.icon+' '+esc(l.label)+'</div>'+
+    '<div style="font-size:13px;color:#cdd6e6;opacity:.85">'+esc(l.sub)+'</div></a>').join('');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
+    '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
+}
 function overview(client){
   let h=tokenBanner(client);
   h+=setupPanel();
+  h+=channelLinksPanel(client);
   h+=weeklyPanel(client);
   h+='<div class="kpis">'+
     kpi(client.totalCycles,'총 사이클')+

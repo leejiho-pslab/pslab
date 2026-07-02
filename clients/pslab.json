@@ -25,7 +25,12 @@
   "contentPillars": ["실전 광고 운영 노하우", "대행사·업계 비하인드", "마케팅 의사결정 기준", "브랜딩·성장 사례", "창업·사업 인사이트"],
   "bannedWords": ["100% 보장", "무조건", "최저가"],
   "targets": ["instagram"],
-  "accounts": { "instagram": "_pslab" },
+  "accounts": { "instagram": "_pslab", "threads": "_pslab" },
+  "channelLinks": {
+    "instagram": "https://www.instagram.com/_pslab",
+    "threads": "https://www.threads.net/@_pslab",
+    "blogger": "https://pslab2026.blogspot.com"
+  },
   "scheduleTimes": ["19:00"],
   "manualPlan": true,
   "reviewMode": "manual",
