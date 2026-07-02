@@ -12,6 +12,8 @@ ads:
   - { channel: google, account_id: "" }   # 후순위
   - { channel: kakao,  account_id: "" }   # 후순위
 
-competitors:             # 초안 — 실제 비교 대상으로 확정/수정해서 사용 (네이버 트렌드/쇼핑 검색어로 쓰임)
-  - { name: 아파트멘터리, url: "https://apartmentary.com/" }
-  - { name: 한샘리하우스, url: "https://www.hanssem.com/" }
+competitors:             # 실제 비교 대상 확정 (name 은 네이버 트렌드/쇼핑 검색어로 사용됨 — 정확도 위해 상호명 확인 필요시 조정)
+  - { name: 인테리어티쳐, url: "https://interiorteacher.com/" }
+  - { name: 한건축, url: "https://hanarchitecture.co.kr/company" }
+  - { name: DDB인테리어스튜디오, url: "https://ddb-interior-studio.imweb.me/process" }
+  - { name: 뮤지엄오브모던키친, url: "https://museumofmodernkitchen.com/" }
