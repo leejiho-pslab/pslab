@@ -1,0 +1,516 @@
+[
+  {
+    "id": "naver-blog-07-02",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "stat",
+        "kicker": "Reality",
+        "title": "한 명이 동시에 돌리는 계정 수",
+        "value": "15+",
+        "label": "개 — 그만큼 내 계정은 덜 봅니다",
+        "sub": "계약 전 \"내 담당자가 맡은 계정 수\"를 꼭 확인하세요."
+      },
+      {
+        "type": "compare",
+        "kicker": "Report",
+        "title": "좋은 보고 vs 나쁜 보고",
+        "left": {
+          "label": "피해야 할 보고",
+          "items": [
+            "노출 120만",
+            "CTR 2.3%",
+            "클릭 2.7만"
+          ]
+        },
+        "right": {
+          "label": "좋은 보고",
+          "items": [
+            "전환 320건",
+            "매출 4,800만원",
+            "ROAS 410%"
+          ]
+        }
+      },
+      {
+        "type": "checklist",
+        "kicker": "Contract",
+        "title": "계약서에서 분리 확인할 항목",
+        "items": [
+          "매체 광고비(실비)",
+          "운영 수수료(%)",
+          "제작비(별도)",
+          "리포트 주기와 형식"
+        ]
+      },
+      {
+        "type": "steps",
+        "kicker": "Onboarding",
+        "title": "좋은 대행사의 첫 2주",
+        "steps": [
+          {
+            "label": "소재 3~5종 소액 테스트",
+            "desc": "승자 소재를 데이터로 찾기"
+          },
+          {
+            "label": "전환 추적 세팅",
+            "desc": "픽셀·이벤트·UTM 점검"
+          },
+          {
+            "label": "주간 리뷰 후 예산 집중",
+            "desc": "검증된 소재에 비중 이동"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-07-02",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "quote",
+        "kicker": "Lesson",
+        "text": "맡기지 말고, 같이 운영하라.",
+        "by": "광고비 2천만원으로 배운 것"
+      },
+      {
+        "type": "stat",
+        "kicker": "Waste",
+        "title": "월 1회 보고 → 주 1회 점검",
+        "value": "-48%",
+        "label": "불필요한 광고비 감소",
+        "sub": "안 되는 소재를 빨리 끄는 것만으로."
+      },
+      {
+        "type": "checklist",
+        "kicker": "Source",
+        "title": "가장 잘 먹힌 소재의 출처",
+        "items": [
+          "고객이 자주 묻는 질문",
+          "실제 후기 문장",
+          "반품·환불 사유",
+          "상담에서 반복되는 고민"
+        ]
+      },
+      {
+        "type": "compare",
+        "kicker": "Roles",
+        "title": "역할 분담",
+        "left": {
+          "label": "우리(브랜드)",
+          "items": [
+            "소재 방향·메시지",
+            "제품/혜택 정보",
+            "최종 의사결정"
+          ]
+        },
+        "right": {
+          "label": "대행사",
+          "items": [
+            "세팅·입찰·최적화",
+            "소재 제작·실험",
+            "주간 리포트"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "naver-blog-07-09",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "bars",
+        "kicker": "Funnel",
+        "title": "전형적인 이탈 구간",
+        "bars": [
+          {
+            "label": "클릭→체류",
+            "pct": 100,
+            "val": "100"
+          },
+          {
+            "label": "체류→장바구니",
+            "pct": 22,
+            "val": "22%"
+          },
+          {
+            "label": "장바구니→결제",
+            "pct": 9,
+            "val": "9%"
+          }
+        ]
+      },
+      {
+        "type": "checklist",
+        "kicker": "Above the fold",
+        "title": "첫 화면에 반드시 있을 것",
+        "items": [
+          "광고와 같은 핵심 메시지",
+          "구체적 혜택(숫자)",
+          "신뢰 요소(후기·보장)",
+          "눈에 띄는 행동 버튼"
+        ]
+      },
+      {
+        "type": "stat",
+        "kicker": "Trust",
+        "title": "후기 유무에 따른 전환율 차이",
+        "value": "2.4x",
+        "label": "후기 있는 페이지의 전환율",
+        "sub": "광고를 늘리기 전에 후기부터 채우세요."
+      },
+      {
+        "type": "steps",
+        "kicker": "Checkout",
+        "title": "결제 이탈 줄이는 3수",
+        "steps": [
+          {
+            "label": "비회원 결제 허용",
+            "desc": "가입 강제 제거"
+          },
+          {
+            "label": "입력칸 최소화",
+            "desc": "필수만 남기기"
+          },
+          {
+            "label": "간편결제 추가",
+            "desc": "카카오·네이버페이"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-07-09",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "compare",
+        "kicker": "Hero",
+        "title": "바꾸기 전 vs 후",
+        "left": {
+          "label": "Before",
+          "items": [
+            "프리미엄 스킨케어",
+            "당신을 위한 선택",
+            "지금 만나보세요"
+          ]
+        },
+        "right": {
+          "label": "After",
+          "items": [
+            "건조함 14일 케어",
+            "재구매율 67%",
+            "오늘 주문 → 내일 도착"
+          ]
+        }
+      },
+      {
+        "type": "checklist",
+        "kicker": "Proof",
+        "title": "위로 올릴 신뢰 요소",
+        "items": [
+          "누적 판매 수량",
+          "별점과 후기 수",
+          "재구매율",
+          "인증·수상·언론"
+        ]
+      },
+      {
+        "type": "stat",
+        "kicker": "Focus",
+        "title": "CTA를 하나로 줄였을 때",
+        "value": "+38%",
+        "label": "클릭률 상승",
+        "sub": "선택지를 줄이면 행동이 늘어납니다."
+      },
+      {
+        "type": "bars",
+        "kicker": "Device",
+        "title": "유입 vs 매출 비중",
+        "bars": [
+          {
+            "label": "모바일 유입",
+            "pct": 80,
+            "val": "80%"
+          },
+          {
+            "label": "모바일 매출",
+            "pct": 61,
+            "val": "61%"
+          },
+          {
+            "label": "격차(개선 여지)",
+            "pct": 19,
+            "val": "19%p"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "naver-blog-07-16",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "quote",
+        "kicker": "Why",
+        "text": "무엇을 파는지가 아니라, 왜 만드는지를 팔아라.",
+        "by": "작은 브랜드의 생존 공식"
+      },
+      {
+        "type": "checklist",
+        "kicker": "Story",
+        "title": "'왜'를 만드는 재료",
+        "items": [
+          "내가 겪은 불편한 장면",
+          "기존 제품에 화났던 순간",
+          "\"이건 아니다\" 싶었던 경험",
+          "바꾸고 싶었던 한 가지"
+        ]
+      },
+      {
+        "type": "compare",
+        "kicker": "Target",
+        "title": "넓게 vs 좁게",
+        "left": {
+          "label": "대기업식(넓게)",
+          "items": [
+            "모두에게",
+            "최대 도달",
+            "평균적 메시지"
+          ]
+        },
+        "right": {
+          "label": "스몰브랜드식(좁게)",
+          "items": [
+            "이 이유에 공감하는 사람",
+            "깊은 충성",
+            "뾰족한 메시지"
+          ]
+        }
+      },
+      {
+        "type": "steps",
+        "kicker": "Consistency",
+        "title": "이유를 새기는 접점",
+        "steps": [
+          {
+            "label": "상세페이지 첫 문단",
+            "desc": "왜 만들었는지부터"
+          },
+          {
+            "label": "패키지·카드",
+            "desc": "한 줄의 이유"
+          },
+          {
+            "label": "SNS·응대",
+            "desc": "같은 톤으로 반복"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-07-16",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "stat",
+        "kicker": "Speed",
+        "title": "트렌드 반응 속도",
+        "value": "1일",
+        "label": "우리 vs 대기업 수 주",
+        "sub": "오늘 본 이슈를 내일 콘텐츠로."
+      },
+      {
+        "type": "compare",
+        "kicker": "Position",
+        "title": "어디서 1등 할 것인가",
+        "left": {
+          "label": "큰 시장 10등",
+          "items": [
+            "인지도 분산",
+            "가격 경쟁",
+            "존재감 약함"
+          ]
+        },
+        "right": {
+          "label": "좁은 시장 1등",
+          "items": [
+            "카테고리 대표",
+            "추천·재구매",
+            "검색 장악"
+          ]
+        }
+      },
+      {
+        "type": "checklist",
+        "kicker": "Human",
+        "title": "사람을 드러내는 콘텐츠",
+        "items": [
+          "만드는 과정 비하인드",
+          "창업자의 결정과 고민",
+          "고객과의 실제 대화",
+          "실패와 개선 기록"
+        ]
+      },
+      {
+        "type": "bars",
+        "kicker": "Fans",
+        "title": "도달 vs 관계",
+        "bars": [
+          {
+            "label": "도달형(1회 노출)",
+            "pct": 30,
+            "val": "얕음"
+          },
+          {
+            "label": "관계형(재구매)",
+            "pct": 85,
+            "val": "깊음"
+          },
+          {
+            "label": "추천 전파",
+            "pct": 70,
+            "val": "강함"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "naver-blog-07-23",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "bars",
+        "kicker": "70-20-10",
+        "title": "예산 배분 비율",
+        "bars": [
+          {
+            "label": "70% 검증된 곳",
+            "pct": 70,
+            "val": "70%"
+          },
+          {
+            "label": "20% 확장",
+            "pct": 20,
+            "val": "20%"
+          },
+          {
+            "label": "10% 실험",
+            "pct": 10,
+            "val": "10%"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "kicker": "Scale",
+        "title": "확장 예산의 역할",
+        "value": "20%",
+        "label": "내일의 주력을 키우는 자리",
+        "sub": "오늘의 70%도 한때는 이 20%였습니다."
+      },
+      {
+        "type": "checklist",
+        "kicker": "Test",
+        "title": "10% 실험 아이디어",
+        "items": [
+          "안 써본 새 채널",
+          "평소와 다른 소재 톤",
+          "낯선 타겟군",
+          "새 콘텐츠 포맷"
+        ]
+      },
+      {
+        "type": "steps",
+        "kicker": "Rebalance",
+        "title": "매월 재배분 루틴",
+        "steps": [
+          {
+            "label": "성과 정렬",
+            "desc": "ROAS 순으로 줄 세우기"
+          },
+          {
+            "label": "승자 승급",
+            "desc": "실험→확장→주력 이동"
+          },
+          {
+            "label": "패자 정리",
+            "desc": "신호 없는 곳 중단"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-07-23",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "stat",
+        "kicker": "Focus",
+        "title": "소액일수록",
+        "value": "1",
+        "label": "개 채널에 집중",
+        "sub": "두세 곳에 나누면 데이터가 안 쌓입니다."
+      },
+      {
+        "type": "steps",
+        "kicker": "Creative",
+        "title": "20만원 소재 실험",
+        "steps": [
+          {
+            "label": "소재 3~4종 준비",
+            "desc": "후킹·앵글 다르게"
+          },
+          {
+            "label": "소액 균등 분배",
+            "desc": "5만원씩 동시 송출"
+          },
+          {
+            "label": "승자만 살리기",
+            "desc": "나머지 중단"
+          }
+        ]
+      },
+      {
+        "type": "checklist",
+        "kicker": "Asset",
+        "title": "쌓이는 곳에 쓰기",
+        "items": [
+          "후기 이벤트",
+          "블로그·SNS 콘텐츠",
+          "상세페이지 개선",
+          "재구매 메시지"
+        ]
+      },
+      {
+        "type": "bars",
+        "kicker": "Plan",
+        "title": "월 100만원 배분",
+        "bars": [
+          {
+            "label": "주력 채널",
+            "pct": 70,
+            "val": "70만"
+          },
+          {
+            "label": "소재 실험",
+            "pct": 20,
+            "val": "20만"
+          },
+          {
+            "label": "자산 투자",
+            "pct": 10,
+            "val": "10만"
+          }
+        ]
+      }
+    ]
+  }
+]
