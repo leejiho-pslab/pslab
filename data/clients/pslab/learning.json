@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-02T11:54:37.673Z",
+  "generatedAt": "2026-07-02T12:19:43.433Z",
   "sampleSize": 4,
   "variants": [
     {
@@ -14,7 +14,7 @@
       "posts": 1,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 0
+      "avgViews": 10
     }
   ],
   "channels": [
@@ -30,7 +30,7 @@
       "posts": 1,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 0
+      "avgViews": 10
     },
     {
       "key": "blogger",
@@ -53,7 +53,7 @@
       "posts": 1,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 0
+      "avgViews": 10
     },
     {
       "key": "11:00",
@@ -76,7 +76,7 @@
       "posts": 3,
       "avgEngagement": 0.6666666666666666,
       "avgLikes": 0.6666666666666666,
-      "avgViews": 0.3333333333333333
+      "avgViews": 3.6666666666666665
     }
   ],
   "bestVariant": "A",
