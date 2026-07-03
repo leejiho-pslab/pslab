@@ -14,12 +14,15 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 
 import httpx
 
 GA4_BASE = "https://analyticsdata.googleapis.com"
 GA4_SCOPE = "https://www.googleapis.com/auth/analytics.readonly"
+
+log = logging.getLogger("cafe24_ops.ga4")
 
 
 def ga4_report_to_visitors(raw: dict) -> int | None:
@@ -210,52 +213,49 @@ class GA4Client:
             return ga4_report_to_new_returning(resp.json())
         return None
 
-    def daily_site_metrics(self, date: str) -> dict[str, float] | None:
-        """일자 사이트 지표(방문자/세션/페이지뷰/평균 체류시간). 실패 시 None. 401 이면 토큰 1회 재발급."""
-        body = {
-            "dateRanges": [{"startDate": date, "endDate": date}],
-            "metrics": [{"name": name} for name, _ in SITE_METRICS],
-        }
+    def _run_report(self, body: dict, label: str) -> dict | None:
+        """runReport 공통 실행 — 실패 시 실제 사유를 로그로 남기고 None.
+
+        조용히 None 만 반환하면 "ga4 0건"의 원인(권한/미활성화 API/속성ID 오류 등)을
+        알 수 없어 진단이 어렵다. 여기서 응답 본문·예외를 warning 으로 남긴다.
+        """
         path = f"/v1beta/properties/{self.property_id}:runReport"
         for attempt in (1, 2):
             try:
                 resp = self._http.post(
                     path, headers={"Authorization": f"Bearer {self._access_token()}"}, json=body)
-            except Exception:  # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
+                log.warning("[ga4:%s] 요청 실패(토큰/네트워크): %s: %s", label, type(e).__name__, e)
                 return None
             if resp.status_code == 401 and attempt == 1:
                 self._token = None
                 continue
             if resp.status_code != 200:
+                log.warning("[ga4:%s] HTTP %s — %s", label, resp.status_code, resp.text[:400])
                 return None
-            return ga4_report_to_site_metrics(resp.json())
+            return resp.json()
         return None
 
+    def daily_site_metrics(self, date: str) -> dict[str, float] | None:
+        """일자 사이트 지표(방문자/세션/페이지뷰/평균 체류시간). 실패 시 None(사유는 로그)."""
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "metrics": [{"name": name} for name, _ in SITE_METRICS],
+        }, label="site")
+        return ga4_report_to_site_metrics(raw) if raw is not None else None
+
     def daily_channel_conversions(self, date: str, mapping: dict | None = None) -> dict[str, dict] | None:
-        """일자 채널(sessionSourceMedium)별 전환수/전환매출. 실패 시 None. 401 이면 토큰 1회 재발급.
+        """일자 채널(sessionSourceMedium)별 전환수/전환매출. 실패 시 None(사유는 로그).
 
         광고 채널별 실제 전환은 각 광고 플랫폼 자체 보고값보다 GA4 값이 더 신뢰도 높은 경우가
         많아, 이 값이 있으면 ads facts 의 conversions 를 이 값으로 대체한다(AdsCollector 참고).
         """
-        body = {
+        raw = self._run_report({
             "dateRanges": [{"startDate": date, "endDate": date}],
             "dimensions": [{"name": "sessionSourceMedium"}],
             "metrics": [{"name": "conversions"}, {"name": "purchaseRevenue"}],
-        }
-        path = f"/v1beta/properties/{self.property_id}:runReport"
-        for attempt in (1, 2):
-            try:
-                resp = self._http.post(
-                    path, headers={"Authorization": f"Bearer {self._access_token()}"}, json=body)
-            except Exception:  # noqa: BLE001
-                return None
-            if resp.status_code == 401 and attempt == 1:
-                self._token = None
-                continue
-            if resp.status_code != 200:
-                return None
-            return ga4_report_to_channel_conversions(resp.json(), mapping)
-        return None
+        }, label="conversions")
+        return ga4_report_to_channel_conversions(raw, mapping) if raw is not None else None
 
     def close(self) -> None:
         self._http.close()
