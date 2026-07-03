@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-02T13:13:56.099Z",
+  "updatedAt": "2026-07-03T11:43:35.392Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-02T13:08:28.542Z",
-      "insightComment": "참여율 200.0%로 평균(100.0%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-02T13:08:30.100Z"
+      "metricsAt": "2026-07-03T11:38:02.289Z",
+      "insightComment": "참여율 200.0%로 평균(67.4%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-03T11:38:03.932Z"
     },
     {
       "id": "w1-fri",
@@ -196,9 +196,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-02T13:08:29.493Z",
-      "insightComment": "참여율 200.0%로 평균(100.0%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-02T13:08:30.939Z"
+      "metricsAt": "2026-07-03T11:38:03.383Z",
+      "insightComment": "참여율 200.0%로 평균(67.4%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-03T11:38:04.622Z"
     },
     {
       "id": "w2-mon",
@@ -978,15 +978,15 @@
         }
       ],
       "metrics": {
-        "views": 11,
+        "views": 13,
         "likes": 0,
         "comments": 0,
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-02T13:08:29.768Z",
-      "insightComment": "조회 11·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-02T13:08:31.062Z"
+      "metricsAt": "2026-07-03T11:38:03.616Z",
+      "insightComment": "조회 13·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-03T11:38:04.743Z"
     },
     {
       "id": "threads-07-11",
@@ -1101,7 +1101,7 @@
       ],
       "scheduledFor": "2026-07-03T09:00:00.000Z",
       "score": 80,
-      "status": "planned",
+      "status": "published",
       "kicker": "Shorts",
       "headline": "광고비 *날리는* 사장님 특징",
       "sub": "30초 쇼츠.",
@@ -1131,7 +1131,26 @@
         "마케팅 전략",
         "자영업 광고",
         "창업 마케팅"
-      ]
+      ],
+      "publishedUrl": "https://youtu.be/ulDu8KIb_0Y",
+      "publishedAt": "2026-07-03T11:37:56.889Z",
+      "published": [
+        {
+          "platform": "youtube",
+          "remoteId": "ulDu8KIb_0Y",
+          "url": "https://youtu.be/ulDu8KIb_0Y"
+        }
+      ],
+      "metrics": {
+        "views": 26841,
+        "likes": 1100,
+        "comments": 66,
+        "shares": 44,
+        "engagementRate": 0.0450802876196863
+      },
+      "metricsAt": "2026-07-03T11:38:03.666Z",
+      "insightComment": "참여율 4.5%로 평균(67.4%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-03T11:38:04.878Z"
     },
     {
       "id": "youtube-07-12",
@@ -1303,9 +1322,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-02T13:08:29.769Z",
+      "metricsAt": "2026-07-03T11:38:03.666Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-02T13:08:31.167Z"
+      "insightAt": "2026-07-03T11:38:05.007Z"
     },
     {
       "id": "blogger-07-09",
@@ -1316,7 +1335,7 @@
       ],
       "scheduledFor": "2026-07-03T09:00:00.000Z",
       "score": 82,
-      "status": "planned",
+      "status": "published",
       "kicker": "Landing",
       "headline": "전환율을 두 배로 올린 랜딩페이지 점검표",
       "sub": "광고를 안 바꾸고 페이지만 고쳐 전환율을 2배로 올린 적이 있습니다. 그때 쓴 점검표를 공개합니다.",
@@ -1337,7 +1356,26 @@
         "전환율",
         "CRO",
         "상세페이지"
-      ]
+      ],
+      "publishedUrl": "https://pslab2026.blogspot.com/2026/07/blog-post.html",
+      "publishedAt": "2026-07-03T11:37:58.921Z",
+      "published": [
+        {
+          "platform": "blogger",
+          "remoteId": "677959418277201183",
+          "url": "https://pslab2026.blogspot.com/2026/07/blog-post.html"
+        }
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-03T11:38:03.666Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-03T11:38:05.125Z"
     },
     {
       "id": "blogger-07-16",
