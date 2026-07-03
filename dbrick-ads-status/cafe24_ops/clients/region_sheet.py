@@ -20,6 +20,7 @@ import io
 import json
 import os
 import time
+import urllib.parse
 
 import httpx
 
@@ -111,8 +112,11 @@ def fetch_via_sheets_api(sheet_id: str, gid: str, credentials_info: dict, timeou
     if not title:
         raise ValueError(f"gid={gid} 에 해당하는 시트 탭을 찾을 수 없습니다")
 
+    # 시트 탭 이름에 공백/특수문자가 있으면(예: "온라인 인입_지역") A1 표기 규칙상
+    # 작은따옴표로 감싸야 하고, 경로 세그먼트라 URL 인코딩도 필요하다(둘 다 안 하면 404).
+    quoted_range = urllib.parse.quote(f"'{title}'", safe="")
     values_resp = httpx.get(
-        f"{SHEETS_API_BASE}/{sheet_id}/values/{title}",
+        f"{SHEETS_API_BASE}/{sheet_id}/values/{quoted_range}",
         headers=headers, timeout=timeout,
     )
     _raise_with_body(values_resp)

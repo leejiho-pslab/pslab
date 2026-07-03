@@ -1,6 +1,9 @@
+import httpx
+
 import cafe24_ops.clients.region_sheet as region_sheet
 from cafe24_ops.clients.region_sheet import (
     fetch_region_status,
+    fetch_via_sheets_api,
     parse_region_csv,
     pick_sheet_title,
     sheet_csv_url,
@@ -95,3 +98,27 @@ def test_fetch_region_status_reports_broken_credentials_instead_of_silent_fallba
     out = fetch_region_status("SHEET3", "3")
     assert calls["csv"] == 0                 # CSV 로 폴백하지 않아야 함
     assert "JSON" in out["error"]
+
+
+def test_fetch_via_sheets_api_quotes_title_with_spaces(monkeypatch):
+    # 시트 탭 이름에 공백이 있으면("온라인 인입_지역") A1 표기용 작은따옴표 + URL 인코딩이
+    # 둘 다 적용돼야 한다 — 안 그러면 실사용에서처럼 404 가 난다.
+    monkeypatch.setattr(region_sheet, "_sheets_access_token", lambda creds: "tok")
+    requested_urls: list[str] = []
+
+    def fake_get(url, params=None, headers=None, timeout=None):
+        requested_urls.append(str(url))
+        req = httpx.Request("GET", url)
+        if "/values/" in str(url):
+            return httpx.Response(200, json={"values": [["지역", "유입수"], ["서울", "10"]]}, request=req)
+        return httpx.Response(200, json={"sheets": [
+            {"properties": {"sheetId": 42, "title": "온라인 인입_지역"}},
+        ]}, request=req)
+
+    monkeypatch.setattr(region_sheet.httpx, "get", fake_get)
+    out = fetch_via_sheets_api("SHEET1", "42", {"type": "service_account"})
+
+    assert out == {"headers": ["지역", "유입수"], "rows": [["서울", "10"]]}
+    values_url = next(u for u in requested_urls if "/values/" in u)
+    assert "%27" in values_url                # 작은따옴표(') 가 인코딩돼 있어야 함
+    assert " " not in values_url               # 공백이 그대로 남아있으면 안 됨(404 원인)
