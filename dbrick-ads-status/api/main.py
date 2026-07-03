@@ -38,6 +38,7 @@ from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_trend,
 )
 from cafe24_ops.etl.compare import period_comparison, summary_cards_range  # noqa: E402
+from cafe24_ops.etl.ga4_site import site_summary, site_trend  # noqa: E402
 from cafe24_ops.etl.competitor_metrics import (  # noqa: E402
     bestseller_changes,
     competitor_ad_creatives,
@@ -86,7 +87,12 @@ def _store() -> Store:
 @app.get("/health")
 def health() -> dict:
     """헬스 + 데이터 신선도(모니터링용). DB 접근 실패해도 200 으로 status 표기."""
+    import os as _os
+
     info: dict = {"status": "ok", "mode": _config.mode}
+    # GA4 자격증명이 이 런타임에 보이는지(지역현황 시트/전환 대체가 왜 안 되는지 진단용 — 값은 노출 안 함)
+    info["ga4_creds"] = bool(_os.environ.get("GOOGLE_APPLICATION_CREDENTIALS_JSON"))
+    info["ga4_property"] = bool(_os.environ.get("GA4_PROPERTY_ID"))
     store = _store()
     try:
         dates = store.list_dates()
@@ -420,6 +426,23 @@ def dates() -> dict:
     store = _store()
     try:
         return {"dates": store.list_dates()}
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/site")
+def ga4_site_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    """GA4 사이트 분석 — 기간 요약(방문자/세션/페이지뷰/체류시간) + 일자별 추이."""
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to,
+            "summary": site_summary(store, date_from, date_to),
+            "trend": site_trend(store, date_from, date_to),
+        }
     finally:
         store.close()
 

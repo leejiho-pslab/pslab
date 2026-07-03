@@ -7,6 +7,7 @@ from .base import BaseCollector
 from .cafe24 import Cafe24Collector
 from .competitor import CompetitorCollector
 from .creative import CreativeCollector
+from .ga4_site import Ga4SiteCollector
 
 
 def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
@@ -16,6 +17,7 @@ def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
         AdsCollector(config, mode),
         CreativeCollector(config, mode),
         CompetitorCollector(config, mode),
+        Ga4SiteCollector(config, mode),
     ]
 
 
@@ -25,5 +27,6 @@ __all__ = [
     "AdsCollector",
     "CreativeCollector",
     "CompetitorCollector",
+    "Ga4SiteCollector",
     "build_collectors",
 ]

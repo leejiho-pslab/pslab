@@ -46,6 +46,7 @@ body {
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 16px;
 }
 .kpi-grid.kpi-4 { grid-template-columns: repeat(4, 1fr); }
+.kpi-grid.kpi-8 { grid-template-columns: repeat(4, 1fr); }
 .kpi-card {
   background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--blue);
   border-radius: 10px; padding: 14px;
@@ -85,6 +86,7 @@ body {
 .ch-metrics span { display: block; color: var(--sub); font-size: 11px; }
 .ch-metrics b { display: block; font-size: 14.5px; margin-top: 2px; }
 .ch-metrics.six { grid-template-columns: repeat(6, 1fr); }
+.ch-metrics.eight { grid-template-columns: repeat(4, 1fr); }
 .mini-delta { display: block; font-size: 11px; font-weight: 600; font-style: normal; margin-top: 2px; }
 .mini-delta.up { color: var(--up); }
 .mini-delta.down { color: var(--down); }
@@ -269,19 +271,20 @@ button { cursor: pointer; }
 .rank-row .delta { font-weight: 600; }
 
 @media (max-width: 900px) {
-  .kpi-grid, .kpi-grid.kpi-4 { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .kpi-grid.kpi-4, .kpi-grid.kpi-8 { grid-template-columns: repeat(2, 1fr); }
   .group-grid { grid-template-columns: repeat(2, 1fr); }
   .two-col { grid-template-columns: 1fr; }
   .crm-grid { grid-template-columns: repeat(2, 1fr); }
   .comp-grid { grid-template-columns: 1fr; }
   .ch-metrics.six { grid-template-columns: repeat(3, 1fr); }
+  .ch-metrics.eight { grid-template-columns: repeat(3, 1fr); }
   .creative-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 600px) {
   .app { padding: 12px; }
   .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .kpi-grid, .kpi-grid.kpi-4 { grid-template-columns: repeat(2, 1fr); }
-  .ch-metrics, .ch-metrics.six { grid-template-columns: repeat(2, 1fr); }
+  .kpi-grid, .kpi-grid.kpi-4, .kpi-grid.kpi-8 { grid-template-columns: repeat(2, 1fr); }
+  .ch-metrics, .ch-metrics.six, .ch-metrics.eight { grid-template-columns: repeat(2, 1fr); }
   .creative-grid { grid-template-columns: 1fr; }
   .hbar-row, .hbar-row.wide { grid-template-columns: 80px 1fr; }
   .hbar-val { display: none; }

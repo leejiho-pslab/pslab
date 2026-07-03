@@ -10,6 +10,7 @@ import type {
   CompetitorTrendRow,
   NaverSearchItem,
   NaverTrend,
+  Ga4SiteResponse,
   RegionStatus,
   Creative,
   CreativeFatigue,
@@ -89,6 +90,10 @@ export const api = {
     ),
   competitorsBestChanges: (date?: string) =>
     get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
+
+  // GA4 사이트 분석 (방문자/세션/페이지뷰/체류시간)
+  ga4Site: (from: string, to: string) =>
+    get<Ga4SiteResponse>(`/api/ga4/site?from=${from}&to=${to}`),
 
   // 대시보드 하단 — 온라인 인입 지역 현황(구글 시트)
   regionStatus: () => get<RegionStatus>("/api/region-status"),

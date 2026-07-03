@@ -7,6 +7,7 @@ import type { AdsChannel, AdsOverview, AdsTrendRow } from "../types";
 import { PeriodSelector } from "../components/PeriodSelector";
 import { KpiDelta } from "../components/KpiDelta";
 import { AdsTrendChart } from "../components/AdsTrendChart";
+import { Ga4SitePanel } from "../components/Ga4SitePanel";
 import { Loading, ErrorState } from "../components/States";
 
 const CH_LABEL: Record<string, string> = {
@@ -54,13 +55,15 @@ export function AdsPage({ date }: { date: string }) {
         <Loading rows={3} />
       ) : (
         <>
-          {/* 상단: 광고 전체 요약 (비교기간 대비 증감) */}
-          <div className="kpi-grid">
+          {/* 상단: 광고 전체 요약 (비교기간 대비 증감) — 전환수는 GA4 연동 시 GA4 기준으로 대체됨 */}
+          <div className="kpi-grid kpi-8">
             <KpiDelta label="총 광고비" value={s ? won(s.ad_cost) : "—"} delta={d.ad_cost} />
             <KpiDelta label="광고 매출" value={s ? won(s.ad_sales) : "—"} delta={d.ad_sales} />
             <KpiDelta label="ROAS" value={s?.roas != null ? `${s.roas}x` : "—"} delta={d.roas} />
-            <KpiDelta label="노출량" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
+            <KpiDelta label="노출수" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
             <KpiDelta label="클릭수" value={s ? num(s.clicks) : "—"} delta={d.clicks} />
+            <KpiDelta label="클릭률(CTR)" value={s?.ctr != null ? `${s.ctr}%` : "—"} delta={d.ctr} />
+            <KpiDelta label="전환수" value={s ? num(s.conversions) : "—"} delta={d.conversions} />
             <KpiDelta label="전환율" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
           </div>
 
@@ -85,6 +88,9 @@ export function AdsPage({ date }: { date: string }) {
           {channels.map((c) => (
             <ChannelDetail key={c.channel} c={c} cmp={cmpMap.get(c.channel)} trend={chTrend[c.channel] ?? []} />
           ))}
+
+          {/* GA4 사이트 분석 — 선택기간 방문자/세션/페이지뷰/체류시간 */}
+          <Ga4SitePanel from={ranges.selFrom} to={ranges.selTo} />
         </>
       )}
     </>
@@ -104,8 +110,10 @@ function ChannelDetail({
     ["광고비", won(c.ad_cost), c.ad_cost, cmp?.ad_cost],
     ["광고매출", won(c.ad_sales), c.ad_sales, cmp?.ad_sales],
     ["ROAS", c.roas != null ? `${c.roas}x` : "—", c.roas, cmp?.roas],
-    ["노출량", num(c.impressions), c.impressions, cmp?.impressions],
+    ["노출수", num(c.impressions), c.impressions, cmp?.impressions],
     ["클릭수", num(c.clicks), c.clicks, cmp?.clicks],
+    ["클릭률(CTR)", c.ctr != null ? `${c.ctr}%` : "—", c.ctr, cmp?.ctr],
+    ["전환수", num(c.conversions), c.conversions, cmp?.conversions],
     ["전환율", c.cvr != null ? `${c.cvr}%` : "—", c.cvr, cmp?.cvr],
   ];
   return (
@@ -114,7 +122,7 @@ function ChannelDetail({
         <h2>{CH_LABEL[c.channel] ?? c.channel}</h2>
         <span className="badge">예산 {c.budget_share ?? 0}%</span>
       </div>
-      <div className="ch-metrics six">
+      <div className="ch-metrics eight">
         {metrics.map(([k, v, cur, prev]) => {
           const dd = formatDelta(pct(cur, prev));
           return (

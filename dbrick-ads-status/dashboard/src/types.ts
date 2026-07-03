@@ -265,6 +265,31 @@ export interface BestChange {
   rank_changes: RankChange[];
 }
 
+// ── GA4 사이트 분석 ────────────────────────────────────────────
+export interface Ga4SiteSummary {
+  visitors: number;
+  sessions: number;
+  page_views: number;
+  avg_session_duration: number | null;
+  pages_per_session: number | null;
+  days: number;
+}
+
+export interface Ga4SiteTrendRow {
+  date: string;
+  visitors: number | null;
+  sessions: number | null;
+  page_views: number | null;
+  avg_session_duration: number | null;
+}
+
+export interface Ga4SiteResponse {
+  from: string;
+  to: string;
+  summary: Ga4SiteSummary;
+  trend: Ga4SiteTrendRow[];
+}
+
 export interface RegionStatus {
   headers: string[];
   rows: string[][];

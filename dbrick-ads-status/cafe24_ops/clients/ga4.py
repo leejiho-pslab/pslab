@@ -75,6 +75,31 @@ DEFAULT_SOURCE_MEDIUM_CHANNEL = {
 }
 
 
+# 사이트 분석 지표 — GA4 metric 이름 → facts metric 키 (순서 중요: runReport metrics 순서와 일치)
+# site_ 접두어: 카페24 쪽 visitors 등과 metric 이름이 겹치면 소스 무관 조회(_scalar 등)가 오염됨.
+SITE_METRICS = [
+    ("totalUsers", "site_visitors"),                  # 사이트 방문자
+    ("sessions", "site_sessions"),                    # 세션수
+    ("screenPageViews", "site_page_views"),           # 페이지뷰
+    ("averageSessionDuration", "site_avg_duration"),  # 평균 체류시간(초)
+]
+
+
+def ga4_report_to_site_metrics(raw: dict) -> dict[str, float] | None:
+    """단일 dateRange runReport(SITE_METRICS 순서) 응답 → {metric_key: value}. 행 없으면 None."""
+    rows = (raw or {}).get("rows") or []
+    if not rows:
+        return None
+    vals = rows[0].get("metricValues") or []
+    out: dict[str, float] = {}
+    for i, (_, key) in enumerate(SITE_METRICS):
+        try:
+            out[key] = float(vals[i].get("value", 0) or 0) if i < len(vals) else 0.0
+        except (TypeError, ValueError):
+            out[key] = 0.0
+    return out
+
+
 def ga4_report_to_channel_conversions(raw: dict, mapping: dict | None = None) -> dict[str, dict]:
     """sessionSourceMedium 차원 runReport(conversions, purchaseRevenue) →
     {channel: {"conversions": n, "ga4_conversion_value": v}}.
@@ -183,6 +208,27 @@ class GA4Client:
             if resp.status_code != 200:
                 return None
             return ga4_report_to_new_returning(resp.json())
+        return None
+
+    def daily_site_metrics(self, date: str) -> dict[str, float] | None:
+        """일자 사이트 지표(방문자/세션/페이지뷰/평균 체류시간). 실패 시 None. 401 이면 토큰 1회 재발급."""
+        body = {
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "metrics": [{"name": name} for name, _ in SITE_METRICS],
+        }
+        path = f"/v1beta/properties/{self.property_id}:runReport"
+        for attempt in (1, 2):
+            try:
+                resp = self._http.post(
+                    path, headers={"Authorization": f"Bearer {self._access_token()}"}, json=body)
+            except Exception:  # noqa: BLE001
+                return None
+            if resp.status_code == 401 and attempt == 1:
+                self._token = None
+                continue
+            if resp.status_code != 200:
+                return None
+            return ga4_report_to_site_metrics(resp.json())
         return None
 
     def daily_channel_conversions(self, date: str, mapping: dict | None = None) -> dict[str, dict] | None:
