@@ -314,6 +314,14 @@ class Cafe24Collector(BaseCollector):
         return out
 
     def collect_live(self, date: str) -> list[dict]:
+        # 자사몰이 없는 업체(shop.platform=none, 예: 디브릭)는 카페24 수집 대상이 아니다.
+        # NotImplementedError 로 스킵하면 파이프라인이 "실패"가 아니라 "건너뜀"으로 처리하고
+        # 자가모니터링 알림에도 실패 채널로 잡히지 않는다(매일 뜨던 오탐 경고 제거).
+        if (self.config.sources.shop.get("platform") or "").lower() in ("", "none"):
+            raise NotImplementedError(
+                "[cafe24] 자사몰 미보유(shop.platform=none) — 카페24 수집 대상 아님(정상 스킵)."
+            )
+
         from ..clients import Cafe24Client
         from ..store import Store
 
