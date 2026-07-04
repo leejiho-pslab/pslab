@@ -27,6 +27,9 @@ CAMPAIGN_TYPE_CHANNEL = {
 }
 DEFAULT_CHANNEL = "naver_other"      # 쇼핑검색/파워컨텐츠/브랜드검색 등 기타 유형
 
+# 키워드 메타(계정별) 프로세스 캐시 — 백필(다일)에서 날짜마다 재크롤 방지.
+_ID_META_CACHE: dict[str, dict] = {}
+
 
 def sign(secret_key: str, timestamp: str, method: str, path: str) -> str:
     message = f"{timestamp}.{method}.{path}"
@@ -169,13 +172,15 @@ class NaverSearchAdClient:
             data += (self.stats(ids[i:i + 100], date).get("data") or [])
         return {"data": data}
 
-    def fetch_keyword_facts(self, date: str) -> list[dict]:
-        """키워드 단위 리포트 facts(source='naver_keyword').
+    def _build_keyword_id_meta(self) -> dict[str, dict]:
+        """{엔티티 id: {keyword,campaign,adgroup,channel}} — 캠페인→광고그룹→키워드 크롤.
 
-        파워링크(WEB_SITE) 캠페인은 키워드별, 그 외(플레이스 등)는 키워드가 없어
-        광고그룹 단위(키워드='-')로 /stats 를 조회한다. /stats 응답의 각 행은 조회한
-        엔티티 id(row['id'])를 담고 있어 이를 키워드/광고그룹 메타에 되매핑한다.
+        날짜와 무관한 메타이므로 프로세스 단위로 캐시한다(백필에서 31일치를 매번 다시
+        크롤하면 수백 콜이 반복돼 매우 느림). 캐시 키는 계정(customer_id).
         """
+        cached = _ID_META_CACHE.get(self.customer_id)
+        if cached is not None:
+            return cached
         id_meta: dict[str, dict] = {}
         for c in self.list_campaigns():
             channel = CAMPAIGN_TYPE_CHANNEL.get(c["type"], DEFAULT_CHANNEL)
@@ -193,6 +198,17 @@ class NaverSearchAdClient:
                     id_meta[ag["id"]] = {
                         "keyword": "-", "campaign": cname, "adgroup": aname, "channel": channel,
                     }
+        _ID_META_CACHE[self.customer_id] = id_meta
+        return id_meta
+
+    def fetch_keyword_facts(self, date: str) -> list[dict]:
+        """키워드 단위 리포트 facts(source='naver_keyword').
+
+        파워링크(WEB_SITE) 캠페인은 키워드별, 그 외(플레이스 등)는 키워드가 없어
+        광고그룹 단위(키워드='-')로 /stats 를 조회한다. /stats 응답의 각 행은 조회한
+        엔티티 id(row['id'])를 담고 있어 이를 키워드/광고그룹 메타에 되매핑한다.
+        """
+        id_meta = self._build_keyword_id_meta()
         if not id_meta:
             return []
         stats = self._stats_for_ids(list(id_meta), date)

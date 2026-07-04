@@ -1,5 +1,6 @@
 import httpx
 
+import cafe24_ops.clients.ads_naver as ads_naver
 from cafe24_ops.clients.ads_naver import NaverSearchAdClient, naver_sa_keyword_rows_to_facts
 from cafe24_ops.config import load_config
 from cafe24_ops.etl.keyword_metrics import keyword_channels, keyword_report, keyword_summary
@@ -24,10 +25,18 @@ def test_keyword_rows_to_facts_maps_by_id():
 
 
 # ── 라이브 흐름(캠페인→광고그룹→키워드→stats) ───────────────────
+_META_CALLS: dict = {}
+
+
 def test_fetch_keyword_facts_flow():
+    ads_naver._ID_META_CACHE.clear()  # 프로세스 캐시 초기화(테스트 순서 무관하게)
+    _META_CALLS.clear()
+    _META_CALLS.update({"campaigns": 0})
+
     def handler(req: httpx.Request) -> httpx.Response:
         p = req.url.path
         if p == "/ncc/campaigns":
+            _META_CALLS["campaigns"] += 1
             return httpx.Response(200, json=[
                 {"nccCampaignId": "cmp-pl", "campaignTp": "WEB_SITE", "name": "파워링크"},
                 {"nccCampaignId": "cmp-pc", "campaignTp": "PLACE", "name": "플레이스"},
@@ -60,6 +69,10 @@ def test_fetch_keyword_facts_flow():
     c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
                             transport=httpx.MockTransport(handler))
     facts = c.fetch_keyword_facts("2026-07-03")
+    # 같은 계정 두 번째 날 조회 시 메타 재크롤 없이 캐시 사용(백필 성능)
+    calls_before = dict(_META_CALLS)
+    c.fetch_keyword_facts("2026-07-02")
+    assert _META_CALLS["campaigns"] == calls_before["campaigns"]  # 캠페인 목록 재조회 안 함
     c.close()
 
     # 키워드/광고그룹 단위로 dims 가 나뉘어야 함
