@@ -34,5 +34,5 @@ region_status:
 # region_status 와 같은 서비스계정 비공개 연동(GOOGLE_APPLICATION_CREDENTIALS_JSON) 사용.
 # sheet_id/gid 를 비워두면 대시보드는 딥링크(홈페이지/인스타/광고라이브러리)만 표시한다.
 competitor_media:
-  sheet_id: ""
-  gid: ""
+  sheet_id: "1Bdgt2eUNS63KyQrgXqibvs1ROYCarGpw7HrhIs0Papc"   # 디브릭 경쟁사 리서치 시트
+  gid: "0"
