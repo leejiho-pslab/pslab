@@ -52,19 +52,38 @@ def test_ga4_report_to_channel_conversions_custom_mapping():
     assert out["naver_place"]["conversions"] == 3.0
 
 
+def test_keyevents_vs_conversions_picks_max():
+    # GA4 지표 개편: 신규 속성은 conversions=0, keyEvents 에만 값. 둘 중 큰 값을 써야 함.
+    raw = {
+        "metricHeaders": [{"name": "keyEvents"}, {"name": "conversions"}, {"name": "purchaseRevenue"}],
+        "rows": [
+            {"dimensionValues": [{"value": "meta / cpc"}],
+             "metricValues": [{"value": "7"}, {"value": "0"}, {"value": "0"}]},
+        ],
+    }
+    out = ga4_report_to_channel_conversions(
+        raw, metric_order=["keyEvents", "conversions", "purchaseRevenue"])
+    assert out["meta"]["conversions"] == 7.0   # keyEvents(7) > conversions(0)
+
+
 def test_daily_channel_conversions_http():
     def handler(req: httpx.Request) -> httpx.Response:
         assert "properties/1/:runReport" not in str(req.url)  # sanity: 실제 프로퍼티id 사용
-        return httpx.Response(200, json={"rows": [
-            {"dimensionValues": [{"value": "naver / cpc"}],
-             "metricValues": [{"value": "4"}, {"value": "20000"}]},
-        ]})
+        # 실 API 는 요청한 keyEvents/conversions/purchaseRevenue 순서로 헤더+값을 준다.
+        return httpx.Response(200, json={
+            "metricHeaders": [{"name": "keyEvents"}, {"name": "conversions"}, {"name": "purchaseRevenue"}],
+            "rows": [
+                {"dimensionValues": [{"value": "naver / cpc"}],
+                 "metricValues": [{"value": "4"}, {"value": "4"}, {"value": "20000"}]},
+            ],
+        })
 
     c = GA4Client("999", {"type": "service_account"},
                   transport=httpx.MockTransport(handler), token_fn=lambda: "tok")
     try:
         out = c.daily_channel_conversions("2026-06-28")
         assert out["naver_powerlink"]["conversions"] == 4.0
+        assert out["naver_powerlink"]["ga4_conversion_value"] == 20000.0
     finally:
         c.close()
 

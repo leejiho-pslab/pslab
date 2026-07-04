@@ -204,6 +204,44 @@ export interface CreativeOverview {
   by_channel: CreativeByChannel[];
 }
 
+// ── 네이버 검색광고 키워드 리포트 ──────────────────────────────
+export interface KeywordRow {
+  channel: string;
+  campaign: string;
+  adgroup: string;
+  keyword: string;
+  ad_cost: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ad_sales: number;
+  ctr: number | null;
+  cpc: number | null;
+  cvr: number | null;
+  roas: number | null;
+}
+
+export interface KeywordSummary {
+  keyword_count: number;
+  ad_cost: number;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ctr: number | null;
+  cpc: number | null;
+  cvr: number | null;
+}
+
+export interface KeywordReportResponse {
+  from: string;
+  to: string;
+  channel: string | null;
+  sort: string;
+  channels: string[];
+  summary: KeywordSummary;
+  rows: KeywordRow[];
+}
+
 export interface CreativeFatigue {
   creative_id: string;
   name: string;

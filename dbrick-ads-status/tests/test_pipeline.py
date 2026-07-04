@@ -10,7 +10,7 @@ def test_pipeline_end_to_end_mock(tmp_path):
         result = run_pipeline("2026-06-17", cfg, store, mode="mock")
 
         # 모든 소스가 수집을 시도했다.
-        assert set(result.per_source) == {"cafe24", "ads", "creative", "competitor", "ga4_site"}
+        assert set(result.per_source) == {"cafe24", "ads", "creative", "naver_keyword", "competitor", "ga4_site"}
         # 카페24 mock 은 8개 요약 KPI(+차원 팩트)를 생성한다.
         assert result.per_source["cafe24"] >= 8
         assert len(result.kpi) == 8

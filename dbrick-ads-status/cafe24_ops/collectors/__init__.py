@@ -8,6 +8,7 @@ from .cafe24 import Cafe24Collector
 from .competitor import CompetitorCollector
 from .creative import CreativeCollector
 from .ga4_site import Ga4SiteCollector
+from .naver_keyword import NaverKeywordCollector
 
 
 def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
@@ -16,6 +17,7 @@ def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
         Cafe24Collector(config, mode),
         AdsCollector(config, mode),
         CreativeCollector(config, mode),
+        NaverKeywordCollector(config, mode),
         CompetitorCollector(config, mode),
         Ga4SiteCollector(config, mode),
     ]
@@ -26,6 +28,7 @@ __all__ = [
     "Cafe24Collector",
     "AdsCollector",
     "CreativeCollector",
+    "NaverKeywordCollector",
     "CompetitorCollector",
     "Ga4SiteCollector",
     "build_collectors",

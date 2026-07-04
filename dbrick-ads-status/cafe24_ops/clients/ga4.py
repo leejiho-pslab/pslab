@@ -116,9 +116,36 @@ def ga4_report_to_site_metrics(raw: dict) -> dict[str, float] | None:
     return out
 
 
-def ga4_report_to_source_medium(raw: dict) -> list[dict]:
-    """sessionSourceMedium 차원 runReport(sessions, totalUsers, conversions) →
-    [{"source_medium","sessions","users","conversions"}]. 행 없으면 빈 리스트."""
+def _metric_index(raw: dict, fallback: list[str]) -> dict[str, int]:
+    """runReport 응답의 metricHeaders 로 {metric_name: 열 인덱스} 를 만든다.
+    헤더가 없으면 요청 순서(fallback)를 그대로 사용한다(테스트/구버전 대비)."""
+    headers = (raw or {}).get("metricHeaders") or []
+    if headers:
+        return {(h.get("name") or ""): i for i, h in enumerate(headers)}
+    return {name: i for i, name in enumerate(fallback)}
+
+
+def _conversions_from(vals: list, idx: dict[str, int]) -> float:
+    """conversions / keyEvents 중 존재하는 값의 최댓값. GA4 는 2024년 conversions →
+    keyEvents 로 지표를 개편해, 신규 속성은 conversions 가 0 이고 keyEvents 만 채워진다.
+    둘 다 요청해 더 큰 값을 전환수로 삼으면 구/신 속성 모두에서 값이 보인다."""
+    best = 0.0
+    for name in ("conversions", "keyEvents"):
+        i = idx.get(name)
+        if i is None:
+            continue
+        try:
+            v = float(vals[i].get("value", 0) or 0) if i < len(vals) else 0.0
+        except (TypeError, ValueError):
+            v = 0.0
+        best = max(best, v)
+    return best
+
+
+def ga4_report_to_source_medium(raw: dict, metric_order: list[str] | None = None) -> list[dict]:
+    """sessionSourceMedium 차원 runReport → [{"source_medium","sessions","users","conversions"}].
+    conversions 는 conversions/keyEvents 중 큰 값. 행 없으면 빈 리스트."""
+    idx = _metric_index(raw, metric_order or ["sessions", "totalUsers", "conversions"])
     out: list[dict] = []
     for r in (raw or {}).get("rows") or []:
         dims = r.get("dimensionValues") or [{}]
@@ -126,12 +153,14 @@ def ga4_report_to_source_medium(raw: dict) -> list[dict]:
         sm = (dims[0].get("value") or "").strip()
         if not sm:
             continue
-        def _v(i):
+        def _v(name):
+            i = idx.get(name)
             try:
-                return float(vals[i].get("value", 0) or 0) if i < len(vals) else 0.0
+                return float(vals[i].get("value", 0) or 0) if i is not None and i < len(vals) else 0.0
             except (TypeError, ValueError):
                 return 0.0
-        out.append({"source_medium": sm, "sessions": _v(0), "users": _v(1), "conversions": _v(2)})
+        out.append({"source_medium": sm, "sessions": _v("sessions"), "users": _v("totalUsers"),
+                    "conversions": _conversions_from(vals, idx)})
     return out
 
 
@@ -152,27 +181,31 @@ def ga4_report_to_top_pages(raw: dict) -> list[dict]:
     return out
 
 
-def ga4_report_to_channel_conversions(raw: dict, mapping: dict | None = None) -> dict[str, dict]:
-    """sessionSourceMedium 차원 runReport(conversions, purchaseRevenue) →
+def ga4_report_to_channel_conversions(
+    raw: dict, mapping: dict | None = None, metric_order: list[str] | None = None
+) -> dict[str, dict]:
+    """sessionSourceMedium 차원 runReport(keyEvents/conversions, purchaseRevenue) →
     {channel: {"conversions": n, "ga4_conversion_value": v}}.
 
-    매핑 안 되는 source/medium 은 channel="ga4_unmapped" 로 합산돼 유실 없이 노출된다.
+    conversions 는 conversions/keyEvents 중 큰 값(GA4 지표 개편 대응).
+    광고 채널(AD_CHANNELS)로 매핑되는 유입만 반영한다(비광고 유입 제외).
     """
     mapping = mapping or DEFAULT_SOURCE_MEDIUM_CHANNEL
-    rows = (raw or {}).get("rows") or []
+    idx = _metric_index(raw, metric_order or ["conversions", "purchaseRevenue"])
+    rev_i = idx.get("purchaseRevenue")
     out: dict[str, dict] = {}
-    for r in rows:
+    for r in (raw or {}).get("rows") or []:
         dims = r.get("dimensionValues") or [{}]
         vals = r.get("metricValues") or []
         source_medium = (dims[0].get("value") or "").strip()
         channel = mapping.get(source_medium)
-        # 광고 채널로 매핑되는 유입만 광고 전환 대체에 반영한다. direct/organic/referral 등
-        # 비광고 유입은 광고 카드에 붙이면 오히려 오해를 부르므로 여기서 제외(그 값은
-        # GA4 매체별 분석 표에서 원본 그대로 확인 가능).
         if channel not in AD_CHANNELS:
             continue
-        conv = float(vals[0].get("value", 0) or 0) if len(vals) > 0 else 0.0
-        rev = float(vals[1].get("value", 0) or 0) if len(vals) > 1 else 0.0
+        conv = _conversions_from(vals, idx)
+        try:
+            rev = float(vals[rev_i].get("value", 0) or 0) if rev_i is not None and rev_i < len(vals) else 0.0
+        except (TypeError, ValueError):
+            rev = 0.0
         agg = out.setdefault(channel, {"conversions": 0.0, "ga4_conversion_value": 0.0})
         agg["conversions"] += conv
         agg["ga4_conversion_value"] += rev
@@ -304,21 +337,40 @@ class GA4Client:
         광고 채널별 실제 전환은 각 광고 플랫폼 자체 보고값보다 GA4 값이 더 신뢰도 높은 경우가
         많아, 이 값이 있으면 ads facts 의 conversions 를 이 값으로 대체한다(AdsCollector 참고).
         """
+        # keyEvents(신규)+conversions(구) 동시 요청 → 둘 중 큰 값 사용. 신규 속성에서
+        # 구 conversions 미지원으로 400 이 나면 conversions 단독으로 1회 재시도한다.
+        order = ["keyEvents", "conversions", "purchaseRevenue"]
         raw = self._run_report({
             "dateRanges": [{"startDate": date, "endDate": date}],
             "dimensions": [{"name": "sessionSourceMedium"}],
-            "metrics": [{"name": "conversions"}, {"name": "purchaseRevenue"}],
+            "metrics": [{"name": m} for m in order],
         }, label="conversions")
-        return ga4_report_to_channel_conversions(raw, mapping) if raw is not None else None
+        if raw is None:
+            order = ["conversions", "purchaseRevenue"]
+            raw = self._run_report({
+                "dateRanges": [{"startDate": date, "endDate": date}],
+                "dimensions": [{"name": "sessionSourceMedium"}],
+                "metrics": [{"name": m} for m in order],
+            }, label="conversions_fallback")
+        return ga4_report_to_channel_conversions(raw, mapping, order) if raw is not None else None
 
     def daily_source_medium(self, date: str) -> list[dict] | None:
-        """일자 sessionSourceMedium 별 세션/사용자/전환. 실패 시 None(사유는 로그)."""
+        """일자 sessionSourceMedium 별 세션/사용자/전환. 실패 시 None(사유는 로그).
+        전환은 keyEvents/conversions 중 큰 값(GA4 지표 개편 대응, 400 시 단독 재시도)."""
+        order = ["sessions", "totalUsers", "keyEvents", "conversions"]
         raw = self._run_report({
             "dateRanges": [{"startDate": date, "endDate": date}],
             "dimensions": [{"name": "sessionSourceMedium"}],
-            "metrics": [{"name": "sessions"}, {"name": "totalUsers"}, {"name": "conversions"}],
+            "metrics": [{"name": m} for m in order],
         }, label="source_medium")
-        return ga4_report_to_source_medium(raw) if raw is not None else None
+        if raw is None:
+            order = ["sessions", "totalUsers", "conversions"]
+            raw = self._run_report({
+                "dateRanges": [{"startDate": date, "endDate": date}],
+                "dimensions": [{"name": "sessionSourceMedium"}],
+                "metrics": [{"name": m} for m in order],
+            }, label="source_medium_fallback")
+        return ga4_report_to_source_medium(raw, order) if raw is not None else None
 
     def daily_top_pages(self, date: str, limit: int = 15) -> list[dict] | None:
         """일자 페이지(pageTitle)별 조회수 상위. 실패 시 None(사유는 로그)."""

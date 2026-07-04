@@ -13,6 +13,7 @@ import type {
   Ga4SiteResponse,
   Ga4ChannelsResponse,
   Ga4PagesResponse,
+  KeywordReportResponse,
   RegionStatus,
   Creative,
   CreativeFatigue,
@@ -74,6 +75,12 @@ export const api = {
     ),
   creativesOverview: (from: string, to: string, sort = "roas") =>
     get<CreativeOverview>(`/api/creatives/overview?from=${from}&to=${to}&sort=${sort}`),
+  // 네이버 검색광고 키워드 리포트 (광고비 기준 정렬)
+  adsKeywords: (from: string, to: string, channel?: string, sort = "ad_cost", topN = 300) =>
+    get<KeywordReportResponse>(
+      `/api/ads/keywords?from=${from}&to=${to}&sort=${sort}&top_n=${topN}` +
+        (channel ? `&channel=${channel}` : ""),
+    ),
   creativesFatigue: (date?: string) =>
     get<{ date: string | null; items: CreativeFatigue[] }>(`/api/creatives/fatigue${q(date)}`),
 

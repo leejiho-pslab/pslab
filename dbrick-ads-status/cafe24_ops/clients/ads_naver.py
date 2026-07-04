@@ -54,6 +54,32 @@ def naver_sa_to_facts(date: str, raw: dict, channel: str = "naver") -> list[dict
     ]
 
 
+def naver_sa_keyword_rows_to_facts(date: str, rows: list[dict], id_meta: dict[str, dict]) -> list[dict]:
+    """/stats 의 per-id 행 목록 + {id: 메타} → source='naver_keyword' facts.
+
+    각 행의 id 로 키워드/캠페인/광고그룹/채널 메타를 되찾아 dims 에 실어준다.
+    메타에 없는 id(현재 계정 대상 외) 행은 무시한다.
+    """
+    out: list[dict] = []
+    for d in rows or []:
+        meta = id_meta.get(d.get("id"))
+        if not meta:
+            continue
+        dims = {"keyword": meta["keyword"], "campaign": meta["campaign"],
+                "adgroup": meta["adgroup"], "channel": meta["channel"]}
+        values = {
+            "ad_cost": float(d.get("salesAmt", 0) or 0),   # SA salesAmt = 광고비(지출액)
+            "impressions": float(d.get("impCnt", 0) or 0),
+            "clicks": float(d.get("clkCnt", 0) or 0),
+            "conversions": float(d.get("ccnt", 0) or 0),
+            "ad_sales": float(d.get("convAmt", 0) or 0),
+        }
+        for k, v in values.items():
+            out.append({"date": date, "source": "naver_keyword", "metric": k,
+                        "value": v, "dims": dims})
+    return out
+
+
 class NaverSearchAdClient:
     def __init__(
         self,
@@ -97,12 +123,30 @@ class NaverSearchAdClient:
         return r.json()
 
     def list_campaigns(self) -> list[dict]:
-        """캠페인 목록 — id + 유형(campaignTp: WEB_SITE=파워링크, PLACE=플레이스 등)."""
+        """캠페인 목록 — id + 유형(campaignTp: WEB_SITE=파워링크, PLACE=플레이스 등) + 이름."""
         data = self._get("/ncc/campaigns", {})
         items = data if isinstance(data, list) else data.get("data", [])
         return [
-            {"id": c.get("nccCampaignId"), "type": c.get("campaignTp")}
+            {"id": c.get("nccCampaignId"), "type": c.get("campaignTp"), "name": c.get("name")}
             for c in items if c.get("nccCampaignId")
+        ]
+
+    def list_adgroups(self, campaign_id: str) -> list[dict]:
+        """캠페인의 광고그룹 목록 — id + 이름."""
+        data = self._get("/ncc/adgroups", {"nccCampaignId": campaign_id})
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [
+            {"id": a.get("nccAdgroupId"), "name": a.get("name")}
+            for a in items if a.get("nccAdgroupId")
+        ]
+
+    def list_keywords(self, adgroup_id: str) -> list[dict]:
+        """광고그룹의 키워드 목록 — id + 키워드 텍스트."""
+        data = self._get("/ncc/keywords", {"nccAdgroupId": adgroup_id})
+        items = data if isinstance(data, list) else data.get("data", [])
+        return [
+            {"id": k.get("nccKeywordId"), "keyword": k.get("keyword")}
+            for k in items if k.get("nccKeywordId")
         ]
 
     def list_campaign_ids(self) -> list[str]:
@@ -124,6 +168,35 @@ class NaverSearchAdClient:
         for i in range(0, len(ids), 100):
             data += (self.stats(ids[i:i + 100], date).get("data") or [])
         return {"data": data}
+
+    def fetch_keyword_facts(self, date: str) -> list[dict]:
+        """키워드 단위 리포트 facts(source='naver_keyword').
+
+        파워링크(WEB_SITE) 캠페인은 키워드별, 그 외(플레이스 등)는 키워드가 없어
+        광고그룹 단위(키워드='-')로 /stats 를 조회한다. /stats 응답의 각 행은 조회한
+        엔티티 id(row['id'])를 담고 있어 이를 키워드/광고그룹 메타에 되매핑한다.
+        """
+        id_meta: dict[str, dict] = {}
+        for c in self.list_campaigns():
+            channel = CAMPAIGN_TYPE_CHANNEL.get(c["type"], DEFAULT_CHANNEL)
+            cname = c.get("name") or c["id"]
+            for ag in self.list_adgroups(c["id"]):
+                aname = ag.get("name") or ag["id"]
+                if channel == "naver_powerlink":
+                    for k in self.list_keywords(ag["id"]):
+                        id_meta[k["id"]] = {
+                            "keyword": k.get("keyword") or "-", "campaign": cname,
+                            "adgroup": aname, "channel": channel,
+                        }
+                else:
+                    # 플레이스/쇼핑 등 키워드 없는 유형 → 광고그룹 단위 집계
+                    id_meta[ag["id"]] = {
+                        "keyword": "-", "campaign": cname, "adgroup": aname, "channel": channel,
+                    }
+        if not id_meta:
+            return []
+        stats = self._stats_for_ids(list(id_meta), date)
+        return naver_sa_keyword_rows_to_facts(date, stats.get("data") or [], id_meta)
 
     def fetch_facts(self, date: str) -> list[dict]:
         """캠페인 유형별(파워링크/플레이스/기타)로 나눠 각각 채널 facts 를 생성."""

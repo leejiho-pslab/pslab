@@ -2,7 +2,13 @@ import { useEffect, useState } from "react";
 import { api } from "../api";
 import { formatValue } from "../format";
 import { daysBefore } from "../util";
-import type { Creative, CreativeFatigue, CreativeOverview } from "../types";
+import type {
+  Creative,
+  CreativeFatigue,
+  CreativeOverview,
+  KeywordReportResponse,
+  KeywordRow,
+} from "../types";
 import { RangePicker } from "../components/RangePicker";
 import { CreativeThumb } from "../components/CreativeThumb";
 import { Loading, ErrorState } from "../components/States";
@@ -17,91 +23,199 @@ const CH_LABEL: Record<string, string> = {
   kakao: "Kakao",
 };
 const won = (v: number | null | undefined) => (v == null ? "—" : formatValue(v, "currency"));
-const num = (v: number) => Math.round(v).toLocaleString("ko-KR");
+const num = (v: number | null | undefined) => (v == null ? "—" : Math.round(v).toLocaleString("ko-KR"));
 const roasPct = (r: number | null | undefined) => (r == null ? "—" : `${Math.round(r * 100)}%`);
+
+// 광고 히스토리 상단 채널 탭 — Meta(소재) / 네이버 검색(키워드) / 네이버 플레이스(광고그룹)
+type HistCh = "meta" | "naver_powerlink" | "naver_place";
+const HIST_TABS: { key: HistCh; label: string }[] = [
+  { key: "meta", label: "Meta 소재" },
+  { key: "naver_powerlink", label: "네이버 검색(키워드)" },
+  { key: "naver_place", label: "네이버 플레이스" },
+];
 
 export function CreativePage({ date }: { date: string }) {
   const [from, setFrom] = useState(() => daysBefore(date, 6));
   const [to, setTo] = useState(date);
-  const [sort, setSort] = useState<"roas" | "ctr" | "cvr" | "ad_sales">("roas");
-  const [channel, setChannel] = useState<string>("all");
-  const [data, setData] = useState<CreativeOverview | null>(null);
-  const [fatigue, setFatigue] = useState<CreativeFatigue[]>([]);
-  const [err, setErr] = useState("");
+  const [hist, setHist] = useState<HistCh>("meta");
 
   useEffect(() => {
     setFrom(daysBefore(date, 6));
     setTo(date);
   }, [date]);
-  useEffect(() => {
-    setData(null);
-    api.creativesOverview(from, to, sort).then(setData).catch((e) => setErr(String(e)));
-    api.creativesFatigue(to).then((r) => setFatigue(r.items)).catch(() => {});
-  }, [from, to, sort]);
-
-  const s = data?.summary;
-  const all = data?.creatives ?? [];
-  const channels = Array.from(new Set(all.map((c) => c.channel)));
-  const creatives = channel === "all" ? all : all.filter((c) => c.channel === channel);
-  const fatiguedIds = new Set(fatigue.filter((f) => f.fatigued).map((f) => f.creative_id));
 
   return (
     <>
       <RangePicker base={date} from={from} to={to} onChange={(f, t) => { setFrom(f); setTo(t); }} />
-      {err ? (
-        <ErrorState error={err} />
-      ) : !data ? (
-        <Loading rows={3} />
+
+      <div className="card-head" style={{ marginBottom: 12 }}>
+        <div className="filter-group">
+          채널:
+          {HIST_TABS.map((t) => (
+            <button key={t.key} className={hist === t.key ? "active" : ""} onClick={() => setHist(t.key)}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {hist === "meta" ? (
+        <MetaCreatives from={from} to={to} />
       ) : (
-        <>
-          <div className="kpi-grid">
-            <Kpi label="라이브 소재" value={s ? `${s.creative_count}개` : "—"} />
-            <Kpi label="광고비" value={s ? won(s.ad_cost) : "—"} />
-            <Kpi label="구매 전환값" value={s ? won(s.ad_sales) : "—"} />
-            <Kpi label="평균 ROAS" value={roasPct(s?.roas)} />
-            <Kpi label="평균 CTR" value={s?.ctr != null ? `${s.ctr}%` : "—"} />
-            <Kpi label="총 구매" value={s ? num(s.conversions) : "—"} />
-          </div>
-
-          <div className="card">
-            <div className="card-head">
-              <h2>소재별 성과 ({creatives.length})</h2>
-              <div className="sort-tabs">
-                {channels.length > 1 && (
-                  <span className="filter-group">
-                    채널:
-                    <button className={channel === "all" ? "active" : ""} onClick={() => setChannel("all")}>전체</button>
-                    {channels.map((ch) => (
-                      <button key={ch} className={channel === ch ? "active" : ""} onClick={() => setChannel(ch)}>
-                        {CH_LABEL[ch] ?? ch}
-                      </button>
-                    ))}
-                  </span>
-                )}
-                <span className="filter-group">
-                  정렬:
-                  {(["roas", "ad_sales", "ctr", "cvr"] as const).map((x) => (
-                    <button key={x} className={sort === x ? "active" : ""} onClick={() => setSort(x)}>
-                      {x === "ad_sales" ? "구매전환값" : x.toUpperCase()}
-                    </button>
-                  ))}
-                </span>
-              </div>
-            </div>
-
-            {creatives.length === 0 ? (
-              <p className="muted">기간 내 소재 데이터가 없습니다. (Meta 연동/수집 후 표시)</p>
-            ) : (
-              <div className="ad-grid">
-                {creatives.map((c) => (
-                  <AdCard key={c.creative_id} c={c} fatigued={fatiguedIds.has(c.creative_id)} />
-                ))}
-              </div>
-            )}
-          </div>
-        </>
+        <KeywordReport from={from} to={to} channel={hist} />
       )}
     </>
+  );
+}
+
+// ── Meta 소재 히스토리 ───────────────────────────────────────────
+function MetaCreatives({ from, to }: { from: string; to: string }) {
+  const [sort, setSort] = useState<"roas" | "ctr" | "cvr" | "ad_sales">("roas");
+  const [data, setData] = useState<CreativeOverview | null>(null);
+  const [fatigue, setFatigue] = useState<CreativeFatigue[]>([]);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    setData(null);
+    setErr("");
+    api.creativesOverview(from, to, sort).then(setData).catch((e) => setErr(String(e)));
+    api.creativesFatigue(to).then((r) => setFatigue(r.items)).catch(() => {});
+  }, [from, to, sort]);
+
+  if (err) return <ErrorState error={err} />;
+  if (!data) return <Loading rows={3} />;
+
+  const s = data.summary;
+  const creatives = (data.creatives ?? []).filter((c) => c.channel === "meta");
+  const fatiguedIds = new Set(fatigue.filter((f) => f.fatigued).map((f) => f.creative_id));
+
+  return (
+    <>
+      <div className="kpi-grid">
+        <Kpi label="라이브 소재" value={`${creatives.length}개`} />
+        <Kpi label="광고비" value={won(s.ad_cost)} />
+        <Kpi label="구매 전환값" value={won(s.ad_sales)} />
+        <Kpi label="평균 ROAS" value={roasPct(s.roas)} />
+        <Kpi label="평균 CTR" value={s.ctr != null ? `${s.ctr}%` : "—"} />
+        <Kpi label="총 구매" value={num(s.conversions)} />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>소재별 성과 ({creatives.length})</h2>
+          <span className="filter-group">
+            정렬:
+            {(["roas", "ad_sales", "ctr", "cvr"] as const).map((x) => (
+              <button key={x} className={sort === x ? "active" : ""} onClick={() => setSort(x)}>
+                {x === "ad_sales" ? "구매전환값" : x.toUpperCase()}
+              </button>
+            ))}
+          </span>
+        </div>
+
+        {creatives.length === 0 ? (
+          <p className="muted">기간 내 Meta 소재 데이터가 없습니다. (Meta 연동/수집 후 표시)</p>
+        ) : (
+          <div className="ad-grid">
+            {creatives.map((c) => (
+              <AdCard key={c.creative_id} c={c} fatigued={fatiguedIds.has(c.creative_id)} />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ── 네이버 검색/플레이스 키워드 리포트 ───────────────────────────
+function KeywordReport({ from, to, channel }: { from: string; to: string; channel: string }) {
+  const [data, setData] = useState<KeywordReportResponse | null>(null);
+  const [sort, setSort] = useState<"ad_cost" | "clicks" | "impressions" | "conversions">("ad_cost");
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    setData(null);
+    setErr("");
+    api.adsKeywords(from, to, channel, sort).then(setData).catch((e) => setErr(String(e)));
+  }, [from, to, channel, sort]);
+
+  if (err) return <ErrorState error={err} />;
+  if (!data) return <Loading rows={3} />;
+
+  const s = data.summary;
+  const rows = data.rows ?? [];
+  const isPlace = channel === "naver_place";
+  const label = CH_LABEL[channel] ?? channel;
+
+  return (
+    <>
+      <div className="kpi-grid">
+        <Kpi label={isPlace ? "광고그룹 수" : "키워드 수"} value={`${s.keyword_count}개`} />
+        <Kpi label="광고비 소진" value={won(s.ad_cost)} />
+        <Kpi label="노출수" value={num(s.impressions)} />
+        <Kpi label="클릭수" value={num(s.clicks)} />
+        <Kpi label="평균 CTR" value={s.ctr != null ? `${s.ctr}%` : "—"} />
+        <Kpi label="평균 CPC" value={won(s.cpc)} />
+      </div>
+
+      <div className="card">
+        <div className="card-head">
+          <h2>{label} · {isPlace ? "광고그룹" : "키워드"} 리포트 ({rows.length})</h2>
+          <span className="filter-group">
+            정렬:
+            {(["ad_cost", "clicks", "impressions", "conversions"] as const).map((x) => (
+              <button key={x} className={sort === x ? "active" : ""} onClick={() => setSort(x)}>
+                {x === "ad_cost" ? "광고비" : x === "clicks" ? "클릭" : x === "impressions" ? "노출" : "전환"}
+              </button>
+            ))}
+          </span>
+        </div>
+
+        {rows.length === 0 ? (
+          <p className="muted">
+            기간 내 {label} 데이터가 없습니다. 네이버 검색광고(SA) 연동·수집 후 표시됩니다.
+          </p>
+        ) : (
+          <div className="table-wrap">
+            <table className="grid-table">
+              <thead>
+                <tr>
+                  <th className="left">{isPlace ? "광고그룹" : "키워드"}</th>
+                  <th className="left">캠페인</th>
+                  <th>광고비 소진</th>
+                  <th>노출</th>
+                  <th>클릭</th>
+                  <th>CTR</th>
+                  <th>CPC</th>
+                  <th>전환</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => (
+                  <KeywordRowView key={`${r.campaign}:${r.adgroup}:${r.keyword}:${i}`} r={r} isPlace={isPlace} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
+function KeywordRowView({ r, isPlace }: { r: KeywordRow; isPlace: boolean }) {
+  const first = isPlace ? r.adgroup : r.keyword && r.keyword !== "-" ? r.keyword : r.adgroup;
+  return (
+    <tr>
+      <td className="left strong">{first}</td>
+      <td className="left muted">{r.campaign}</td>
+      <td className="strong">{won(r.ad_cost)}</td>
+      <td>{num(r.impressions)}</td>
+      <td>{num(r.clicks)}</td>
+      <td>{r.ctr != null ? `${r.ctr}%` : "—"}</td>
+      <td>{won(r.cpc)}</td>
+      <td>{num(r.conversions)}</td>
+    </tr>
   );
 }
 

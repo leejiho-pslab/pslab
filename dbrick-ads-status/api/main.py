@@ -58,6 +58,11 @@ from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_trend,
     creatives_ranked,
 )
+from cafe24_ops.etl.keyword_metrics import (  # noqa: E402
+    keyword_channels,
+    keyword_report,
+    keyword_summary,
+)
 from cafe24_ops.store import Store  # noqa: E402
 
 
@@ -368,6 +373,27 @@ def creatives_trend_ep(
     try:
         return {"creative_id": creative_id,
                 "rows": creative_trend(store, creative_id, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/keywords")
+def ads_keywords_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    channel: str | None = Query(default=None),
+    sort: str = Query(default="ad_cost"),
+    top_n: int = Query(default=300),
+) -> dict:
+    """네이버 검색광고 키워드 리포트 — 채널(파워링크/플레이스) 필터, 광고비 기준 정렬."""
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to, "channel": channel, "sort": sort,
+            "channels": keyword_channels(store, date_from, date_to),
+            "summary": keyword_summary(store, date_from, date_to, channel),
+            "rows": keyword_report(store, date_from, date_to, channel, sort, top_n),
+        }
     finally:
         store.close()
 
