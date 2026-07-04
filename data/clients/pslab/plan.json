@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-03T11:58:11.823Z",
+  "updatedAt": "2026-07-04T11:03:42.174Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-03T11:52:24.858Z",
-      "insightComment": "참여율 200.0%로 평균(67.4%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-03T11:52:26.223Z"
+      "metricsAt": "2026-07-04T10:58:02.680Z",
+      "insightComment": "참여율 200.0%로 평균(57.8%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-04T10:58:06.124Z"
     },
     {
       "id": "w1-fri",
@@ -196,9 +196,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-03T11:52:25.698Z",
-      "insightComment": "참여율 200.0%로 평균(67.4%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-03T11:52:26.544Z"
+      "metricsAt": "2026-07-04T10:58:03.826Z",
+      "insightComment": "참여율 200.0%로 평균(57.8%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-04T10:58:06.211Z"
     },
     {
       "id": "w2-mon",
@@ -209,7 +209,7 @@
       ],
       "scheduledFor": "2026-07-04T09:00:00.000Z",
       "score": 87,
-      "status": "planned",
+      "status": "published",
       "kicker": "Decision",
       "headline": "이 광고, 꺼야 할까?<br>판단하는 *숫자 하나*",
       "sub": "감으로 끄지 마세요. 손익분기 한 줄 계산법.",
@@ -249,7 +249,26 @@
         "cards/pslab/w2-mon-4.png",
         "cards/pslab/w2-mon-5.png"
       ],
-      "cardImage": "cards/pslab/w2-mon-1.png"
+      "cardImage": "cards/pslab/w2-mon-1.png",
+      "publishedUrl": "https://www.instagram.com/p/DaXlHvkjzDc/",
+      "publishedAt": "2026-07-04T10:57:58.853Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "17872646940684548",
+          "url": "https://www.instagram.com/p/DaXlHvkjzDc/"
+        }
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-04T10:58:05.610Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-04T10:58:06.293Z"
     },
     {
       "id": "w2-wed",
@@ -724,7 +743,7 @@
       ],
       "scheduledFor": "2026-07-04T09:00:00.000Z",
       "score": 82,
-      "status": "planned",
+      "status": "manual",
       "kicker": "Conversion",
       "headline": "클릭은 느는데 매출이 안 오르는 진짜 이유",
       "sub": "광고를 늘렸는데 매출이 그대로라면, 문제는 광고가 아니라 \"클릭 다음\"에 있습니다.",
@@ -984,9 +1003,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-03T11:52:25.939Z",
+      "metricsAt": "2026-07-04T10:58:05.818Z",
       "insightComment": "조회 13·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-03T11:52:26.639Z"
+      "insightAt": "2026-07-04T10:58:06.379Z"
     },
     {
       "id": "threads-07-11",
@@ -1148,9 +1167,9 @@
         "shares": 44,
         "engagementRate": 0.0450802876196863
       },
-      "metricsAt": "2026-07-03T11:52:25.989Z",
-      "insightComment": "참여율 4.5%로 평균(67.4%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
-      "insightAt": "2026-07-03T11:52:26.728Z"
+      "metricsAt": "2026-07-04T10:58:05.869Z",
+      "insightComment": "참여율 4.5%로 평균(57.8%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-04T10:58:06.522Z"
     },
     {
       "id": "youtube-07-12",
@@ -1322,9 +1341,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-03T11:52:25.990Z",
+      "metricsAt": "2026-07-04T10:58:05.870Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-03T11:52:26.828Z"
+      "insightAt": "2026-07-04T10:58:06.627Z"
     },
     {
       "id": "blogger-07-09",
@@ -1373,9 +1392,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-03T11:52:25.990Z",
+      "metricsAt": "2026-07-04T10:58:05.870Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-03T11:52:26.930Z"
+      "insightAt": "2026-07-04T10:58:06.706Z"
     },
     {
       "id": "blogger-07-16",

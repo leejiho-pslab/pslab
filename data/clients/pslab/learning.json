@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-03T11:52:25.991Z",
-  "sampleSize": 6,
+  "generatedAt": "2026-07-04T10:58:05.871Z",
+  "sampleSize": 7,
   "variants": [
     {
       "key": "A",
@@ -11,19 +11,19 @@
     },
     {
       "key": "B",
-      "posts": 2,
+      "posts": 3,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 6.5
+      "avgViews": 4.333333333333333
     }
   ],
   "channels": [
     {
       "key": "instagram",
-      "posts": 2,
-      "avgEngagement": 2,
-      "avgLikes": 2,
-      "avgViews": 1
+      "posts": 3,
+      "avgEngagement": 1.3333333333333333,
+      "avgLikes": 1.3333333333333333,
+      "avgViews": 0.6666666666666666
     },
     {
       "key": "youtube",
@@ -63,6 +63,13 @@
       "avgViews": 8951.333333333334
     },
     {
+      "key": "19:00",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
+    },
+    {
       "key": "11:00",
       "posts": 1,
       "avgEngagement": 0,
@@ -91,6 +98,13 @@
       "avgEngagement": 0.02254014380984315,
       "avgLikes": 550,
       "avgViews": 13420.5
+    },
+    {
+      "key": "branch",
+      "posts": 1,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 0
     }
   ],
   "bestVariant": "A",
