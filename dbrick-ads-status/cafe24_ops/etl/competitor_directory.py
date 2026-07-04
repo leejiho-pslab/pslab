@@ -129,15 +129,27 @@ def _norm_platform(v: str) -> str:
     return _PLATFORM_NORM.get(_norm(v), (v or "").strip().lower() or "instagram")
 
 
+def _find_header_row(grid: list[list[str]]) -> tuple[int, dict[str, int]]:
+    """헤더 줄을 자동 탐지 — 위에 안내문/빈 줄이 있어도 실제 헤더 줄을 찾는다.
+    (경쟁사 또는 이미지URL 컬럼 + 알려진 컬럼 2개 이상)이 잡히는 첫 줄을 헤더로 본다."""
+    for i, row in enumerate(grid or []):
+        idx = _header_index(row)
+        if ("competitor" in idx or "image_url" in idx) and len(idx) >= 2:
+            return i, idx
+    return -1, {}
+
+
 def parse_competitor_media(
     headers: list[str], rows: list[list[str]],
     date_from: str | None = None, date_to: str | None = None,
 ) -> list[dict]:
-    """시트 (headers, rows) → 소재 아이템 리스트. 게시일이 [from,to] 범위 밖이면 제외
-    (게시일이 비었거나 파싱 불가면 포함). 게시일 내림차순 정렬."""
-    idx = _header_index(headers or [])
-    if "competitor" not in idx and "image_url" not in idx:
+    """시트 표 → 소재 아이템 리스트. 헤더 줄을 자동 탐지하므로 위에 안내문/빈 줄이 있어도 됨.
+    게시일이 [from,to] 범위 밖이면 제외(비었거나 파싱 불가면 포함). 게시일 내림차순 정렬."""
+    grid = ([headers] if headers else []) + list(rows or [])
+    h_row, idx = _find_header_row(grid)
+    if h_row < 0:
         return []
+    rows = grid[h_row + 1:]  # 헤더 줄 다음부터가 데이터
 
     def cell(row, key):
         i = idx.get(key)

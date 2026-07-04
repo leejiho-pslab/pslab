@@ -59,5 +59,20 @@ def test_parse_media_no_link_column_does_not_steal_image_url():
     assert it["link"] is None  # 이미지URL 을 링크로 잘못 매핑하지 않음
 
 
+def test_parse_media_auto_detects_header_below_junk_rows():
+    # 실제 사용자 시트: 위 3줄이 안내문/찌꺼기, 진짜 헤더는 그 아래 — 자동 탐지해야 함
+    headers = ["경쟁사 | 플랫폼 | 게시일 | 이미지URL | 좋아요 | 댓글 | 캡션 | 링크"]  # 한 칸에 통짜(무시)
+    rows = [
+        ["플랫폼 = instagram / meta / google · 게시일 = 2026-07-02 형식"],  # 안내문(무시)
+        ["A1", "B1", "C1", "D1", "E1", "F1", "G1", "H1"],                  # 찌꺼기(무시)
+        ["경쟁사", "플랫폼", "게시일", "이미지URL", "좋아요", "댓글", "캡션", "링크"],  # 진짜 헤더
+        ["뮤지엄", "instagram", "2026-07-02", "https://img/1.jpg", "12", "3", "글", "https://p/1"],
+    ]
+    items = parse_competitor_media(headers, rows)
+    assert len(items) == 1
+    assert items[0]["competitor"] == "뮤지엄" and items[0]["image_url"] == "https://img/1.jpg"
+    assert items[0]["likes"] == 12 and items[0]["comments"] == 3
+
+
 def test_parse_media_empty_headers():
     assert parse_competitor_media([], []) == []
