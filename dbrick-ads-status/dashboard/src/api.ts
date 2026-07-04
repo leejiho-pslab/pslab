@@ -7,6 +7,8 @@ import type {
   BestChange,
   Competitor,
   CompetitorCreatives,
+  CompetitorDirectory,
+  CompetitorMediaResponse,
   CompetitorTrendRow,
   NaverSearchItem,
   NaverTrend,
@@ -97,6 +99,9 @@ export const api = {
     get<{ date: string | null; competitors: CompetitorCreatives[] }>(
       `/api/competitors/creatives${q(date)}`,
     ),
+  competitorsDirectory: () => get<CompetitorDirectory>("/api/competitors/directory"),
+  competitorsMedia: (from: string, to: string) =>
+    get<CompetitorMediaResponse>(`/api/competitors/media?from=${from}&to=${to}`),
   competitorsBestChanges: (date?: string) =>
     get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
 

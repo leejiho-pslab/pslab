@@ -14,10 +14,11 @@ ads:
   - { channel: kakao,  account_id: "" }   # 후순위
 
 competitors:             # 실제 비교 대상 확정 (name 은 네이버 트렌드/쇼핑 검색어로 사용됨 — 정확도 위해 상호명 확인 필요시 조정)
-  - { name: 인테리어티쳐, url: "https://interiorteacher.com/" }
-  - { name: 한건축, url: "https://hanarchitecture.co.kr/company" }
-  - { name: DDB인테리어스튜디오, url: "https://ddb-interior-studio.imweb.me/process" }
-  - { name: 뮤지엄오브모던키친, url: "https://museumofmodernkitchen.com/" }
+  # url=홈페이지, insta=인스타 핸들, domain=구글 광고투명성 조회 도메인, fb_query=페북 광고라이브러리 검색어
+  - { name: 인테리어티쳐,        url: "https://interiorteacher.com/",            insta: interiorteacher,      domain: interiorteacher.com,          fb_query: interiorteacher }
+  - { name: 한건축,             url: "https://hanarchitecture.co.kr/company",    insta: han.architecture_,    domain: hanarchitecture.co.kr,        fb_query: hanarchitecture }
+  - { name: DDB인테리어스튜디오,  url: "https://ddb-interior-studio.imweb.me/process", insta: ddb_interior_studio, domain: ddb-interior-studio.imweb.me, fb_query: "ddb interior studio" }
+  - { name: 뮤지엄오브모던키친,   url: "https://museumofmodernkitchen.com/",       insta: museumofmodernkitchen, domain: museumofmodernkitchen.com,   fb_query: museumofmodernkitchen }
 
 # 대시보드 하단 "온라인 인입 지역 현황" 표 — 대표님이 직접 관리하는 구글 시트를 그대로 노출.
 # 연결 방식(자동 우선순위): GOOGLE_APPLICATION_CREDENTIALS_JSON(서비스계정, GA4 와 재사용 가능)
@@ -26,3 +27,12 @@ competitors:             # 실제 비교 대상 확정 (name 은 네이버 트�
 region_status:
   sheet_id: "18dafF2keO5xW59eH9WcQbgcRpX7M6Jmn62ySA3NkdoM"
   gid: "1478961985"
+
+# 경쟁사 모니터링 — 인스타 포스팅 / 메타·구글 광고 소재를 대표님이 관리하는 구글 시트로 노출.
+# 시트 한 행 = 한 게시물/소재. 권장 헤더(순서 무관, 한글/영문 모두 인식):
+#   경쟁사 | 플랫폼(instagram/meta/google) | 게시일(YYYY-MM-DD) | 이미지URL | 좋아요 | 댓글 | 캡션 | 링크
+# region_status 와 같은 서비스계정 비공개 연동(GOOGLE_APPLICATION_CREDENTIALS_JSON) 사용.
+# sheet_id/gid 를 비워두면 대시보드는 딥링크(홈페이지/인스타/광고라이브러리)만 표시한다.
+competitor_media:
+  sheet_id: ""
+  gid: ""

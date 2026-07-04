@@ -67,6 +67,11 @@ class SourcesConfig:
         """대시보드 하단 '온라인 인입 지역 현황' 구글 시트 설정({sheet_id, gid}). 없으면 빈 dict."""
         return dict(self.raw.get("region_status", {}) or {})
 
+    @property
+    def competitor_media(self) -> dict:
+        """경쟁사 인스타/광고 소재 구글 시트 설정({sheet_id, gid}). 없으면 빈 dict."""
+        return dict(self.raw.get("competitor_media", {}) or {})
+
 
 @dataclass
 class AppConfig:

@@ -279,6 +279,39 @@ export interface NaverTrend {
   rows: Array<Record<string, number | string>>;
 }
 
+export interface CompetitorLink {
+  name: string;
+  url: string | null;
+  insta: string | null;
+  insta_url: string | null;
+  fb_ad_library_url: string | null;
+  google_ads_url: string | null;
+}
+
+export interface CompetitorDirectory {
+  competitors: CompetitorLink[];
+  count: number;
+}
+
+export interface CompetitorMediaItem {
+  competitor: string;
+  platform: string;
+  post_date: string | null;
+  image_url: string | null;
+  likes: number | null;
+  comments: number | null;
+  caption: string | null;
+  link: string | null;
+}
+
+export interface CompetitorMediaResponse {
+  from: string | null;
+  to: string | null;
+  configured: boolean;
+  items: CompetitorMediaItem[];
+  error: string | null;
+}
+
 export interface CompetitorAd {
   platform: string;
   title: string;

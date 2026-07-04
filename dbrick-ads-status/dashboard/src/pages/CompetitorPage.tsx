@@ -5,6 +5,8 @@ import type {
   BestChange,
   Competitor,
   CompetitorCreatives,
+  CompetitorLink,
+  CompetitorMediaItem,
   NaverSearchItem,
   NaverTrend,
 } from "../types";
@@ -14,6 +16,39 @@ import { MultiLineChart } from "../components/MultiLineChart";
 import { Loading, ErrorState } from "../components/States";
 
 const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
+const MEDIA_PLAT: Record<string, string> = { instagram: "인스타", meta: "메타 광고", google: "구글 광고" };
+const num = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("ko-KR"));
+
+function MediaCard({ m }: { m: CompetitorMediaItem }) {
+  const body = (
+    <>
+      {m.image_url ? (
+        <img className="media-img" src={m.image_url} alt={m.caption ?? m.competitor} loading="lazy" />
+      ) : (
+        <div className="media-img ph">이미지 없음</div>
+      )}
+      <div className="media-meta">
+        <div className="media-top">
+          <span className={`plat-badge ${m.platform}`}>{MEDIA_PLAT[m.platform] ?? m.platform}</span>
+          <span className="media-comp">{m.competitor}</span>
+          {m.post_date && <span className="muted small">{m.post_date}</span>}
+        </div>
+        {m.caption && <p className="media-cap" title={m.caption}>{m.caption}</p>}
+        {(m.platform === "instagram" || m.likes != null || m.comments != null) && (
+          <div className="media-eng">
+            <span>♥ {num(m.likes)}</span>
+            <span>💬 {num(m.comments)}</span>
+          </div>
+        )}
+      </div>
+    </>
+  );
+  return m.link ? (
+    <a className="card media-card" href={m.link} target="_blank" rel="noreferrer">{body}</a>
+  ) : (
+    <div className="card media-card">{body}</div>
+  );
+}
 
 export function CompetitorPage({ date }: { date: string }) {
   const [from, setFrom] = useState(() => daysBefore(date, 6));
@@ -23,6 +58,8 @@ export function CompetitorPage({ date }: { date: string }) {
   const [trend, setTrend] = useState<NaverTrend>({ competitors: [], rows: [] });
   const [ads, setAds] = useState<CompetitorCreatives[]>([]);
   const [changes, setChanges] = useState<BestChange[]>([]);
+  const [directory, setDirectory] = useState<CompetitorLink[]>([]);
+  const [media, setMedia] = useState<CompetitorMediaItem[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState("");
 
@@ -30,6 +67,10 @@ export function CompetitorPage({ date }: { date: string }) {
     setFrom(daysBefore(date, 6));
     setTo(date);
   }, [date]);
+  // 지정 현황(딥링크)은 기간과 무관 — 빠르게 상단에 표시
+  useEffect(() => {
+    api.competitorsDirectory().then((d) => setDirectory(d.competitors)).catch(() => {});
+  }, []);
   useEffect(() => {
     Promise.all([
       api.competitors(to),
@@ -46,11 +87,36 @@ export function CompetitorPage({ date }: { date: string }) {
         setLoaded(true);
       })
       .catch((e) => setErr(String(e)));
+    api.competitorsMedia(from, to).then((m) => setMedia(m.items)).catch(() => setMedia([]));
   }, [from, to]);
 
   return (
     <>
       <RangePicker base={date} from={from} to={to} onChange={(f, t) => { setFrom(f); setTo(t); }} />
+
+      {/* 경쟁사 지정 현황 — 홈페이지/인스타/광고라이브러리 원클릭 (기간 무관, 항상 상단) */}
+      {directory.length > 0 && (
+        <div className="card">
+          <div className="card-head">
+            <h2>경쟁사 지정 현황 ({directory.length}곳)</h2>
+            <span className="muted small">디브릭 경쟁사로 지정된 업체 · 바로가기</span>
+          </div>
+          <div className="comp-dir-grid">
+            {directory.map((c) => (
+              <div className="comp-dir" key={c.name}>
+                <div className="comp-dir-name">{c.name}</div>
+                <div className="comp-dir-links">
+                  {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="linkbtn home">홈페이지</a>}
+                  {c.insta_url && <a href={c.insta_url} target="_blank" rel="noreferrer" className="linkbtn insta">인스타그램</a>}
+                  {c.fb_ad_library_url && <a href={c.fb_ad_library_url} target="_blank" rel="noreferrer" className="linkbtn meta">메타 광고(라이브)</a>}
+                  {c.google_ads_url && <a href={c.google_ads_url} target="_blank" rel="noreferrer" className="linkbtn google">구글 광고</a>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {err ? (
         <ErrorState error={err} />
       ) : !loaded ? (
@@ -81,6 +147,18 @@ export function CompetitorPage({ date }: { date: string }) {
               </div>
             ))}
           </div>
+
+          {/* 경쟁사 인스타 포스팅 · 광고 소재 이미지 (선택 기간 게시분, 구글시트 연동) */}
+          {media.length > 0 && (
+            <>
+              <h2 className="section-title">경쟁사 소재 · 포스팅 ({from} ~ {to})</h2>
+              <div className="media-grid">
+                {media.map((m, i) => (
+                  <MediaCard key={`${m.competitor}:${m.link ?? i}`} m={m} />
+                ))}
+              </div>
+            </>
+          )}
 
           {/* 네이버 검색량 + 트렌드 */}
           <div className="two-col">

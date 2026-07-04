@@ -19,6 +19,10 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 
 from cafe24_ops.alerts import build_alerts, build_commentary, build_digest  # noqa: E402
 from cafe24_ops.clients.region_sheet import fetch_region_status  # noqa: E402
+from cafe24_ops.etl.competitor_directory import (  # noqa: E402
+    competitor_directory,
+    parse_competitor_media,
+)
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.etl.breakdown import (  # noqa: E402
     best_products,
@@ -430,6 +434,30 @@ def competitors_naver_ep(
         return {"search": naver_search(store, date_to), "trend": naver_trend(store, date_from, date_to)}
     finally:
         store.close()
+
+
+@app.get("/api/competitors/directory")
+def competitors_directory_ep() -> dict:
+    """경쟁사 지정 현황 — 업체별 홈페이지/인스타/페북 광고라이브러리/구글 광고투명성 딥링크."""
+    comps = competitor_directory(_config.sources.competitors)
+    return {"competitors": comps, "count": len(comps)}
+
+
+@app.get("/api/competitors/media")
+def competitors_media_ep(
+    date_from: str | None = Query(default=None, alias="from"),
+    date_to: str | None = Query(default=None, alias="to"),
+) -> dict:
+    """경쟁사 인스타 포스팅 / 메타·구글 광고 소재 — 대표님 관리 구글시트를 그대로 노출.
+    시트 미설정이면 configured=false(대시보드는 딥링크만 표시)."""
+    cfg = _config.sources.competitor_media
+    sheet_id, gid = cfg.get("sheet_id"), cfg.get("gid")
+    if not sheet_id or not gid:
+        return {"from": date_from, "to": date_to, "configured": False, "items": [], "error": None}
+    sheet = fetch_region_status(sheet_id, gid)
+    items = parse_competitor_media(sheet.get("headers", []), sheet.get("rows", []), date_from, date_to)
+    return {"from": date_from, "to": date_to, "configured": True,
+            "items": items, "error": sheet.get("error")}
 
 
 @app.get("/api/competitors/creatives")
