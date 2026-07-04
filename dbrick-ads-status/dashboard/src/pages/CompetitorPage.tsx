@@ -4,7 +4,6 @@ import { daysBefore } from "../util";
 import type {
   BestChange,
   Competitor,
-  CompetitorCreatives,
   CompetitorLink,
   CompetitorMediaItem,
   CompetitorMediaResponse,
@@ -16,32 +15,66 @@ import { CategoryBar } from "../components/CategoryBar";
 import { MultiLineChart } from "../components/MultiLineChart";
 import { Loading, ErrorState } from "../components/States";
 
-const PLAT_LABEL: Record<string, string> = { meta: "Meta", google: "Google" };
 const MEDIA_PLAT: Record<string, string> = { instagram: "인스타", meta: "메타 광고", google: "구글 광고" };
-const num = (v: number | null | undefined) => (v == null ? "—" : v.toLocaleString("ko-KR"));
+const num = (v: number | null | undefined) => (v == null ? null : v.toLocaleString("ko-KR"));
+
+// 인스타 게시물/릴스 링크 → 공개 임베드 URL(이미지+캡션 자동 표시). 아니면 null.
+function instagramEmbed(link: string | null): string | null {
+  if (!link) return null;
+  const m = link.match(/instagram\.com\/(p|reel|tv)\/([A-Za-z0-9_-]+)/i);
+  return m ? `https://www.instagram.com/${m[1]}/${m[2]}/embed/captioned/` : null;
+}
+
+function MediaHeader({ m }: { m: CompetitorMediaItem }) {
+  const likes = num(m.likes);
+  const comments = num(m.comments);
+  return (
+    <div className="media-meta">
+      <div className="media-top">
+        <span className={`plat-badge ${m.platform}`}>{MEDIA_PLAT[m.platform] ?? m.platform}</span>
+        <span className="media-comp">{m.competitor}</span>
+        {m.post_date && <span className="muted small">{m.post_date}</span>}
+      </div>
+      {(likes || comments) && (
+        <div className="media-eng small muted">
+          {likes && <span>♥ {likes}</span>}
+          {comments && <span>💬 {comments}</span>}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function MediaCard({ m }: { m: CompetitorMediaItem }) {
+  const embed = m.platform === "instagram" ? instagramEmbed(m.link) : null;
+
+  // 1) 인스타 게시물 링크 → 실제 게시물 임베드(이미지+캡션). 링크만 있으면 됨.
+  if (embed) {
+    return (
+      <div className="card media-card">
+        <MediaHeader m={m} />
+        <iframe
+          className="media-embed"
+          src={embed}
+          title={`${m.competitor} 인스타 게시물`}
+          loading="lazy"
+          allowTransparency
+          frameBorder={0}
+        />
+      </div>
+    );
+  }
+
+  // 2) 그 외(메타/구글 소재 등) → 붙여넣은 이미지 표시. 캡션은 아래에.
   const body = (
     <>
       {m.image_url ? (
         <img className="media-img" src={m.image_url} alt={m.caption ?? m.competitor} loading="lazy" />
       ) : (
-        <div className="media-img ph">이미지 없음</div>
+        <div className="media-img ph">이미지 없음 — 인스타는 링크만, 메타/구글은 이미지URL 입력</div>
       )}
-      <div className="media-meta">
-        <div className="media-top">
-          <span className={`plat-badge ${m.platform}`}>{MEDIA_PLAT[m.platform] ?? m.platform}</span>
-          <span className="media-comp">{m.competitor}</span>
-          {m.post_date && <span className="muted small">{m.post_date}</span>}
-        </div>
-        {m.caption && <p className="media-cap" title={m.caption}>{m.caption}</p>}
-        {(m.platform === "instagram" || m.likes != null || m.comments != null) && (
-          <div className="media-eng">
-            <span>♥ {num(m.likes)}</span>
-            <span>💬 {num(m.comments)}</span>
-          </div>
-        )}
-      </div>
+      <MediaHeader m={m} />
+      {m.caption && <p className="media-cap" title={m.caption}>{m.caption}</p>}
     </>
   );
   return m.link ? (
@@ -64,7 +97,6 @@ export function CompetitorPage({ date }: { date: string }) {
   const [comps, setComps] = useState<Competitor[]>([]);
   const [search, setSearch] = useState<NaverSearchItem[]>([]);
   const [trend, setTrend] = useState<NaverTrend>({ competitors: [], rows: [] });
-  const [ads, setAds] = useState<CompetitorCreatives[]>([]);
   const [changes, setChanges] = useState<BestChange[]>([]);
   const [directory, setDirectory] = useState<CompetitorLink[]>([]);
   const [media, setMedia] = useState<CompetitorMediaResponse | null>(null);
@@ -87,14 +119,12 @@ export function CompetitorPage({ date }: { date: string }) {
     Promise.all([
       api.competitors(to),
       api.competitorsNaver(from, to),
-      api.competitorsCreatives(to),
       api.competitorsBestChanges(to),
     ])
-      .then(([c, nv, cr, bc]) => {
+      .then(([c, nv, bc]) => {
         setComps(c.competitors);
         setSearch(nv.search);
         setTrend(nv.trend);
-        setAds(cr.competitors);
         setChanges(bc.items);
         setLoaded(true);
       })
@@ -168,9 +198,9 @@ export function CompetitorPage({ date }: { date: string }) {
               ) : media.items.length === 0 ? (
                 <div className="card">
                   <p className="muted">
-                    최근 {MEDIA_DAYS}일({mediaFrom}~{mediaTo})에 게시된 소재가 없습니다 — 구글시트에
-                    <b> 게시일이 이 범위 안</b>인 행을 넣으면 여기에 이미지 카드로 표시됩니다.
-                    (헤더: 경쟁사·플랫폼·게시일·이미지URL·좋아요·댓글·캡션·링크)
+                    최근 {MEDIA_DAYS}일({mediaFrom}~{mediaTo})에 게시된 소재가 없습니다. 구글시트에 한 줄 추가하세요 —
+                    <b> 인스타는 ‘링크’ 칸에 게시물 주소만</b> 넣으면 실제 게시물(이미지·캡션)이 자동으로 뜹니다.
+                    메타/구글 소재는 <b>이미지URL</b>에 소재 이미지 주소를 넣으세요. (게시일은 이 범위 안)
                   </p>
                 </div>
               ) : (
@@ -193,23 +223,16 @@ export function CompetitorPage({ date }: { date: string }) {
             <MultiLineChart title="네이버 트렌드 흐름" series={trend.competitors} rows={trend.rows} />
           </div>
 
-          {/* 경쟁사 광고 소재 */}
-          <h2 className="section-title">경쟁사 광고 소재 (메타 · 구글)</h2>
-          <div className="comp-grid">
-            {ads.map((c) => (
-              <div className="card comp-card" key={c.name}>
-                <h2>{c.name}</h2>
-                <div className="ad-creatives">
-                  {c.creatives.map((a, i) => (
-                    <div className="ad-creative" key={i}>
-                      <span className={`plat-badge ${a.platform}`}>{PLAT_LABEL[a.platform] ?? a.platform}</span>
-                      <span className="ad-title">{a.title}</span>
-                    </div>
-                  ))}
-                  {c.creatives.length === 0 && <p className="muted">노출 중인 광고 없음</p>}
-                </div>
-              </div>
-            ))}
+          {/* 메타·구글 광고 소재 모니터링 안내 (라이브는 딥링크, 특정 소재 고정은 시트) */}
+          <h2 className="section-title">메타 · 구글 광고 소재 모니터링</h2>
+          <div className="card">
+            <p className="muted" style={{ margin: 0 }}>
+              현재 <b>라이브 중인 광고 소재 전체</b>는 상단 <b>경쟁사 지정 현황</b>의
+              <span className="pill meta">메타 광고(라이브)</span>·<span className="pill google">구글 광고</span> 버튼으로
+              바로 확인하세요(항상 최신·이미지 포함). 특정 소재를 이 화면에 고정하려면, 구글시트에
+              <b> 플랫폼=meta 또는 google</b>, <b>이미지URL</b>(소재 캡처 이미지 주소)로 한 줄 추가하면
+              위 <b>‘경쟁사 소재·포스팅’</b> 카드에 함께 표시됩니다.
+            </p>
           </div>
 
           {/* 베스트 상품 카테고리 분석 */}
