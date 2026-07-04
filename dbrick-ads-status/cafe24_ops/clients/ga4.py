@@ -337,39 +337,33 @@ class GA4Client:
         광고 채널별 실제 전환은 각 광고 플랫폼 자체 보고값보다 GA4 값이 더 신뢰도 높은 경우가
         많아, 이 값이 있으면 ads facts 의 conversions 를 이 값으로 대체한다(AdsCollector 참고).
         """
-        # keyEvents(신규)+conversions(구) 동시 요청 → 둘 중 큰 값 사용. 신규 속성에서
-        # 구 conversions 미지원으로 400 이 나면 conversions 단독으로 1회 재시도한다.
-        order = ["keyEvents", "conversions", "purchaseRevenue"]
-        raw = self._run_report({
-            "dateRanges": [{"startDate": date, "endDate": date}],
-            "dimensions": [{"name": "sessionSourceMedium"}],
-            "metrics": [{"name": m} for m in order],
-        }, label="conversions")
-        if raw is None:
-            order = ["conversions", "purchaseRevenue"]
+        # keyEvents(신규 명칭)와 conversions(구 명칭)는 GA4 내부적으로 같은 지표라
+        # 한 요청에 함께 넣으면 400("Found duplicate metrics: conversions"). 따라서
+        # keyEvents 단독으로 먼저 요청하고, 미지원(구 속성)으로 실패하면 conversions 단독 재시도.
+        raw, order = self._report_with_conv_metric(
+            date, dims=[{"name": "sessionSourceMedium"}], base=["purchaseRevenue"], label="conversions")
+        return ga4_report_to_channel_conversions(raw, mapping, order) if raw is not None else None
+
+    def _report_with_conv_metric(self, date, dims, base, label):
+        """전환 지표(keyEvents→실패 시 conversions)를 base 지표 앞에 붙여 runReport.
+        반환: (raw|None, 사용된 metric 순서 리스트)."""
+        for conv in ("keyEvents", "conversions"):
+            order = [conv, *base]
             raw = self._run_report({
                 "dateRanges": [{"startDate": date, "endDate": date}],
-                "dimensions": [{"name": "sessionSourceMedium"}],
+                "dimensions": dims,
                 "metrics": [{"name": m} for m in order],
-            }, label="conversions_fallback")
-        return ga4_report_to_channel_conversions(raw, mapping, order) if raw is not None else None
+            }, label=label if conv == "keyEvents" else f"{label}_conv")
+            if raw is not None:
+                return raw, order
+        return None, [conv, *base]
 
     def daily_source_medium(self, date: str) -> list[dict] | None:
         """일자 sessionSourceMedium 별 세션/사용자/전환. 실패 시 None(사유는 로그).
-        전환은 keyEvents/conversions 중 큰 값(GA4 지표 개편 대응, 400 시 단독 재시도)."""
-        order = ["sessions", "totalUsers", "keyEvents", "conversions"]
-        raw = self._run_report({
-            "dateRanges": [{"startDate": date, "endDate": date}],
-            "dimensions": [{"name": "sessionSourceMedium"}],
-            "metrics": [{"name": m} for m in order],
-        }, label="source_medium")
-        if raw is None:
-            order = ["sessions", "totalUsers", "conversions"]
-            raw = self._run_report({
-                "dateRanges": [{"startDate": date, "endDate": date}],
-                "dimensions": [{"name": "sessionSourceMedium"}],
-                "metrics": [{"name": m} for m in order],
-            }, label="source_medium_fallback")
+        전환은 keyEvents(실패 시 conversions) — 둘은 동일 지표라 함께 요청하면 400."""
+        raw, order = self._report_with_conv_metric(
+            date, dims=[{"name": "sessionSourceMedium"}],
+            base=["sessions", "totalUsers"], label="source_medium")
         return ga4_report_to_source_medium(raw, order) if raw is not None else None
 
     def daily_top_pages(self, date: str, limit: int = 15) -> list[dict] | None:

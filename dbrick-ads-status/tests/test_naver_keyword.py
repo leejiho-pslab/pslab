@@ -53,6 +53,9 @@ def test_fetch_keyword_facts_flow():
             ])
         if p == "/stats":
             ids = req.url.params.get_list("ids")
+            # /stats 한 호출의 ids 는 동일 엔티티 유형이어야 함(섞으면 네이버 400)
+            prefixes = {i.split("-")[0] for i in ids}
+            assert len(prefixes) == 1, f"mixed entity ids in one /stats call: {prefixes}"
             # 실 API 는 한 번의 호출로 요청한 모든 id 의 per-id 행을 함께 준다.
             pool = {
                 "kw-1": {"id": "kw-1", "salesAmt": "831468", "impCnt": "12153", "clkCnt": "576",

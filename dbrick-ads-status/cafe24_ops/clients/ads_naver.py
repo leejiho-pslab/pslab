@@ -191,12 +191,13 @@ class NaverSearchAdClient:
                     for k in self.list_keywords(ag["id"]):
                         id_meta[k["id"]] = {
                             "keyword": k.get("keyword") or "-", "campaign": cname,
-                            "adgroup": aname, "channel": channel,
+                            "adgroup": aname, "channel": channel, "entity": "keyword",
                         }
                 else:
                     # 플레이스/쇼핑 등 키워드 없는 유형 → 광고그룹 단위 집계
                     id_meta[ag["id"]] = {
-                        "keyword": "-", "campaign": cname, "adgroup": aname, "channel": channel,
+                        "keyword": "-", "campaign": cname, "adgroup": aname,
+                        "channel": channel, "entity": "adgroup",
                     }
         _ID_META_CACHE[self.customer_id] = id_meta
         return id_meta
@@ -207,12 +208,19 @@ class NaverSearchAdClient:
         파워링크(WEB_SITE) 캠페인은 키워드별, 그 외(플레이스 등)는 키워드가 없어
         광고그룹 단위(키워드='-')로 /stats 를 조회한다. /stats 응답의 각 행은 조회한
         엔티티 id(row['id'])를 담고 있어 이를 키워드/광고그룹 메타에 되매핑한다.
+
+        주의: /stats 는 한 호출의 ids 가 동일 엔티티 유형이어야 한다(키워드+광고그룹을
+        섞으면 400). 따라서 유형별로 나눠 호출한 뒤 합친다.
         """
         id_meta = self._build_keyword_id_meta()
         if not id_meta:
             return []
-        stats = self._stats_for_ids(list(id_meta), date)
-        return naver_sa_keyword_rows_to_facts(date, stats.get("data") or [], id_meta)
+        rows: list[dict] = []
+        for entity in ("keyword", "adgroup"):
+            ids = [i for i, m in id_meta.items() if m.get("entity") == entity]
+            if ids:
+                rows += self._stats_for_ids(ids, date).get("data") or []
+        return naver_sa_keyword_rows_to_facts(date, rows, id_meta)
 
     def fetch_facts(self, date: str) -> list[dict]:
         """캠페인 유형별(파워링크/플레이스/기타)로 나눠 각각 채널 facts 를 생성."""
