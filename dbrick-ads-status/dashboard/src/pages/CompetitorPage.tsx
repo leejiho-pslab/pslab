@@ -51,9 +51,16 @@ function MediaCard({ m }: { m: CompetitorMediaItem }) {
   );
 }
 
+// 경쟁사 소재·포스팅은 상단 기간과 무관하게 항상 "최근 10일" 고정으로 끌어온다.
+const MEDIA_DAYS = 10;
+
 export function CompetitorPage({ date }: { date: string }) {
   const [from, setFrom] = useState(() => daysBefore(date, 6));
   const [to, setTo] = useState(date);
+  // 최근 10일은 "실제 오늘"에 맞춘다(수집 기준일이 하루 뒤처져도 오늘 게시분이 보이도록).
+  const today = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD (로컬/KST)
+  const mediaTo = today >= date ? today : date;
+  const mediaFrom = daysBefore(mediaTo, MEDIA_DAYS - 1);
   const [comps, setComps] = useState<Competitor[]>([]);
   const [search, setSearch] = useState<NaverSearchItem[]>([]);
   const [trend, setTrend] = useState<NaverTrend>({ competitors: [], rows: [] });
@@ -72,6 +79,10 @@ export function CompetitorPage({ date }: { date: string }) {
   useEffect(() => {
     api.competitorsDirectory().then((d) => setDirectory(d.competitors)).catch(() => {});
   }, []);
+  // 소재·포스팅은 최근 10일 고정(상단 기간 선택과 별개)
+  useEffect(() => {
+    api.competitorsMedia(mediaFrom, mediaTo).then(setMedia).catch(() => setMedia(null));
+  }, [date]);
   useEffect(() => {
     Promise.all([
       api.competitors(to),
@@ -88,7 +99,6 @@ export function CompetitorPage({ date }: { date: string }) {
         setLoaded(true);
       })
       .catch((e) => setErr(String(e)));
-    api.competitorsMedia(from, to).then(setMedia).catch(() => setMedia(null));
   }, [from, to]);
 
   return (
@@ -152,14 +162,15 @@ export function CompetitorPage({ date }: { date: string }) {
           {/* 경쟁사 인스타 포스팅 · 광고 소재 이미지 (선택 기간 게시분, 구글시트 연동) */}
           {media?.configured && (
             <>
-              <h2 className="section-title">경쟁사 소재 · 포스팅 ({from} ~ {to})</h2>
+              <h2 className="section-title">경쟁사 소재 · 포스팅 (최근 {MEDIA_DAYS}일 · {mediaFrom} ~ {mediaTo})</h2>
               {media.error ? (
                 <div className="card"><p className="muted">시트 조회 오류: {media.error}</p></div>
               ) : media.items.length === 0 ? (
                 <div className="card">
                   <p className="muted">
-                    이 기간에 게시된 소재가 없습니다 — 구글시트에 <b>게시일이 {from}~{to} 사이</b>인
-                    행을 넣으면 여기에 이미지 카드로 표시됩니다. (헤더: 경쟁사·플랫폼·게시일·이미지URL·좋아요·댓글·캡션·링크)
+                    최근 {MEDIA_DAYS}일({mediaFrom}~{mediaTo})에 게시된 소재가 없습니다 — 구글시트에
+                    <b> 게시일이 이 범위 안</b>인 행을 넣으면 여기에 이미지 카드로 표시됩니다.
+                    (헤더: 경쟁사·플랫폼·게시일·이미지URL·좋아요·댓글·캡션·링크)
                   </p>
                 </div>
               ) : (
