@@ -28,9 +28,14 @@ def test_ga4_site_collector_mock_deterministic():
     a = c.collect("2026-06-20")
     b = c.collect("2026-06-20")
     assert a == b                                   # 같은 날짜 = 같은 값
-    metrics = {r["metric"] for r in a}
-    assert metrics == {"site_visitors", "site_sessions", "site_page_views", "site_avg_duration"}
-    assert all(r["source"] == "ga4_site" for r in a)
+    sources = {r["source"] for r in a}
+    assert sources == {"ga4_site", "ga4_channel", "ga4_page"}
+    site_metrics = {r["metric"] for r in a if r["source"] == "ga4_site"}
+    assert site_metrics == {"site_visitors", "site_sessions", "site_page_views",
+                            "site_avg_duration", "site_new", "site_returning"}
+    # 매체별/페이지별 상세도 dims 를 달고 나온다
+    assert any(r["source"] == "ga4_channel" and "source_medium" in r["dims"] for r in a)
+    assert any(r["source"] == "ga4_page" and "page" in r["dims"] for r in a)
 
 
 def test_ga4_site_collector_live_skips_without_creds(monkeypatch):
@@ -46,10 +51,14 @@ def test_ga4_site_collector_live_skips_without_creds(monkeypatch):
 
 class _FakeStore:
     def __init__(self, facts):
-        self._facts = facts
+        # 각 fact 에 source 기본값 ga4_site, dims 기본값 {} 부여
+        self._facts = [{"source": "ga4_site", "dims": {}, **f} for f in facts]
 
     def get_facts(self, date_from, date_to, source=None):
-        return [f for f in self._facts if date_from <= f["date"] <= date_to]
+        return [
+            f for f in self._facts
+            if date_from <= f["date"] <= date_to and (source is None or f["source"] == source)
+        ]
 
 
 def test_site_summary_weights_duration_by_sessions():
@@ -80,3 +89,40 @@ def test_ga4_site_endpoint_smoke():
     assert r.status_code == 200
     body = r.json()
     assert "summary" in body and "trend" in body
+
+
+def test_source_medium_breakdown_sorts_and_deltas():
+    from cafe24_ops.etl.ga4_site import source_medium_breakdown
+    facts = [
+        # 선택기간
+        {"date": "2026-06-27", "source": "ga4_channel", "metric": "sessions", "value": 889, "dims": {"source_medium": "meta / cpc"}},
+        {"date": "2026-06-27", "source": "ga4_channel", "metric": "conversions", "value": 20, "dims": {"source_medium": "meta / cpc"}},
+        {"date": "2026-06-27", "source": "ga4_channel", "metric": "sessions", "value": 144, "dims": {"source_medium": "naver_sa / cpc"}},
+        # 비교기간
+        {"date": "2026-06-20", "source": "ga4_channel", "metric": "sessions", "value": 700, "dims": {"source_medium": "meta / cpc"}},
+    ]
+    store = _FakeStore(facts)
+    rows = source_medium_breakdown(store, "2026-06-27", "2026-06-27", "2026-06-20", "2026-06-20")
+    assert rows[0]["source_medium"] == "meta / cpc"          # 세션 많은 순
+    assert rows[0]["sessions"] == 889 and rows[0]["conversions"] == 20
+    assert rows[0]["sessions_delta"] == 27.0                  # (889-700)/700*100
+    assert rows[1]["source_medium"] == "naver_sa / cpc"
+
+
+def test_top_pages_sorts_and_limits():
+    from cafe24_ops.etl.ga4_site import top_pages
+    facts = [
+        {"date": "2026-06-27", "source": "ga4_page", "metric": "views", "value": 1200, "dims": {"page": "무료 상담 | 디브릭"}},
+        {"date": "2026-06-27", "source": "ga4_page", "metric": "views", "value": 532, "dims": {"page": "디브릭 - 포트폴리오"}},
+        {"date": "2026-06-27", "source": "ga4_page", "metric": "views", "value": 250, "dims": {"page": "30평대 인테리어"}},
+    ]
+    store = _FakeStore(facts)
+    rows = top_pages(store, "2026-06-27", "2026-06-27", limit=2)
+    assert len(rows) == 2
+    assert rows[0] == {"page": "무료 상담 | 디브릭", "views": 1200.0}
+
+
+def test_ga4_channels_and_pages_endpoints_smoke():
+    c = TestClient(app)
+    assert c.get("/api/ga4/channels?from=2026-06-20&to=2026-06-21").status_code == 200
+    assert c.get("/api/ga4/pages?from=2026-06-20&to=2026-06-21").status_code == 200

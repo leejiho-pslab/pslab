@@ -60,22 +60,35 @@ def ga4_report_to_new_returning(raw: dict) -> dict | None:
     return out
 
 
-# GA4 sessionSourceMedium("naver / cpc" 등) → 대시보드 광고 채널 키.
-# 디브릭 실제 UTM 태깅 규칙에 맞춰 config/ga4_channel_map.yaml 로 재정의 가능(없으면 이 기본값 사용).
-# 매칭 안 되는 source/medium 은 "ga4_unmapped" 로 남아 유실 없이 확인 가능하다.
+# GA4 sessionSourceMedium("meta / cpc" 등) → 대시보드 광고 채널 키.
+# 디브릭 실제 GA4 값 기준(meta/cpc, naver_sa/cpc, ig/social 등)으로 매핑.
+# config/ga4_channel_map.yaml 로 재정의 가능(없으면 이 기본값 사용).
+# 광고 채널이 아닌 값(direct/organic/referral 등)은 여기 없으면 광고 전환 대체에서 제외된다.
 DEFAULT_SOURCE_MEDIUM_CHANNEL = {
+    # Meta(페이스북/인스타)
+    "meta / cpc": "meta",
     "facebook / cpc": "meta",
     "instagram / cpc": "meta",
     "fb / cpc": "meta",
     "ig / cpc": "meta",
+    "ig / social": "meta",
+    "instagram / social": "meta",
+    "facebook / social": "meta",
+    "fb / social": "meta",
+    # 네이버 검색광고(파워링크) — GA4는 파워링크/플레이스를 구분 못 해 통칭 naver_sa 로 들어옴
+    "naver_sa / cpc": "naver_powerlink",
     "naver / cpc": "naver_powerlink",
     "naver_powerlink / cpc": "naver_powerlink",
     "naver_place / cpc": "naver_place",
     "naver_place / referral": "naver_place",
+    # 구글/카카오(후순위)
     "google / cpc": "google",
     "kakao / cpc": "kakao",
     "kakaomoment / cpc": "kakao",
 }
+
+# 광고 채널 집합 — 광고 전환 대체 시 이 채널들에만 GA4 전환을 붙인다(비광고 유입은 제외).
+AD_CHANNELS = {"meta", "naver_powerlink", "naver_place", "google", "kakao"}
 
 
 # 사이트 분석 지표 — GA4 metric 이름 → facts metric 키 (순서 중요: runReport metrics 순서와 일치)
@@ -103,6 +116,42 @@ def ga4_report_to_site_metrics(raw: dict) -> dict[str, float] | None:
     return out
 
 
+def ga4_report_to_source_medium(raw: dict) -> list[dict]:
+    """sessionSourceMedium 차원 runReport(sessions, totalUsers, conversions) →
+    [{"source_medium","sessions","users","conversions"}]. 행 없으면 빈 리스트."""
+    out: list[dict] = []
+    for r in (raw or {}).get("rows") or []:
+        dims = r.get("dimensionValues") or [{}]
+        vals = r.get("metricValues") or []
+        sm = (dims[0].get("value") or "").strip()
+        if not sm:
+            continue
+        def _v(i):
+            try:
+                return float(vals[i].get("value", 0) or 0) if i < len(vals) else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+        out.append({"source_medium": sm, "sessions": _v(0), "users": _v(1), "conversions": _v(2)})
+    return out
+
+
+def ga4_report_to_top_pages(raw: dict) -> list[dict]:
+    """pageTitle 차원 runReport(screenPageViews) → [{"page","views"}]. 행 없으면 빈 리스트."""
+    out: list[dict] = []
+    for r in (raw or {}).get("rows") or []:
+        dims = r.get("dimensionValues") or [{}]
+        vals = r.get("metricValues") or []
+        page = (dims[0].get("value") or "").strip()
+        if not page:
+            continue
+        try:
+            views = float(vals[0].get("value", 0) or 0) if vals else 0.0
+        except (TypeError, ValueError):
+            views = 0.0
+        out.append({"page": page, "views": views})
+    return out
+
+
 def ga4_report_to_channel_conversions(raw: dict, mapping: dict | None = None) -> dict[str, dict]:
     """sessionSourceMedium 차원 runReport(conversions, purchaseRevenue) →
     {channel: {"conversions": n, "ga4_conversion_value": v}}.
@@ -116,7 +165,12 @@ def ga4_report_to_channel_conversions(raw: dict, mapping: dict | None = None) ->
         dims = r.get("dimensionValues") or [{}]
         vals = r.get("metricValues") or []
         source_medium = (dims[0].get("value") or "").strip()
-        channel = mapping.get(source_medium, "ga4_unmapped")
+        channel = mapping.get(source_medium)
+        # 광고 채널로 매핑되는 유입만 광고 전환 대체에 반영한다. direct/organic/referral 등
+        # 비광고 유입은 광고 카드에 붙이면 오히려 오해를 부르므로 여기서 제외(그 값은
+        # GA4 매체별 분석 표에서 원본 그대로 확인 가능).
+        if channel not in AD_CHANNELS:
+            continue
         conv = float(vals[0].get("value", 0) or 0) if len(vals) > 0 else 0.0
         rev = float(vals[1].get("value", 0) or 0) if len(vals) > 1 else 0.0
         agg = out.setdefault(channel, {"conversions": 0.0, "ga4_conversion_value": 0.0})
@@ -256,6 +310,33 @@ class GA4Client:
             "metrics": [{"name": "conversions"}, {"name": "purchaseRevenue"}],
         }, label="conversions")
         return ga4_report_to_channel_conversions(raw, mapping) if raw is not None else None
+
+    def daily_source_medium(self, date: str) -> list[dict] | None:
+        """일자 sessionSourceMedium 별 세션/사용자/전환. 실패 시 None(사유는 로그)."""
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "sessionSourceMedium"}],
+            "metrics": [{"name": "sessions"}, {"name": "totalUsers"}, {"name": "conversions"}],
+        }, label="source_medium")
+        return ga4_report_to_source_medium(raw) if raw is not None else None
+
+    def daily_top_pages(self, date: str, limit: int = 15) -> list[dict] | None:
+        """일자 페이지(pageTitle)별 조회수 상위. 실패 시 None(사유는 로그)."""
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "pageTitle"}],
+            "metrics": [{"name": "screenPageViews"}],
+            "orderBys": [{"metric": {"metricName": "screenPageViews"}, "desc": True}],
+            "limit": limit,
+        }, label="top_pages")
+        return ga4_report_to_top_pages(raw) if raw is not None else None
+
+    def daily_new_returning_metrics(self, date: str) -> dict[str, float] | None:
+        """일자 신규/재방문 사용자수 → {'site_new','site_returning'}. 실패 시 None."""
+        nr = self.daily_new_returning(date)
+        if nr is None:
+            return None
+        return {"site_new": float(nr.get("new", 0)), "site_returning": float(nr.get("returning", 0))}
 
     def close(self) -> None:
         self._http.close()

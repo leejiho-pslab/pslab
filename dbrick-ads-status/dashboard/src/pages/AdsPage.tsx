@@ -90,7 +90,12 @@ export function AdsPage({ date }: { date: string }) {
           ))}
 
           {/* GA4 사이트 분석 — 선택기간 방문자/세션/페이지뷰/체류시간 */}
-          <Ga4SitePanel from={ranges.selFrom} to={ranges.selTo} />
+          <Ga4SitePanel
+            from={ranges.selFrom}
+            to={ranges.selTo}
+            cmpFrom={ranges.cmpFrom}
+            cmpTo={ranges.cmpTo}
+          />
         </>
       )}
     </>

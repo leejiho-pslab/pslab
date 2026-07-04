@@ -270,6 +270,8 @@ export interface Ga4SiteSummary {
   visitors: number;
   sessions: number;
   page_views: number;
+  new_users: number;
+  returning_users: number;
   avg_session_duration: number | null;
   pages_per_session: number | null;
   days: number;
@@ -280,6 +282,8 @@ export interface Ga4SiteTrendRow {
   visitors: number | null;
   sessions: number | null;
   page_views: number | null;
+  new_users: number | null;
+  returning_users: number | null;
   avg_session_duration: number | null;
 }
 
@@ -288,6 +292,31 @@ export interface Ga4SiteResponse {
   to: string;
   summary: Ga4SiteSummary;
   trend: Ga4SiteTrendRow[];
+}
+
+export interface Ga4ChannelRow {
+  source_medium: string;
+  sessions: number;
+  users: number;
+  conversions: number;
+  sessions_delta: number | null;
+}
+
+export interface Ga4ChannelsResponse {
+  from: string;
+  to: string;
+  rows: Ga4ChannelRow[];
+}
+
+export interface Ga4PageRow {
+  page: string;
+  views: number;
+}
+
+export interface Ga4PagesResponse {
+  from: string;
+  to: string;
+  rows: Ga4PageRow[];
 }
 
 export interface RegionStatus {

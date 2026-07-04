@@ -38,7 +38,12 @@ from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_trend,
 )
 from cafe24_ops.etl.compare import period_comparison, summary_cards_range  # noqa: E402
-from cafe24_ops.etl.ga4_site import site_summary, site_trend  # noqa: E402
+from cafe24_ops.etl.ga4_site import (  # noqa: E402
+    site_summary,
+    site_trend,
+    source_medium_breakdown,
+    top_pages,
+)
 from cafe24_ops.etl.competitor_metrics import (  # noqa: E402
     bestseller_changes,
     competitor_ad_creatives,
@@ -435,7 +440,7 @@ def ga4_site_ep(
     date_from: str = Query(..., alias="from"),
     date_to: str = Query(..., alias="to"),
 ) -> dict:
-    """GA4 사이트 분석 — 기간 요약(방문자/세션/페이지뷰/체류시간) + 일자별 추이."""
+    """GA4 사이트 분석 — 기간 요약(방문자/세션/페이지뷰/체류시간/신규·재방문) + 일자별 추이."""
     store = _store()
     try:
         return {
@@ -443,6 +448,38 @@ def ga4_site_ep(
             "summary": site_summary(store, date_from, date_to),
             "trend": site_trend(store, date_from, date_to),
         }
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/channels")
+def ga4_channels_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    cmp_from: str | None = Query(default=None),
+    cmp_to: str | None = Query(default=None),
+) -> dict:
+    """GA4 매체별(sessionSourceMedium) 세션/사용자/전환 — 비교기간 대비 세션 증감 포함."""
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to,
+            "rows": source_medium_breakdown(store, date_from, date_to, cmp_from, cmp_to),
+        }
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/pages")
+def ga4_pages_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    top_n: int = Query(default=10),
+) -> dict:
+    """GA4 페이지별(pageTitle) 조회수 상위 N."""
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to, "rows": top_pages(store, date_from, date_to, top_n)}
     finally:
         store.close()
 

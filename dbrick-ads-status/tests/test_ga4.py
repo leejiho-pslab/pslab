@@ -32,17 +32,17 @@ def test_ga4_report_to_new_returning_mapping():
 
 def test_ga4_report_to_channel_conversions_mapping():
     raw = {"rows": [
-        {"dimensionValues": [{"value": "naver / cpc"}],
+        {"dimensionValues": [{"value": "naver_sa / cpc"}],   # 실제 디브릭 GA4 값
          "metricValues": [{"value": "12"}, {"value": "480000"}]},
-        {"dimensionValues": [{"value": "facebook / cpc"}],
+        {"dimensionValues": [{"value": "meta / cpc"}],
          "metricValues": [{"value": "5"}, {"value": "150000"}]},
-        {"dimensionValues": [{"value": "unknown-source / referral"}],
+        {"dimensionValues": [{"value": "(direct) / (none)"}],  # 비광고 유입 → 광고 전환 대체에서 제외
          "metricValues": [{"value": "2"}, {"value": "0"}]},
     ]}
     out = ga4_report_to_channel_conversions(raw)
     assert out["naver_powerlink"] == {"conversions": 12.0, "ga4_conversion_value": 480000.0}
     assert out["meta"] == {"conversions": 5.0, "ga4_conversion_value": 150000.0}
-    assert out["ga4_unmapped"] == {"conversions": 2.0, "ga4_conversion_value": 0.0}  # 매핑 안 되면 유실 없이 남음
+    assert "ga4_unmapped" not in out  # 비광고 유입(direct 등)은 광고 카드에 안 붙음
 
 
 def test_ga4_report_to_channel_conversions_custom_mapping():
