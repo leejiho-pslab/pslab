@@ -7,6 +7,7 @@ import type {
   CompetitorCreatives,
   CompetitorLink,
   CompetitorMediaItem,
+  CompetitorMediaResponse,
   NaverSearchItem,
   NaverTrend,
 } from "../types";
@@ -59,7 +60,7 @@ export function CompetitorPage({ date }: { date: string }) {
   const [ads, setAds] = useState<CompetitorCreatives[]>([]);
   const [changes, setChanges] = useState<BestChange[]>([]);
   const [directory, setDirectory] = useState<CompetitorLink[]>([]);
-  const [media, setMedia] = useState<CompetitorMediaItem[]>([]);
+  const [media, setMedia] = useState<CompetitorMediaResponse | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [err, setErr] = useState("");
 
@@ -87,7 +88,7 @@ export function CompetitorPage({ date }: { date: string }) {
         setLoaded(true);
       })
       .catch((e) => setErr(String(e)));
-    api.competitorsMedia(from, to).then((m) => setMedia(m.items)).catch(() => setMedia([]));
+    api.competitorsMedia(from, to).then(setMedia).catch(() => setMedia(null));
   }, [from, to]);
 
   return (
@@ -149,14 +150,25 @@ export function CompetitorPage({ date }: { date: string }) {
           </div>
 
           {/* 경쟁사 인스타 포스팅 · 광고 소재 이미지 (선택 기간 게시분, 구글시트 연동) */}
-          {media.length > 0 && (
+          {media?.configured && (
             <>
               <h2 className="section-title">경쟁사 소재 · 포스팅 ({from} ~ {to})</h2>
-              <div className="media-grid">
-                {media.map((m, i) => (
-                  <MediaCard key={`${m.competitor}:${m.link ?? i}`} m={m} />
-                ))}
-              </div>
+              {media.error ? (
+                <div className="card"><p className="muted">시트 조회 오류: {media.error}</p></div>
+              ) : media.items.length === 0 ? (
+                <div className="card">
+                  <p className="muted">
+                    이 기간에 게시된 소재가 없습니다 — 구글시트에 <b>게시일이 {from}~{to} 사이</b>인
+                    행을 넣으면 여기에 이미지 카드로 표시됩니다. (헤더: 경쟁사·플랫폼·게시일·이미지URL·좋아요·댓글·캡션·링크)
+                  </p>
+                </div>
+              ) : (
+                <div className="media-grid">
+                  {media.items.map((m, i) => (
+                    <MediaCard key={`${m.competitor}:${m.link ?? i}`} m={m} />
+                  ))}
+                </div>
+              )}
             </>
           )}
 
