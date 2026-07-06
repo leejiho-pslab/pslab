@@ -29,7 +29,8 @@ name: dbrick ads daily collect
 
 on:
   schedule:
-    - cron: "0 23 * * *" # 08:00 KST (UTC+9)
+    - cron: "0 22 * * *" # 07:00 KST (UTC+9) — 매일 오전 7시 전일자 수집
+
   workflow_dispatch:
     inputs:
       days:
