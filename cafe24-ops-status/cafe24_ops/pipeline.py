@@ -7,8 +7,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date as _date
-from datetime import timedelta
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from .collectors import build_collectors
 from .config import AppConfig
@@ -18,9 +18,17 @@ from .store import Store
 
 log = logging.getLogger("cafe24_ops.pipeline")
 
+KST = ZoneInfo("Asia/Seoul")
+
 
 def yesterday() -> str:
-    return (_date.today() - timedelta(days=1)).isoformat()
+    """KST 기준 어제 날짜.
+
+    GitHub Actions 러너는 시스템 시계가 UTC라, date.today()(로컬 시각) 기준으로
+    계산하면 07:00~08:59 KST(=전날 22:00~23:59 UTC) 사이 실행 시 UTC 날짜가
+    아직 전날이라 하루 더 과거로 밀린다 — 매일 KST 어제 데이터가 누락되던 원인.
+    """
+    return (datetime.now(KST).date() - timedelta(days=1)).isoformat()
 
 
 @dataclass
