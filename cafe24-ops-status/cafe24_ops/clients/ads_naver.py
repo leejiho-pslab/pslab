@@ -186,6 +186,12 @@ class NaverSearchAdClient:
                     len(ids), len(rows))
         return {}
 
+    # 실 라이브 진단 결과: 100개씩 청크로 보내면 대부분 빈 응답(행 0개)이 오고, 마지막
+    # 소수 id만 남은 청크에서만 정상 응답이 왔다 — 요청 간격(스로틀)을 지켜도 동일해
+    # 단순 초당 호출 제한 문제가 아니라 batch 크기 자체의 문제로 보인다. 임계값이
+    # 정확히 얼마인지 문서로 확인 못해 보수적으로 작게 잡는다.
+    _KEYWORD_STATS_CHUNK = 20
+
     def fetch_keyword_facts(self, date: str) -> list[dict]:
         """파워링크/플레이스 키워드별 성과. 캠페인→광고그룹→키워드 계층을 따라가 집계한다."""
         campaigns = [c for c in self.list_campaigns() if c["type"] in CAMPAIGN_TYPE_CHANNEL]
@@ -207,9 +213,12 @@ class NaverSearchAdClient:
 
             rows_by_id: dict[str, dict] = {}
             kw_ids = [k["id"] for k in keywords]
-            for i in range(0, len(kw_ids), 100):
-                chunk = kw_ids[i:i + 100]
+            chunk_size = self._KEYWORD_STATS_CHUNK
+            for i in range(0, len(kw_ids), chunk_size):
+                chunk = kw_ids[i:i + chunk_size]
                 data = self.stats(chunk, date).get("data") or []
+                log.info("네이버SA 키워드 stats: %s 청크 %d개 id → 응답 %d행",
+                         channel, len(chunk), len(data))
                 rows_by_id.update(self._match_rows_to_ids(chunk, data))
 
             for kw in keywords:
