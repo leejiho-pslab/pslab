@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-05T11:23:19.741Z",
+  "updatedAt": "2026-07-06T13:00:22.104Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-05T11:18:02.572Z",
-      "insightComment": "참여율 200.0%로 평균(63.1%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-05T11:18:04.668Z"
+      "metricsAt": "2026-07-06T12:54:56.467Z",
+      "insightComment": "참여율 200.0%로 평균(51.1%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-06T12:54:58.917Z"
     },
     {
       "id": "w1-fri",
@@ -196,9 +196,9 @@
         "shares": 0,
         "engagementRate": 2
       },
-      "metricsAt": "2026-07-05T11:18:03.231Z",
-      "insightComment": "참여율 200.0%로 평균(63.1%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-05T11:18:04.744Z"
+      "metricsAt": "2026-07-06T12:54:57.264Z",
+      "insightComment": "참여율 200.0%로 평균(51.1%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-06T12:54:59.013Z"
     },
     {
       "id": "w2-mon",
@@ -266,9 +266,9 @@
         "shares": 0,
         "engagementRate": 1
       },
-      "metricsAt": "2026-07-05T11:18:03.898Z",
-      "insightComment": "참여율 100.0%로 평균(63.1%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-05T11:18:04.824Z"
+      "metricsAt": "2026-07-06T12:54:58.081Z",
+      "insightComment": "참여율 100.0%로 평균(51.1%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-06T12:54:59.111Z"
     },
     {
       "id": "w2-wed",
@@ -1003,9 +1003,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-05T11:18:04.144Z",
+      "metricsAt": "2026-07-06T12:54:58.247Z",
       "insightComment": "조회 13·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-05T11:18:04.970Z"
+      "insightAt": "2026-07-06T12:54:59.304Z"
     },
     {
       "id": "threads-07-11",
@@ -1042,15 +1042,15 @@
         }
       ],
       "metrics": {
-        "views": 0,
+        "views": 63,
         "likes": 0,
         "comments": 0,
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-05T11:18:04.345Z",
-      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-05T11:18:05.050Z"
+      "metricsAt": "2026-07-06T12:54:58.437Z",
+      "insightComment": "조회 63·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-06T12:54:59.473Z"
     },
     {
       "id": "threads-07-14",
@@ -1186,9 +1186,9 @@
         "shares": 44,
         "engagementRate": 0.0450802876196863
       },
-      "metricsAt": "2026-07-05T11:18:04.396Z",
-      "insightComment": "참여율 4.5%로 평균(63.1%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
-      "insightAt": "2026-07-05T11:18:05.131Z"
+      "metricsAt": "2026-07-06T12:54:58.488Z",
+      "insightComment": "참여율 4.5%로 평균(51.1%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-06T12:55:07.088Z"
     },
     {
       "id": "youtube-07-12",
@@ -1199,7 +1199,7 @@
       ],
       "scheduledFor": "2026-07-06T09:00:00.000Z",
       "score": 79,
-      "status": "planned",
+      "status": "published",
       "kicker": "Shorts",
       "headline": "이 광고 *꺼야 할까*?",
       "sub": "숫자 하나로 판단.",
@@ -1229,7 +1229,26 @@
         "온라인마케팅",
         "광고 최적화",
         "마케팅 전략"
-      ]
+      ],
+      "publishedUrl": "https://youtu.be/43G-r4KHvUs",
+      "publishedAt": "2026-07-06T12:54:52.581Z",
+      "published": [
+        {
+          "platform": "youtube",
+          "remoteId": "43G-r4KHvUs",
+          "url": "https://youtu.be/43G-r4KHvUs"
+        }
+      ],
+      "metrics": {
+        "views": 25973,
+        "likes": 1376,
+        "comments": 247,
+        "shares": 151,
+        "engagementRate": 0.06830169791706772
+      },
+      "metricsAt": "2026-07-06T12:54:58.538Z",
+      "insightComment": "참여율 6.8%로 평균(51.1%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-06T12:55:07.221Z"
     },
     {
       "id": "youtube-07-19",
@@ -1360,9 +1379,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-05T11:18:04.397Z",
+      "metricsAt": "2026-07-06T12:54:58.538Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-05T11:18:05.216Z"
+      "insightAt": "2026-07-06T12:55:07.371Z"
     },
     {
       "id": "blogger-07-09",
@@ -1411,9 +1430,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-05T11:18:04.397Z",
+      "metricsAt": "2026-07-06T12:54:58.539Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-05T11:18:05.295Z"
+      "insightAt": "2026-07-06T12:55:07.470Z"
     },
     {
       "id": "blogger-07-16",
@@ -1424,7 +1443,7 @@
       ],
       "scheduledFor": "2026-07-06T09:00:00.000Z",
       "score": 82,
-      "status": "planned",
+      "status": "published",
       "kicker": "Strategy",
       "headline": "작은 브랜드가 대기업과 '다르게' 싸우는 4가지 방법",
       "sub": "대기업과 같은 방식으로 싸우면 집니다. 작을 때만 쓸 수 있는 무기 네 가지로 판을 바꾸세요.",
@@ -1445,7 +1464,26 @@
         "마케팅전략",
         "포지셔닝",
         "차별화"
-      ]
+      ],
+      "publishedUrl": "https://pslab2026.blogspot.com/2026/07/4.html",
+      "publishedAt": "2026-07-06T12:54:54.333Z",
+      "published": [
+        {
+          "platform": "blogger",
+          "remoteId": "5938243066771381890",
+          "url": "https://pslab2026.blogspot.com/2026/07/4.html"
+        }
+      ],
+      "metrics": {
+        "views": 0,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-06T12:54:58.539Z",
+      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-06T12:55:07.592Z"
     },
     {
       "id": "blogger-07-23",

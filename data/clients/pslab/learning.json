@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-05T11:18:04.398Z",
-  "sampleSize": 8,
+  "generatedAt": "2026-07-06T12:54:58.540Z",
+  "sampleSize": 10,
   "variants": [
     {
       "key": "A",
@@ -11,17 +11,17 @@
     },
     {
       "key": "B",
-      "posts": 3,
-      "avgEngagement": 0.3333333333333333,
-      "avgLikes": 0.3333333333333333,
-      "avgViews": 4.666666666666667
+      "posts": 4,
+      "avgEngagement": 0.2670754244792669,
+      "avgLikes": 344.25,
+      "avgViews": 6496.75
     },
     {
       "key": "C",
-      "posts": 1,
+      "posts": 2,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 0
+      "avgViews": 31.5
     }
   ],
   "channels": [
@@ -34,21 +34,21 @@
     },
     {
       "key": "youtube",
-      "posts": 1,
-      "avgEngagement": 0.0450802876196863,
-      "avgLikes": 1100,
-      "avgViews": 26841
+      "posts": 2,
+      "avgEngagement": 0.05669099276837701,
+      "avgLikes": 1238,
+      "avgViews": 26407
     },
     {
       "key": "threads",
       "posts": 2,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 6.5
+      "avgViews": 38
     },
     {
       "key": "blogger",
-      "posts": 2,
+      "posts": 3,
       "avgEngagement": 0,
       "avgLikes": 0,
       "avgViews": 0
@@ -57,10 +57,10 @@
   "hours": [
     {
       "key": "21:00",
-      "posts": 2,
-      "avgEngagement": 2,
-      "avgLikes": 2,
-      "avgViews": 1
+      "posts": 4,
+      "avgEngagement": 1.017075424479267,
+      "avgLikes": 345,
+      "avgViews": 6493.75
     },
     {
       "key": "19:00",
@@ -74,7 +74,7 @@
       "posts": 4,
       "avgEngagement": 0.011270071904921575,
       "avgLikes": 275,
-      "avgViews": 6713.5
+      "avgViews": 6729.25
     },
     {
       "key": "11:00",
@@ -87,17 +87,10 @@
   "motifs": [
     {
       "key": "compass",
-      "posts": 1,
-      "avgEngagement": 2,
-      "avgLikes": 2,
-      "avgViews": 1
-    },
-    {
-      "key": "branch",
-      "posts": 1,
+      "posts": 2,
       "avgEngagement": 1,
       "avgLikes": 1,
-      "avgViews": 1
+      "avgViews": 0.5
     },
     {
       "key": "lock",
@@ -105,6 +98,13 @@
       "avgEngagement": 0.6666666666666666,
       "avgLikes": 0.6666666666666666,
       "avgViews": 4.666666666666667
+    },
+    {
+      "key": "branch",
+      "posts": 2,
+      "avgEngagement": 0.5341508489585338,
+      "avgLikes": 688.5,
+      "avgViews": 12987
     },
     {
       "key": "chart",
@@ -118,7 +118,7 @@
       "posts": 1,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 0
+      "avgViews": 63
     }
   ],
   "bestVariant": "A",
