@@ -39,6 +39,36 @@ def test_naver_sa_client_flow():
     c.close()
 
 
+def test_naver_sa_splits_powerlink_place_by_campaign_type():
+    """campaignTp=WEB_SITE→네이버 파워링크, PLACE→네이버 플레이스로 분리 집계돼야 한다."""
+    def handler(req):
+        if req.url.path == "/ncc/campaigns":
+            return httpx.Response(200, json=[
+                {"nccCampaignId": "web-1", "campaignTp": "WEB_SITE"},
+                {"nccCampaignId": "place-1", "campaignTp": "PLACE"},
+                {"nccCampaignId": "shop-1", "campaignTp": "SHOPPING"},
+            ])
+        if req.url.path == "/stats":
+            ids = req.url.params.get_list("ids")
+            amounts = {"web-1": "1000", "place-1": "500", "shop-1": "200"}
+            assert len(ids) == 1  # 이 테스트에선 채널별로 캠페인이 하나씩
+            return httpx.Response(200, json={"data": [{"salesAmt": amounts[ids[0]], "convAmt": "0"}]})
+        return httpx.Response(404)
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    facts = c.fetch_facts("2026-06-17")
+    ad_cost_by_channel = {
+        f["dims"]["channel"]: f["value"] for f in facts if f["metric"] == "ad_cost"
+    }
+    assert ad_cost_by_channel == {
+        "naver_powerlink": 1000.0,
+        "naver_place": 500.0,
+        "naver_other": 200.0,   # 쇼핑 등 그 외 유형도 광고비가 사라지지 않고 남는다
+    }
+    c.close()
+
+
 def test_naver_sa_chunks_over_100_ids():
     calls = {"stats": 0}
 
