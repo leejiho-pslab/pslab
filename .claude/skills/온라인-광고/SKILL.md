@@ -1,63 +1,80 @@
 ---
 name: 온라인-광고
-description: 온라인 광고 성과 대시보드(광고 채널 성과·ROAS·CTR·CPC + 소재별 이미지·성과 '광고 히스토리' + 경쟁사 모니터링)를 신규 업체에 배포/연동하거나 점검/수정할 때 사용. Meta·네이버SA·구글·카카오 광고 API와 네이버 DataLab/검색(경쟁사)을 다룬다(매출/방문자 운영지표는 '카페24-운영현황' 스킬). "광고만 세팅", "소재 성과/이미지", "ROAS 대시보드", "경쟁사 모니터링", "광고 히스토리" 같은 요청에 사용.
+description: 온라인 광고 성과 대시보드(광고 채널 성과·ROAS·CTR·CPC·전환 + 소재/키워드 '광고 히스토리' + 경쟁사 모니터링)를 신규 업체에 배포/연동하거나 점검/수정할 때 사용. Meta·네이버SA(파워링크/플레이스 분리)·구글·카카오 광고 API, GA4(전환·사이트분석), 네이버 DataLab/검색(경쟁사), 구글시트(지역현황·경쟁사 소재)를 다룬다(매출/방문 운영지표는 '카페24-운영현황' 스킬). "광고만 세팅", "소재/키워드 성과", "ROAS 대시보드", "GA4 전환 연동", "경쟁사 모니터링/인스타/광고라이브러리", "광고 히스토리", "지역 현황" 같은 요청에 사용.
 ---
 
 # 온라인 광고 (광고 · 광고 히스토리 · 경쟁사 도메인)
 
-광고 성과를 매일 무인 수집해 대시보드 **"광고" / "광고 히스토리" / "경쟁사 모니터링" 3개 탭**으로
-보여주는 무료 자동화 도메인. 매출·방문 운영지표는 별도 스킬(**카페24-운영현황**)이라,
-광고만 원하는 업체는 이 스킬만으로 세팅·운영한다.
-프로젝트 루트: [`cafe24-ops-status/`](../../../cafe24-ops-status/).
+광고 성과를 매일 무인 수집해 **"광고" / "광고 히스토리" / "경쟁사 모니터링" 3개 탭**으로 보여주는
+무료 자동화 도메인. 매출·방문 운영지표는 별도 스킬(**카페24-운영현황**)이라, 광고만 원하는 업체는
+이 스킬만으로 세팅·운영한다(자사몰 없는 업체 = `shop.platform: none` → 카페24 수집기 자동 스킵).
+프로젝트 루트: `cafe24-ops-status/`(원본) 또는 업체 복제본(예: `dbrick-ads-status/`).
 
 ## 이 도메인이 다루는 것 (3개 탭)
 
-- **광고**: 채널별(Meta·네이버SA·구글·카카오) 광고비·광고매출·ROAS·CTR·CPC·CVR, 선택기간 vs 비교기간 증감, 채널 추이.
-- **광고 히스토리**: 소재(ad)별 **이미지 카드 + 성과**(구매·ROAS·구매전환값·CTR·CPC·비용), 기간 필터·정렬, 피로도(성과 하락) 신호.
-- **경쟁사 모니터링**: 네이버 DataLab 검색어 트렌드 + 쇼핑 검색, 경쟁사 프로모션/베스트 변화.
+- **광고**: 채널별(Meta·**네이버 파워링크/플레이스**·구글·카카오) 광고비·매출·ROAS·CTR·CPC·CVR·노출·전환.
+  네이버는 `campaignTp`로 파워링크(WEB_SITE)/플레이스(PLACE) **자동 분리**. **전환수는 GA4 기준으로 대체**
+  (source/medium → 채널 매핑, keyEvents/conversions 중 큰 값). 선택 vs 비교기간 증감 + 채널 추이.
+  하단 **GA4 사이트 분석**: 방문자·세션·페이지뷰·체류·신규/재방문 + **매체별 유입·전환 표** + **인기 페이지 TOP**.
+- **광고 히스토리**: 채널 탭 — **Meta 소재**(이미지 카드 + 구매·ROAS·CTR·CPC·피로도) / **네이버 검색(키워드)**
+  리포트(광고비 소진 기준 정렬, 캠페인·광고그룹·노출·클릭·CTR·CPC·전환) / **네이버 플레이스**(광고그룹 단위).
+- **경쟁사 모니터링**: **지정 현황 딥링크**(홈페이지·인스타·페북 광고라이브러리(active만)·구글 광고 투명성)
+  + **인스타 게시물 임베드**(구글시트 `링크`만 넣으면 이미지+캡션 자동, 최근 10일) + **구글시트 소재**(메타/구글 이미지)
+  + 네이버 DataLab 트렌드·검색.
+- 하단 **온라인 인입 지역 현황**(구글시트, 서비스계정 비공개 연동).
 
-**데이터 소스**: Meta Marketing API(계정+ad-level+소재 썸네일) · 네이버 검색광고 API · (선택)구글/카카오 · 네이버 DataLab/검색 API(경쟁사).
+**데이터 소스**: Meta Marketing API(계정+ad-level+소재 썸네일) · 네이버 검색광고 API(계정/캠페인/광고그룹/키워드 stats)
+· (선택)구글/카카오 · **GA4 Data API**(전환·사이트지표·source_medium·pages·newVsReturning) · 네이버 DataLab/검색(경쟁사)
+· **Google Sheets API v4**(서비스계정 — 지역현황·경쟁사 소재).
 
 ## 무료 스택 (모든 도메인 공통)
 
 | 역할 | 플랫폼 | 비고 |
 |---|---|---|
-| 매일 수집 | GitHub Actions | `cafe24-daily-collect.yml` (07:00 KST, 전 채널) |
+| 매일 수집 | GitHub Actions | `*-daily-collect.yml` (**07:00 KST = cron "0 22 * * *"**, 전 채널) |
 | 데이터 영속 | Neon Postgres | `DATABASE_URL` |
-| 웹/API | Render Web Service | 무료(15분 무접속 슬립 → keepalive로 방지) |
+| 웹/API | Render Web Service | 무료(15분 무접속 슬립 → keepalive로 방지, 자동 재배포 on push) |
 
-수집 → 정규화 → Neon(`facts`) → FastAPI → React. 소재/경쟁사는 KPI 합산이 아니라 `facts`를 직접 집계해 서빙.
+수집 → 정규화 → Neon(`facts`) → FastAPI → React. 소재/키워드/경쟁사/GA4는 KPI 합산이 아니라 `facts`를 직접 집계해 서빙.
+한 수집기가 여러 `source`를 낼 수 있고(예: ga4_site→ga4_site/ga4_channel/ga4_page), 파이프라인은 수집된 소스만 `delete_facts`+upsert.
 
 ## 신규 업체 온보딩 (광고만)
 
-1. **저장소**: repo 포크. 2. **Neon** `DATABASE_URL` Secret([`DEPLOY-FREE.md`](../../../cafe24-ops-status/DEPLOY-FREE.md) §0).
+1. **저장소**: repo 포크/복제. 2. **Neon** `DATABASE_URL`.
 3. **광고 채널**(있는 것만 — 없으면 자동 스킵):
-   - **Meta**: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (+ `META_APP_ID`/`META_APP_SECRET` 넣으면 매 실행 60일 장기토큰 자동 갱신 → 무인 지속).
-   - **네이버SA**: `NAVER_SA_API_KEY`, `NAVER_SA_SECRET_KEY`, `NAVER_SA_CUSTOMER_ID`.
+   - **Meta**: `META_ACCESS_TOKEN`, `META_AD_ACCOUNT_ID` (+ `META_APP_ID`/`META_APP_SECRET` → 실행당 1회 60일 장기토큰 자동 갱신, DB 영속).
+   - **네이버SA**: `NAVER_SA_API_KEY`, `NAVER_SA_SECRET_KEY`, `NAVER_SA_CUSTOMER_ID`. (파워링크/플레이스 자동 분리 + 키워드 리포트)
    - **구글/카카오**(후순위): `GOOGLE_ADS_*` / `KAKAO_ACCESS_TOKEN`,`KAKAO_AD_ACCOUNT_ID`.
-4. **경쟁사**: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`(네이버 개발자센터, DataLab+검색). 경쟁사는 `config/sources.yaml`의 `competitors[]`에 정의.
-5. **Render**: Blueprint → `render.yaml` → `DATABASE_URL`(+광고/네이버 키) → Deploy.
-6. **백필**: Actions `ops daily collect` 수동 실행(`days: 30`). (소재/경쟁사는 스냅샷 성격 — 과거 백필 제한, `--skip`로 조정)
-7. **검증**: `keek-api-smoke.yml`(엔드포인트 200), `cafe24-diag.yml`(연결 진단).
+4. **GA4(전환·사이트분석)**: `GA4_PROPERTY_ID`(숫자만!) + `GOOGLE_APPLICATION_CREDENTIALS_JSON`(서비스계정 키). 서비스계정 이메일을 GA4 속성 뷰어로 공유. 전환수가 0이면 GA4 "핵심 이벤트(키 이벤트)" 미설정 → 상담신청 등을 키 이벤트로 지정.
+5. **경쟁사**: `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`(DataLab+검색 API 둘 다 사용 설정). `config/sources.yaml`의 `competitors[]`에 `name/url/insta/domain/fb_query`.
+6. **구글시트(선택)**: `region_status`·`competitor_media`에 `sheet_id/gid`. 시트를 위 서비스계정 이메일에 **뷰어 공유**(GA4 키 재사용). 인스타는 시트 `링크`만으로 임베드.
+7. **Render**: Blueprint → env(`DATABASE_URL`+광고/네이버/GA4/시트 키) → Deploy. **schedule은 기본 브랜치에서만 동작.**
+8. **백필**: Actions `daily collect` 수동 실행(`days: 31`). 9. **검증**: `*-api-smoke.yml`(200), `/health`(ga4_creds/ga4_property 플래그).
 
-> 광고만 쓰면 카페24/GA4 수집기는 자격증명 없어 자동 스킵된다. "카페24 어드민" 탭까지 숨기려면
-> `dashboard/src/App.tsx`의 `TABS`에서 `cafe24` 탭 제거(선택).
+> **멀티테넌트 주의(같은 repo에 여러 대시보드)**: GitHub 저장소 Secrets는 **repo 전체 공유** → 업체별 `TENANT_` 접두어(예: `DBRICK_META_ACCESS_TOKEN`)로 충돌 방지, 워크플로에서 원래 이름 env로 매핑. Render env는 서비스 격리라 접두어 불필요.
 
 ### 업체별 필수 교체
-`config/sources.yaml`(`ads[].account_id`, `competitors[]`=업체 경쟁사) · `render.yaml`(`services[].name`) · keepalive/smoke 워크플로의 하드코딩 `keek-ops-dashboard.onrender.com` · GitHub Secrets.
+`config/sources.yaml`(`shop.platform`, `ads[].account_id`, `competitors[]`, `region_status`/`competitor_media` 시트) · `render.yaml`(`services[].name`) · keepalive/smoke 워크플로의 하드코딩 도메인 · GitHub Secrets · `dashboard/index.html` `<title>`(브랜딩).
 
 ## 핵심 함정/교훈 (이 도메인)
 
-- **소재 이미지가 안 뜸** → 소재는 `ad-level insights`(성과) + `/act_{id}/ads?fields=creative{thumbnail_url,image_url}`(썸네일)를 `source='creative'` facts로 저장. **활성/최근활성 광고만** 반환됨(중단 소재는 빠짐).
-- **`/api/ads/overview` 422** → `cmp_from`/`cmp_to`가 **필수**. 프론트 `computeRanges`가 선택·비교 4개 값을 항상 채움(비우면 광고 탭 전체 ErrorState).
-- **소재/경쟁사 재수집 시 낡은 행 잔존** → 썸네일/카테고리명 바뀌면 dims 달라짐. 재삽입 전 `delete_facts(date, source)`로 소스별 교체.
-- **Meta 토큰 만료로 수집 중단** → `META_APP_ID/SECRET`로 실행당 1회 장기토큰 교환 후 DB(app_kv) 영속. DB 토큰이 env Secret보다 우선.
-- **경쟁사 버즈 오탐** → 네이버 검색 결과는 정확매칭 필터로 브랜드명 오탐 제거(`competitor_metrics`).
-- **네이버SA ROAS** → 계정 통화/전환 기준 확인 완료(정상). 채널별 `_derive`로 ROAS/CTR/CPC/CVR 파생.
-- **라이브 "서버 오류"** → Render 슬립(keepalive) 또는 브라우저 캐시(`Ctrl+Shift+R`). 서버 진단은 `keek-api-smoke.yml`(GitHub 러너).
+- **GA4 전환 400 "Found duplicate metrics: conversions"** → `keyEvents`와 `conversions`는 GA4 내부 동일 지표. 한 요청에 같이 넣지 말 것. keyEvents 단독 → 실패 시 conversions 단독 폴백(`_report_with_conv_metric`). 파서는 둘 중 큰 값 사용.
+- **GA4 전환이 0** → 속성에 "핵심 이벤트"가 없음(코드 아님). / `GA4_PROPERTY_ID`에 복붙 히든문자 → 숫자만. `/health`의 ga4_creds/ga4_property로 진단.
+- **네이버 키워드 /stats 400** → 한 `/stats` 호출의 `ids`는 **동일 엔티티 유형**이어야 함(키워드 nkw-·광고그룹 grp- 혼합 금지) → 유형별 분리 호출. 키워드 메타(캠페인→광고그룹→키워드)는 날짜 무관 → **프로세스 캐시**(백필 시 매일 재크롤 방지).
+- **구글시트 404/인식 실패** → 탭 이름 공백은 A1 표기 작은따옴표+URL인코딩. 서비스계정 있으면 비공개 Sheets API, 없으면 공개 CSV 폴백. 헤더가 첫 줄이 아니어도 되게 **헤더 줄 자동 탐지**(위 안내문/찌꺼기 skip).
+- **경쟁사 광고 소재 자동수집** → FB/구글은 경쟁사 상업광고 **무료/공식 API 없음**(FB API는 정치광고만). 서버 스크래핑은 IP 차단. → **딥링크(active 필터)** + 인스타 **임베드**(`/p|reel/{code}/embed/captioned`) + 시트 이미지URL. 유료 자동은 Apify류.
+- **소재 이미지 안 뜸** → Meta `ad-level insights`+`ads?fields=creative{thumbnail_url,image_url}`를 `source='creative'`로. **활성/최근활성만** 반환.
+- **`/api/ads/overview` 422** → `cmp_from`/`cmp_to` 필수(프론트 `computeRanges`가 4값 항상 채움).
+- **재수집 낡은 행 잔존** → dims 바뀌면(썸네일/키워드) 재삽입 전 `delete_facts(date, source)`.
+- **Meta 토큰 만료 중단** → `META_APP_ID/SECRET`로 장기토큰 교환 후 app_kv 영속(DB 토큰 우선).
+- **자사몰 없는 업체 카페24 오탐** → `shop.platform: ""/none`이면 cafe24 수집기 `NotImplementedError`로 정상 스킵.
+- **경쟁사 소재 기간 필터** → 소재·포스팅은 상단 기간과 별개 **최근 10일 고정**, 종료일은 수집기준일 뒤처짐 대비 **실제 오늘**로 앵커.
+- **스케줄 지연** → GitHub schedule은 정시 ±수분~최대 1시간 지연 가능(정상).
 
 ## 레퍼런스 (이 도메인)
 
-**API**: `/api/ads/summary` · `ads/channels` · `ads/overview(cmp_from,cmp_to 필수)` · `ads/channel-trend` · `ads/trend` · `creatives/overview` · `creatives/fatigue` · `creatives/trend` · `competitors` · `competitors/trend` · `competitors/naver` · `competitors/creatives` · `competitors/best-changes`.
-**핵심 파일**: `collectors/{ads,creative,competitor}.py` · `clients/{ads_meta,ads_naver,ads_google,ads_kakao,naver_datalab,naver_search}.py` · `etl/{ads_metrics,creative_metrics,competitor_metrics}.py` · `pages/{AdsPage,CreativePage,CompetitorPage}.tsx` + 컴포넌트(PeriodSelector·AdsTrendChart·AdCostChart·CreativeThumb).
-**로컬**: `python scripts/run_all.py --mode live --days 30` · `uvicorn api.main:app --reload` · `cd dashboard && npm run build` · `pytest`.
+**API**: `ads/summary·channels·overview(cmp_from,cmp_to 필수)·channel-trend·trend` · `ads/keywords(channel,sort=ad_cost)` ·
+`creatives/overview·fatigue·trend` · `ga4/site·ga4/channels·ga4/pages` · `competitors·/trend·/naver·/directory·/media·/best-changes` · `region-status` · `/health`.
+**핵심 파일**: `collectors/{ads,creative,naver_keyword,competitor,ga4_site}.py` · `clients/{ads_meta,ads_naver,ads_google,ads_kakao,ga4,naver_datalab,naver_search,region_sheet}.py`
+· `etl/{ads_metrics,creative_metrics,keyword_metrics,competitor_metrics,competitor_directory,ga4_site}.py` · `pages/{AdsPage,CreativePage,CompetitorPage}.tsx` + `components/{Ga4SitePanel,CreativeThumb,PeriodSelector,AdsTrendChart}`.
+**로컬**: `python scripts/run_all.py --mode live --days 31` · `uvicorn api.main:app --reload` · `cd dashboard && npm run build` · `pytest`.
