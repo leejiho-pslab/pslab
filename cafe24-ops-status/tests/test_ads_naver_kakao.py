@@ -118,6 +118,16 @@ def test_naver_sa_match_rows_to_ids_positional_fallback():
     assert matched["kw-1"]["impCnt"] == "10" and matched["kw-2"]["impCnt"] == "5"
 
 
+def test_naver_sa_match_rows_to_ids_empty_rows_is_no_activity_not_a_warning(caplog):
+    """행 0개는 매칭 실패가 아니라 '그 배치 전부 그 날 활동 없음' — 경고 없이 조용히 스킵."""
+    import logging
+
+    with caplog.at_level(logging.WARNING):
+        matched = NaverSearchAdClient._match_rows_to_ids(["kw-1", "kw-2"], [])
+    assert matched == {}
+    assert not caplog.records
+
+
 def test_naver_sa_match_rows_to_ids_length_mismatch_skips():
     rows = [{"impCnt": "10"}]
     matched = NaverSearchAdClient._match_rows_to_ids(["kw-1", "kw-2"], rows)

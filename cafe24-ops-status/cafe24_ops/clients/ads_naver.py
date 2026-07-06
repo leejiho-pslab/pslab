@@ -167,13 +167,17 @@ class NaverSearchAdClient:
     def _match_rows_to_ids(ids: list[str], rows: list[dict]) -> dict[str, dict]:
         """/stats 응답 행을 요청 id에 매칭한다.
 
-        공식 문서에 행별 id echo 여부가 명확하지 않아 방어적으로 처리: 행에 id 계열
-        필드가 있으면 그걸로 매칭하고, 없으면 요청과 같은 순서로 온다고 가정해 위치
-        기반 매칭한다. 길이가 안 맞으면 매칭을 포기(빈 dict)하고 경고 로그를 남겨
-        실 API 응답으로 스키마를 확인할 수 있게 한다.
+        실 라이브 검증 결과 응답 행에는 id 계열 필드가 실제로 붙어 온다(그래서 이
+        분기가 항상 우선 매칭에 성공). 응답 행이 아예 0개인 경우는 매칭 실패가
+        아니라 "해당 배치의 키워드 전부가 그 날짜에 노출/클릭이 없었다"는 정상적인
+        결과이므로(광고 플랫폼 stats API의 흔한 동작 — 무활동 항목은 행 자체가 없음)
+        경고 없이 조용히 스킵한다. 행이 있는데 id 필드도 없고 개수도 안 맞는, 진짜
+        스키마 불일치로 볼 수 있는 경우에만 경고를 남긴다.
         """
+        if not rows:
+            return {}
         id_keys = ("id", "nccKeywordId")
-        if rows and any(k in rows[0] for k in id_keys):
+        if any(k in rows[0] for k in id_keys):
             out = {}
             for row in rows:
                 rid = next((row[k] for k in id_keys if k in row), None)
@@ -186,14 +190,13 @@ class NaverSearchAdClient:
                     len(ids), len(rows))
         return {}
 
-    # 실 라이브 진단 결과: 100개씩 청크로 보내면 대부분 빈 응답(행 0개)이 오고, 마지막
-    # 소수 id만 남은 청크에서만 정상 응답이 왔다 — 요청 간격(스로틀)을 지켜도 동일해
-    # 단순 초당 호출 제한 문제가 아니라 batch 크기 자체의 문제로 보인다. 임계값이
-    # 정확히 얼마인지 문서로 확인 못해 보수적으로 작게 잡는다.
-    _KEYWORD_STATS_CHUNK = 20
-
     def fetch_keyword_facts(self, date: str) -> list[dict]:
-        """파워링크/플레이스 키워드별 성과. 캠페인→광고그룹→키워드 계층을 따라가 집계한다."""
+        """파워링크/플레이스 키워드별 성과. 캠페인→광고그룹→키워드 계층을 따라가 집계한다.
+
+        실 라이브 검증 결과: /stats 응답 행에는 id 필드가 실제로 붙어 오고(그래서
+        id 기반 매칭이 항상 성공), 그 날 노출/클릭이 없던 키워드는 배치 응답에서
+        행 자체가 빠진다(플랫폼 stats API의 흔한 동작) — 청크 크기와는 무관.
+        """
         campaigns = [c for c in self.list_campaigns() if c["type"] in CAMPAIGN_TYPE_CHANNEL]
         if not campaigns:
             return []
@@ -213,13 +216,12 @@ class NaverSearchAdClient:
 
             rows_by_id: dict[str, dict] = {}
             kw_ids = [k["id"] for k in keywords]
-            chunk_size = self._KEYWORD_STATS_CHUNK
-            for i in range(0, len(kw_ids), chunk_size):
-                chunk = kw_ids[i:i + chunk_size]
+            for i in range(0, len(kw_ids), 100):
+                chunk = kw_ids[i:i + 100]
                 data = self.stats(chunk, date).get("data") or []
-                log.info("네이버SA 키워드 stats: %s 청크 %d개 id → 응답 %d행",
-                         channel, len(chunk), len(data))
                 rows_by_id.update(self._match_rows_to_ids(chunk, data))
+            log.info("네이버SA 키워드 stats: %s 키워드 %d개 중 %d개에 %s 활동 있음",
+                     channel, len(kw_ids), len(rows_by_id), date)
 
             for kw in keywords:
                 row = rows_by_id.get(kw["id"])
