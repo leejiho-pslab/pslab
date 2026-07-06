@@ -124,6 +124,36 @@ def test_naver_sa_match_rows_to_ids_length_mismatch_skips():
     assert matched == {}
 
 
+def test_naver_sa_from_account_enables_request_throttle(monkeypatch):
+    """라이브 경로(from_account)만 요청 간격을 강제한다 — 직접 생성(테스트)은 즉시 실행."""
+    monkeypatch.setenv("NAVER_SA_API_KEY", "k")
+    monkeypatch.setenv("NAVER_SA_SECRET_KEY", "s")
+    c = NaverSearchAdClient.from_account({"account_id": "cust"})
+    assert c._request_interval > 0
+    c.close()
+
+    c2 = NaverSearchAdClient("key", "sec", "cust")
+    assert c2._request_interval == 0
+    c2.close()
+
+
+def test_naver_sa_get_throttles_between_calls():
+    """request_interval > 0 이면 연속 호출 사이 최소 간격을 지킨다."""
+    import time
+
+    def handler(req):
+        return httpx.Response(200, json={"data": []})
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler), request_interval=0.2)
+    start = time.monotonic()
+    c._get("/ncc/campaigns", {})
+    c._get("/ncc/campaigns", {})
+    elapsed = time.monotonic() - start
+    assert elapsed >= 0.2
+    c.close()
+
+
 def test_naver_sa_chunks_over_100_ids():
     calls = {"stats": 0}
 

@@ -14,12 +14,18 @@ import hmac
 import json
 import logging
 import os
+import time
 
 import httpx
 
 log = logging.getLogger(__name__)
 
 NAVER_SA_BASE = "https://api.searchad.naver.com"
+
+# 네이버SA API 는 초당 호출 제한이 있어(공식 권장: 요청 간 0.5초 이상 간격), 캠페인/광고그룹/
+# 키워드 계층을 훑느라 순차 호출이 많은 키워드 리포트에서는 매 호출 사이 이 간격을 지켜야
+# "정상 200 + 빈 데이터"로 조용히 누락되는 일을 막을 수 있다.
+_REQ_INTERVAL = 0.5
 
 # 캠페인 유형(campaignTp) → 채널. 파워링크/플레이스는 광고 탭에서 성과를 따로 봐야 하는
 # 대표 상품이라 분리하고, 그 외 유형(쇼핑/브랜드검색/파워컨텐츠 등)은 광고비가 조용히
@@ -71,12 +77,17 @@ class NaverSearchAdClient:
         transport: httpx.BaseTransport | None = None,
         base_url: str = NAVER_SA_BASE,
         timeout: float = 30.0,
+        request_interval: float = 0.0,
     ):
         self.api_key = api_key
         self.secret_key = secret_key
         self.customer_id = customer_id
         self._ts = timestamp_fn  # 테스트 주입용
         self._http = httpx.Client(base_url=base_url, transport=transport, timeout=timeout)
+        # 캠페인→광고그룹→키워드 계층을 훑는 키워드 리포트는 순차 호출이 많아, 라이브
+        # 호출(from_account)에서만 _REQ_INTERVAL 간격을 강제한다(테스트는 0으로 즉시 실행).
+        self._request_interval = request_interval
+        self._last_request_ts: float | None = None
 
     @classmethod
     def from_account(cls, acc: dict, transport: httpx.BaseTransport | None = None) -> "NaverSearchAdClient":
@@ -85,11 +96,10 @@ class NaverSearchAdClient:
             secret_key=os.environ.get("NAVER_SA_SECRET_KEY", ""),
             customer_id=str(acc.get("account_id") or os.environ.get("NAVER_SA_CUSTOMER_ID", "")),
             transport=transport,
+            request_interval=_REQ_INTERVAL,
         )
 
     def _headers(self, method: str, path: str) -> dict:
-        import time
-
         ts = self._ts() if self._ts else str(int(time.time() * 1000))
         return {
             "X-Timestamp": ts,
@@ -98,7 +108,17 @@ class NaverSearchAdClient:
             "X-Signature": sign(self.secret_key, ts, method, path),
         }
 
+    def _throttle(self) -> None:
+        if self._request_interval <= 0:
+            return
+        if self._last_request_ts is not None:
+            wait = self._request_interval - (time.monotonic() - self._last_request_ts)
+            if wait > 0:
+                time.sleep(wait)
+        self._last_request_ts = time.monotonic()
+
     def _get(self, path: str, params: dict) -> dict:
+        self._throttle()
         r = self._http.get(path, params=params, headers=self._headers("GET", path))
         r.raise_for_status()
         return r.json()
