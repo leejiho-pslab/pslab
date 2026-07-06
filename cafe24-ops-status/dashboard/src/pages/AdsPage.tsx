@@ -11,6 +11,7 @@ import { Loading, ErrorState } from "../components/States";
 
 const CH_LABEL: Record<string, string> = {
   meta: "Meta", google: "Google", naver: "Naver", kakao: "Kakao",
+  naver_powerlink: "네이버 파워링크", naver_place: "네이버 플레이스", naver_other: "네이버 기타",
 };
 const won = (v: number) => formatValue(v, "currency");
 const num = (v: number) => Math.round(v).toLocaleString("ko-KR");
