@@ -51,6 +51,7 @@ from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_trend,
     creatives_ranked,
 )
+from cafe24_ops.etl.keyword_metrics import keyword_report_range  # noqa: E402
 from cafe24_ops.store import Store  # noqa: E402
 
 
@@ -356,6 +357,20 @@ def creatives_trend_ep(
     try:
         return {"creative_id": creative_id,
                 "rows": creative_trend(store, creative_id, date_from, date_to)}
+    finally:
+        store.close()
+
+
+@app.get("/api/ads/keywords")
+def ads_keywords_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    channel: str = Query(default="naver_powerlink"),
+    sort: str = Query(default="ad_cost"),
+) -> dict:
+    store = _store()
+    try:
+        return keyword_report_range(store, date_from, date_to, channel, sort)
     finally:
         store.close()
 

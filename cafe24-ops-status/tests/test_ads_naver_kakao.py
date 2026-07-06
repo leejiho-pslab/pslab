@@ -69,6 +69,61 @@ def test_naver_sa_splits_powerlink_place_by_campaign_type():
     c.close()
 
 
+def test_naver_sa_fetch_keyword_facts_full_hierarchy():
+    """캠페인→광고그룹→키워드 계층을 따라가 키워드별 facts 를 만들어야 한다."""
+    def handler(req):
+        path = req.url.path
+        if path == "/ncc/campaigns":
+            return httpx.Response(200, json=[
+                {"nccCampaignId": "cmp-1", "campaignTp": "WEB_SITE"},
+                {"nccCampaignId": "cmp-2", "campaignTp": "SHOPPING"},  # 파워링크/플레이스 아니므로 제외
+            ])
+        if path == "/ncc/adgroups":
+            assert req.url.params.get("nccCampaignId") == "cmp-1"
+            return httpx.Response(200, json=[{"nccAdgroupId": "grp-1", "name": "겨울신상"}])
+        if path == "/ncc/keywords":
+            assert req.url.params.get("nccAdgroupId") == "grp-1"
+            return httpx.Response(200, json=[
+                {"nccKeywordId": "kw-1", "keyword": "keek 목베개"},
+                {"nccKeywordId": "kw-2", "keyword": "여행 목베개"},
+            ])
+        if path == "/stats":
+            ids = req.url.params.get_list("ids")
+            assert ids == ["kw-1", "kw-2"]
+            return httpx.Response(200, json={"data": [
+                {"salesAmt": "1000", "impCnt": "100", "clkCnt": "10", "ccnt": "1"},
+                {"salesAmt": "500", "impCnt": "50", "clkCnt": "5", "ccnt": "0"},
+            ]})
+        return httpx.Response(404)
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    facts = c.fetch_keyword_facts("2026-06-17")
+    by_kw = {f["dims"]["keyword"]: f["value"] for f in facts if f["metric"] == "ad_cost"}
+    assert by_kw == {"keek 목베개": 1000.0, "여행 목베개": 500.0}
+    assert all(f["dims"]["adgroup"] == "겨울신상" for f in facts)
+    assert all(f["dims"]["channel"] == "naver_powerlink" for f in facts)
+    c.close()
+
+
+def test_naver_sa_match_rows_to_ids_by_id_field():
+    rows = [{"id": "kw-2", "impCnt": "5"}, {"id": "kw-1", "impCnt": "10"}]
+    matched = NaverSearchAdClient._match_rows_to_ids(["kw-1", "kw-2"], rows)
+    assert matched["kw-1"]["impCnt"] == "10" and matched["kw-2"]["impCnt"] == "5"
+
+
+def test_naver_sa_match_rows_to_ids_positional_fallback():
+    rows = [{"impCnt": "10"}, {"impCnt": "5"}]
+    matched = NaverSearchAdClient._match_rows_to_ids(["kw-1", "kw-2"], rows)
+    assert matched["kw-1"]["impCnt"] == "10" and matched["kw-2"]["impCnt"] == "5"
+
+
+def test_naver_sa_match_rows_to_ids_length_mismatch_skips():
+    rows = [{"impCnt": "10"}]
+    matched = NaverSearchAdClient._match_rows_to_ids(["kw-1", "kw-2"], rows)
+    assert matched == {}
+
+
 def test_naver_sa_chunks_over_100_ids():
     calls = {"stats": 0}
 

@@ -7,6 +7,7 @@ from .base import BaseCollector
 from .cafe24 import Cafe24Collector
 from .competitor import CompetitorCollector
 from .creative import CreativeCollector
+from .naver_keyword import NaverKeywordCollector
 
 
 def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
@@ -15,6 +16,7 @@ def build_collectors(config: AppConfig, mode: str) -> list[BaseCollector]:
         Cafe24Collector(config, mode),
         AdsCollector(config, mode),
         CreativeCollector(config, mode),
+        NaverKeywordCollector(config, mode),
         CompetitorCollector(config, mode),
     ]
 
@@ -24,6 +26,7 @@ __all__ = [
     "Cafe24Collector",
     "AdsCollector",
     "CreativeCollector",
+    "NaverKeywordCollector",
     "CompetitorCollector",
     "build_collectors",
 ]

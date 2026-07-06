@@ -12,9 +12,12 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
 import os
 
 import httpx
+
+log = logging.getLogger(__name__)
 
 NAVER_SA_BASE = "https://api.searchad.naver.com"
 
@@ -117,6 +120,97 @@ class NaverSearchAdClient:
             "timeRange": json.dumps({"since": date, "until": date}),
         }
         return self._get("/stats", params)
+
+    def list_adgroups(self, campaign_ids: list[str]) -> list[dict]:
+        """캠페인별 광고그룹 id + 이름. 키워드 리포트의 '캠페인'(실제로는 광고그룹명) 컬럼에 쓰인다."""
+        out: list[dict] = []
+        for cid in campaign_ids:
+            data = self._get("/ncc/adgroups", {"nccCampaignId": cid})
+            items = data if isinstance(data, list) else data.get("data", [])
+            for a in items:
+                if a.get("nccAdgroupId"):
+                    out.append({"id": a["nccAdgroupId"], "campaign_id": cid, "name": a.get("name", "")})
+        return out
+
+    def list_keywords(self, adgroup_ids: list[str]) -> list[dict]:
+        """광고그룹별 키워드 id + 키워드 텍스트."""
+        out: list[dict] = []
+        for gid in adgroup_ids:
+            data = self._get("/ncc/keywords", {"nccAdgroupId": gid})
+            items = data if isinstance(data, list) else data.get("data", [])
+            for k in items:
+                if k.get("nccKeywordId"):
+                    out.append({"id": k["nccKeywordId"], "adgroup_id": gid, "keyword": k.get("keyword", "")})
+        return out
+
+    @staticmethod
+    def _match_rows_to_ids(ids: list[str], rows: list[dict]) -> dict[str, dict]:
+        """/stats 응답 행을 요청 id에 매칭한다.
+
+        공식 문서에 행별 id echo 여부가 명확하지 않아 방어적으로 처리: 행에 id 계열
+        필드가 있으면 그걸로 매칭하고, 없으면 요청과 같은 순서로 온다고 가정해 위치
+        기반 매칭한다. 길이가 안 맞으면 매칭을 포기(빈 dict)하고 경고 로그를 남겨
+        실 API 응답으로 스키마를 확인할 수 있게 한다.
+        """
+        id_keys = ("id", "nccKeywordId")
+        if rows and any(k in rows[0] for k in id_keys):
+            out = {}
+            for row in rows:
+                rid = next((row[k] for k in id_keys if k in row), None)
+                if rid:
+                    out[rid] = row
+            return out
+        if len(rows) == len(ids):
+            return dict(zip(ids, rows))
+        log.warning("네이버SA 키워드 stats: id 수(%d)와 응답 행 수(%d)가 달라 매칭 불가 — 스킵",
+                    len(ids), len(rows))
+        return {}
+
+    def fetch_keyword_facts(self, date: str) -> list[dict]:
+        """파워링크/플레이스 키워드별 성과. 캠페인→광고그룹→키워드 계층을 따라가 집계한다."""
+        campaigns = [c for c in self.list_campaigns() if c["type"] in CAMPAIGN_TYPE_CHANNEL]
+        if not campaigns:
+            return []
+        ids_by_channel: dict[str, list[str]] = {}
+        for c in campaigns:
+            ids_by_channel.setdefault(CAMPAIGN_TYPE_CHANNEL[c["type"]], []).append(c["id"])
+
+        facts: list[dict] = []
+        for channel, campaign_ids in ids_by_channel.items():
+            adgroups = self.list_adgroups(campaign_ids)
+            if not adgroups:
+                continue
+            adgroup_name = {a["id"]: a["name"] for a in adgroups}
+            keywords = self.list_keywords([a["id"] for a in adgroups])
+            if not keywords:
+                continue
+
+            rows_by_id: dict[str, dict] = {}
+            kw_ids = [k["id"] for k in keywords]
+            for i in range(0, len(kw_ids), 100):
+                chunk = kw_ids[i:i + 100]
+                data = self.stats(chunk, date).get("data") or []
+                rows_by_id.update(self._match_rows_to_ids(chunk, data))
+
+            for kw in keywords:
+                row = rows_by_id.get(kw["id"])
+                if not row:
+                    continue
+                dims = {
+                    "channel": channel,
+                    "keyword": kw.get("keyword") or kw["id"],
+                    "adgroup": adgroup_name.get(kw["adgroup_id"], ""),
+                }
+                values = {
+                    "impressions": float(row.get("impCnt", 0) or 0),
+                    "clicks": float(row.get("clkCnt", 0) or 0),
+                    "ad_cost": float(row.get("salesAmt", 0) or 0),
+                    "conversions": float(row.get("ccnt", 0) or 0),
+                }
+                for metric, value in values.items():
+                    facts.append({"date": date, "source": "keyword", "metric": metric,
+                                  "value": value, "dims": dims})
+        return facts
 
     def fetch_facts(self, date: str) -> list[dict]:
         campaigns = self.list_campaigns()

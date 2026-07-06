@@ -205,6 +205,37 @@ export interface CreativeOverview {
   by_channel: CreativeByChannel[];
 }
 
+// ── 광고 히스토리(네이버 키워드) ─────────────────────────────────
+export interface KeywordRow {
+  keyword: string;
+  adgroup: string;
+  impressions: number;
+  clicks: number;
+  conversions: number;
+  ad_cost: number;
+  ctr: number | null;
+  cpc: number | null;
+}
+
+export interface KeywordSummary {
+  keyword_count: number;
+  impressions: number;
+  clicks: number;
+  ad_cost: number;
+  conversions: number;
+  ctr: number | null;
+  cpc: number | null;
+}
+
+export interface KeywordReport {
+  from: string;
+  to: string;
+  channel: string;
+  sort: string;
+  summary: KeywordSummary;
+  keywords: KeywordRow[];
+}
+
 export interface CreativeFatigue {
   creative_id: string;
   name: string;

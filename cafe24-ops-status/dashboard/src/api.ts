@@ -13,6 +13,7 @@ import type {
   Creative,
   CreativeFatigue,
   CreativeOverview,
+  KeywordReport,
   DailyDetailResponse,
   DailyResponse,
   DigestResponse,
@@ -72,6 +73,8 @@ export const api = {
     get<CreativeOverview>(`/api/creatives/overview?from=${from}&to=${to}&sort=${sort}`),
   creativesFatigue: (date?: string) =>
     get<{ date: string | null; items: CreativeFatigue[] }>(`/api/creatives/fatigue${q(date)}`),
+  adsKeywords: (from: string, to: string, channel = "naver_powerlink", sort = "ad_cost") =>
+    get<KeywordReport>(`/api/ads/keywords?from=${from}&to=${to}&channel=${channel}&sort=${sort}`),
 
   // 경쟁사
   competitors: (date?: string) =>

@@ -216,6 +216,8 @@ button { cursor: pointer; }
   padding: 4px 9px; font-size: 12px; cursor: pointer; color: var(--sub);
 }
 .sort-tabs button.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+.main-tabs { margin-bottom: 14px; }
+.main-tabs button { font-size: 13px; padding: 6px 14px; }
 
 /* 소재 하이라이트 */
 .card.highlight { border-color: var(--blue); background: #f5f9ff; }
