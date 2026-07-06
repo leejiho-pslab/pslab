@@ -56,6 +56,7 @@ jobs:
           check "/api/ads/channel-trend?from=$F&to=$B"
           check "/api/creatives/overview?from=$F&to=$B&sort=roas"
           check "/api/creatives/fatigue?date=$B"
+          check "/api/ads/keywords?from=$F&to=$B&channel=naver_powerlink&sort=ad_cost"
           check "/api/competitors?date=$B"
           check "/api/competitors/trend?from=$F&to=$B"
           check "/api/competitors/best-changes?date=$B"
