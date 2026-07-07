@@ -31,6 +31,7 @@ import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
+import { loadCredentials } from './core/config.js';
 import { makeInsightComment } from './core/insight.js';
 import { createNotifier } from './core/notify.js';
 import { WeeklyReportEngine, WeeklyReportStore } from './core/weekly.js';
@@ -97,6 +98,11 @@ async function buildContent(args: Args): Promise<PostContent> {
   }
   if (typeof args.title === 'string') content.title = args.title;
   return content;
+}
+
+/** 텔레그램 HTML parse_mode용 이스케이프 (에러 문자열에 <>&가 섞여도 전송 실패 방지) */
+function escHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function printResults(label: string, results: { platform: string; ok: boolean; url?: string; error?: string }[]): void {
@@ -413,13 +419,32 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         media,
         tags: includesYoutube && it.ytTags?.length ? it.ytTags : [],
       };
-      console.log(`\n▶ 발행: [${autoChannels.join(',')}] ${content.title} (${imgs.length}장)`);
+      // 자격 증명이 아예 없는 채널(의도적 미연결)은 조용히 건너뛴다.
+      // 자격 증명이 "있는데" 발행이 실패하면(토큰 만료 등) 아래에서 즉시 알림.
+      const configured = autoChannels.filter(
+        (c) => Object.keys(loadCredentials(c)).length > 0,
+      );
+      const unconfigured = autoChannels.filter((c) => !configured.includes(c));
+      if (unconfigured.length > 0) {
+        console.log(`  (자격 증명 미설정 채널 대기: ${unconfigured.join(',')} — ${it.id})`);
+      }
+      if (configured.length === 0) continue;
+
+      console.log(`\n▶ 발행: [${configured.join(',')}] ${content.title} (${imgs.length}장)`);
+      const alertTitle = (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
       // 한 항목 발행 실패가 나머지 항목 발행을 막지 않도록 격리
       let result;
       try {
-        result = await app.publisher.publish(content, { targets: autoChannels });
+        result = await app.publisher.publish(content, { targets: configured });
       } catch (err) {
-        console.log(`  ⚠️ ${it.id} 발행 건너뜀 (${err instanceof Error ? err.message : err})`);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.log(`  ⚠️ ${it.id} 발행 건너뜀 (${msg})`);
+        // 조용한 실패 방지: 실제 발행 모드에선 실패도 즉시 푸시 (내일까지 모르는 사태 차단)
+        if (!dryRun) {
+          await notifier.send(
+            `🔴 <b>발행 실패</b> [${it.id}]\n${escHtml(alertTitle)}\n${escHtml(msg)}\n👉 대시보드 토큰 경고를 확인하세요.`,
+          );
+        }
         continue;
       }
       printResults(`📤 ${it.id}`, result.results);
@@ -428,6 +453,16 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         continue;
       }
       const okResults = result.results.filter((r) => r.ok && r.remoteId);
+      const failed = result.results.filter((r) => !r.ok);
+      // 채널별 실패는 성공 여부와 무관하게 즉시 푸시 — "발행이 멈췄다"를 며칠 뒤에 아는 사태 방지
+      if (failed.length > 0) {
+        const lines = failed
+          .map((f) => `· ${f.platform}: ${escHtml(f.error ?? '알 수 없는 오류')}`)
+          .join('\n');
+        await notifier.send(
+          `🔴 <b>발행 실패</b> [${it.id}] ${failed.map((f) => f.platform).join(',')}\n${escHtml(alertTitle)}\n${lines}\n👉 대시보드 토큰 경고를 확인하세요.`,
+        );
+      }
       if (okResults.length > 0) {
         it.status = 'published';
         it.publishedUrl = okResults[0].url;
@@ -439,11 +474,10 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
           url: r.url,
         }));
         // 발행 후 푸시 알림 (텔레그램) — 설정 없으면 자동 생략
-        const title = (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
         const chs = okResults.map((r) => r.platform).join(', ');
         const link = okResults[0].url ? `\n🔗 ${okResults[0].url}` : '';
         const pushed = await notifier.send(
-          `✅ <b>발행 완료</b> [${chs}]\n${title}${link}`,
+          `✅ <b>발행 완료</b> [${chs}]\n${escHtml(alertTitle)}${link}`,
         );
         if (pushed) console.log('  📲 텔레그램 알림 전송');
       }
@@ -519,14 +553,31 @@ async function cmdCollectInsights(app: App, args: Args): Promise<void> {
 async function cmdCheckTokens(args: Args): Promise<void> {
   const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
   const only = typeof args.client === 'string' ? args.client : 'pslab';
-  const health = await checkTokens();
   const store = new TokenHealthStore(dataDir);
+  const prev = store.load(only);
+  const health = await checkTokens();
   store.save(only, health);
   console.log('\n🔑 토큰 상태 점검');
   for (const t of health.tokens) {
     const icon = t.ok ? (t.warn ? '🟡' : '🟢') : '🔴';
     const exp = t.expiresInDays != null ? ` (만료 ${t.expiresInDays}일 후)` : '';
     console.log(`  ${icon} ${t.label.padEnd(12)} ${t.ok ? '정상' : '오류'}${exp} ${t.detail ?? ''}`);
+  }
+  // 조기 경보: "새로" 생긴 경고만 텔레그램 푸시 (같은 경고 반복 스팸 방지,
+  // 대시보드 배너는 경고가 사라질 때까지 계속 표시됨)
+  const prevWarned = new Set(
+    (prev?.tokens ?? []).filter((t) => t.warn || !t.ok).map((t) => t.label),
+  );
+  const newWarns = health.tokens.filter((t) => (t.warn || !t.ok) && !prevWarned.has(t.label));
+  if (newWarns.length > 0) {
+    const notifier = createNotifier();
+    const lines = newWarns
+      .map((t) => `· ${t.label}: ${escHtml(t.detail ?? '확인 필요')}`)
+      .join('\n');
+    const pushed = await notifier.send(
+      `🟡 <b>토큰 경고</b> — 자동발행이 곧 멈출 수 있어요\n${lines}\n👉 새 토큰 발급 후 GitHub 시크릿을 교체하면 자동 복구됩니다.`,
+    );
+    if (pushed) console.log('  📲 토큰 경고 텔레그램 전송');
   }
 }
 
