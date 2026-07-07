@@ -27,9 +27,9 @@ on:
   workflow_dispatch:
     inputs:
       days:
-        description: "최근 N일 백필 (기본 1)"
+        description: "최근 N일 백필 (빈값 = 스케줄과 동일: 3일 자가치유 수집 + 어제 경쟁사)"
         required: false
-        default: "1"
+        default: ""
 
 jobs:
   collect:
