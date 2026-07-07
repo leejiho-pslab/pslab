@@ -17,8 +17,13 @@ class BaseCollector:
     def __init__(self, config: AppConfig, mode: str = "mock"):
         self.config = config
         self.mode = mode
+        # 소스 내부의 부분 실패(예: ads 소스에서 meta 채널만 오류) 기록용.
+        # 수집 자체는 성공(다른 채널 데이터 반환)해도 여기 남은 오류는 파이프라인이
+        # result.errors 로 승격시켜 일일 브리핑 경고에 잡히게 한다.
+        self.partial_errors: dict[str, str] = {}
 
     def collect(self, date: str) -> list[dict]:
+        self.partial_errors = {}
         if self.mode == "live":
             return self.collect_live(date)
         return self.collect_mock(date)

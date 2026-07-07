@@ -57,6 +57,10 @@ class NaverKeywordCollector(BaseCollector):
         acc = next((a for a in self.config.sources.ads if a.get("channel") == "naver"), {})
         client = NaverSearchAdClient.from_account(acc)
         try:
-            return client.fetch_keyword_facts(date)
+            facts = client.fetch_keyword_facts(date)
+            if client.last_partial_error:
+                # 부분 실패를 파이프라인에 알림 → 경고 승격 + 기존 데이터 보존(upsert만)
+                self.partial_errors["naver_stats"] = client.last_partial_error
+            return facts
         finally:
             client.close()

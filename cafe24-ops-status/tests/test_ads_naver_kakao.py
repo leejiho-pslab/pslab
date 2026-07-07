@@ -147,6 +147,135 @@ def test_naver_sa_from_account_enables_request_throttle(monkeypatch):
     c2.close()
 
 
+def test_naver_sa_get_retries_transient_500_then_succeeds():
+    """일시적 5xx 는 재시도해 성공해야 한다 — 순차 호출 수십 회 중 blip 1회 보호."""
+    calls = {"n": 0}
+
+    def handler(req):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            return httpx.Response(500, json={"error": "server"})
+        return httpx.Response(200, json=[{"nccCampaignId": "cmp-1", "campaignTp": "WEB_SITE"}])
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    assert c.list_campaigns() == [{"id": "cmp-1", "type": "WEB_SITE"}]
+    assert calls["n"] == 3
+    c.close()
+
+
+def test_naver_sa_get_does_not_retry_permanent_4xx():
+    """403 같은 영구 오류는 재시도 없이 즉시 올라와야 한다(요청 낭비 방지)."""
+    import pytest
+
+    calls = {"n": 0}
+
+    def handler(req):
+        calls["n"] += 1
+        return httpx.Response(403, json={"error": "forbidden"})
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        c.list_campaigns()
+    assert calls["n"] == 1
+    c.close()
+
+
+def test_naver_sa_get_gives_up_after_max_attempts():
+    """계속되는 5xx 는 최대 시도 후 예외로 올라와야 한다(무한 재시도 금지)."""
+    import pytest
+
+    calls = {"n": 0}
+
+    def handler(req):
+        calls["n"] += 1
+        return httpx.Response(503, json={"error": "unavailable"})
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    with pytest.raises(httpx.HTTPStatusError):
+        c.list_campaigns()
+    assert calls["n"] == NaverSearchAdClient._MAX_ATTEMPTS
+    c.close()
+
+
+def _keyword_hierarchy_handler(stats_fn):
+    """캠페인 1 → 광고그룹 1 → 키워드 150개(2청크) 계층 mock. stats 응답만 주입."""
+    def handler(req):
+        path = req.url.path
+        if path == "/ncc/campaigns":
+            return httpx.Response(200, json=[{"nccCampaignId": "cmp-1", "campaignTp": "WEB_SITE"}])
+        if path == "/ncc/adgroups":
+            return httpx.Response(200, json=[{"nccAdgroupId": "grp-1", "name": "그룹1"}])
+        if path == "/ncc/keywords":
+            return httpx.Response(200, json=[
+                {"nccKeywordId": f"kw-{i}", "keyword": f"키워드{i}"} for i in range(150)])
+        if path == "/stats":
+            return stats_fn(req.url.params.get_list("ids"))
+        return httpx.Response(404)
+    return handler
+
+
+def test_naver_sa_keyword_one_chunk_failure_keeps_other_chunks():
+    """청크 하나가 (재시도 후에도) 실패해도 나머지 청크의 키워드 성과는 살아남아야 한다."""
+    def stats_fn(ids):
+        if "kw-0" in ids:  # 첫 청크(100개)는 항상 실패
+            return httpx.Response(500, json={"error": "server"})
+        return httpx.Response(200, json={"data": [
+            {"id": kid, "salesAmt": "100", "impCnt": "10", "clkCnt": "1", "ccnt": "0"}
+            for kid in ids]})
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(_keyword_hierarchy_handler(stats_fn)))
+    facts = c.fetch_keyword_facts("2026-06-17")
+    kws = {f["dims"]["keyword"] for f in facts}
+    assert "키워드100" in kws and "키워드0" not in kws  # 둘째 청크만 수집
+    assert c.last_partial_error and "1/2" in c.last_partial_error
+    c.close()
+
+
+def test_naver_sa_keyword_all_chunks_failed_raises():
+    """전 청크 실패 = 채널 데이터 전무 → 예외로 올려 기존 데이터가 덮이지 않게 한다."""
+    import pytest
+
+    def stats_fn(ids):
+        return httpx.Response(500, json={"error": "server"})
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(_keyword_hierarchy_handler(stats_fn)))
+    with pytest.raises(RuntimeError):
+        c.fetch_keyword_facts("2026-06-17")
+    c.close()
+
+
+def test_naver_sa_adgroup_listing_failure_skips_campaign_only():
+    """한 캠페인의 광고그룹 조회 실패가 다른 캠페인 수집을 막지 않아야 한다."""
+    def handler(req):
+        path = req.url.path
+        if path == "/ncc/campaigns":
+            return httpx.Response(200, json=[
+                {"nccCampaignId": "cmp-bad", "campaignTp": "WEB_SITE"},
+                {"nccCampaignId": "cmp-ok", "campaignTp": "WEB_SITE"},
+            ])
+        if path == "/ncc/adgroups":
+            if req.url.params.get("nccCampaignId") == "cmp-bad":
+                return httpx.Response(500, json={"error": "server"})
+            return httpx.Response(200, json=[{"nccAdgroupId": "grp-ok", "name": "정상그룹"}])
+        if path == "/ncc/keywords":
+            return httpx.Response(200, json=[{"nccKeywordId": "kw-ok", "keyword": "정상키워드"}])
+        if path == "/stats":
+            return httpx.Response(200, json={"data": [
+                {"id": "kw-ok", "salesAmt": "100", "impCnt": "10", "clkCnt": "1", "ccnt": "0"}]})
+        return httpx.Response(404)
+
+    c = NaverSearchAdClient("key", "sec", "cust", timestamp_fn=lambda: "1",
+                            transport=httpx.MockTransport(handler))
+    facts = c.fetch_keyword_facts("2026-06-17")
+    assert {f["dims"]["keyword"] for f in facts} == {"정상키워드"}
+    c.close()
+
+
 def test_naver_sa_get_throttles_between_calls():
     """request_interval > 0 이면 연속 호출 사이 최소 간격을 지킨다."""
     import time
