@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-06T13:06:03.324Z",
+  "checkedAt": "2026-07-07T02:00:50.528Z",
   "tokens": [
     {
       "label": "Instagram",
@@ -10,6 +10,18 @@
     {
       "label": "Threads",
       "platform": "threads",
+      "ok": true,
+      "warn": false
+    },
+    {
+      "label": "YouTube",
+      "platform": "youtube",
+      "ok": true,
+      "warn": false
+    },
+    {
+      "label": "Blogger",
+      "platform": "blogger",
       "ok": true,
       "warn": false
     }
