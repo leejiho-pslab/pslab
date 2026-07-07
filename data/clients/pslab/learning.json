@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-07T11:58:33.566Z",
-  "sampleSize": 10,
+  "generatedAt": "2026-07-07T12:17:15.456Z",
+  "sampleSize": 11,
   "variants": [
     {
       "key": "A",
@@ -11,10 +11,10 @@
     },
     {
       "key": "B",
-      "posts": 4,
-      "avgEngagement": 0.2670754244792669,
-      "avgLikes": 344.25,
-      "avgViews": 6496.75
+      "posts": 5,
+      "avgEngagement": 0.21366033958341352,
+      "avgLikes": 275.4,
+      "avgViews": 5197.4
     },
     {
       "key": "C",
@@ -27,10 +27,10 @@
   "channels": [
     {
       "key": "instagram",
-      "posts": 3,
-      "avgEngagement": 1.6666666666666667,
-      "avgLikes": 1.6666666666666667,
-      "avgViews": 1
+      "posts": 4,
+      "avgEngagement": 1.25,
+      "avgLikes": 1.25,
+      "avgViews": 0.75
     },
     {
       "key": "youtube",
@@ -56,18 +56,18 @@
   ],
   "hours": [
     {
-      "key": "21:00",
-      "posts": 4,
-      "avgEngagement": 1.017075424479267,
-      "avgLikes": 345,
-      "avgViews": 6493.75
-    },
-    {
       "key": "19:00",
       "posts": 1,
       "avgEngagement": 1,
       "avgLikes": 1,
       "avgViews": 1
+    },
+    {
+      "key": "21:00",
+      "posts": 5,
+      "avgEngagement": 0.8136603395834137,
+      "avgLikes": 276,
+      "avgViews": 5195
     },
     {
       "key": "20:00",
@@ -108,10 +108,10 @@
     },
     {
       "key": "chart",
-      "posts": 2,
-      "avgEngagement": 0.02254014380984315,
-      "avgLikes": 550,
-      "avgViews": 13420.5
+      "posts": 3,
+      "avgEngagement": 0.015026762539895433,
+      "avgLikes": 366.6666666666667,
+      "avgViews": 8947
     },
     {
       "key": "rocket",
@@ -122,10 +122,10 @@
     }
   ],
   "bestVariant": "A",
-  "bestHour": "21:00",
+  "bestHour": "19:00",
   "hints": [
     "디자인 A안이 평균 참여율 101.1%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
-    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
+    "19:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
