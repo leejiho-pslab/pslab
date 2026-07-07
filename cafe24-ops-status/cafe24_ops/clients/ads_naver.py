@@ -88,6 +88,9 @@ class NaverSearchAdClient:
         # 호출(from_account)에서만 _REQ_INTERVAL 간격을 강제한다(테스트는 0으로 즉시 실행).
         self._request_interval = request_interval
         self._last_request_ts: float | None = None
+        # 직전 fetch_keyword_facts 의 부분 실패 요약(없으면 None). 수집기가 읽어
+        # 파이프라인 partial_errors 로 승격 → 부분 수집이 조용히 지나가지 않게 한다.
+        self.last_partial_error: str | None = None
 
     @classmethod
     def from_account(cls, acc: dict, transport: httpx.BaseTransport | None = None) -> "NaverSearchAdClient":
@@ -117,11 +120,33 @@ class NaverSearchAdClient:
                 time.sleep(wait)
         self._last_request_ts = time.monotonic()
 
+    # 일시적 오류(레이트리밋/서버 오류/네트워크 순단)만 재시도한다. 키워드 리포트는
+    # 순차 호출이 수십 회라 blip 한 번이 그날 수집 전체를 무너뜨리지 않게 하는 안전망.
+    # 4xx(429 제외)는 요청 자체의 문제라 재시도해도 소용없으니 즉시 올린다.
+    _RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+    _MAX_ATTEMPTS = 3
+
     def _get(self, path: str, params: dict) -> dict:
-        self._throttle()
-        r = self._http.get(path, params=params, headers=self._headers("GET", path))
-        r.raise_for_status()
-        return r.json()
+        last_exc: Exception | None = None
+        for attempt in range(1, self._MAX_ATTEMPTS + 1):
+            self._throttle()
+            try:
+                r = self._http.get(path, params=params, headers=self._headers("GET", path))
+                r.raise_for_status()
+                return r.json()
+            except httpx.HTTPStatusError as exc:
+                if exc.response.status_code not in self._RETRY_STATUSES:
+                    raise
+                last_exc = exc
+            except httpx.TransportError as exc:
+                last_exc = exc
+            if attempt < self._MAX_ATTEMPTS:
+                # 백오프는 요청 간격에 비례(라이브 0.5초→0.5/1.0초). 테스트(간격 0)는 대기 없음.
+                time.sleep(self._request_interval * attempt)
+                log.warning("네이버SA %s 일시 오류(시도 %d/%d): %s — 재시도",
+                            path, attempt, self._MAX_ATTEMPTS, last_exc)
+        assert last_exc is not None
+        raise last_exc
 
     def list_campaigns(self) -> list[dict]:
         """전체 캠페인의 id + 유형(campaignTp). 파워링크/플레이스 분리 집계에 쓰인다."""
@@ -142,10 +167,18 @@ class NaverSearchAdClient:
         return self._get("/stats", params)
 
     def list_adgroups(self, campaign_ids: list[str]) -> list[dict]:
-        """캠페인별 광고그룹 id + 이름. 키워드 리포트의 '캠페인'(실제로는 광고그룹명) 컬럼에 쓰인다."""
+        """캠페인별 광고그룹 id + 이름. 키워드 리포트의 '캠페인'(실제로는 광고그룹명) 컬럼에 쓰인다.
+
+        캠페인 하나의 조회 실패(재시도 후에도)가 나머지 캠페인의 수집까지 막지 않게
+        건너뛰고 경고만 남긴다 — 부분 수집이 전무(全無)보다 낫다.
+        """
         out: list[dict] = []
         for cid in campaign_ids:
-            data = self._get("/ncc/adgroups", {"nccCampaignId": cid})
+            try:
+                data = self._get("/ncc/adgroups", {"nccCampaignId": cid})
+            except httpx.HTTPError as exc:
+                log.warning("네이버SA 광고그룹 조회 실패(campaign=%s) — 건너뜀: %s", cid, exc)
+                continue
             items = data if isinstance(data, list) else data.get("data", [])
             for a in items:
                 if a.get("nccAdgroupId"):
@@ -153,10 +186,14 @@ class NaverSearchAdClient:
         return out
 
     def list_keywords(self, adgroup_ids: list[str]) -> list[dict]:
-        """광고그룹별 키워드 id + 키워드 텍스트."""
+        """광고그룹별 키워드 id + 키워드 텍스트. (광고그룹 단위 장애 격리 — list_adgroups와 동일)"""
         out: list[dict] = []
         for gid in adgroup_ids:
-            data = self._get("/ncc/keywords", {"nccAdgroupId": gid})
+            try:
+                data = self._get("/ncc/keywords", {"nccAdgroupId": gid})
+            except httpx.HTTPError as exc:
+                log.warning("네이버SA 키워드 조회 실패(adgroup=%s) — 건너뜀: %s", gid, exc)
+                continue
             items = data if isinstance(data, list) else data.get("data", [])
             for k in items:
                 if k.get("nccKeywordId"):
@@ -197,6 +234,7 @@ class NaverSearchAdClient:
         id 기반 매칭이 항상 성공), 그 날 노출/클릭이 없던 키워드는 배치 응답에서
         행 자체가 빠진다(플랫폼 stats API의 흔한 동작) — 청크 크기와는 무관.
         """
+        self.last_partial_error = None
         campaigns = [c for c in self.list_campaigns() if c["type"] in CAMPAIGN_TYPE_CHANNEL]
         if not campaigns:
             return []
@@ -216,10 +254,27 @@ class NaverSearchAdClient:
 
             rows_by_id: dict[str, dict] = {}
             kw_ids = [k["id"] for k in keywords]
-            for i in range(0, len(kw_ids), 100):
-                chunk = kw_ids[i:i + 100]
-                data = self.stats(chunk, date).get("data") or []
+            chunks = [kw_ids[i:i + 100] for i in range(0, len(kw_ids), 100)]
+            failed_chunks = 0
+            for chunk in chunks:
+                try:
+                    data = self.stats(chunk, date).get("data") or []
+                except httpx.HTTPError as exc:
+                    failed_chunks += 1
+                    log.warning("네이버SA 키워드 stats 청크 실패(%s, %d개 id) — 건너뜀: %s",
+                                channel, len(chunk), exc)
+                    continue
                 rows_by_id.update(self._match_rows_to_ids(chunk, data))
+            if failed_chunks == len(chunks):
+                # 전 청크 실패 = 채널 데이터가 전무 → 예외로 올려 파이프라인이 소스 오류로
+                # 기록하고, 해당 일자의 기존 keyword 데이터가 빈 결과로 덮이지 않게 한다.
+                raise RuntimeError(
+                    f"네이버SA 키워드 stats 전 청크({len(chunks)}개) 실패: channel={channel}")
+            if failed_chunks:
+                log.warning("네이버SA 키워드 stats: %s 청크 %d/%d개 실패 — 해당 키워드 성과는 이번 수집에서 누락",
+                            channel, failed_chunks, len(chunks))
+                self.last_partial_error = (
+                    f"{channel} stats 청크 {failed_chunks}/{len(chunks)}개 실패(키워드 일부 누락)")
             log.info("네이버SA 키워드 stats: %s 키워드 %d개 중 %d개에 %s 활동 있음",
                      channel, len(kw_ids), len(rows_by_id), date)
 

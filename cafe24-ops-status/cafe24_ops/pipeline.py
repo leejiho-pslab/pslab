@@ -73,6 +73,11 @@ def run_pipeline(
         result.per_source[collector.source] = len(records)
         all_raw.extend(records)
         log.info("   - %-11s %d건", collector.source, len(records))
+        # 소스 내부의 부분 실패(예: ads 소스의 meta 채널만 오류)를 errors 로 승격 —
+        # 수집 자체는 성공해도 collect_status/일일 브리핑 경고에 잡히게 한다.
+        for part, msg in (getattr(collector, "partial_errors", None) or {}).items():
+            result.errors[f"{collector.source}/{part}"] = msg
+            log.warning("   - %-11s 부분 실패(%s): %s", collector.source, part, msg)
     result.raw_count = len(all_raw)
 
     # 2) 정규화 -------------------------------------------------------
@@ -84,7 +89,14 @@ def run_pipeline(
     log.info("③ 집계 + 저장")
     # 이번에 수집된 소스만 해당 일자 facts 를 비우고 다시 넣는다(차원 변경된 낡은 행 제거).
     # 수집 실패/스킵 소스(facts 없음)는 건드리지 않아 기존 데이터를 보존한다.
+    # 단, 부분 실패 소스(예: ads 에서 meta 채널만 오류)는 delete 를 생략하고 upsert 만
+    # 한다 — 재수집 시 이번에 실패한 채널의 기존(정상) 데이터가 빈 결과로 덮여
+    # 사라지지 않게 하기 위함. (낡은 차원 정리는 다음 전체 성공 수집에서 이뤄진다)
+    partial_sources = {c.source for c in cols if getattr(c, "partial_errors", None)}
     for src in {f.source for f in facts}:
+        if src in partial_sources:
+            log.warning("   - %-11s 부분 실패 소스 → 기존 데이터 보존(upsert만)", src)
+            continue
         store.delete_facts(date, src)
     store.upsert_facts(facts)
     kpi = aggregate_daily(date, facts, config.metrics)
