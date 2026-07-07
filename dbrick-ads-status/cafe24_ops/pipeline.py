@@ -7,8 +7,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import date as _date
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 
 from .collectors import build_collectors
 from .config import AppConfig
@@ -18,9 +17,18 @@ from .store import Store
 
 log = logging.getLogger("cafe24_ops.pipeline")
 
+# 수집 기준 타임존 — 한국(KST). 러너가 UTC 라도 "어제"를 KST 로 계산해야 한다.
+# (07:00 KST = 전날 22:00 UTC → UTC 기준 today()-1 은 KST 기준 '그저께'가 되어 하루 누락)
+KST = timezone(timedelta(hours=9))
+
+
+def today_kst() -> str:
+    return datetime.now(KST).date().isoformat()
+
 
 def yesterday() -> str:
-    return (_date.today() - timedelta(days=1)).isoformat()
+    """KST 기준 어제(전일자). 데일리 수집이 KST 07:00 에 돌아도 전날 데이터를 정확히 잡는다."""
+    return (datetime.now(KST).date() - timedelta(days=1)).isoformat()
 
 
 @dataclass
