@@ -1,0 +1,30 @@
+name: pitch assets
+on:
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 이미지 다운로드
+        run: |
+          mkdir -p docs/pitch-assets
+          node -e '
+            const fs=require("fs");
+            const list=JSON.parse(fs.readFileSync("data/pitch-assets.json","utf8"));
+            (async()=>{ for(const it of list){ const r=await fetch(it.url); if(!r.ok){console.log("FAIL",it.name,r.status);continue;} const b=Buffer.from(await r.arrayBuffer()); fs.writeFileSync("docs/pitch-assets/"+it.name+".png", b); console.log("ok",it.name,b.length);} })();
+          '
+      - name: 커밋
+        run: |
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f docs/pitch-assets
+          git commit -m "chore: pitch 배경 이미지 다운로드" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3; do git pull --rebase origin ${{ github.ref_name }} && git push && exit 0; sleep 3; done
