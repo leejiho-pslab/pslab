@@ -84,8 +84,23 @@ jobs:
         run: |
           # 07:00 KST 무인 실행 보호 — 일시적 실패(네트워크/외부 API 순단)면 재시도.
           # 파이프라인은 소스 단위 멱등(성공 소스만 delete+reinsert)이라 재실행이 안전하다.
+          #
+          # 스케줄 실행은 최근 3일 재수집(dbrick 과 동일 패턴):
+          #  - 하루 실행이 빠져도(러너 장애 등) 다음날 자동으로 메움(자가치유)
+          #  - GA4 전환·Meta 광고비의 24~48h 늦은 보정을 매일 최근 이틀치에 반영
+          #  - 단, 경쟁사는 '현재 스냅샷' 소스라 과거 날짜에 쓰면 이력이 오염됨 → 3일
+          #    재수집에서 제외하고 어제 하루만 별도 수집
+          # 수동 실행(days 입력)은 기존처럼 그대로 N일 백필.
+          collect() {
+            if [ -n "${{ github.event.inputs.days }}" ]; then
+              python scripts/run_all.py --mode live --days "${{ github.event.inputs.days }}"
+            else
+              python scripts/run_all.py --mode live --days 3 --skip competitor \
+                && python scripts/run_all.py --mode live --days 1 --skip cafe24,ads,creative,keyword
+            fi
+          }
           for attempt in 1 2 3; do
-            if python scripts/run_all.py --mode live --days "${{ github.event.inputs.days || '1' }}"; then
+            if collect; then
               exit 0
             fi
             echo "::warning::데일리 수집 실패 (시도 $attempt/3) — 90초 후 재시도"
