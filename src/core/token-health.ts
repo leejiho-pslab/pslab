@@ -97,6 +97,81 @@ async function checkOne(
   return { label, platform, ok: live.ok, warn, expiresInDays: days, detail };
 }
 
+/**
+ * 구글 OAuth refresh token이 살아있는지 실제 토큰 교환으로 확인한다.
+ * (유튜브·블로거 공용. 발행 시점이 아니라 매 점검마다 미리 확인 — 특히
+ * 미검수 앱의 유튜브 refresh token은 7일마다 만료되므로 조기 경보가 필수.)
+ */
+async function googleRefreshCheck(
+  label: string,
+  platform: string,
+  clientId?: string,
+  clientSecret?: string,
+  refreshToken?: string,
+): Promise<TokenStatus | undefined> {
+  if (!clientId || !clientSecret || !refreshToken) return undefined;
+  try {
+    const body = new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      refresh_token: refreshToken,
+      grant_type: 'refresh_token',
+    });
+    const res = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      body,
+    });
+    const json: any = await res.json().catch(() => ({}));
+    if (res.ok && json.access_token) {
+      return { label, platform, ok: true, warn: false };
+    }
+    const code = json.error ?? `HTTP ${res.status}`;
+    const hint =
+      json.error === 'invalid_grant'
+        ? 'refresh token 만료/폐기 — OAuth Playground에서 재발급해 시크릿을 교체하세요 (미검수 앱은 7일마다 만료).'
+        : (json.error_description ?? '자격 증명을 확인하세요.');
+    return { label, platform, ok: false, warn: true, detail: `토큰 오류(${code}): ${hint}` };
+  } catch (err) {
+    return {
+      label,
+      platform,
+      ok: false,
+      warn: true,
+      detail: `점검 실패: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
+
+/**
+ * LinkedIn 접근 토큰 생존 확인. 401만 확실한 만료로 취급한다
+ * (403은 스코프 제한일 수 있어 살아있다고 본다 — 오탐 경고 방지).
+ */
+async function linkedinCheck(token?: string): Promise<TokenStatus | undefined> {
+  if (!token) return undefined;
+  const base = { label: 'LinkedIn', platform: 'linkedin' };
+  try {
+    const res = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    if (res.status === 401) {
+      return {
+        ...base,
+        ok: false,
+        warn: true,
+        detail: '토큰 만료/무효 — 개발자 포털에서 접근 토큰을 재발급해 시크릿을 교체하세요 (약 60일 주기).',
+      };
+    }
+    return { ...base, ok: true, warn: false };
+  } catch (err) {
+    return {
+      ...base,
+      ok: false,
+      warn: true,
+      detail: `점검 실패: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
+
 /** 환경변수의 SNS 토큰들을 점검한다. */
 export async function checkTokens(): Promise<TokenHealth> {
   const env = process.env;
@@ -117,6 +192,21 @@ export async function checkTokens(): Promise<TokenHealth> {
       env.PSLAB_THREADS_APP_ID,
       env.PSLAB_THREADS_APP_SECRET,
     ),
+    googleRefreshCheck(
+      'YouTube',
+      'youtube',
+      env.PSLAB_YOUTUBE_CLIENT_ID,
+      env.PSLAB_YOUTUBE_CLIENT_SECRET,
+      env.PSLAB_YOUTUBE_REFRESH_TOKEN,
+    ),
+    googleRefreshCheck(
+      'Blogger',
+      'blogger',
+      env.PSLAB_BLOGGER_CLIENT_ID,
+      env.PSLAB_BLOGGER_CLIENT_SECRET,
+      env.PSLAB_BLOGGER_REFRESH_TOKEN,
+    ),
+    linkedinCheck(env.PSLAB_LINKEDIN_ACCESS_TOKEN),
   ]);
   return {
     checkedAt: new Date().toISOString(),
