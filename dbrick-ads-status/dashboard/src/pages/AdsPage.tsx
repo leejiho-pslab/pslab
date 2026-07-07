@@ -20,8 +20,8 @@ const CH_LABEL: Record<string, string> = {
   kakao: "Kakao",
   ga4_unmapped: "GA4 미분류(채널 매핑 필요)",
 };
-const won = (v: number) => formatValue(v, "currency");
-const num = (v: number) => Math.round(v).toLocaleString("ko-KR");
+const won = (v: number | null | undefined) => (v == null ? "—" : formatValue(v, "currency"));
+const num = (v: number | null | undefined) => (v == null ? "—" : Math.round(v).toLocaleString("ko-KR"));
 const pct = (cur: number | null, prev: number | null | undefined): number | null =>
   cur == null || prev == null || prev === 0 ? null : Math.round(((cur - prev) / prev) * 1000) / 10;
 
@@ -55,16 +55,17 @@ export function AdsPage({ date }: { date: string }) {
         <Loading rows={3} />
       ) : (
         <>
-          {/* 상단: 광고 전체 요약 (비교기간 대비 증감) — 전환수는 GA4 연동 시 GA4 기준으로 대체됨 */}
+          {/* 상단: 광고 전체 요약 (비교기간 대비 증감) — 리드젠 기준: 결과(문의)·CPA·CPC 중심
+              (매출/ROAS는 리드젠에서 무의미해 제외). 전환수 = Meta '결과'(GA4 연동 시 GA4). */}
           <div className="kpi-grid kpi-8">
             <KpiDelta label="총 광고비" value={s ? won(s.ad_cost) : "—"} delta={d.ad_cost} />
-            <KpiDelta label="광고 매출" value={s ? won(s.ad_sales) : "—"} delta={d.ad_sales} />
-            <KpiDelta label="ROAS" value={s?.roas != null ? `${s.roas}x` : "—"} delta={d.roas} />
-            <KpiDelta label="노출수" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
+            <KpiDelta label="결과(전환)" value={s ? num(s.conversions) : "—"} delta={d.conversions} />
+            <KpiDelta label="전환당 비용(CPA)" value={s?.conversions ? won(Math.round(s.ad_cost / s.conversions)) : "—"} delta={null} />
+            <KpiDelta label="전환율(CVR)" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
             <KpiDelta label="클릭수" value={s ? num(s.clicks) : "—"} delta={d.clicks} />
+            <KpiDelta label="클릭당 비용(CPC)" value={s?.clicks ? won(Math.round(s.ad_cost / s.clicks)) : "—"} delta={null} />
+            <KpiDelta label="노출수" value={s ? num(s.impressions) : "—"} delta={d.impressions} />
             <KpiDelta label="클릭률(CTR)" value={s?.ctr != null ? `${s.ctr}%` : "—"} delta={d.ctr} />
-            <KpiDelta label="전환수" value={s ? num(s.conversions) : "—"} delta={d.conversions} />
-            <KpiDelta label="전환율" value={s?.cvr != null ? `${s.cvr}%` : "—"} delta={d.cvr} />
           </div>
 
           {/* 채널별 예산 비율표 */}
@@ -111,15 +112,17 @@ function ChannelDetail({
   cmp: AdsChannel | undefined;
   trend: AdsTrendRow[];
 }) {
+  const cpa = c.conversions ? Math.round(c.ad_cost / c.conversions) : null;
+  const cmpCpa = cmp?.conversions ? Math.round(cmp.ad_cost / cmp.conversions) : null;
   const metrics: [string, string, number | null, number | null | undefined][] = [
     ["광고비", won(c.ad_cost), c.ad_cost, cmp?.ad_cost],
-    ["광고매출", won(c.ad_sales), c.ad_sales, cmp?.ad_sales],
-    ["ROAS", c.roas != null ? `${c.roas}x` : "—", c.roas, cmp?.roas],
+    ["결과(전환)", num(c.conversions), c.conversions, cmp?.conversions],
+    ["전환당 비용", won(cpa), cpa, cmpCpa],
+    ["전환율(CVR)", c.cvr != null ? `${c.cvr}%` : "—", c.cvr, cmp?.cvr],
     ["노출수", num(c.impressions), c.impressions, cmp?.impressions],
     ["클릭수", num(c.clicks), c.clicks, cmp?.clicks],
     ["클릭률(CTR)", c.ctr != null ? `${c.ctr}%` : "—", c.ctr, cmp?.ctr],
-    ["전환수", num(c.conversions), c.conversions, cmp?.conversions],
-    ["전환율", c.cvr != null ? `${c.cvr}%` : "—", c.cvr, cmp?.cvr],
+    ["클릭당 비용(CPC)", won(c.cpc), c.cpc, cmp?.cpc],
   ];
   return (
     <div className="card ch-detail">
@@ -139,7 +142,7 @@ function ChannelDetail({
           );
         })}
       </div>
-      <AdsTrendChart rows={trend} title="최근 30일 광고비 · ROAS 흐름" height={180} />
+      <AdsTrendChart rows={trend} title="최근 30일 광고비 · 결과(전환) 흐름" height={180} />
     </div>
   );
 }

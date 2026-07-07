@@ -115,7 +115,7 @@ def ads_channel_trend(store, date_from: str, date_to: str) -> dict:
             rows.append({
                 "date": d, "ad_cost": cost, "ad_sales": sales,
                 "roas": round(sales / cost, 2) if cost else None,
-                "impressions": impr, "clicks": clicks,
+                "impressions": impr, "clicks": clicks, "conversions": conv,
                 "ctr": round(clicks / impr * 100, 2) if impr else None,
                 "cvr": round(conv / clicks * 100, 2) if clicks else None,
             })

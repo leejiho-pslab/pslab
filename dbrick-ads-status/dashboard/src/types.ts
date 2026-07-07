@@ -154,6 +154,7 @@ export interface AdsTrendRow {
   ad_cost: number;
   ad_sales: number;
   roas: number | null;
+  conversions?: number;
 }
 
 export interface AdsChannelTrend {
