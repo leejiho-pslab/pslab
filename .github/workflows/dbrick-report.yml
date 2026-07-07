@@ -1,0 +1,37 @@
+name: dbrick monthly report extract
+
+# 월간 비교 리포트용 집계 추출 — DB(facts)에서 두 달치 지표를 뽑아 로그에 JSON 출력.
+# 수동 실행 전용(workflow_dispatch). 데이터 재수집은 dbrick-daily-collect 로.
+on:
+  workflow_dispatch:
+    inputs:
+      a:
+        description: "비교기준(이전) 월 YYYY-MM"
+        required: false
+        default: "2026-05"
+      b:
+        description: "대상(최근) 월 YYYY-MM"
+        required: false
+        default: "2026-06"
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+    defaults:
+      run:
+        working-directory: dbrick-ads-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Extract monthly aggregates
+        env:
+          DATABASE_URL: ${{ secrets.DBRICK_DATABASE_URL }}
+        run: |
+          python scripts/monthly_report.py --a "${{ github.event.inputs.a || '2026-05' }}" --b "${{ github.event.inputs.b || '2026-06' }}"
