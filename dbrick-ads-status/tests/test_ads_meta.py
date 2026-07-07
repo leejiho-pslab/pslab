@@ -49,6 +49,38 @@ def test_meta_purchase_action_type_priority():
     assert f2["conversions"] == 7.0 and f2["ad_sales"] == 90000.0   # 픽셀 폴백
 
 
+def test_meta_result_actions_counted_as_conversions():
+    # 리드젠(구매 없음): '웹사이트 등록 완료'(complete_registration)가 결과 → 전환수로 집계
+    raw = {"data": [{
+        "spend": "70000", "impressions": "801", "clicks": "36",
+        "actions": [
+            {"action_type": "complete_registration", "value": "2"},
+            {"action_type": "landing_page_view", "value": "20"},   # 비-리드는 제외
+        ],
+    }]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 2.0    # 등록 완료 = 전환
+    assert f["ad_sales"] == 0.0       # 리드젠은 구매전환값 없음
+
+
+def test_meta_sums_multiple_result_events_and_ignores_purchase_when_results_exist():
+    raw = {"data": [{"actions": [
+        {"action_type": "complete_registration", "value": "2"},
+        {"action_type": "lead", "value": "1"},
+        {"action_type": "onsite_conversion.messaging_conversation_started_7d", "value": "3"},
+        {"action_type": "purchase", "value": "5"},   # 결과가 있으면 구매는 무시
+    ]}]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 6.0    # 등록2 + 리드1 + 메시지3 (구매5 제외)
+
+
+def test_meta_falls_back_to_purchase_when_no_results():
+    # 순수 이커머스(결과 이벤트 없음)면 기존대로 구매수를 전환수로
+    raw = {"data": [{"actions": [{"action_type": "omni_purchase", "value": "9"}]}]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 9.0
+
+
 def test_meta_strips_act_prefix():
     seen = {}
 

@@ -24,7 +24,6 @@ const CH_LABEL: Record<string, string> = {
 };
 const won = (v: number | null | undefined) => (v == null ? "—" : formatValue(v, "currency"));
 const num = (v: number | null | undefined) => (v == null ? "—" : Math.round(v).toLocaleString("ko-KR"));
-const roasPct = (r: number | null | undefined) => (r == null ? "—" : `${Math.round(r * 100)}%`);
 
 // 광고 히스토리 상단 채널 탭 — Meta(소재) / 네이버 검색(키워드) / 네이버 플레이스(광고그룹)
 type HistCh = "meta" | "naver_powerlink" | "naver_place";
@@ -70,7 +69,7 @@ export function CreativePage({ date }: { date: string }) {
 
 // ── Meta 소재 히스토리 ───────────────────────────────────────────
 function MetaCreatives({ from, to }: { from: string; to: string }) {
-  const [sort, setSort] = useState<"roas" | "ctr" | "cvr" | "ad_sales">("roas");
+  const [sort, setSort] = useState<"conversions" | "ctr" | "cvr">("conversions");
   const [data, setData] = useState<CreativeOverview | null>(null);
   const [fatigue, setFatigue] = useState<CreativeFatigue[]>([]);
   const [err, setErr] = useState("");
@@ -94,10 +93,10 @@ function MetaCreatives({ from, to }: { from: string; to: string }) {
       <div className="kpi-grid">
         <Kpi label="라이브 소재" value={`${creatives.length}개`} />
         <Kpi label="광고비" value={won(s.ad_cost)} />
-        <Kpi label="구매 전환값" value={won(s.ad_sales)} />
-        <Kpi label="평균 ROAS" value={roasPct(s.roas)} />
+        <Kpi label="총 전환(결과)" value={num(s.conversions)} />
+        <Kpi label="전환당 비용" value={s.conversions ? won(Math.round(s.ad_cost / s.conversions)) : "—"} />
         <Kpi label="평균 CTR" value={s.ctr != null ? `${s.ctr}%` : "—"} />
-        <Kpi label="총 구매" value={num(s.conversions)} />
+        <Kpi label="전환율" value={s.cvr != null ? `${s.cvr}%` : "—"} />
       </div>
 
       <div className="card">
@@ -105,9 +104,9 @@ function MetaCreatives({ from, to }: { from: string; to: string }) {
           <h2>소재별 성과 ({creatives.length})</h2>
           <span className="filter-group">
             정렬:
-            {(["roas", "ad_sales", "ctr", "cvr"] as const).map((x) => (
+            {(["conversions", "ctr", "cvr"] as const).map((x) => (
               <button key={x} className={sort === x ? "active" : ""} onClick={() => setSort(x)}>
-                {x === "ad_sales" ? "구매전환값" : x.toUpperCase()}
+                {x === "conversions" ? "전환(결과)" : x.toUpperCase()}
               </button>
             ))}
           </span>
@@ -221,9 +220,9 @@ function KeywordRowView({ r, isPlace }: { r: KeywordRow; isPlace: boolean }) {
 
 function AdCard({ c, fatigued }: { c: Creative; fatigued: boolean }) {
   const rows: [string, string][] = [
-    ["구매", c.conversions != null ? num(c.conversions) : "—"],
-    ["ROAS", roasPct(c.roas)],
-    ["구매 전환값", won(c.ad_sales)],
+    ["전환(결과)", c.conversions != null ? num(c.conversions) : "—"],
+    ["전환율", c.cvr != null ? `${c.cvr}%` : "—"],
+    ["전환당 비용", c.conversions ? won(Math.round(c.ad_cost / c.conversions)) : "—"],
     ["CTR", c.ctr != null ? `${c.ctr}%` : "—"],
     ["CPC", won(c.cpc)],
     ["비용", won(c.ad_cost)],
@@ -240,7 +239,7 @@ function AdCard({ c, fatigued }: { c: Creative; fatigued: boolean }) {
           {rows.map(([k, v]) => (
             <tr key={k}>
               <th>{k}</th>
-              <td className={k === "ROAS" ? "hot" : ""}>{v}</td>
+              <td className={k === "전환(결과)" ? "hot" : ""}>{v}</td>
             </tr>
           ))}
         </tbody>
