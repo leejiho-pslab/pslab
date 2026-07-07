@@ -67,6 +67,10 @@ from cafe24_ops.etl.keyword_metrics import (  # noqa: E402
     keyword_report,
     keyword_summary,
 )
+from cafe24_ops.etl.monthly_report import (  # noqa: E402
+    latest_complete_month,
+    monthly_report_data,
+)
 from cafe24_ops.store import Store  # noqa: E402
 
 
@@ -536,6 +540,39 @@ def ga4_pages_ep(
         return {"from": date_from, "to": date_to, "rows": top_pages(store, date_from, date_to, top_n)}
     finally:
         store.close()
+
+
+@app.get("/api/report/monthly")
+def report_monthly_ep(month: str | None = Query(default=None)) -> dict:
+    """월간 리포트 데이터 — month(YYYY-MM) 미지정 시 '지난달(완결된 최근 월)' 자동.
+    매월 1일이면 자동으로 전월 리포트가 기본으로 잡힌다."""
+    store = _store()
+    try:
+        m = month or latest_complete_month(store)
+        return monthly_report_data(store, m)
+    finally:
+        store.close()
+
+
+@app.get("/api/report/monthly.docx")
+def report_monthly_docx_ep(month: str | None = Query(default=None)):
+    """월간 리포트 Word(.docx) 다운로드 — 대표님 확정 양식."""
+    from fastapi.responses import StreamingResponse  # noqa: PLC0415
+    from cafe24_ops.report_docx import build_report_docx  # noqa: PLC0415
+
+    store = _store()
+    try:
+        m = month or latest_complete_month(store)
+        data = monthly_report_data(store, m)
+    finally:
+        store.close()
+    blob = build_report_docx(data)
+    fname = f"dbrick_ad_report_{m}.docx"
+    return StreamingResponse(
+        iter([blob]),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
 
 
 @app.get("/api/region-status")
