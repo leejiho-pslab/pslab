@@ -1,20 +1,20 @@
 {
-  "generatedAt": "2026-07-07T12:17:15.456Z",
-  "sampleSize": 11,
+  "generatedAt": "2026-07-08T11:10:13.936Z",
+  "sampleSize": 12,
   "variants": [
     {
       "key": "A",
-      "posts": 4,
-      "avgEngagement": 1.0112700719049217,
-      "avgLikes": 276,
-      "avgViews": 6710.75
+      "posts": 5,
+      "avgEngagement": 0.40901605752393727,
+      "avgLikes": 220.8,
+      "avgViews": 5369
     },
     {
       "key": "B",
       "posts": 5,
       "avgEngagement": 0.21366033958341352,
-      "avgLikes": 275.4,
-      "avgViews": 5197.4
+      "avgLikes": 275.6,
+      "avgViews": 5198
     },
     {
       "key": "C",
@@ -28,9 +28,9 @@
     {
       "key": "instagram",
       "posts": 4,
-      "avgEngagement": 1.25,
-      "avgLikes": 1.25,
-      "avgViews": 0.75
+      "avgEngagement": 0.75,
+      "avgLikes": 1.5,
+      "avgViews": 2
     },
     {
       "key": "youtube",
@@ -41,10 +41,10 @@
     },
     {
       "key": "threads",
-      "posts": 2,
+      "posts": 3,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 38.5
+      "avgViews": 25.666666666666668
     },
     {
       "key": "blogger",
@@ -56,25 +56,25 @@
   ],
   "hours": [
     {
-      "key": "19:00",
-      "posts": 1,
-      "avgEngagement": 1,
-      "avgLikes": 1,
-      "avgViews": 1
-    },
-    {
       "key": "21:00",
       "posts": 5,
-      "avgEngagement": 0.8136603395834137,
-      "avgLikes": 276,
-      "avgViews": 5195
+      "avgEngagement": 0.5136603395834135,
+      "avgLikes": 276.2,
+      "avgViews": 5195.8
+    },
+    {
+      "key": "19:00",
+      "posts": 1,
+      "avgEngagement": 0.5,
+      "avgLikes": 1,
+      "avgViews": 2
     },
     {
       "key": "20:00",
-      "posts": 4,
-      "avgEngagement": 0.011270071904921575,
-      "avgLikes": 275,
-      "avgViews": 6729.5
+      "posts": 5,
+      "avgEngagement": 0.009016057523937259,
+      "avgLikes": 220,
+      "avgViews": 5383.6
     },
     {
       "key": "11:00",
@@ -88,30 +88,30 @@
     {
       "key": "compass",
       "posts": 2,
-      "avgEngagement": 1,
+      "avgEngagement": 0.5,
       "avgLikes": 1,
-      "avgViews": 0.5
+      "avgViews": 1
     },
     {
       "key": "lock",
       "posts": 3,
-      "avgEngagement": 0.6666666666666666,
+      "avgEngagement": 0.3333333333333333,
       "avgLikes": 0.6666666666666666,
-      "avgViews": 4.666666666666667
+      "avgViews": 5
     },
     {
       "key": "branch",
       "posts": 2,
-      "avgEngagement": 0.5341508489585338,
+      "avgEngagement": 0.2841508489585339,
       "avgLikes": 688.5,
-      "avgViews": 12987
+      "avgViews": 12987.5
     },
     {
       "key": "chart",
-      "posts": 3,
-      "avgEngagement": 0.015026762539895433,
-      "avgLikes": 366.6666666666667,
-      "avgViews": 8947
+      "posts": 4,
+      "avgEngagement": 0.13627007190492157,
+      "avgLikes": 275.25,
+      "avgViews": 6710.75
     },
     {
       "key": "rocket",
@@ -122,10 +122,10 @@
     }
   ],
   "bestVariant": "A",
-  "bestHour": "19:00",
+  "bestHour": "21:00",
   "hints": [
-    "디자인 A안이 평균 참여율 101.1%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
-    "19:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
+    "디자인 A안이 평균 참여율 40.9%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
