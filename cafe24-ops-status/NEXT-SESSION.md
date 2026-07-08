@@ -15,7 +15,7 @@
 - **저장소**: `leejiho-pslab/pslab`, 프로젝트 폴더 `cafe24-ops-status/`
 - **무료 스택**: GitHub Actions(수집) · Neon Postgres(`DATABASE_URL`) · Render Web(웹/API)
 - **파이프라인**: 수집 → 정규화 → 집계(`kpi_daily`) → Neon(`facts`) → FastAPI(`api/main.py`) → React(`dashboard/`)
-- **대시보드 4탭**: 카페24 어드민 / 광고 / 광고 히스토리 / 경쟁사 모니터링
+- **대시보드 5탭**: 카페24 어드민 / 광고 / 광고 히스토리 / 경쟁사 모니터링 / 월간 리포트
 
 ## 2. 브랜치 / 배포 (중요)
 
@@ -58,7 +58,15 @@
   4. **부분 실패 가시성 + 데이터 보존**(`pipeline.py`, `collectors/base.py`): 수집기의 `partial_errors` 를 `result.errors["소스/채널"]` 로 승격 → `collection_health_alert`(일일 브리핑 경고)에 잡힘. 부분 실패 소스는 delete+reinsert 대신 **upsert만** 수행해 재수집 시 실패 채널의 기존 정상 데이터를 보존(낡은 차원 정리는 다음 전체 성공 수집에서).
   5. **07:00 무인 수집 3회 재시도**(`cafe24-daily-collect.yml`): 일시 실패 시 90초 간격 재시도. 파이프라인이 소스 단위 멱등이라 안전.
   6. **스케줄 수집 = 최근 3일 재수집**(dbrick 프로젝트와 동일 패턴 채택): 하루 실행이 빠져도 다음날 자동 자가치유 + GA4 전환·Meta 광고비의 24~48h 지연 보정 반영. **경쟁사는 현재 스냅샷 소스라 3일 재수집에서 제외**(`--skip competitor`)하고 어제 하루만 별도 수집 — 과거 날짜에 오늘 스냅샷이 덮여 이력이 오염되는 것 방지. 수동 실행(days 입력)은 기존 동작 유지.
-- 테스트 109개 통과
+- **월간 리포트 탭 추가(2026-07-08)** — dbrick 프로젝트(`dbrick-ads-status/`)가 먼저 구현한 "매월 1일 지난달 자동 생성 + Word 다운로드" 기능을 keek 용으로 포팅.
+  dbrick 은 리드젠(구매 없는 상담·문의형) 업체라 매출/ROAS 를 안 다루고 결과(문의)·CPA 중심인데, **keek 은 자사몰 실매출이 있는 이커머스라 매출·ROAS 중심으로 지표를 재설계**(CPA 대신 ROAS/객단가/구매전환율).
+  - `cafe24_ops/etl/monthly_report.py`: 두 달(전월 vs 전전월) 비교 — KPI표(매출/광고비/광고매출/ROAS/주문/객단가/구매전환율/방문자) · 매체별 비교표(+ROAS) · 좋아진/아쉬운(규칙 기반) · 해석 · 네이버 키워드 TOP6 · 다음달 전략 초안(5개). `latest_complete_month()`가 KST 오늘의 전월을 기본값으로 잡아 **매월 1일 자동으로 전월 리포트가 뜬다**(데이터 없으면 있는 가장 최근 월로 폴백).
+  - `cafe24_ops/report_docx.py`: 위 데이터를 Word(.docx)로 변환(`python-docx`, `requirements.txt`에 추가). 섹션 01~05(요약표/좋아진·아쉬운/매체별표/키워드/전략초안).
+  - API: `/api/report/monthly`(month 미지정 시 자동), `/api/report/monthly.docx`(다운로드) — `keek-api-smoke.yml`에도 추가.
+  - 프론트: `MonthlyReportPage.tsx` 신설 + `App.tsx`에 5번째 탭("월간 리포트", 이 탭에서는 BriefingBanner 숨김) + `styles.css`에 `.mr-*` 블록(keek 의 `--blue` 액센트 사용, dbrick 원본은 브라운 계열).
+  - 테스트 5종 추가(월 헬퍼, 구조, CPC 방향, 폴백, docx 바이트), 전체 114개 통과, 빌드 통과, 로컬 mock 데이터로 두 엔드포인트 실제 호출 검증 완료.
+  - **다음 세션 확인 필요**: 라이브 배포 후 `keek-api-smoke.yml`로 `/api/report/monthly`·`/api/report/monthly.docx` 200 확인 + 실제 다운로드된 .docx 파일이 한글 폰트(맑은 고딕)로 깨짐 없이 열리는지 육안 확인(Render 서버에 한글 폰트가 없어도 Word 자체에 폰트명만 지정하는 방식이라 문제 없어야 하지만 미검증).
+- 테스트 114개 통과
 
 ## 5. 남은 일 / 알려진 갭
 
