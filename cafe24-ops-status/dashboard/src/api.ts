@@ -18,6 +18,7 @@ import type {
   DailyResponse,
   DigestResponse,
   MetricsConfig,
+  MonthlyReport,
   PeriodResponse,
   SummaryResponse,
   TrendResponse,
@@ -91,4 +92,10 @@ export const api = {
     ),
   competitorsBestChanges: (date?: string) =>
     get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
+
+  // 월간 리포트
+  reportMonthly: (month?: string) =>
+    get<MonthlyReport>(`/api/report/monthly${month ? `?month=${month}` : ""}`),
+  reportDocxUrl: (month?: string) =>
+    `${BASE}/api/report/monthly.docx${month ? `?month=${month}` : ""}`,
 };
