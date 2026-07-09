@@ -1,0 +1,11 @@
+{
+  "output": "assets/mts-video/mts-mood-film.mp4",
+  "segments": [
+    { "type": "card", "img": "assets/mts-video/intro.png", "dur": 2.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260709_125407_d5f4361d-08d8-4f66-b47a-1324ec97b7f7.mp4", "cap": "assets/mts-video/cap_waffle.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260709_125354_3289ff9a-66be-4689-a9ea-5ff7069dd9d7.mp4", "cap": "assets/mts-video/cap_terrace.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260709_125403_c5c49551-9c6b-43e3-9a5f-776f3b419932.mp4", "cap": "assets/mts-video/cap_cellar.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260709_125350_49915ad4-85eb-4796-b15f-3323cebb30c8.mp4", "cap": "assets/mts-video/cap_bar.png", "dur": 4.6 },
+    { "type": "card", "img": "assets/mts-video/outro.png", "dur": 3.2 }
+  ]
+}
