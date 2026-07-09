@@ -38,12 +38,19 @@ done
 # concat (동일 코덱 파라미터)
 ffmpeg -y -loglevel error -f concat -safe 0 -i "$list" -c copy "$tmp/joined.mp4"
 
-# 앰비언트 BGM (저작권 free) — 따뜻한 A major 패드 + 슬로우 트레몰로 + 로우패스 + 페이드
+# BGM — 커밋된 우아한 라운지 곡(assets/mts-video/bgm.m4a)이 있으면 우선 사용,
+# 없으면 저작권 free 합성 패드로 폴백.
 fade_out_start=$(echo "$total - 2.2" | bc)
-ffmpeg -y -loglevel error -f lavfi -i \
-  "aevalsrc=0.17*sin(2*PI*110*t)+0.13*sin(2*PI*164.81*t)+0.11*sin(2*PI*220*t)+0.07*sin(2*PI*277.18*t):s=44100:d=${total}" \
-  -af "tremolo=f=0.14:d=0.55,lowpass=f=1100,highpass=f=60,afade=t=in:st=0:d=1.8,afade=t=out:st=${fade_out_start}:d=2.2,volume=0.6" \
-  "$tmp/bgm.wav"
+if [ -f assets/mts-video/bgm.m4a ]; then
+  ffmpeg -y -loglevel error -stream_loop -1 -i assets/mts-video/bgm.m4a -t "$total" \
+    -af "afade=t=in:st=0:d=1.4,afade=t=out:st=${fade_out_start}:d=2.2,volume=0.9" \
+    "$tmp/bgm.wav"
+else
+  ffmpeg -y -loglevel error -f lavfi -i \
+    "aevalsrc=0.17*sin(2*PI*110*t)+0.13*sin(2*PI*164.81*t)+0.11*sin(2*PI*220*t)+0.07*sin(2*PI*277.18*t):s=44100:d=${total}" \
+    -af "tremolo=f=0.14:d=0.55,lowpass=f=1100,highpass=f=60,afade=t=in:st=0:d=1.8,afade=t=out:st=${fade_out_start}:d=2.2,volume=0.6" \
+    "$tmp/bgm.wav"
+fi
 
 mkdir -p "$(dirname "$OUT")"
 ffmpeg -y -loglevel error -i "$tmp/joined.mp4" -i "$tmp/bgm.wav" \
