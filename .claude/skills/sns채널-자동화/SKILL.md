@@ -34,11 +34,11 @@ description: >-
 ### 채널별 자동화 가능 여부 (정직하게)
 | 채널 | 자동발행 | 방식 |
 |---|---|---|
-| 인스타그램 | ✅ | Instagram Graph API (캐러셀) |
+| 인스타그램 | ✅ | Instagram Graph API (캐러셀) API에는 공개범위 파라미터가 없음 — 게시물 공개 여부는 **계정 설정**을 따르므로, 일부공개로 보이면 앱에서 계정을 공개(전문가 계정)로 전환 |
 | 스레드 | ✅ | Threads API |
 | 구글 블로그 | ✅ | Blogger API v3 (OAuth2 refresh token) |
 | 링크드인 | ✅ | LinkedIn Posts API (REST, 이미지는 Images API로 별도 업로드 후 첨부) |
-| 유튜브 | ✅ | YouTube Data API v3 재개형(resumable) 업로드. 구글 앱 미검수 상태면 refresh token이 7일마다 만료 — 검수 전엔 담당자가 주기적으로 재로그인 필요 |
+| 유튜브 | ✅ | YouTube Data API v3 재개형(resumable) 업로드. **공개범위 기본값은 반드시 'public'(전체 공개)** — 과거 'unlisted' 기본값으로 일부공개 사고 발생. 낮추려면 PSLAB_YOUTUBE_PRIVACY 또는 platformOptions.youtube.privacyStatus로만. 구글 앱 미검수 상태면 refresh token이 7일마다 만료 — 검수 전엔 담당자가 주기적으로 재로그인 필요 |
 | 네이버 블로그 | ❌ 수동 | 공식 발행 API 없음 → 대시보드에서 본문 복사 + 이미지 다운로드 |
 
 ---

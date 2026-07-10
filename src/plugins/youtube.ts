@@ -105,8 +105,12 @@ export class YouTubePlugin extends BasePlugin {
     if (!this.accessToken) await this.refreshAccessToken();
     const bytes = readFileSync(video.source);
     const tags = (content.tags ?? []).slice(0, 15);
+    // 공개 범위 — 기본은 반드시 '전체 공개'. (일부공개로 올라가는 사고 방지)
+    // 테스트 등으로 낮추고 싶을 때만 platformOptions 또는 PSLAB_YOUTUBE_PRIVACY로 재정의.
     const privacyStatus =
-      (content.platformOptions?.youtube?.privacyStatus as string) ?? 'unlisted';
+      (content.platformOptions?.youtube?.privacyStatus as string) ??
+      process.env.PSLAB_YOUTUBE_PRIVACY ??
+      'public';
 
     // 1단계: 재개형 업로드 시작 — 메타데이터를 보내고 실제 업로드 URL을 받는다.
     const initRes = await timedFetch(`${YouTubePlugin.UPLOAD}?uploadType=resumable&part=snippet,status`, {
