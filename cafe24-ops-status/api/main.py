@@ -52,6 +52,10 @@ from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creatives_ranked,
 )
 from cafe24_ops.etl.keyword_metrics import keyword_report_range  # noqa: E402
+from cafe24_ops.etl.monthly_report import (  # noqa: E402
+    latest_complete_month,
+    monthly_report_data,
+)
 from cafe24_ops.store import Store  # noqa: E402
 
 
@@ -436,6 +440,40 @@ def dates() -> dict:
         return {"dates": store.list_dates()}
     finally:
         store.close()
+
+
+@app.get("/api/report/monthly")
+def report_monthly_ep(month: str | None = Query(default=None)) -> dict:
+    """월간 리포트 데이터 — month(YYYY-MM) 미지정 시 '지난달(완결된 최근 월)' 자동.
+    매월 1일이면 자동으로 전월 리포트가 기본으로 잡힌다."""
+    store = _store()
+    try:
+        m = month or latest_complete_month(store)
+        return monthly_report_data(store, m)
+    finally:
+        store.close()
+
+
+@app.get("/api/report/monthly.docx")
+def report_monthly_docx_ep(month: str | None = Query(default=None)):
+    """월간 리포트 Word(.docx) 다운로드."""
+    from fastapi.responses import StreamingResponse  # noqa: PLC0415
+
+    from cafe24_ops.report_docx import build_report_docx  # noqa: PLC0415
+
+    store = _store()
+    try:
+        m = month or latest_complete_month(store)
+        data = monthly_report_data(store, m)
+    finally:
+        store.close()
+    blob = build_report_docx(data)
+    fname = f"keek_ad_report_{m}.docx"
+    return StreamingResponse(
+        iter([blob]),
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{fname}"'},
+    )
 
 
 # 빌드된 React 대시보드를 같은 서비스에서 서빙 (있을 때만).

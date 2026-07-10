@@ -25,6 +25,30 @@ PURCHASE_ACTION_TYPES = (
     "onsite_web_purchase",
 )
 
+# 리드젠(구매 아님) 업체의 "결과" — 웹사이트 등록 완료/리드/문의 등. Meta Ads Manager 의
+# '결과' 는 캠페인 최적화 이벤트라, 통합(omni/dedup) 지표를 여러 결과 이벤트에 걸쳐 '합산'한다
+# (중복표현인 offsite pixel 원시치는 제외해 과대집계 방지). 인지·프로필방문 등 비-리드는 제외.
+# 계정마다 최적화 이벤트가 다르면 config 로 조정 가능(ads[].result_actions).
+RESULT_ACTION_TYPES = (
+    "complete_registration",   # 웹사이트 등록 완료(웹문의)
+    "lead",                    # 리드
+    "submit_application",      # 신청 완료
+    "contact",                 # 연락/문의
+    "onsite_conversion.messaging_conversation_started_7d",  # 메시지 대화 시작
+    "onsite_conversion.lead_grouped",
+)
+
+# 소재(ad) 레벨 인사이트는 계정 레벨의 통합(omni/dedup) 이름을 주지 않고, 픽셀 원시
+# 이름(offsite_conversion.fb_pixel_complete_registration 등)만 돌려주는 경우가 있다.
+# 그래서 정확한 결과 합이 0이면, '결과 이벤트 접미사'로 한 번 더 매칭해 폴백한다.
+# (account 레벨은 통합 이름으로 이미 잡히므로 이 폴백까지 오지 않음 → 이중집계 없음.)
+RESULT_ACTION_SUFFIXES = (
+    "complete_registration",
+    "lead",
+    "submit_application",
+    "contact",
+)
+
 
 def _action_value(items, action_types) -> float:
     if isinstance(action_types, str):
@@ -39,6 +63,45 @@ def _action_value(items, action_types) -> float:
     return 0.0
 
 
+def _action_sum(items, action_types) -> float:
+    """지정 action_type 들의 값 '합' (존재하는 것만). 여러 결과 이벤트를 함께 집계할 때."""
+    wanted = set(action_types)
+    total = 0.0
+    for it in items or []:
+        if it.get("action_type") in wanted:
+            try:
+                total += float(it.get("value") or 0)
+            except (TypeError, ValueError):
+                pass
+    return total
+
+
+def _action_sum_suffix(items, suffixes) -> float:
+    """action_type 이 지정 접미사로 끝나는 항목들의 값 '합'. 픽셀 원시 이름 폴백용."""
+    total = 0.0
+    for it in items or []:
+        at = it.get("action_type") or ""
+        if any(at.endswith(sfx) for sfx in suffixes):
+            try:
+                total += float(it.get("value") or 0)
+            except (TypeError, ValueError):
+                pass
+    return total
+
+
+def _conversions(actions, result_actions=RESULT_ACTION_TYPES) -> float:
+    """전환수 = 결과(리드/등록/문의) 합.
+
+    1) 통합(omni/dedup) 이름 정확 매칭 합 → account 레벨에서 잡힘
+    2) 0이면 픽셀 원시 이름(…complete_registration 등) 접미사 매칭 → ad(소재) 레벨 폴백
+    3) 그래도 0이면 순수 이커머스로 보고 구매수 폴백
+    """
+    results = _action_sum(actions, result_actions)
+    if not results:
+        results = _action_sum_suffix(actions, RESULT_ACTION_SUFFIXES)
+    return results if results else _action_value(actions, PURCHASE_ACTION_TYPES)
+
+
 def meta_insights_to_facts(date: str, raw: dict) -> list[dict]:
     """Insights 응답 → 표준 metric 레코드(dims.channel=meta)."""
     rows = (raw or {}).get("data") or []
@@ -49,7 +112,7 @@ def meta_insights_to_facts(date: str, raw: dict) -> list[dict]:
         "ad_cost": float(d.get("spend", 0) or 0),
         "impressions": float(d.get("impressions", 0) or 0),
         "clicks": float(d.get("clicks", 0) or 0),
-        "conversions": _action_value(d.get("actions"), PURCHASE_ACTION_TYPES),
+        "conversions": _conversions(d.get("actions")),
         "ad_sales": _action_value(d.get("action_values"), PURCHASE_ACTION_TYPES),
     }
     return [
@@ -81,7 +144,8 @@ def meta_ad_insights_to_facts(date: str, raw: dict, thumbs: dict | None = None) 
             "ad_cost": float(d.get("spend", 0) or 0),
             "impressions": float(d.get("impressions", 0) or 0),
             "clicks": float(d.get("clicks", 0) or 0),
-            "conversions": _action_value(d.get("actions"), PURCHASE_ACTION_TYPES),
+            # 리드젠 '결과'(등록/리드/문의) 기준 — 계정 레벨(광고 탭)과 동일 로직.
+            "conversions": _conversions(d.get("actions")),
             "ad_sales": _action_value(d.get("action_values"), PURCHASE_ACTION_TYPES),
         }
         out += [{"date": date, "source": "creative", "metric": k, "value": v, "dims": dims}

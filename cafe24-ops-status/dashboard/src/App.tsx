@@ -6,12 +6,14 @@ import { Cafe24Page } from "./pages/Cafe24Page";
 import { AdsPage } from "./pages/AdsPage";
 import { CreativePage } from "./pages/CreativePage";
 import { CompetitorPage } from "./pages/CompetitorPage";
+import { MonthlyReportPage } from "./pages/MonthlyReportPage";
 
 const TABS = [
   { id: "cafe24", label: "카페24 어드민" },
   { id: "ads", label: "광고" },
   { id: "creative", label: "광고 히스토리" },
   { id: "competitor", label: "경쟁사 모니터링" },
+  { id: "report", label: "월간 리포트" },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -82,12 +84,13 @@ export default function App() {
         ))}
       </nav>
 
-      <BriefingBanner date={date} />
+      {tab !== "report" && <BriefingBanner date={date} />}
 
       {tab === "cafe24" && <Cafe24Page date={date} config={config} />}
       {tab === "ads" && <AdsPage date={date} />}
       {tab === "creative" && <CreativePage date={date} />}
       {tab === "competitor" && <CompetitorPage date={date} />}
+      {tab === "report" && <MonthlyReportPage dates={dates} />}
 
       <footer className="foot">
         자사몰 통합 자동화 대시보드 · 지표 정의는 metrics.yaml 기반 · 데이터 mock/live 전환 가능

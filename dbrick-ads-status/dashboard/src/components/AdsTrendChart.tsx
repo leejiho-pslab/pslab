@@ -2,10 +2,10 @@ import { useState } from "react";
 import type { AdsTrendRow } from "../types";
 import { formatValue } from "../format";
 
-// 일별 광고비(막대) + ROAS(선) — 그리드라인 + 호버 툴팁
+// 일별 광고비(막대) + 결과·전환(선) — 그리드라인 + 호버 툴팁 (리드젠: ROAS 대신 결과 흐름)
 export function AdsTrendChart({
   rows,
-  title = "일별 광고비 · ROAS 추이",
+  title = "일별 광고비 · 결과(전환) 추이",
   height = 220,
 }: {
   rows: AdsTrendRow[];
@@ -28,13 +28,13 @@ export function AdsTrendChart({
   const iw = W - pad.l - pad.r;
   const ih = H - pad.t - pad.b;
   const maxCost = Math.max(...rows.map((r) => r.ad_cost), 1);
-  const maxRoas = Math.max(...rows.map((r) => r.roas ?? 0), 1);
+  const maxConv = Math.max(...rows.map((r) => r.conversions ?? 0), 1);
   const bw = iw / rows.length;
   const bx = (i: number) => pad.l + i * bw + bw * 0.15;
   const barW = bw * 0.7;
   const yCost = (v: number) => pad.t + ih - (v / maxCost) * ih;
-  const yRoas = (v: number) => pad.t + ih - (v / maxRoas) * ih;
-  const line = rows.map((r, i) => `${bx(i) + barW / 2},${yRoas(r.roas ?? 0)}`).join(" ");
+  const yConv = (v: number) => pad.t + ih - (v / maxConv) * ih;
+  const line = rows.map((r, i) => `${bx(i) + barW / 2},${yConv(r.conversions ?? 0)}`).join(" ");
   const grid = [0.25, 0.5, 0.75, 1];
 
   const onMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -75,13 +75,13 @@ export function AdsTrendChart({
           <div className="chart-tip" style={{ left: `${((bx(idx) + barW / 2) / W) * 100}%` }}>
             <div className="tip-date">{rows[idx].date}</div>
             <div><i style={{ background: "#f59e0b" }} /> 광고비 {formatValue(rows[idx].ad_cost, "currency")}</div>
-            <div><i style={{ background: "#16a34a" }} /> ROAS {rows[idx].roas ?? "—"}x</div>
+            <div><i style={{ background: "#16a34a" }} /> 결과 {rows[idx].conversions ?? 0}건</div>
           </div>
         )}
       </div>
       <div className="legend-inline">
         <span><i className="dot" style={{ background: "#f59e0b" }} /> 광고비</span>
-        <span><i className="dot" style={{ background: "#16a34a" }} /> ROAS</span>
+        <span><i className="dot" style={{ background: "#16a34a" }} /> 결과(전환)</span>
       </div>
     </div>
   );

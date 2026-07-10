@@ -16,6 +16,7 @@ import type {
   Ga4ChannelsResponse,
   Ga4PagesResponse,
   KeywordReportResponse,
+  MonthlyReport,
   RegionStatus,
   Creative,
   CreativeFatigue,
@@ -117,4 +118,10 @@ export const api = {
 
   // 대시보드 하단 — 온라인 인입 지역 현황(구글 시트)
   regionStatus: () => get<RegionStatus>("/api/region-status"),
+
+  // 월간 리포트 (month 미지정 시 지난달 자동)
+  reportMonthly: (month?: string) =>
+    get<MonthlyReport>(`/api/report/monthly${month ? `?month=${month}` : ""}`),
+  reportDocxUrl: (month?: string) =>
+    `${BASE}/api/report/monthly.docx${month ? `?month=${month}` : ""}`,
 };

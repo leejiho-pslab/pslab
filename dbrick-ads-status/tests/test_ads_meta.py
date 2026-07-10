@@ -49,6 +49,38 @@ def test_meta_purchase_action_type_priority():
     assert f2["conversions"] == 7.0 and f2["ad_sales"] == 90000.0   # 픽셀 폴백
 
 
+def test_meta_result_actions_counted_as_conversions():
+    # 리드젠(구매 없음): '웹사이트 등록 완료'(complete_registration)가 결과 → 전환수로 집계
+    raw = {"data": [{
+        "spend": "70000", "impressions": "801", "clicks": "36",
+        "actions": [
+            {"action_type": "complete_registration", "value": "2"},
+            {"action_type": "landing_page_view", "value": "20"},   # 비-리드는 제외
+        ],
+    }]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 2.0    # 등록 완료 = 전환
+    assert f["ad_sales"] == 0.0       # 리드젠은 구매전환값 없음
+
+
+def test_meta_sums_multiple_result_events_and_ignores_purchase_when_results_exist():
+    raw = {"data": [{"actions": [
+        {"action_type": "complete_registration", "value": "2"},
+        {"action_type": "lead", "value": "1"},
+        {"action_type": "onsite_conversion.messaging_conversation_started_7d", "value": "3"},
+        {"action_type": "purchase", "value": "5"},   # 결과가 있으면 구매는 무시
+    ]}]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 6.0    # 등록2 + 리드1 + 메시지3 (구매5 제외)
+
+
+def test_meta_falls_back_to_purchase_when_no_results():
+    # 순수 이커머스(결과 이벤트 없음)면 기존대로 구매수를 전환수로
+    raw = {"data": [{"actions": [{"action_type": "omni_purchase", "value": "9"}]}]}
+    f = {x["metric"]: x["value"] for x in meta_insights_to_facts("2026-07-05", raw)}
+    assert f["conversions"] == 9.0
+
+
 def test_meta_strips_act_prefix():
     seen = {}
 
@@ -92,3 +124,41 @@ def test_meta_ad_insights_to_facts():
     d0 = facts[0]["dims"]
     assert d0["creative_id"] == "123" and d0["name"] == "겨울 아우터 A" and d0["thumb"] == "http://img/a.jpg"
     assert meta_ad_insights_to_facts("2026-06-28", {"data": []}) == []
+
+
+def test_meta_ad_insights_counts_result_conversions_like_account():
+    # 리드젠: 소재(ad) 레벨도 계정 레벨과 동일하게 '결과'(등록/리드/문의)를 전환수로 집계
+    from cafe24_ops.clients.ads_meta import meta_ad_insights_to_facts
+    raw = {"data": [{
+        "ad_id": "555", "ad_name": "상담 유도 A",
+        "spend": "50000", "impressions": "3000", "clicks": "120",
+        "actions": [
+            {"action_type": "complete_registration", "value": "3"},
+            {"action_type": "lead", "value": "2"},
+            {"action_type": "landing_page_view", "value": "80"},  # 비-리드 제외
+        ],
+    }]}
+    m = {f["metric"]: f["value"] for f in meta_ad_insights_to_facts("2026-07-05", raw)}
+    assert m["conversions"] == 5.0    # 등록3 + 리드2 (구매 없음)
+    assert m["ad_sales"] == 0.0
+
+
+def test_meta_conversions_suffix_fallback_for_pixel_raw_names():
+    # 소재 레벨이 통합 이름 없이 픽셀 원시 이름만 줄 때도 접미사 매칭으로 폴백 집계
+    from cafe24_ops.clients.ads_meta import _conversions
+    actions = [
+        {"action_type": "offsite_conversion.fb_pixel_complete_registration", "value": "4"},
+        {"action_type": "offsite_conversion.fb_pixel_lead", "value": "1"},
+        {"action_type": "landing_page_view", "value": "40"},
+    ]
+    assert _conversions(actions) == 5.0
+
+
+def test_meta_conversions_no_double_count_when_both_omni_and_pixel_present():
+    # 통합(complete_registration)이 있으면 접미사 폴백까지 가지 않아 이중집계 없음
+    from cafe24_ops.clients.ads_meta import _conversions
+    actions = [
+        {"action_type": "complete_registration", "value": "3"},
+        {"action_type": "offsite_conversion.fb_pixel_complete_registration", "value": "3"},
+    ]
+    assert _conversions(actions) == 3.0

@@ -1,54 +1,54 @@
 {
-  "generatedAt": "2026-07-07T02:00:56.811Z",
-  "sampleSize": 10,
+  "generatedAt": "2026-07-09T12:22:09.016Z",
+  "sampleSize": 14,
   "variants": [
     {
       "key": "A",
-      "posts": 4,
-      "avgEngagement": 1.0112700719049217,
-      "avgLikes": 276,
-      "avgViews": 6710.75
+      "posts": 6,
+      "avgEngagement": 0.34084671460328103,
+      "avgLikes": 184,
+      "avgViews": 4476.166666666667
     },
     {
       "key": "B",
-      "posts": 4,
-      "avgEngagement": 0.2670754244792669,
-      "avgLikes": 344.25,
-      "avgViews": 6496.75
+      "posts": 5,
+      "avgEngagement": 0.1803270062500802,
+      "avgLikes": 275.6,
+      "avgViews": 5198.2
     },
     {
       "key": "C",
-      "posts": 2,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 32
+      "posts": 3,
+      "avgEngagement": 0.016907174291270085,
+      "avgLikes": 244,
+      "avgViews": 5449.666666666667
     }
   ],
   "channels": [
     {
       "key": "instagram",
-      "posts": 3,
-      "avgEngagement": 1.6666666666666667,
-      "avgLikes": 1.6666666666666667,
-      "avgViews": 1
+      "posts": 4,
+      "avgEngagement": 0.7083333333333334,
+      "avgLikes": 1.5,
+      "avgViews": 2.25
     },
     {
       "key": "youtube",
-      "posts": 2,
-      "avgEngagement": 0.05669099276837701,
-      "avgLikes": 1238,
-      "avgViews": 26407
+      "posts": 3,
+      "avgEngagement": 0.054701169470188084,
+      "avgLikes": 1069.3333333333333,
+      "avgViews": 23033
     },
     {
       "key": "threads",
-      "posts": 2,
+      "posts": 3,
       "avgEngagement": 0,
       "avgLikes": 0,
-      "avgViews": 38.5
+      "avgViews": 29.666666666666668
     },
     {
       "key": "blogger",
-      "posts": 3,
+      "posts": 4,
       "avgEngagement": 0,
       "avgLikes": 0,
       "avgViews": 0
@@ -56,25 +56,25 @@
   ],
   "hours": [
     {
-      "key": "21:00",
-      "posts": 4,
-      "avgEngagement": 1.017075424479267,
-      "avgLikes": 345,
-      "avgViews": 6493.75
-    },
-    {
       "key": "19:00",
       "posts": 1,
-      "avgEngagement": 1,
+      "avgEngagement": 0.5,
       "avgLikes": 1,
-      "avgViews": 1
+      "avgViews": 2
+    },
+    {
+      "key": "21:00",
+      "posts": 7,
+      "avgEngagement": 0.35033665058917307,
+      "avgLikes": 301.85714285714283,
+      "avgViews": 6037.857142857143
     },
     {
       "key": "20:00",
-      "posts": 4,
-      "avgEngagement": 0.011270071904921575,
-      "avgLikes": 275,
-      "avgViews": 6729.5
+      "posts": 5,
+      "avgEngagement": 0.009016057523937259,
+      "avgLikes": 220,
+      "avgViews": 5386
     },
     {
       "key": "11:00",
@@ -87,31 +87,31 @@
   "motifs": [
     {
       "key": "compass",
-      "posts": 2,
-      "avgEngagement": 1,
-      "avgLikes": 1,
-      "avgViews": 0.5
+      "posts": 3,
+      "avgEngagement": 0.3502405076246034,
+      "avgLikes": 244.66666666666666,
+      "avgViews": 5429
     },
     {
       "key": "lock",
       "posts": 3,
-      "avgEngagement": 0.6666666666666666,
+      "avgEngagement": 0.3333333333333333,
       "avgLikes": 0.6666666666666666,
-      "avgViews": 4.666666666666667
+      "avgViews": 5
     },
     {
       "key": "branch",
       "posts": 2,
-      "avgEngagement": 0.5341508489585338,
+      "avgEngagement": 0.2841508489585339,
       "avgLikes": 688.5,
-      "avgViews": 12987
+      "avgViews": 12987.5
     },
     {
       "key": "chart",
-      "posts": 2,
-      "avgEngagement": 0.02254014380984315,
-      "avgLikes": 550,
-      "avgViews": 13420.5
+      "posts": 5,
+      "avgEngagement": 0.07568272419060393,
+      "avgLikes": 220.2,
+      "avgViews": 5371.2
     },
     {
       "key": "rocket",
@@ -122,10 +122,10 @@
     }
   ],
   "bestVariant": "A",
-  "bestHour": "21:00",
+  "bestHour": "19:00",
   "hints": [
-    "디자인 A안이 평균 참여율 101.1%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
-    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
+    "디자인 A안이 평균 참여율 34.1%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "19:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }

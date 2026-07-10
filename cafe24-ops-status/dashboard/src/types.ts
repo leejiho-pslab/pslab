@@ -246,6 +246,32 @@ export interface CreativeFatigue {
   fatigued: boolean;
 }
 
+// ── 월간 리포트 ────────────────────────────────────────────
+export interface MrDelta { text: string; dir: "good" | "bad" | "flat"; pct?: number }
+export interface MrKpiRow { label: string; a: string; b: string; delta: MrDelta }
+export interface MrChannelRow {
+  channel: string;
+  ad_cost: string; ad_cost_d: MrDelta;
+  impressions: string; impressions_d: MrDelta;
+  clicks: string; clicks_d: MrDelta;
+  ctr: string; ctr_d: MrDelta;
+  cpc: string; cpc_d: MrDelta;
+  ad_sales: string;
+  roas: string; roas_d: MrDelta;
+}
+export interface MrKeyword { keyword: string; campaign: string | null; ad_cost: string; clicks: string; ctr: string; cpc: string }
+export interface MrStrategy { title: string; body: string }
+export interface MonthlyReport {
+  target: string; compare: string; target_label: string; compare_label: string;
+  headline: string;
+  kpi_rows: MrKpiRow[];
+  channel_rows: MrChannelRow[];
+  improved: string[]; declined: string[];
+  interpretation: string; keyword_note: string;
+  top_keywords: MrKeyword[];
+  strategy_draft: MrStrategy[];
+}
+
 // ── 경쟁사 모니터링 ────────────────────────────────────────────
 export interface Competitor {
   name: string;
