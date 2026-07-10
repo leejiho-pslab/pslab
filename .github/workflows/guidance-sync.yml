@@ -1,0 +1,83 @@
+name: guidance sync (지침 자동 반영)
+
+# 대시보드 '지침' 탭에서 등록한 이슈([브랜드노트·…], [가이드·…])를
+# 데이터 파일에 반영하고 → 대시보드 재생성 → 커밋 → 이슈를 닫는다.
+# 반영된 지침은 다음 콘텐츠 생성 사이클부터 프롬프트·소재 선정에 적용된다.
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: guidance-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Seoul
+      ISSUE_TITLE: ${{ github.event.issue.title }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: 빌드
+        run: |
+          npm ci
+          npm run build
+      - name: 지침 반영
+        id: apply
+        run: |
+          out=$(node scripts/sync-guidance.mjs)
+          echo "$out"
+          if echo "$out" | grep -q "SYNCED"; then echo "synced=true" >> "$GITHUB_OUTPUT"; fi
+      - name: 대시보드 재생성 + 커밋
+        if: steps.apply.outputs.synced == 'true'
+        run: |
+          node dist/cli.js dashboard --out docs/index.html
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f data/clients docs/index.html
+          git commit -m "chore(guidance): 운영자 지침 반영 — ${ISSUE_TITLE}" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo push ok; exit 0; }
+            echo retry $i; sleep 4
+          done
+      - name: 이슈 닫기 (반영 완료 코멘트)
+        if: steps.apply.outputs.synced == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          api="https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}"
+          curl -sS -X POST -H "Authorization: Bearer $GH_TOKEN" "$api/comments" \
+            -d '{"body":"✅ 지침이 시스템에 반영되었습니다. 다음 콘텐츠 생성부터 자동 적용됩니다. (대시보드 지침 탭에서 현재 값을 확인하세요)"}' >/dev/null
+          curl -sS -X PATCH -H "Authorization: Bearer $GH_TOKEN" "$api" \
+            -d '{"state":"closed","state_reason":"completed"}' >/dev/null
+          echo "issue #${ISSUE_NUMBER} closed"
+      - name: Pages 설정
+        if: steps.apply.outputs.synced == 'true'
+        uses: actions/configure-pages@v5
+      - name: Pages 아티팩트 업로드
+        if: steps.apply.outputs.synced == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Pages 배포
+        id: deploy
+        if: steps.apply.outputs.synced == 'true'
+        uses: actions/deploy-pages@v4

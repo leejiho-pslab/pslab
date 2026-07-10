@@ -7,7 +7,7 @@ import type {
   PostContent,
   PublishResult,
 } from '../core/types.js';
-import { pseudoMetrics, simulateApiCall } from './shared.js';
+import { pseudoMetrics, simulateApiCall, timedFetch } from './shared.js';
 
 /**
  * YouTube 플러그인 (YouTube Data API v3, 재개형 업로드).
@@ -109,7 +109,7 @@ export class YouTubePlugin extends BasePlugin {
       (content.platformOptions?.youtube?.privacyStatus as string) ?? 'unlisted';
 
     // 1단계: 재개형 업로드 시작 — 메타데이터를 보내고 실제 업로드 URL을 받는다.
-    const initRes = await fetch(`${YouTubePlugin.UPLOAD}?uploadType=resumable&part=snippet,status`, {
+    const initRes = await timedFetch(`${YouTubePlugin.UPLOAD}?uploadType=resumable&part=snippet,status`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${this.accessToken}`,
@@ -137,11 +137,11 @@ export class YouTubePlugin extends BasePlugin {
     }
 
     // 2단계: 실제 영상 바이트 업로드
-    const putRes = await fetch(uploadUrl, {
+    const putRes = await timedFetch(uploadUrl, {
       method: 'PUT',
       headers: { 'content-type': 'video/mp4' },
       body: bytes,
-    });
+    }, 600_000); // 영상 업로드는 10분까지 허용
     const json: any = await putRes.json().catch(() => ({}));
     if (!putRes.ok || !json.id) {
       throw new Error(`YouTube 업로드 실패: ${json.error?.message ?? putRes.status}`);
@@ -177,7 +177,7 @@ export class YouTubePlugin extends BasePlugin {
       refresh_token: this.credentials.refreshToken!,
       grant_type: 'refresh_token',
     });
-    const res = await fetch(YouTubePlugin.TOKEN, { method: 'POST', body });
+    const res = await timedFetch(YouTubePlugin.TOKEN, { method: 'POST', body });
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || !json.access_token) {
       throw new Error(
@@ -189,7 +189,7 @@ export class YouTubePlugin extends BasePlugin {
 
   private async apiGet(path: string, params: Record<string, string>): Promise<any> {
     const qs = new URLSearchParams(params);
-    const res = await fetch(`${YouTubePlugin.API}/${path}?${qs.toString()}`, {
+    const res = await timedFetch(`${YouTubePlugin.API}/${path}?${qs.toString()}`, {
       headers: { authorization: `Bearer ${this.accessToken}` },
     });
     const json: any = await res.json().catch(() => ({}));

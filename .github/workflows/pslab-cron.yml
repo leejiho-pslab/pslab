@@ -25,6 +25,7 @@ concurrency:
 jobs:
   cycle:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     # Pages 배포(deploy-pages@v4)에 필요한 환경
     environment:
       name: github-pages

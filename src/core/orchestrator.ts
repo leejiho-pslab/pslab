@@ -18,6 +18,7 @@ import type { AlertHub } from './alerts.js';
 import type { DesignStudio, DesignStore, DesignStyle } from './design.js';
 import type { PlanStore } from './plan.js';
 import { generatePlan } from './plan.js';
+import { GuidanceStore, brandNotesText } from './guidance.js';
 import type { PlatformId } from './types.js';
 import { createLogger } from './logger.js';
 
@@ -68,6 +69,8 @@ export interface OrchestratorDeps {
   design?: { studio: DesignStudio; store: DesignStore };
   /** 콘텐츠 플랜(발행 대기 큐) 저장소 */
   plan?: PlanStore;
+  /** 운영자 지침(브랜드 노트 + 채널 가이드) 저장소 */
+  guidance?: GuidanceStore;
 }
 
 export class Orchestrator {
@@ -78,9 +81,19 @@ export class Orchestrator {
     const startedAt = new Date().toISOString();
     log.info(`▶ 사이클 시작 — ${client.name}(${client.id})`);
 
-    // 0) 과거 이력에서 강화 신호 추출
+    // 0) 과거 이력에서 강화 신호 추출 + 운영자 지침(브랜드 노트·채널 가이드) 로드
     const history = this.deps.store?.read(client.id) ?? [];
     const reinforcement = this.extractReinforcement(history);
+    const brief0 = this.deps.guidance?.loadBrief(client.id);
+    const guides = this.deps.guidance?.loadGuides(client.id) ?? {};
+    const chGuide = guides[client.targets[0]];
+    if (chGuide?.topics?.length) {
+      // 운영자가 정한 우선 소재를 강화 신호로 얹어 소재 선정에서 앞세운다
+      reinforcement.favoredTopics = [
+        ...chGuide.topics,
+        ...reinforcement.favoredTopics,
+      ].slice(0, 8);
+    }
 
     // 1) 시장 조사 (경쟁사·트렌드 + 강화 + 최근 주제 회전)
     const recentTopics = history
@@ -89,7 +102,7 @@ export class Orchestrator {
       .map((h) => h.topic);
     const research: ResearchResult = await this.deps.research.investigate({
       industry: client.industry,
-      keywords: client.keywords,
+      keywords: [...new Set([...(chGuide?.topics ?? []), ...client.keywords])],
       competitors: client.competitors,
       reinforcement,
       recentTopics,
@@ -134,6 +147,8 @@ export class Orchestrator {
       format: pick.suggestedFormat,
       targetPlatform: client.targets[0],
       media: [{ kind: 'image', prompt: imagePrompt }],
+      brandNotes: brandNotesText(brief0),
+      channelGuide: chGuide?.guide || undefined,
     });
 
     // 3) 검수 (스위치: manual/rules/auto)

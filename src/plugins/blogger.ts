@@ -6,7 +6,7 @@ import type {
   PostContent,
   PublishResult,
 } from '../core/types.js';
-import { simulateApiCall } from './shared.js';
+import { simulateApiCall, timedFetch } from './shared.js';
 
 /**
  * 구글 블로그(Blogger) 플러그인 — Blogger API v3 공식 자동발행.
@@ -105,7 +105,7 @@ export class BloggerPlugin extends BasePlugin {
       refresh_token: this.credentials.refreshToken!,
       grant_type: 'refresh_token',
     });
-    const res = await fetch(BloggerPlugin.TOKEN, { method: 'POST', body });
+    const res = await timedFetch(BloggerPlugin.TOKEN, { method: 'POST', body });
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || !json.access_token) {
       throw new Error(
@@ -117,7 +117,7 @@ export class BloggerPlugin extends BasePlugin {
 
   private async apiGet(path: string, params: Record<string, string>): Promise<any> {
     const qs = new URLSearchParams(params);
-    const res = await fetch(`${BloggerPlugin.API}/${path}?${qs.toString()}`, {
+    const res = await timedFetch(`${BloggerPlugin.API}/${path}?${qs.toString()}`, {
       headers: { authorization: `Bearer ${this.accessToken}` },
     });
     const json: any = await res.json().catch(() => ({}));
@@ -128,7 +128,7 @@ export class BloggerPlugin extends BasePlugin {
   }
 
   private async apiPost(path: string, body: unknown): Promise<any> {
-    const res = await fetch(`${BloggerPlugin.API}/${path}`, {
+    const res = await timedFetch(`${BloggerPlugin.API}/${path}`, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${this.accessToken}`,

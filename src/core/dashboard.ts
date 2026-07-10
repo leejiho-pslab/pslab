@@ -14,6 +14,7 @@ import type { DesignStore } from './design.js';
 import type { PlanStore } from './plan.js';
 import type { LearningStore } from './learning.js';
 import type { TokenHealthStore } from './token-health.js';
+import type { GuidanceStore } from './guidance.js';
 import type { WeeklyReportStore } from './weekly.js';
 import type { PlatformId } from './types.js';
 
@@ -177,6 +178,7 @@ function buildClientData(
   learnStore?: LearningStore,
   tokenStore?: TokenHealthStore,
   reportStore?: WeeklyReportStore,
+  guidanceStore?: GuidanceStore,
 ) {
   const history = store.read(client.id);
   const design = designStore.load(client.id);
@@ -271,6 +273,8 @@ function buildClientData(
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
     weeklyReport: weeklyReport ?? null,
+    brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
+    channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
   };
 }
 
@@ -282,6 +286,7 @@ export function renderDashboard(
   learnStore?: LearningStore,
   tokenStore?: TokenHealthStore,
   reportStore?: WeeklyReportStore,
+  guidanceStore?: GuidanceStore,
 ): string {
   // 설정 현황 — 환경변수 "존재 여부"만 본다(값은 절대 노출하지 않음).
   const env = process.env;
@@ -301,7 +306,7 @@ export function renderDashboard(
     channels: CHANNELS,
     setup,
     clients: clients.map((c) =>
-      buildClientData(c, store, designStore, planStore, learnStore, tokenStore, reportStore),
+      buildClientData(c, store, designStore, planStore, learnStore, tokenStore, reportStore, guidanceStore),
     ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
@@ -509,6 +514,62 @@ function requestsPanel(key, chLabel){
     '<span class="muted">등록을 누르면 깃허브 창이 열립니다 — 초록색 “Submit new issue” 버튼만 누르면 접수 완료. 처리 상태는 이 게시판에 자동 표시됩니다.</span></div></div></div>';
   return h;
 }
+// ── 지침(브랜드 노트 + 채널 가이드) — AI 상시 학습 입력 창구 ──
+const BRAND_FIELDS=[
+  {k:'분석', f:'analysis', label:'🔍 브랜드 분석', ph:'우리 브랜드는 어떤 브랜드인지, 강점·차별점·고객이 우리를 찾는 이유를 적어주세요.'},
+  {k:'방향성', f:'direction', label:'🧭 방향성 의견', ph:'앞으로 콘텐츠가 가야 할 방향, 밀고 싶은 메시지, 하지 말아야 할 것을 적어주세요.'},
+  {k:'감도', f:'sensibility', label:'🎨 콘텐츠 감도', ph:'원하는 톤·비주얼 무드를 적어주세요. 예) 과장 없이 차분하게, 사진은 웜톤, 이모지 최소화'}
+];
+function guideNote(){
+  return '<div class="muted" style="margin:2px 0 14px">여기 적은 내용은 자동으로 반영됩니다 — 등록 → 깃허브 창에서 제출 → 몇 분 내 시스템에 저장되어 <b>다음 콘텐츠 생성부터 프롬프트·소재 선정에 적용</b>됩니다. (이슈가 자동으로 닫히면 반영 완료)</div>';
+}
+function submitGuidance(title, bodyPrefix, taId){
+  const ta=document.getElementById(taId);
+  const txt=(ta&&ta.value.trim())||'';
+  if(!txt){ alert('내용을 먼저 적어주세요.'); return; }
+  window.open(issue(title, bodyPrefix+txt), '_blank');
+  if(ta) ta.value='';
+}
+function guideView(client){
+  let h='<div class="sect-h"><h2>🧭 지침 — AI가 상시 학습하는 브랜드 노트·채널 가이드</h2></div>'+guideNote();
+  // 브랜드 노트 3종
+  h+='<div class="panel" style="border-color:#c9d8f0;background:#f8fbff"><h3>🏷 브랜드 노트</h3>';
+  const bb=client.brandBrief||{};
+  for(const bf of BRAND_FIELDS){
+    const cur=bb[bf.f];
+    h+='<div style="margin:14px 0 4px;font-weight:700;font-size:13.5px">'+bf.label+'</div>'+
+       (cur?'<div class="capbox" style="margin-bottom:8px"><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(cur)+'</div></div>'
+           :'<div class="muted" style="margin-bottom:8px">아직 등록된 내용이 없습니다.</div>')+
+       '<textarea id="bb-'+bf.f+'" class="reqta" rows="3" placeholder="'+esc(bf.ph)+'"></textarea>'+
+       '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[브랜드노트·'+bf.k+'] '+esc(client.name)+'\\',\\'\\',\\'bb-'+bf.f+'\\')">✏️ '+bf.k+' 업데이트</button></div>';
+  }
+  if(bb.updatedAt){ h+='<div class="muted" style="margin-top:10px">마지막 갱신: '+ftime(bb.updatedAt)+'</div>'; }
+  if(bb.log&&bb.log.length){
+    h+='<div class="muted" style="margin-top:8px">최근 이력</div><table style="margin-top:4px"><tr><th style="width:130px">일시</th><th style="width:70px">항목</th><th>내용</th></tr>'+
+      bb.log.slice(0,5).map(l=>'<tr><td class="muted">'+ftime(l.at)+'</td><td>'+esc(l.field)+'</td><td class="muted">'+esc(l.excerpt)+'…</td></tr>').join('')+'</table>';
+  }
+  h+='</div>';
+  // 채널별 가이드
+  h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
+  const guides=client.channelGuides||{};
+  for(const chDef of DATA.channels){
+    const g=guides[chDef.key];
+    h+='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>'+chDef.icon+' '+esc(chDef.label)+'</h3>'+(g&&g.updatedAt?'<span class="muted">갱신 '+ftime(g.updatedAt)+'</span>':'<span class="muted">미설정</span>')+'</div>';
+    if(g&&(g.topics||[]).length){ h+='<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>'; }
+    if(g&&g.guide){ h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">핵심 가이드</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(g.guide)+'</div></div>'; }
+    h+='<textarea id="cg-'+chDef.key+'" class="reqta" rows="4" placeholder="첫 줄에 \\'주제: 소재1, 소재2, 소재3\\' 형식으로 우선 소재를, 그 아래에 이 채널의 규칙·톤·금지사항 등 핵심 가이드를 적어주세요."></textarea>'+
+       '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[가이드·'+chDef.key+'] '+esc(client.name)+'\\',\\'\\',\\'cg-'+chDef.key+'\\')">✏️ '+esc(chDef.label)+' 가이드 업데이트</button></div></div>';
+  }
+  return h;
+}
+function channelGuidePanel(client, key){
+  const g=(client.channelGuides||{})[key];
+  if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
+  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 수정 →</button></div>'+
+    ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
+    (g.guide?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(g.guide)+'</div>':'')+
+    '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+}
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
   const txt=(ta&&ta.value.trim())||'';
@@ -687,6 +748,8 @@ function channelDetail(client, c){
   h+=requestsPanel(c.key, chLabel);
   // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
   h+=periodBar();
+  // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
+  h+=channelGuidePanel(client, c.key);
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';
@@ -889,7 +952,9 @@ function renderClients(){
 }
 function renderTabs(){
   const c=DATA.clients[ci];
-  const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}].concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}));
+  const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
+    .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
     let req='';
@@ -899,12 +964,12 @@ function renderTabs(){
       req = openN ? '<span class="treq open" title="수정요청 처리중 '+openN+'건">🛠'+openN+'</span>'
           : (iss.length ? '<span class="treq done" title="수정요청 전부 처리완료">✅</span>' : '');
     }
-    return '<button class="tab'+(t.key===ch?' on':'')+'" onclick="setCh(\\''+t.key+'\\')">'+t.icon+' '+t.label+(t.key!=='all'?'<span class="dot '+(t.active?'live':'off')+'"></span>':'')+req+'</button>';
+    return '<button class="tab'+(t.key===ch?' on':'')+'" onclick="setCh(\\''+t.key+'\\')">'+t.icon+' '+t.label+(t.key!=='all'&&!t.noDot?'<span class="dot '+(t.active?'live':'off')+'"></span>':'')+req+'</button>';
   }).join('');
 }
 function renderView(){
   const c=DATA.clients[ci];
-  document.getElementById('view').innerHTML = ch==='all'?overview(c):channelDetail(c,c.channels.find(x=>x.key===ch));
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):channelDetail(c,c.channels.find(x=>x.key===ch)));
   document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}

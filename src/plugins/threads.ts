@@ -7,7 +7,7 @@ import type {
   PostContent,
   PublishResult,
 } from '../core/types.js';
-import { pseudoMetrics, simulateApiCall } from './shared.js';
+import { pseudoMetrics, simulateApiCall, timedFetch } from './shared.js';
 
 /**
  * Threads 플러그인 (Threads API by Meta — graph.threads.net).
@@ -198,7 +198,7 @@ export class ThreadsPlugin extends BasePlugin {
       ...params,
       access_token: this.credentials.accessToken!,
     });
-    const res = await fetch(`${ThreadsPlugin.API}/${path}?${qs.toString()}`);
+    const res = await timedFetch(`${ThreadsPlugin.API}/${path}?${qs.toString()}`);
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || json.error) {
       throw new Error(`Threads API: ${json.error?.message ?? res.status}`);
@@ -214,7 +214,7 @@ export class ThreadsPlugin extends BasePlugin {
       ...params,
       access_token: this.credentials.accessToken!,
     });
-    const res = await fetch(`${ThreadsPlugin.API}/${path}`, {
+    const res = await timedFetch(`${ThreadsPlugin.API}/${path}`, {
       method: 'POST',
       body,
     });

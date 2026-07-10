@@ -29,6 +29,7 @@ import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
+import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
 import { loadCredentials } from './core/config.js';
@@ -295,7 +296,7 @@ async function cmdDashboard(args: Args): Promise<void> {
   const learnStore = new LearningStore(dataDir);
   const tokenStore = new TokenHealthStore(dataDir);
   const reportStore = new WeeklyReportStore(dataDir);
-  const html = renderDashboard(clients, store, designStore, planStore, learnStore, tokenStore, reportStore);
+  const html = renderDashboard(clients, store, designStore, planStore, learnStore, tokenStore, reportStore, new GuidanceStore(dataDir));
   mkdirSync(dirname(out), { recursive: true });
   writeFileSync(out, html, 'utf8');
   console.log(`🖥️  대시보드 생성: ${out} (클라이언트 ${clients.length}곳)`);
