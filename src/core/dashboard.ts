@@ -314,82 +314,93 @@ export function renderDashboard(
 <meta http-equiv="refresh" content="300"/>
 <title>pslab 콘텐츠 관제실</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}
-body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#0d0f14;color:#e6e8ee}
-a{color:#6db3ff}
-header{padding:16px 22px;border-bottom:1px solid #1e2230;background:#12141d;position:sticky;top:0;z-index:5}
+:root{color-scheme:light}*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
+a{color:#1d6ae5}
+header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:0;z-index:5}
 .brand{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
-.sub{color:#7b8398;font-size:12px;margin-top:3px}
+.sub{color:#6a7284;font-size:12px;margin-top:3px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .clients{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.cbtn{background:#1a1e2a;border:1px solid #262b3a;color:#cbd3e1;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+.cbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
 .cbtn.on{background:#2b6fff;border-color:#2b6fff;color:#fff}
-.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #1e2230;background:#12141d;position:sticky;top:58px;z-index:4}
-.tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#8b93a7;padding:8px 12px;cursor:pointer;font-size:14px}
-.tab.on{color:#fff;border-bottom-color:#2b6fff}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:58px;z-index:4}
+.tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a7284;padding:8px 12px;cursor:pointer;font-size:14px}
+.tab.on{color:#14171d;border-bottom-color:#2b6fff;font-weight:600}
 .tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
-.dot.live{background:#4ade80}.dot.off{background:#444b5c}
+.dot.live{background:#22c55e}.dot.off{background:#c6ccd8}
+.treq{font-size:10px;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700}
+.treq.open{background:#fdf3e0;color:#b45309}
+.treq.done{background:#e4f7ea;color:#15803d}
 main{padding:18px 22px;max-width:1180px;margin:0 auto}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
-.kpi{background:#141823;border:1px solid #222838;border-radius:12px;padding:12px 14px}
-.kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#7b8398;font-size:12px;margin-top:2px}
-.kpi .v.accent{color:#ffb454}
-.panel{background:#141823;border:1px solid #222838;border-radius:12px;padding:14px 16px;margin-bottom:16px}
+.kpi{background:#f7f9fc;border:1px solid #e4e8f0;border-radius:12px;padding:12px 14px}
+.kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#6a7284;font-size:12px;margin-top:2px}
+.kpi .v.accent{color:#d97706}
+.panel{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,24,40,.04)}
 .panel h3{margin:0 0 10px;font-size:15px}
 .sect-h{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}
 .sect-h h2{font-size:16px;margin:0}
-.btn{background:#222838;border:1px solid #2d3346;color:#cbd3e1;padding:6px 11px;border-radius:8px;font-size:12px;text-decoration:none;cursor:pointer}
-.btn.fb{background:#2a2030;border-color:#5a3a6a;color:#e0b0ff}
+.btn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 11px;border-radius:8px;font-size:12px;text-decoration:none;cursor:pointer}
+.btn.fb{background:#f6effc;border-color:#d9c2ee;color:#7a35b8}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
-.card{background:#141823;border:1px solid #222838;border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-.thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:#0a0c11;display:block}
-.thumb.noimg{display:flex;align-items:center;justify-content:center;color:#4b5263;font-size:13px}
+.card{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eef1f6;display:block}
+.thumb.noimg{display:flex;align-items:center;justify-content:center;color:#9aa2b2;font-size:13px}
 .cbody{padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px}
 .ctop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .ctop strong{font-size:13px}
-.muted{color:#7b8398;font-size:11px}
-.cap{color:#aeb6c6;font-size:12px;line-height:1.4;max-height:3.6em;overflow:hidden}
-.met{display:flex;gap:10px;font-size:11px;color:#9aa3b5;margin-top:auto}
+.muted{color:#6a7284;font-size:11px}
+.cap{color:#4a5264;font-size:12px;line-height:1.4;max-height:3.6em;overflow:hidden}
+.met{display:flex;gap:10px;font-size:11px;color:#5a6274;margin-top:auto}
 .badge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap}
-.b-ok{background:#15331f;color:#4ade80}.b-wait{background:#33290f;color:#ffb454}.b-plan{background:#16243a;color:#6db3ff}.b-hold{background:#331818;color:#ff7a7a}
+.b-ok{background:#e4f7ea;color:#15803d}.b-wait{background:#fdf3e0;color:#b45309}.b-plan{background:#e7effc;color:#2b5fd0}.b-hold{background:#fdeaea;color:#dc2626}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #1e2230}
-th{color:#7b8398;font-weight:600;font-size:12px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e9edf3}
+th{color:#6a7284;font-weight:600;font-size:12px}
 .grade{display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:18px}
-.bar{height:7px;border-radius:4px;background:#222838;overflow:hidden}.bar>i{display:block;height:100%;background:#2b6fff}
-.plan-pill{font-size:11px;color:#9aa3b5}
+.bar{height:7px;border-radius:4px;background:#e9edf3;overflow:hidden}.bar>i{display:block;height:100%;background:#2b6fff}
+.plan-pill{font-size:11px;color:#5a6274}
 .spark{display:block}
-.empty{color:#6b7387;padding:18px;text-align:center;font-size:13px}
-.tag{display:inline-block;background:#1a1e2a;border:1px solid #262b3a;border-radius:6px;padding:2px 7px;font-size:11px;color:#9aa3b5;margin:2px 2px 0 0}
-footer{text-align:center;color:#4b5263;font-size:11px;padding:22px}
-.card.clk{cursor:pointer;transition:transform .12s,border-color .12s}
-.card.clk:hover{transform:translateY(-3px);border-color:#3a4256}
-.b-var{font-weight:600}.v-A{background:#33240f;color:#ff8a3d}.v-B{background:#0c2a28;color:#36d6c4}.v-C{background:#2a2415;color:#ffc24a}
-.modal{position:fixed;inset:0;background:rgba(6,8,12,.82);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow:auto}
+.empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
+.tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
+.card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
+.card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
+.b-var{font-weight:600}.v-A{background:#fdf0e4;color:#c2570f}.v-B{background:#e2f6f4;color:#0f766e}.v-C{background:#fdf6e0;color:#a16207}
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.55);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow:auto}
 .modal.on{display:flex}
-.mwrap{position:relative;background:#12141d;border:1px solid #262b3a;border-radius:16px;max-width:920px;width:100%;padding:22px}
-.mx{position:absolute;top:14px;right:14px;background:#222838;border:1px solid #2d3346;color:#cbd3e1;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
+.mwrap{position:relative;background:#ffffff;border:1px solid #e4e8f0;border-radius:16px;max-width:920px;width:100%;padding:22px}
+.mx{position:absolute;top:14px;right:14px;background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
 #mbody h2{font-size:23px}
-#mbody .kick{color:#ff8a3d;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+#mbody .kick{color:#c2570f;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
 .carou{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;-webkit-overflow-scrolling:touch}
 .carou .slide{position:relative;flex:0 0 auto;scroll-snap-align:center}
-.carou .slide img{height:520px;width:auto;border-radius:14px;display:block;background:#0a0c11;border:1px solid #222838}
-.carou .snum{position:absolute;top:10px;right:10px;background:rgba(8,10,14,.7);color:#cbd3e1;font-size:11px;padding:3px 8px;border-radius:20px}
-.carou::-webkit-scrollbar{height:8px}.carou::-webkit-scrollbar-thumb{background:#2d3346;border-radius:8px}
-.capbox{background:#0f1219;border:1px solid #222838;border-radius:12px;padding:14px 16px}
-.caphd{color:#7b8398;font-size:12px;font-weight:600;margin-bottom:8px}
-.mcap{white-space:normal;line-height:1.75;font-size:15px;color:#d4dae6}
+.carou .slide img{height:520px;width:auto;border-radius:14px;display:block;background:#eef1f6;border:1px solid #e4e8f0}
+.carou .snum{position:absolute;top:10px;right:10px;background:rgba(8,10,14,.7);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px}
+.carou::-webkit-scrollbar{height:8px}.carou::-webkit-scrollbar-thumb{background:#cdd4e0;border-radius:8px}
+.capbox{background:#f7f9fc;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px}
+.caphd{color:#6a7284;font-size:12px;font-weight:600;margin-bottom:8px}
+.mcap{white-space:normal;line-height:1.75;font-size:15px;color:#2a3040}
 .chgrp{margin:10px 0 18px}
-.chgrp-h{font-size:14px;font-weight:700;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #1e2230}
-.md-h1{font-size:19px;margin:10px 0 8px;font-weight:800}.md-h{font-size:15px;color:#ffb454;margin:14px 0 4px;font-weight:700}
-.md-tag{color:#6db3ff;font-weight:600;font-size:13px;margin:10px 0 2px}.md-sp{height:10px}
-.md-quote{background:#16202e;border-left:3px solid #ffb454;padding:8px 12px;color:#e6e8ee;font-size:14px}
+.chgrp-h{font-size:14px;font-weight:700;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e9edf3}
+.md-h1{font-size:19px;margin:10px 0 8px;font-weight:800}.md-h{font-size:15px;color:#b45309;margin:14px 0 4px;font-weight:700}
+.md-tag{color:#1d6ae5;font-weight:600;font-size:13px;margin:10px 0 2px}.md-sp{height:10px}
+.md-quote{background:#fdf6ec;border-left:3px solid #d97706;padding:8px 12px;color:#14171d;font-size:14px}
 .md-quote+.md-quote{padding-top:0}
-.md-tags{color:#6db3ff;font-size:13px;margin-top:12px}
-.md-img{display:block;width:100%;border-radius:10px;margin:12px 0;border:1px solid #222838}
-.mcap b{color:#fff}
+.md-tags{color:#1d6ae5;font-size:13px;margin-top:12px}
+.md-img{display:block;width:100%;border-radius:10px;margin:12px 0;border:1px solid #e4e8f0}
+.mcap b{color:#000}
 .thumbwrap{position:relative}
-.b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#e6e8ee;border:1px solid #2d3346}
+.b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.pbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pbar-t{font-weight:700;font-size:13px;margin-right:4px}
+.pbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px}
+.pbtn.on{background:#14171d;border-color:#14171d;color:#fff}
+.pbar-c{font-size:12px;color:#6a7284;display:inline-flex;align-items:center;gap:5px;margin-left:6px}
+.pbar input[type=date]{border:1px solid #dfe4ec;border-radius:7px;padding:4px 6px;font-size:12px;color:#3a4254;background:#fff}
+.reqta{width:100%;border:1px solid #dfe4ec;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#14171d;background:#fff;resize:vertical}
+.reqta:focus{outline:2px solid #2b6fff33;border-color:#2b6fff}
 @media(max-width:720px){.carou .slide img{height:60vh}}
 </style>
 </head>
@@ -412,9 +423,9 @@ window.onerror = function (m) {
   try {
     var v = document.getElementById('view');
     if (v && !(v.innerHTML && v.innerHTML.replace(/\\s/g, ''))) {
-      v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#ffb4b4">'
+      v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#b91c1c">'
         + '화면을 그리는 중 문제가 생겼어요.<br>'
-        + '<span style="color:#9aa6bd;font-size:13px">' + String(m) + '</span><br><br>'
+        + '<span style="color:#6a7284;font-size:13px">' + String(m) + '</span><br><br>'
         + '<button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button>'
         + '</div>';
     }
@@ -426,6 +437,88 @@ window.onerror = function (m) {
 const DATA = ${json};
 const REPO = DATA.repo;
 let ci = 0, ch = 'all';
+// ── 운영 기간 선택 (전역 상태) ──
+let period = { key:'all', from:null, to:null };
+function periodRange(){
+  if(period.key==='all') return null;
+  const now=new Date(); let from,to;
+  if(period.key==='7d'){ to=now; from=new Date(now.getTime()-6*864e5); }
+  else if(period.key==='14d'){ to=now; from=new Date(now.getTime()-13*864e5); }
+  else if(period.key==='30d'){ to=now; from=new Date(now.getTime()-29*864e5); }
+  else if(period.key==='month'){ from=new Date(now.getFullYear(),now.getMonth(),1); to=now; }
+  else if(period.key==='prev'){ from=new Date(now.getFullYear(),now.getMonth()-1,1); to=new Date(now.getFullYear(),now.getMonth(),0); }
+  else if(period.key==='custom'){
+    if(!period.from&&!period.to) return null;
+    from=period.from?new Date(period.from):new Date(0);
+    to=period.to?new Date(period.to):now;
+  } else return null;
+  const f=new Date(from); f.setHours(0,0,0,0);
+  const t=new Date(to); t.setHours(23,59,59,999);
+  return [f.getTime(), t.getTime()];
+}
+function inPeriod(s){ const r=periodRange(); if(!r) return true; if(!s) return false; const t=new Date(s).getTime(); return t>=r[0]&&t<=r[1]; }
+function periodLabel(){
+  const names={all:'전체 기간','7d':'최근 7일','14d':'최근 14일','30d':'최근 30일',month:'이번 달',prev:'지난 달',custom:'직접 선택'};
+  const r=periodRange();
+  const d=x=>new Date(x).toISOString().slice(0,10);
+  return names[period.key]+(r?' ('+d(r[0])+' ~ '+d(r[1])+')':'');
+}
+function periodBar(){
+  const b=(k,l)=>'<button class="pbtn'+(period.key===k?' on':'')+'" onclick="setPeriod(\\''+k+'\\')">'+l+'</button>';
+  return '<div class="panel pbar"><span class="pbar-t">📆 운영 기간</span>'+
+    b('all','전체')+b('7d','최근 7일')+b('14d','최근 14일')+b('30d','최근 30일')+b('month','이번 달')+b('prev','지난 달')+
+    '<span class="pbar-c">직접 선택 <input type="date" id="pfrom" value="'+(period.from||'')+'" onchange="setCustom()"/> ~ <input type="date" id="pto" value="'+(period.to||'')+'" onchange="setCustom()"/></span>'+
+    '<span class="muted" style="margin-left:auto">'+periodLabel()+'</span></div>';
+}
+function setPeriod(k){ period.key=k; renderView(); }
+function setCustom(){
+  period.key='custom';
+  period.from=(document.getElementById('pfrom')||{}).value||null;
+  period.to=(document.getElementById('pto')||{}).value||null;
+  renderView();
+}
+// ── 수정요청 (깃허브 이슈 연동: [수정요청·채널키] 제목 규약) ──
+let ISSUES=null; // null=로딩중, []=없음/실패
+const REQ_RE=/^\\[수정요청·([a-z-]+)\\]\\s*(.*)$/;
+function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key); }
+function loadIssues(){
+  fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
+    .then(r=>r.ok?r.json():[])
+    .then(arr=>{
+      ISSUES=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request).map(x=>{
+        const m=REQ_RE.exec(x.title||''); if(!m) return null;
+        return { chKey:m[1], titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
+      }).filter(Boolean);
+      renderTabs(); renderView();
+    })
+    .catch(()=>{ ISSUES=[]; });
+}
+function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
+function requestsPanel(key, chLabel){
+  const list=channelIssues(key);
+  const open=list.filter(x=>x.state!=='closed').length;
+  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>';
+  if(list.length){
+    h+='<table><tr><th style="width:92px">상태</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
+      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
+  } else if(ISSUES!==null){
+    h+='<div class="empty" style="padding:8px">아직 등록된 수정요청이 없습니다. 아래에 바로 작성해 보세요.</div>';
+  }
+  h+='<div style="margin-top:12px"><textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn fb" onclick="submitReq(\\''+esc(key)+'\\',\\''+esc(chLabel)+'\\')">✏️ 수정요청 등록</button>'+
+    '<span class="muted">등록을 누르면 깃허브 창이 열립니다 — 초록색 “Submit new issue” 버튼만 누르면 접수 완료. 처리 상태는 이 게시판에 자동 표시됩니다.</span></div></div></div>';
+  return h;
+}
+function submitReq(key, chLabel){
+  const ta=document.getElementById('reqtext-'+key);
+  const txt=(ta&&ta.value.trim())||'';
+  if(!txt){ alert('요청 내용을 먼저 적어주세요.'); return; }
+  const first=txt.split('\\n')[0].slice(0,42);
+  const title='[수정요청·'+key+'] '+first;
+  const body='채널: '+chLabel+'\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
+  window.open(issue(title,body),'_blank');
+  if(ta) ta.value='';
+}
 // 카드 이미지 캐시버스팅 — 기획안 갱신 시에만 새로 받게 버전 쿼리 부여
 const VER = (((DATA.clients[0]||{}).planUpdatedAt)||DATA.generatedAt||'').replace(/\\D/g,'').slice(0,14);
 const imgv = s => !s ? s : (s + (s.indexOf('?')<0?'?':'&') + 'v=' + VER);
@@ -487,9 +580,9 @@ function openDetail(id){
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
   const m=it.metrics;
-  const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#2d3a5a"><div class="caphd">📊 성과 데이터</div>'+
+  const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#c9d8f0"><div class="caphd">📊 성과 데이터</div>'+
     '<div class="met" style="font-size:13px"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>참여율 '+pct(m.engagementRate||0)+'</span></div>'+
-    (it.insightComment?'<div style="color:#9fe6b0;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
+    (it.insightComment?'<div style="color:#15803d;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
   document.getElementById('mbody').innerHTML=
     '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+'</div>'+
     '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
@@ -513,18 +606,18 @@ function manualHelper(it, chDef){
   const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
   const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
-    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#12233d;border-color:#2b5aa0;color:#bcd6ff">⬇ 대표이미지(가로)</a>':'');
+    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(가로)</a>':'');
   const isYt=chDef.key==='youtube';
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
     : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(가로)”를 받아 네이버 대표사진으로 지정(가로 16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
-  const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#2a1530;border-color:#7a3a6a;color:#ffb0e0">🎬 쇼츠 영상 다운로드</a>':'';
+  const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
-    '<div style="margin-top:10px;border-top:1px solid #2a3417;padding-top:10px">'+
+    '<div style="margin-top:10px;border-top:1px solid #e4e8f0;padding-top:10px">'+
     (it.ytTitle?'<div class="muted" style="font-size:11px">제목</div><div class="mcap" style="font-size:13px;margin-bottom:8px">'+esc(it.ytTitle)+'</div>':'')+
-    (it.ytDescription?'<div class="muted" style="font-size:11px">설명(멘션)</div><div class="mcap" style="font-size:12px;white-space:pre-wrap;max-height:9em;overflow:auto;background:#0f1219;border:1px solid #222838;border-radius:8px;padding:8px;margin-bottom:8px">'+esc(it.ytDescription)+'</div>':'')+
+    (it.ytDescription?'<div class="muted" style="font-size:11px">설명(멘션)</div><div class="mcap" style="font-size:12px;white-space:pre-wrap;max-height:9em;overflow:auto;background:#f7f9fc;border:1px solid #e4e8f0;border-radius:8px;padding:8px;margin-bottom:8px">'+esc(it.ytDescription)+'</div>':'')+
     (it.ytTags&&it.ytTags.length?'<div class="muted" style="font-size:11px">태그</div><div style="margin-bottom:4px">'+it.ytTags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>':'')+
     '</div>'):'';
   const ytBtns=isYt?(
@@ -532,7 +625,7 @@ function manualHelper(it, chDef){
     (it.ytDescription?'<button class="btn fb" id="ytdesc-'+esc(it.id)+'" onclick="copyField(\\''+esc(it.id)+'\\',\\'ytDescription\\',this.id)">📝 설명(멘션) 복사</button>':'')+
     (it.ytTags&&it.ytTags.length?'<button class="btn" id="yttags-'+esc(it.id)+'" onclick="copyTags(\\''+esc(it.id)+'\\',this.id)"># 태그 복사</button>':'')
   ):'';
-  return '<div class="capbox" style="margin-top:12px;border-color:#3a4a1f;background:#14180e">'+
+  return '<div class="capbox" style="margin-top:12px;border-color:#d8e4bc;background:#f8fbee">'+
     '<div class="caphd">📋 수동 발행 도우미 ('+esc(chDef.label)+')</div>'+
     '<div class="muted" style="margin-bottom:10px">'+guide+'</div>'+
     '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
@@ -590,6 +683,10 @@ function fmtCaption(s){
 function channelDetail(client, c){
   const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
   let h='';
+  // ① 수정요청 게시판 — 채널 최상단 (작성 + 처리 현황)
+  h+=requestsPanel(c.key, chLabel);
+  // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
+  h+=periodBar();
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';
@@ -600,30 +697,39 @@ function channelDetail(client, c){
   if(!c.active){
     h+='<div class="panel"><div class="empty">이 채널은 아직 <b>연결되지 않았습니다</b>. 설정표(targets)에 '+chLabel+'을 추가하고 키를 연결하면 자동 발행이 시작됩니다.</div></div>';
   }
-  // KPI
+  // 선택 기간으로 필터한 히스토리·데이터
+  const pubF=c.published.filter(p=>inPeriod(p.time));
+  const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>it.status!=='published');
+  // KPI (기간 반영) — 사이클 발행분(pubF) + 기획 발행분(planPubF) 합산
+  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
+    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
+  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
   h+='<div class="kpis">'+
-    kpi(c.stats.publishedCount,'발행됨')+
-    kpi(c.stats.pendingCount,'발행 대기')+
-    kpi(pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
-    kpi(c.stats.totalViews,'누적 조회')+
-    kpi(c.stats.totalLikes,'누적 좋아요')+'</div>';
-  if(c.series&&c.series.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %)</h3>'+sparkline(c.series)+'</div>';}
-  // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트)
-  h+=pubDataRows(c.pending);
+    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
+    kpi(waiting.length,'발행 대기')+
+    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
+    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
+    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
+  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
+  if(seriesF.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %) · '+periodLabel()+'</h3>'+sparkline(seriesF.slice(-12))+'</div>';}
+  // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트) — 기간 반영
+  h+=pubDataRows(planPubF);
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
-  // 발행 대기
-  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+c.pending.length+')</h2></div>';
-  h+= c.pending.length? '<div class="cards">'+c.pending.map(it=>planCard(client,chLabel,it)).join('')+'</div>' : '<div class="empty">예정된 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>';
-  // 발행됨
-  h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 ('+c.published.length+')</h2></div>';
-  h+= c.published.length? '<div class="cards">'+c.published.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')).join('')+'</div>' : '<div class="empty">아직 발행된 콘텐츠가 없습니다.</div>';
+  // 발행 대기 (발행 전 콘텐츠만)
+  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+')</h2></div>';
+  h+= waiting.length? '<div class="cards">'+waiting.map(it=>planCard(client,chLabel,it)).join('')+'</div>' : '<div class="empty">예정된 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>';
+  // 발행됨 — 기간 반영 히스토리 (기획 발행분 + 사이클 발행분)
+  h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 · '+periodLabel()+' ('+(planPubF.length+pubF.length)+')</h2></div>';
+  const pubCards=planPubF.map(it=>planCard(client,chLabel,it)).concat(pubF.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
+  h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
   return h;
 }
 function blogSection(client){
   const b=client.blog;
-  const color = b.score>=70?'#15331f':b.score>=40?'#33290f':'#262b3a';
-  const fg = b.score>=70?'#4ade80':b.score>=40?'#ffb454':'#9aa3b5';
+  const color = b.score>=70?'#e4f7ea':b.score>=40?'#fdf3e0':'#eef1f6';
+  const fg = b.score>=70?'#15803d':b.score>=40?'#b45309':'#5a6274';
   let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>📊 블로그 지수 (blogdex 스타일)</h3><span class="muted">내부 추정 · 네이버 연동 시 실측 교체</span></div>';
   h+='<div class="row"><div class="grade" style="background:'+color+';color:'+fg+'">'+esc(b.grade)+'</div>'+
      '<div style="flex:1;min-width:160px"><div class="muted">종합 점수 '+b.score+'/100</div><div class="bar"><i style="width:'+b.score+'%"></i></div></div></div>';
@@ -642,9 +748,9 @@ function tokenBanner(client){
   const th=client.tokenHealth; if(!th||!th.tokens||!th.tokens.length) return '';
   const bad=th.tokens.filter(t=>t.warn||!t.ok);
   if(!bad.length) return '';
-  return '<div class="panel" style="border-color:#5a3a2a;background:#241a14">'+
+  return '<div class="panel" style="border-color:#f0cfae;background:#fdf6ec">'+
     '<h3>🔑 토큰 점검 경고</h3>'+
-    bad.map(t=>'<div class="muted" style="color:#ffb454;font-size:13px;margin:2px 0">'+(t.ok?'🟡':'🔴')+' '+esc(t.label)+': '+esc(t.detail||'확인 필요')+'</div>').join('')+
+    bad.map(t=>'<div class="muted" style="color:#b45309;font-size:13px;margin:2px 0">'+(t.ok?'🟡':'🔴')+' '+esc(t.label)+': '+esc(t.detail||'확인 필요')+'</div>').join('')+
     '<div class="muted" style="margin-top:6px">토큰을 새로 발급해 GitHub 시크릿(PSLAB_*_ACCESS_TOKEN)을 갱신하세요. 마지막 점검: '+ftime(th.checkedAt)+'</div></div>';
 }
 function learningPanel(client){
@@ -656,10 +762,10 @@ function learningPanel(client){
     return h;
   }
   if(L.hints&&L.hints.length){
-    h+='<div style="margin-bottom:10px">'+L.hints.map(x=>'<div class="muted" style="color:#9fe6b0;font-size:13px;margin:3px 0">💡 '+esc(x)+'</div>').join('')+'</div>';
+    h+='<div style="margin-bottom:10px">'+L.hints.map(x=>'<div class="muted" style="color:#15803d;font-size:13px;margin:3px 0">💡 '+esc(x)+'</div>').join('')+'</div>';
   }
   if(L.variants&&L.variants.length){
-    h+='<div class="muted" style="margin:8px 0 4px">디자인 변형별 성과'+(L.bestVariant?' · 우세: <b style="color:#ffb454">'+esc(L.bestVariant)+'안</b>':'')+'</div>'+
+    h+='<div class="muted" style="margin:8px 0 4px">디자인 변형별 성과'+(L.bestVariant?' · 우세: <b style="color:#b45309">'+esc(L.bestVariant)+'안</b>':'')+'</div>'+
       '<table><tr><th>디자인</th><th>발행</th><th>평균 참여율</th><th>평균 좋아요</th></tr>'+L.variants.map(gs).join('')+'</table>';
   }
   if(L.hours&&L.hours.length>1){
@@ -673,11 +779,11 @@ function weeklyPanel(client){
   const chRows=(w.channels||[]).map(c=>'<tr><td>'+esc(c.label)+'</td><td>'+c.posts+'</td><td>'+pct(c.avgEngagement)+'</td><td>'+c.totalViews+'</td><td>'+c.totalLikes+'</td></tr>').join('');
   const recs=(w.recommendations||[]).map(r=>'<li>'+esc(r)+'</li>').join('');
   const top=w.top?'<div class="muted" style="margin:6px 0">🏆 최고 성과: <b>['+esc(w.top.label)+'] '+esc(w.top.title)+'</b> ('+pct(w.top.engagementRate)+')</div>':'';
-  return '<div class="panel" style="border-color:#2d3a5a;background:#121a26">'+
+  return '<div class="panel" style="border-color:#c9d8f0;background:#f2f6fd">'+
     '<div class="sect-h" style="margin:0 0 10px"><h3>📅 주간 종합 리포트</h3><span class="muted">'+esc(w.weekOf)+' 주 · 발행 '+w.postsCount+'건 · '+ftime(w.generatedAt)+'</span></div>'+
     '<div class="mcap" style="font-size:14px;margin-bottom:8px">'+esc(w.summary)+'</div>'+top+
     (chRows?'<table style="margin:8px 0"><tr><th>채널</th><th>발행</th><th>평균 참여율</th><th>조회</th><th>좋아요</th></tr>'+chRows+'</table>':'')+
-    (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#9fe6b0;font-size:13px">'+recs+'</ul>':'')+
+    (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#15803d;font-size:13px">'+recs+'</ul>':'')+
     '</div>';
 }
 function pubDataRows(items){
@@ -687,7 +793,7 @@ function pubDataRows(items){
   pub.sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
   const rows=pub.map(it=>{const m=it.metrics||{};
     return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
-      (it.insightComment?'<div style="color:#9fe6b0;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
+      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
       '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
       '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
   }).join('');
@@ -715,16 +821,16 @@ function setupPanel(){
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
 function chGrad(key){
-  return ({youtube:'linear-gradient(135deg,#3a0d12,#5a1620)',instagram:'linear-gradient(135deg,#3a1140,#5a1a4a)',threads:'linear-gradient(135deg,#0f1c1e,#16282b)','naver-blog':'linear-gradient(135deg,#0e2417,#123a22)',blogger:'linear-gradient(135deg,#3a1e08,#5a2f0d)',linkedin:'linear-gradient(135deg,#0d1b33,#12294d)'})[key]||'linear-gradient(135deg,#161b26,#1c2434)';
+  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)',linkedin:'linear-gradient(135deg,#ecf2fc,#dce8f8)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
 }
-function chBorder(key){ return ({youtube:'#7a2530',instagram:'#7a3a6a',threads:'#2b5a5f','naver-blog':'#2b7a4a',blogger:'#7a4a1f',linkedin:'#2b5aa0'})[key]||'#2b3550'; }
+function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e',linkedin:'#b8cef0'})[key]||'#dfe4ec'; }
 function channelLinksPanel(client){
   const links=client.channelLinks||[];
   if(!links.length) return '';
   const cards=links.map(l=>
     '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" style="flex:1 1 200px;min-width:180px;text-decoration:none;border-radius:14px;padding:16px 18px;border:1px solid '+chBorder(l.key)+';background:'+chGrad(l.key)+';display:block">'+
-    '<div style="font-weight:800;font-size:18px;color:#f4f7fb;margin-bottom:4px">'+l.icon+' '+esc(l.label)+'</div>'+
-    '<div style="font-size:13px;color:#cdd6e6;opacity:.85">'+esc(l.sub)+'</div></a>').join('');
+    '<div style="font-weight:800;font-size:18px;color:#14171d;margin-bottom:4px">'+l.icon+' '+esc(l.label)+'</div>'+
+    '<div style="font-size:13px;color:#4a5264;opacity:.9">'+esc(l.sub)+'</div></a>').join('');
   return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
 }
@@ -733,35 +839,48 @@ function overview(client){
   h+=setupPanel();
   h+=channelLinksPanel(client);
   h+=weeklyPanel(client);
+  h+=periodBar();
   h+='<div class="kpis">'+
     kpi(client.totalCycles,'총 사이클')+
     kpi(client.totalPublished,'총 발행')+
     kpi(client.heldCount,'승인 대기',client.heldCount>0)+
     kpi('v'+client.designVersion,'디자인 진화')+'</div>';
   h+=learningPanel(client);
-  h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th></tr>'+
+  h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th><th>수정요청</th></tr>'+
     client.channels.map(c=>{const lab=(DATA.channels.find(x=>x.key===c.key)||{});
-      return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td></tr>';}).join('')+'</table></div>';
-  // 이번 달 콘텐츠 기획안 — 채널별로 묶어서 (채널별 순차 검수)
+      const iss=channelIssues(c.key); const openN=iss.filter(x=>x.state!=='closed').length;
+      const reqCell=iss.length?(openN?'<span class="badge b-wait">🛠 처리중 '+openN+'</span>':'<span class="badge b-ok">✅ 완료 '+iss.length+'</span>'):'<span class="muted">-</span>';
+      return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td><td>'+reqCell+'</td></tr>';}).join('')+'</table></div>';
+  // 발행 전 콘텐츠 기획안 — 메인에는 발행 전(예정·수동대기)만 보여준다
   const plan=client.planCards||[];
+  const pre=plan.filter(p=>p.status!=='published');
   const fbTitle='['+client.name+'] 기획안 전체 피드백';
   const fbBody='이번 달 기획안에 대한 의견/수정사항을 적어주세요.\\n\\n';
-  h+='<div class="sect-h"><h2>📅 7월 콘텐츠 기획안 ('+plan.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
-  if(!plan.length){ h+='<div class="empty">기획안이 아직 없습니다.</div>'; }
+  const mon=new Date(DATA.generatedAt).getMonth()+1;
+  h+='<div class="sect-h"><h2>🕓 '+mon+'월 발행 전 콘텐츠 ('+pre.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
+  if(!pre.length){ h+='<div class="empty">발행 전 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>'; }
   else {
     for(const chDef of DATA.channels){
-      const items=plan.filter(p=>(p.channels||[]).includes(chDef.key));
+      const items=pre.filter(p=>(p.channels||[]).includes(chDef.key));
       if(!items.length) continue;
       const lab=chDef.icon+' '+chDef.label;
       h+='<div class="chgrp"><div class="chgrp-h">'+lab+' <span class="muted">'+items.length+'건 · '+esc((items[0].format)||'')+'</span></div>'+
          '<div class="cards">'+items.map(p=>planCard(client,chDef.label,p)).join('')+'</div></div>';
     }
   }
-  // 경쟁사 + 최근 발행 미리보기
+  // 선택한 기간의 발행 게시물 (기획 발행분 + 사이클 발행분)
+  const planPub=plan.filter(p=>p.status==='published'&&inPeriod(p.publishedAt||p.scheduledFor))
+    .sort((a,b)=>String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
+  const recent=[].concat(...client.channels.map(c=>c.published)).filter(p=>inPeriod(p.time))
+    .sort((a,b)=>(b.time||'').localeCompare(a.time||'')).slice(0,12);
+  h+='<div class="sect-h"><h2>✅ 발행된 게시물 · '+periodLabel()+' ('+(planPub.length+recent.length)+')</h2></div>';
+  const pubCards=planPub.map(p=>{
+    const chDef=DATA.channels.find(x=>x.key===((p.channels||[])[0]))||{label:''};
+    return planCard(client,chDef.label,p);
+  }).concat(recent.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
+  h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
+  // 경쟁사
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
-  const recent=[].concat(...client.channels.map(c=>c.published)).sort((a,b)=>(b.time||'').localeCompare(a.time||'')).slice(0,8);
-  h+='<div class="sect-h"><h2>✅ 최근 발행</h2></div>';
-  h+= recent.length?'<div class="cards">'+recent.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')).join('')+'</div>':'<div class="empty">아직 발행된 콘텐츠가 없습니다. (검수 우선 — 승인 후 발행)</div>';
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
@@ -771,7 +890,17 @@ function renderClients(){
 function renderTabs(){
   const c=DATA.clients[ci];
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}].concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}));
-  document.getElementById('tabs').innerHTML = tabs.map(t=>'<button class="tab'+(t.key===ch?' on':'')+'" onclick="setCh(\\''+t.key+'\\')">'+t.icon+' '+t.label+(t.key!=='all'?'<span class="dot '+(t.active?'live':'off')+'"></span>':'')+'</button>').join('');
+  document.getElementById('tabs').innerHTML = tabs.map(t=>{
+    // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
+    let req='';
+    if(t.key!=='all'){
+      const iss=channelIssues(t.key);
+      const openN=iss.filter(x=>x.state!=='closed').length;
+      req = openN ? '<span class="treq open" title="수정요청 처리중 '+openN+'건">🛠'+openN+'</span>'
+          : (iss.length ? '<span class="treq done" title="수정요청 전부 처리완료">✅</span>' : '');
+    }
+    return '<button class="tab'+(t.key===ch?' on':'')+'" onclick="setCh(\\''+t.key+'\\')">'+t.icon+' '+t.label+(t.key!=='all'?'<span class="dot '+(t.active?'live':'off')+'"></span>':'')+req+'</button>';
+  }).join('');
 }
 function renderView(){
   const c=DATA.clients[ci];
@@ -781,10 +910,10 @@ function renderView(){
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
 function setCh(k){ch=k;renderTabs();renderView();window.scrollTo(0,0);}
 try {
-  renderClients(); renderTabs(); renderView();
+  renderClients(); renderTabs(); renderView(); loadIssues();
 } catch (e) {
   var v = document.getElementById('view');
-  if (v) v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#ffb4b4">표시 중 오류: '
+  if (v) v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#b91c1c">표시 중 오류: '
     + ((e && e.message) || e)
     + '<br><br><button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button></div>';
 }
