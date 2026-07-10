@@ -129,10 +129,12 @@ export class InstagramPlugin extends BasePlugin {
       }
       const created = await this.graphPost(`${igUserId}/media`, params);
       creationId = String(created.id);
-      if (media.kind === 'video') {
-        await this.waitForContainerReady(creationId);
-      }
     }
+
+    // 컨테이너가 FINISHED 상태가 될 때까지 대기 후 발행.
+    // 이미지/캐러셀도 서버 측 처리가 비동기라, 곧바로 media_publish를 부르면
+    // 드물게 "Media ID is not available" 오류가 난다(처리 완료 전 호출).
+    await this.waitForContainerReady(creationId);
 
     // 2단계: 발행
     const published = await this.graphPost(`${igUserId}/media_publish`, {
@@ -213,7 +215,7 @@ export class InstagramPlugin extends BasePlugin {
       .slice(0, InstagramPlugin.CAPTION_LIMIT);
   }
 
-  /** 영상 컨테이너가 발행 가능 상태(FINISHED)가 될 때까지 폴링한다. */
+  /** 미디어 컨테이너(이미지/캐러셀/영상)가 발행 가능 상태(FINISHED)가 될 때까지 폴링한다. */
   private async waitForContainerReady(
     creationId: string,
     maxTries = 15,

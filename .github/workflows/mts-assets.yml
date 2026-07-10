@@ -1,0 +1,62 @@
+name: mts assets
+
+# 신규 업체(먼데이투선데이 청담) 제안용 실제 브랜드 사진을 저장소로 가져온다.
+# 이 개발 환경은 외부 이미지 호스트가 프록시에서 차단되므로,
+# 인터넷이 열린 GitHub Actions 러너에서 내려받아 커밋한다.
+on:
+  push:
+    branches: [claude/eager-mayer-tknneh]
+    paths:
+      - 'data/mts-assets.json'
+      - '.github/workflows/mts-assets.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mts-assets
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: 이미지 다운로드 (실제 브랜드 사진)
+        run: |
+          mkdir -p assets/mts
+          node -e '
+            const fs=require("fs");
+            const list=JSON.parse(fs.readFileSync("data/mts-assets.json","utf8"));
+            const ua="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+            const extOf=(ct)=>{ ct=(ct||"").toLowerCase();
+              if(ct.includes("webp"))return"webp"; if(ct.includes("png"))return"png";
+              if(ct.includes("gif"))return"gif"; return"jpg"; };
+            (async()=>{
+              for(const it of list){
+                try{
+                  const r=await fetch(it.url,{headers:{"user-agent":ua,"referer":it.referer||"","accept":"image/avif,image/webp,image/apng,image/*,*/*"}});
+                  if(!r.ok){ console.log("FAIL",it.name,r.status); continue; }
+                  const b=Buffer.from(await r.arrayBuffer());
+                  const ext=extOf(r.headers.get("content-type"));
+                  fs.writeFileSync(`assets/mts/${it.name}.${ext}`, b);
+                  console.log("ok",it.name,ext,b.length);
+                }catch(e){ console.log("ERR",it.name,String(e)); }
+              }
+            })();
+          '
+      - name: 목록 출력
+        run: ls -la assets/mts || true
+      - name: 커밋
+        run: |
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f assets/mts
+          git commit -m "chore(mts): 먼데이투선데이 실제 브랜드 사진 다운로드" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push ok"; exit 0; }
+            echo "retry $i"; sleep 4
+          done
