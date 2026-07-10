@@ -7,7 +7,7 @@ import type {
   PostContent,
   PublishResult,
 } from '../core/types.js';
-import { pseudoMetrics, simulateApiCall } from './shared.js';
+import { pseudoMetrics, simulateApiCall, timedFetch } from './shared.js';
 
 /**
  * Instagram 플러그인 (Instagram Graph API).
@@ -240,7 +240,7 @@ export class InstagramPlugin extends BasePlugin {
       ...params,
       access_token: this.credentials.accessToken!,
     });
-    const res = await fetch(`${InstagramPlugin.API}/${path}?${qs.toString()}`);
+    const res = await timedFetch(`${InstagramPlugin.API}/${path}?${qs.toString()}`);
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || json.error) {
       throw new Error(`Instagram API: ${json.error?.message ?? res.status}`);
@@ -256,7 +256,7 @@ export class InstagramPlugin extends BasePlugin {
       ...params,
       access_token: this.credentials.accessToken!,
     });
-    const res = await fetch(`${InstagramPlugin.API}/${path}`, {
+    const res = await timedFetch(`${InstagramPlugin.API}/${path}`, {
       method: 'POST',
       body,
     });

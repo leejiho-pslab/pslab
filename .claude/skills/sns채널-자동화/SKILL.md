@@ -177,6 +177,22 @@ description: >-
   6. **처리 상태 자동 표시** — `loadIssues()`가 GitHub API(공개 repo, 무인증)로 이슈를 읽어
      제목 규약을 파싱: open=🛠 처리중, closed=✅ 처리완료. 채널 탭 메뉴에 `treq` 배지(🛠n/✅),
      채널별 요약 표에 수정요청 열. **운영자는 이슈를 닫는 것으로 '처리완료' 처리**.
+- **지침 시스템(v3)** — AI가 "상시 학습"하는 운영자 입력 창구 (`src/core/guidance.ts`):
+  - 대시보드 **🧭 지침 탭**: 브랜드 노트(분석/방향성/감도) 3종 + 채널별 주제·핵심 가이드 작성 폼.
+    이슈 제목 규약 `[브랜드노트·분석|방향성|감도]`, `[가이드·<채널key>]` (본문 `주제:` 줄 = 우선 소재 풀).
+  - **guidance-sync.yml** (`on: issues`): 규약 이슈를 파싱해 `data/clients/<id>/brand-brief.json` +
+    `channel-guides.json`에 반영 → 대시보드 재생성·커밋 → **이슈 자동 닫기(반영 완료 코멘트)** → Pages 배포.
+    ※ issues 이벤트는 **기본 브랜치의 워크플로만** 실행되므로 반드시 기본 브랜치에 있어야 함.
+  - **생성 파이프라인 연동**: 오케스트레이터가 사이클마다 로드 —
+    채널 가이드 topics → `reinforcement.favoredTopics` 선두 + research keywords 병합(소재 선정 우선),
+    브랜드 노트(`brandNotesText`) + 가이드 본문 → `ContentBrief.brandNotes/channelGuide` →
+    Claude systemPrompt에 "[운영자 브랜드 노트]" / "[채널 핵심 가이드]" 블록으로 주입.
+  - 각 채널 탭 상단에 현재 가이드 요약 패널(`channelGuidePanel`) 표시.
+- **안정성 수칙**: 모든 외부 API 호출은 `timedFetch`(기본 60초, 유튜브 업로드 600초) 사용 —
+  응답 없는 연결이 크론 잡을 몇십 분씩 묶어두는 사고 방지(2026-07-09 15분 행 사례).
+  워크플로 잡에는 `timeout-minutes`(cron 25분/publish 15분/sync 15분) 필수.
+  대시보드 인라인 JS의 onclick 문자열은 TS 소스에서 `\\'`(백슬래시 2개)로 이스케이프해야 함
+  — `\'` 하나면 SyntaxError로 대시보드 전체가 오류 화면이 된다.
 - **무인 안전장치 3종** (조용한 실패 방지):
   1. **발행 실패 즉시 푸시** — 성공뿐 아니라 채널별 실패도 텔레그램으로 알림(에러 메시지 포함).
      "발행이 며칠째 멈췄는데 아무도 몰랐다" 사태 차단.

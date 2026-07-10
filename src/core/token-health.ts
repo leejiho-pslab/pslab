@@ -10,6 +10,7 @@
  *   PSLAB_INSTAGRAM_ACCESS_TOKEN  / PSLAB_FB_APP_ID, PSLAB_FB_APP_SECRET(선택)
  *   PSLAB_THREADS_ACCESS_TOKEN    / PSLAB_THREADS_APP_ID, PSLAB_THREADS_APP_SECRET(선택)
  */
+import { timedFetch } from '../plugins/shared.js';
 import {
   readFileSync,
   writeFileSync,
@@ -47,7 +48,7 @@ async function expiresInDays(
   if (!appId || !appSecret) return undefined;
   try {
     const url = `${apiBase}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${appId}|${appSecret}`;
-    const res = await fetch(url);
+    const res = await timedFetch(url);
     const json: any = await res.json().catch(() => ({}));
     const expiresAt = json?.data?.expires_at;
     if (typeof expiresAt !== 'number' || expiresAt === 0) return undefined; // 0 = 무기한
@@ -64,7 +65,7 @@ async function liveCheck(
   token: string,
 ): Promise<{ ok: boolean; detail?: string }> {
   try {
-    const res = await fetch(`${apiBase}/me?fields=id&access_token=${encodeURIComponent(token)}`);
+    const res = await timedFetch(`${apiBase}/me?fields=id&access_token=${encodeURIComponent(token)}`);
     const json: any = await res.json().catch(() => ({}));
     if (!res.ok || json.error) {
       return { ok: false, detail: json?.error?.message ?? `HTTP ${res.status}` };
@@ -117,7 +118,7 @@ async function googleRefreshCheck(
       refresh_token: refreshToken,
       grant_type: 'refresh_token',
     });
-    const res = await fetch('https://oauth2.googleapis.com/token', {
+    const res = await timedFetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       body,
     });
@@ -150,7 +151,7 @@ async function linkedinCheck(token?: string): Promise<TokenStatus | undefined> {
   if (!token) return undefined;
   const base = { label: 'LinkedIn', platform: 'linkedin' };
   try {
-    const res = await fetch('https://api.linkedin.com/v2/userinfo', {
+    const res = await timedFetch('https://api.linkedin.com/v2/userinfo', {
       headers: { authorization: `Bearer ${token}` },
     });
     if (res.status === 401) {

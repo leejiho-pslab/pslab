@@ -59,6 +59,12 @@ function systemPrompt(brief: ContentBrief): string {
     brief.audience ? `독자: ${brief.audience}. 이들이 "이건 진짜 현업 사람이 쓴 글이다"라고 느끼게 하세요.` : '',
     brief.tone ? `말투: ${brief.tone}.` : '',
     platformGuide(brief.targetPlatform),
+    brief.brandNotes
+      ? `\n[운영자 브랜드 노트 — 최신 지침. 아래 내용을 최우선으로 반영]\n${brief.brandNotes}`
+      : '',
+    brief.channelGuide
+      ? `\n[이 채널의 핵심 가이드 — 운영자가 정한 규칙. 반드시 따를 것]\n${brief.channelGuide}`
+      : '',
     '',
     '[좋은 글의 조건]',
     '1) 첫 문장에서 멈추게 한다 — 뻔한 인사("~에 대해 알아볼게요") 절대 금지. 구체적 장면·숫자·반론·질문으로 시작.',

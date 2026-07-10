@@ -26,6 +26,10 @@ export interface ContentBrief {
   targetPlatform?: PlatformId;
   /** 함께 생성/첨부할 미디어 요청 */
   media?: MediaRequest[];
+  /** 운영자 브랜드 노트(분석·방향성·감도) — 프롬프트에 최우선 반영 */
+  brandNotes?: string;
+  /** 대상 채널의 핵심 가이드 — 프롬프트에 반영 */
+  channelGuide?: string;
   /** 콜투액션 / 링크 */
   link?: string;
 }

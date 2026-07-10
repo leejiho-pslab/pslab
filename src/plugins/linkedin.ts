@@ -6,7 +6,7 @@ import type {
   PostContent,
   PublishResult,
 } from '../core/types.js';
-import { pseudoMetrics, simulateApiCall } from './shared.js';
+import { pseudoMetrics, simulateApiCall, timedFetch } from './shared.js';
 
 /**
  * LinkedIn 플러그인 (LinkedIn Posts API, REST).
@@ -89,7 +89,7 @@ export class LinkedInPlugin extends BasePlugin {
       ...(media ? { content: { media } } : {}),
     };
 
-    const res = await fetch(`${LinkedInPlugin.API}/posts`, {
+    const res = await timedFetch(`${LinkedInPlugin.API}/posts`, {
       method: 'POST',
       headers: this.headers(),
       body: JSON.stringify(body),
@@ -136,7 +136,7 @@ export class LinkedInPlugin extends BasePlugin {
 
   /** 공개 URL의 이미지를 내려받아 LinkedIn Images API로 업로드하고 자산 urn을 반환한다. */
   private async uploadImage(author: string, publicUrl: string): Promise<string> {
-    const initRes = await fetch(`${LinkedInPlugin.API}/images?action=initializeUpload`, {
+    const initRes = await timedFetch(`${LinkedInPlugin.API}/images?action=initializeUpload`, {
       method: 'POST',
       headers: this.headers(),
       body: JSON.stringify({ initializeUploadRequest: { owner: author } }),
@@ -147,13 +147,13 @@ export class LinkedInPlugin extends BasePlugin {
     }
     const { uploadUrl, image } = initJson.value;
 
-    const imgRes = await fetch(publicUrl);
+    const imgRes = await timedFetch(publicUrl);
     if (!imgRes.ok) {
       throw new Error(`이미지 원본을 가져오지 못했습니다: ${publicUrl}`);
     }
     const bytes = Buffer.from(await imgRes.arrayBuffer());
 
-    const putRes = await fetch(uploadUrl, {
+    const putRes = await timedFetch(uploadUrl, {
       method: 'PUT',
       headers: { authorization: `Bearer ${this.credentials.accessToken}` },
       body: bytes,

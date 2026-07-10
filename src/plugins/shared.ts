@@ -26,3 +26,22 @@ export function pseudoMetrics(seed: string): AnalyticsMetrics {
   const engagementRate = (likes + comments + shares) / views;
   return { views, likes, comments, shares, engagementRate };
 }
+
+/**
+ * 타임아웃 있는 fetch — 무인 크론에서 응답 없는 연결이 잡 전체를 몇십 분씩
+ * 묶어두는 사고 방지(2026-07-09 autopilot 15분 행 후 취소 사례).
+ * 기본 60초, 대용량 업로드는 호출부에서 늘려서 사용.
+ */
+export async function timedFetch(
+  url: string,
+  init: RequestInit = {},
+  timeoutMs = 60_000,
+): Promise<Response> {
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(new Error(`요청 시간 초과(${Math.round(timeoutMs / 1000)}s): ${url.slice(0, 80)}`)), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: ac.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
