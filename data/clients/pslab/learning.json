@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-07-11T10:43:35.036Z",
-  "sampleSize": 16,
+  "generatedAt": "2026-07-12T10:40:02.677Z",
+  "sampleSize": 17,
   "variants": [
     {
       "key": "B",
       "posts": 7,
-      "avgEngagement": 0.41451929017862865,
-      "avgLikes": 197.14285714285714,
-      "avgViews": 3713.1428571428573
+      "avgEngagement": 0.41792065072284634,
+      "avgLikes": 197.28571428571428,
+      "avgViews": 3719.1428571428573
     },
     {
       "key": "A",
@@ -18,19 +18,19 @@
     },
     {
       "key": "C",
-      "posts": 3,
-      "avgEngagement": 0.016907174291270085,
-      "avgLikes": 244,
-      "avgViews": 5449.666666666667
+      "posts": 4,
+      "avgEngagement": 0.012680380718452563,
+      "avgLikes": 183,
+      "avgViews": 4087.25
     }
   ],
   "channels": [
     {
       "key": "instagram",
-      "posts": 5,
-      "avgEngagement": 0.9666666666666668,
-      "avgLikes": 1.6,
-      "avgViews": 2
+      "posts": 6,
+      "avgEngagement": 0.8055555555555557,
+      "avgLikes": 1.3333333333333333,
+      "avgViews": 1.6666666666666667
     },
     {
       "key": "youtube",
@@ -42,9 +42,9 @@
     {
       "key": "threads",
       "posts": 4,
-      "avgEngagement": 0,
-      "avgLikes": 0,
-      "avgViews": 22.25
+      "avgEngagement": 0.005952380952380952,
+      "avgLikes": 0.25,
+      "avgViews": 32.75
     },
     {
       "key": "blogger",
@@ -64,10 +64,10 @@
     },
     {
       "key": "19:00",
-      "posts": 2,
-      "avgEngagement": 0.25,
-      "avgLikes": 0.5,
-      "avgViews": 1
+      "posts": 3,
+      "avgEngagement": 0.17460317460317462,
+      "avgLikes": 0.6666666666666666,
+      "avgViews": 14.666666666666666
     },
     {
       "key": "20:00",
@@ -93,13 +93,6 @@
       "avgViews": 32.5
     },
     {
-      "key": "lock",
-      "posts": 3,
-      "avgEngagement": 0.3333333333333333,
-      "avgLikes": 0.6666666666666666,
-      "avgViews": 5
-    },
-    {
       "key": "branch",
       "posts": 2,
       "avgEngagement": 0.2841508489585339,
@@ -109,9 +102,16 @@
     {
       "key": "compass",
       "posts": 4,
-      "avgEngagement": 0.26268038071845257,
-      "avgLikes": 183.5,
-      "avgViews": 4071.75
+      "avgEngagement": 0.2686327616708335,
+      "avgLikes": 183.75,
+      "avgViews": 4082.25
+    },
+    {
+      "key": "lock",
+      "posts": 4,
+      "avgEngagement": 0.25,
+      "avgLikes": 0.5,
+      "avgViews": 3.75
     },
     {
       "key": "chart",
@@ -124,7 +124,7 @@
   "bestVariant": "B",
   "bestHour": "21:00",
   "hints": [
-    "디자인 B안이 평균 참여율 41.5%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "디자인 B안이 평균 참여율 41.8%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
     "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
