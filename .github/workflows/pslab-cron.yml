@@ -32,9 +32,10 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
-      # 안전장치: 기본은 시뮬레이션. 실제 발행하려면 저장소 Variables에
-      # PSLAB_DRY_RUN=false 를 추가하세요 (Settings → Variables → Actions).
-      PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'true' }}
+      # ⏸ 자동발행 홀드 (2026-07-10 운영자 요청) — 실제 발행 없이 시뮬레이션만.
+      # 대시보드·성과수집·렌더는 계속 동작. 재개하려면 이 값을 원래대로
+      # "vars.PSLAB_DRY_RUN || 'true'" 표현식으로 되돌리면 된다 (git log 참고).
+      PSLAB_DRY_RUN: 'true'
       PSLAB_LOG_LEVEL: info
       # --- AI 글 생성 ---
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
