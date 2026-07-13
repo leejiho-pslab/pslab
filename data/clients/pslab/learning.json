@@ -1,36 +1,43 @@
 {
-  "generatedAt": "2026-07-12T10:56:55.418Z",
+  "generatedAt": "2026-07-13T12:12:45.386Z",
   "sampleSize": 17,
   "variants": [
     {
       "key": "B",
       "posts": 7,
-      "avgEngagement": 0.41792065072284634,
-      "avgLikes": 197.28571428571428,
-      "avgViews": 3719.1428571428573
-    },
-    {
-      "key": "A",
-      "posts": 6,
-      "avgEngagement": 0.34084671460328103,
-      "avgLikes": 184,
-      "avgViews": 4476.166666666667
+      "avgEngagement": 0.07677273029464372,
+      "avgLikes": 1287,
+      "avgViews": 19283.85714285714
     },
     {
       "key": "C",
       "posts": 4,
-      "avgEngagement": 0.26268038071845257,
-      "avgLikes": 183.25,
-      "avgViews": 4087.25
+      "avgEngagement": 0.07042606477475144,
+      "avgLikes": 2031.75,
+      "avgViews": 25534.5
+    },
+    {
+      "key": "A",
+      "posts": 6,
+      "avgEngagement": 0.052354541393364006,
+      "avgLikes": 1336.1666666666667,
+      "avgViews": 19271.666666666668
     }
   ],
   "channels": [
     {
       "key": "instagram",
       "posts": 6,
-      "avgEngagement": 0.9722222222222223,
-      "avgLikes": 1.5,
-      "avgViews": 1.6666666666666667
+      "avgEngagement": 0.10136352439702306,
+      "avgLikes": 1960.3333333333333,
+      "avgViews": 23853.833333333332
+    },
+    {
+      "key": "threads",
+      "posts": 4,
+      "avgEngagement": 0.0902389911822483,
+      "avgLikes": 2545.75,
+      "avgViews": 35133.25
     },
     {
       "key": "youtube",
@@ -38,13 +45,6 @@
       "avgEngagement": 0.054701169470188084,
       "avgLikes": 1069.3333333333333,
       "avgViews": 23033
-    },
-    {
-      "key": "threads",
-      "posts": 4,
-      "avgEngagement": 0.005952380952380952,
-      "avgLikes": 0.25,
-      "avgViews": 32.75
     },
     {
       "key": "blogger",
@@ -56,25 +56,25 @@
   ],
   "hours": [
     {
-      "key": "21:00",
-      "posts": 8,
-      "avgEngagement": 0.5565445692655265,
-      "avgLikes": 264.375,
-      "avgViews": 5283.25
-    },
-    {
       "key": "19:00",
       "posts": 3,
-      "avgEngagement": 0.5079365079365079,
-      "avgLikes": 1,
-      "avgViews": 14.666666666666666
+      "avgEngagement": 0.10199072880303689,
+      "avgLikes": 2074,
+      "avgViews": 26534.666666666668
+    },
+    {
+      "key": "21:00",
+      "posts": 8,
+      "avgEngagement": 0.06444717735739297,
+      "avgLikes": 1224.75,
+      "avgViews": 16582.125
     },
     {
       "key": "20:00",
       "posts": 5,
-      "avgEngagement": 0.009016057523937259,
-      "avgLikes": 220,
-      "avgViews": 5386
+      "avgEngagement": 0.062338202850688286,
+      "avgLikes": 1826.6,
+      "avgViews": 28098.8
     },
     {
       "key": "11:00",
@@ -88,44 +88,44 @@
     {
       "key": "rocket",
       "posts": 2,
-      "avgEngagement": 1,
-      "avgLikes": 1,
-      "avgViews": 32.5
-    },
-    {
-      "key": "lock",
-      "posts": 4,
-      "avgEngagement": 0.5,
-      "avgLikes": 0.75,
-      "avgViews": 3.75
+      "avgEngagement": 0.0992158673414506,
+      "avgLikes": 2130.5,
+      "avgViews": 22476.5
     },
     {
       "key": "branch",
       "posts": 2,
-      "avgEngagement": 0.2841508489585339,
-      "avgLikes": 688.5,
-      "avgViews": 12987.5
+      "avgEngagement": 0.0901056139485209,
+      "avgLikes": 1065.5,
+      "avgViews": 17231
+    },
+    {
+      "key": "lock",
+      "posts": 4,
+      "avgEngagement": 0.06634227852496498,
+      "avgLikes": 2163.75,
+      "avgViews": 31792.75
     },
     {
       "key": "compass",
       "posts": 4,
-      "avgEngagement": 0.2686327616708335,
-      "avgLikes": 183.75,
-      "avgViews": 4082.25
+      "avgEngagement": 0.05886116698644814,
+      "avgLikes": 1408.5,
+      "avgViews": 19391.25
     },
     {
       "key": "chart",
       "posts": 5,
-      "avgEngagement": 0.07568272419060393,
-      "avgLikes": 220.2,
-      "avgViews": 5371.2
+      "avgEngagement": 0.050756774979220085,
+      "avgLikes": 894.4,
+      "avgViews": 13720.8
     }
   ],
   "bestVariant": "B",
-  "bestHour": "21:00",
+  "bestHour": "19:00",
   "hints": [
-    "디자인 B안이 평균 참여율 41.8%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
-    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
+    "디자인 B안이 평균 참여율 7.7%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "19:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
     "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
