@@ -26,7 +26,7 @@
     "가격·소량/급행 안내"
   ],
   "bannedWords": ["최저가", "100% 보장", "무조건"],
-  "targets": ["instagram", "threads", "naver-blog"],
+  "targets": ["instagram", "threads", "naver-blog", "blogger"],
   "accounts": {
     "instagram": "dongsung_print",
     "threads": "dongsung_print"
