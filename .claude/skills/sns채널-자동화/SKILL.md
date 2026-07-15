@@ -118,16 +118,20 @@ description: >-
 **채널 플러그인** (`src/plugins/`): `instagram.ts`, `threads.ts`, `blogger.ts`, `linkedin.ts`,
 `naver-blog.ts`, `youtube.ts`, `shared.ts`.
 
-**렌더/미디어 스크립트** (`scripts/`): `render-cards.mjs`(인스타 캐러셀), `render-blog-images.mjs`,
-`render-shorts.mjs`(쇼츠 슬라이드+투명 오버레이), `build-shorts-video.mjs`(부메랑 배경+오버레이+BGM),
-`fetch-photos.mjs`(배경 사진 CI 다운로드), `seed-*.mjs`(초기 콘텐츠 시드), `schedule-daily.mjs`(일일 재배치).
+**렌더/미디어 스크립트** (`scripts/`): `render-cards.mjs`(인스타 캐러셀·기본 카드뉴스),
+`render-ig.mjs`(인스타 **이미지 전면형** — 실사/AI 사진 위 한글 타이틀 오버레이. `slidePhotos` 가진 항목만),
+`render-blog-images.mjs`, `render-shorts.mjs`(쇼츠 슬라이드+투명 오버레이),
+`build-shorts-video.mjs`(부메랑 배경+오버레이+BGM), `fetch-photos.mjs`(배경 사진 CI 다운로드),
+`seed-*.mjs`(초기 콘텐츠 시드), `schedule-daily.mjs`(일일 재배치).
 
 **워크플로** (`.github/workflows/`): `pslab-cron.yml`(무인 루프+Pages 배포), `pslab-publish.yml`,
 `pages-deploy.yml`(docs/ 배포).
 
 **클라이언트 데이터** (`data/clients/<id>/`): `plan.json`(기획안), `design.json`, `learning.json`,
 `bg-sources.json`(힉스필드 배경 URL), `video-sources.json`(쇼츠 모션클립 URL),
-`blog-figures.json`(블로그 본문 삽입 이미지 시드), `weekly-reports.json`, `token-health.json`.
+`blog-figures.json`(블로그 본문 삽입 이미지 시드), `keyword-trends.json`(네이버 데이터랩 실 검색관심도 —
+대시보드 트렌드 표의 소스), `brand-brief.json`·`channel-guides.json`(운영자 지침),
+`weekly-reports.json`, `token-health.json`.
 **이 폴더는 기본 gitignore 대상이니, 시드 파일은 반드시 `git add -f`로 강제 커밋할 것** (§8 참고 — 안 하면 CI가 조용히 렌더를 건너뛴다).
 
 **설정표** (`clients/<id>.json`): `ClientConfig` — `accounts`(채널별 계정 핸들, 표시용),
@@ -269,6 +273,27 @@ description: >-
   3) `render-shorts.mjs`가 투명 오버레이(`ov-N.png`, 반투명 패널) 렌더.
   4) `build-shorts-video.mjs`가 CI에서 클립 다운로드 → **부메랑(정+역) 끊김없는 배경** → 타임드 오버레이 → BGM.
   - **무료 BGM**: `assets/bgm/*.mp3` 있으면 그것, 없으면 ffmpeg 합성 앰비언트 패드(저작권 0).
+- **인스타 "이미지 전면형" 리디자인** (`render-ig.mjs` — 실사/AI 사진을 전면에 깔고 **한글 타이틀만 HTML 오버레이**):
+  감성 레퍼런스 계정처럼 "사진 + 타이틀"이 기본형. plan 항목에 `slidePhotos`(슬라이드별 이미지 URL 배열)와
+  `igStyle`을 주면 이 렌더러가 처리하고, `render-cards.mjs`는 `slidePhotos` 가진 인스타 항목을 자동 제외한다.
+  - **3스타일 = 이미지·레이아웃·폰트·컬러를 전부 다르게**: `cinema`(영화 스틸 — 전면 사진+하단 그라데이션+큰 흰 타이틀+금색 강조),
+    `photoA`(실사 카드 — 상단 레드 액센트 바+에디토리얼 커커), `photoB`(매거진 — 사진 상단+그린 컬러밴드+다른 폰트무게).
+    "3개 중 1개는 시네마틱"처럼 스타일을 섞어 피드에 리듬을 준다.
+  - **캐러셀은 슬라이드마다 내용에 맞는 이미지**(최소 2~3장). **이미지 재사용 금지** — 콘텐츠마다 신규 생성.
+  - **글자는 절대 AI 이미지에 굽지 않는다** — 사진엔 사물·배경만(프롬프트에 `no text no letters`), 한글은 HTML 오버레이.
+  - AI 생성 이미지는 캡션에 **"AI 생성 예시" 고지** 문구를 넣어 실물 오해 방지.
+  - **하단 세이프존 필수**(§8 크로미움 잘림) — 타이틀·핸들은 `flex-end + padding-bottom ≥135px` 안에.
+- **블로그 개편 규칙** (네이버·구글 **각각 다른 원고**로):
+  - **결론 먼저 + 기승전결**: 도입에 "🎯 결론부터/핵심부터" → 이야기 전개. **네이버=스토리형(1인칭 실장 언니 말투),
+    구글=가이드형(비교표·체크리스트)** 으로 톤·구성·예시를 서로 다르게(같은 원고 복붙 금지).
+  - **30대 여성 톤 이모지**, 가독성 위해 문단 짧게·적당히 띄어쓰기.
+  - **본문 이미지 4장+**: 텍스트가 아니라 **사물·배경**(없으면 힉스필드 생성). `![](url)` 마크다운으로 삽입
+    (네이버 다운로드 파싱·블로거 img 변환 모두 이 규격). **글마다 신규 이미지** — 재사용 금지.
+  - **썸네일·본문에서 SEO/ISSUE 등 내부 지침 라벨 제거**. 대표이미지는 플랫폼 규격에 맞춤(네이버 피드=**정사각 1080**;
+    세로 카드 이미지를 그대로 쓰면 사이즈 안 맞음).
+  - **가짜 트렌드 패널 금지 → 실 검색량 데이터**: 네이버 데이터랩(PlayMCP `datalab_search`)으로 상대 검색관심도를
+    받아 `keyword-trends.json`에 저장, `dashboard.ts`가 표로 렌더(네이버 불가 시 구글 트렌드 폴백).
+    검색량 낮은 키워드가 드러나면 소재 우선순위 조정에 활용.
 
 ---
 
@@ -339,6 +364,16 @@ description: >-
 - **개발환경은 외부 호스트 접근 불가**(cloudfront/외부 이미지 403). 미디어는 **세션에서 생성→URL 저장→
   CI에서 다운로드**. 이미지 다운로드·영상 합성은 네트워크 열린 CI(GitHub Actions)에서만.
 - **한글은 HTML→Chromium**로 렌더. AI 확산 이미지에 한글 넣으면 깨진다.
+- **헤드리스 크로미움은 하단 ~110px가 캡처에서 잘린다**(`--window-size` 높이 ≠ 실제 가용 높이). PNG 크기는
+  지정대로(예 1080×1350) 나오지만, `bottom:`/`flex-end`로 맨 아래 붙인 텍스트가 화면 밖으로 밀려 안 보인다.
+  **모든 하단 텍스트는 하단 세이프존(padding-bottom ≥135px) 안에** 두고, 인스타는 어차피 1:1 그리드가 상하
+  135px를 크롭하니 그 밴드를 희생영역으로 설계한다(`render-cards.mjs`의 `--safe-b`, `render-ig.mjs`의 `SAFE_B`).
+  상단(`top:`) 배치는 정상. 새 렌더러를 만들면 **더미 텍스트를 맨 아래에 찍어 잘리는지 먼저 테스트**할 것.
+- **AI 이미지 최종 합성 검수는 개발환경에서 불가**(egress 정책이 `github.io`·`cloudfront`를 403 차단). 글자·레이아웃은
+  dev 렌더(폴백 단색 배경)로 확인되지만 **실제 사진 합성 결과(얼굴 왜곡·구도)는 눈으로 못 본다**. 검수하려면
+  ① 환경 네트워크 정책에 `*.cloudfront.net`·`cdn.higgsfield.ai`·`*.github.io`를 허용(설정은 **새 세션부터** 반영), 또는
+  ② 담당자가 대시보드 캡처를 채팅에 올려주면 그 이미지를 열어 진단. 힉스필드 생성 프롬프트엔 항상
+  `no text no letters`를 넣어 글자 아티팩트를 원천 차단.
 - **private 저장소 = 무료 플랜에서 Pages 꺼짐(404)**. public 유지(시크릿은 안전). visibility 바꾸면
   Pages Source가 None으로 초기화되니 다시 `GitHub Actions`로 켜야 함.
 - **GITHUB_TOKEN으로 push하면 다른 워크플로가 트리거되지 않음**(무한루프 방지). 그래서 각 워크플로가
