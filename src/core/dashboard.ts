@@ -607,7 +607,7 @@ function publishedCard(p, badge){
     '<div class="met"><span>👁 '+p.views+'</span><span>❤ '+p.likes+'</span><span>💬 '+p.comments+'</span><span>'+pct(p.engagementRate)+'</span></div>'+
     '<div>'+link+'</div></div></div>';
 }
-function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').replace(/\\*/g,''):it.topic; }
+function plainHead(it){ return it.headline?it.headline.replace(/<br>|\n/g,' ').replace(/\*/g,''):it.topic; }
 function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
 function slideCount(it){ return (it.slideImages&&it.slideImages.length)||1; }
 function planCard(client, chLabel, it){
