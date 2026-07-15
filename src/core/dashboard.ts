@@ -317,7 +317,7 @@ export function renderDashboard(
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta http-equiv="refresh" content="300"/>
-<title>pslab 콘텐츠 관제실</title>
+<title>ALWAYS ON 콘텐츠 관제실</title>
 <style>
 :root{color-scheme:light}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
@@ -411,7 +411,7 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ pslab 콘텐츠 관제실</div>
+  <div class="brand">🛰️ ALWAYS ON 콘텐츠 관제실</div>
   <div class="sub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
@@ -607,7 +607,7 @@ function publishedCard(p, badge){
     '<div class="met"><span>👁 '+p.views+'</span><span>❤ '+p.likes+'</span><span>💬 '+p.comments+'</span><span>'+pct(p.engagementRate)+'</span></div>'+
     '<div>'+link+'</div></div></div>';
 }
-function plainHead(it){ return it.headline?it.headline.replace(/<br>|\n/g,' ').replace(/\*/g,''):it.topic; }
+function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').replace(/\\*/g,''):it.topic; }
 function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
 function slideCount(it){ return (it.slideImages&&it.slideImages.length)||1; }
 function planCard(client, chLabel, it){
