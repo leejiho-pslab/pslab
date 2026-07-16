@@ -308,6 +308,12 @@ description: >-
   - **가짜 트렌드 패널 금지 → 실 검색량 데이터**: 네이버 데이터랩(PlayMCP `datalab_search`)으로 상대 검색관심도를
     받아 `keyword-trends.json`에 저장, `dashboard.ts`가 표로 렌더(네이버 불가 시 구글 트렌드 폴백).
     검색량 낮은 키워드가 드러나면 소재 우선순위 조정에 활용.
+  - **키워드 기반 기획 시스템(권장·상위호환)**: 상대지수(데이터랩)보다 **실제 월간검색수**가 기획에 정확.
+    `scripts/fetch-keywords.mjs`가 **네이버 검색광고 API `/keywordstool`**(HMAC 서명)로 시드 키워드의
+    월간검색수(PC/모바일)·경쟁정도 + 검색량 상위 연관키워드(발굴)를 받아 `keyword-trends.json` **v2**로 저장.
+    시크릿 `NAVER_AD_API_KEY`(액세스라이선스)·`NAVER_AD_SECRET`(비밀키)·`NAVER_AD_CUSTOMER_ID`(계정번호,
+    검색광고>도구>API 사용 관리에서 발급). 대시보드 blogSection이 v2(월간검색수·경쟁·발굴후보)/v1(상대지수)
+    자동 분기. 워크플로에 매 사이클 수집 스텝. **블로그 소재는 검색량 상위 키워드 우선으로 기획**.
 
 ---
 
