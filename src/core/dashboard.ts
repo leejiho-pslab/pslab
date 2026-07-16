@@ -3,11 +3,13 @@
  *
  * 벤치마킹:
  *  - Planable/Buffer: 채널 탭 + 콘텐츠 캘린더(발행/대기) + 기획안 피드백
- *  - blogdex(블덱스): 네이버 블로그 "지수 등급" + 포스팅 전문성/연관성 점수 + 키워드 분석
+ *  - 네이버 검색 관심도: 네이버 데이터랩 실측 상대지수(keyword-trends.json)
  *
  * 클라이언트별 격리 저장소(이력/디자인/플랜)를 모아 자가완결형 HTML 한 장으로
  * 렌더한다. 데이터는 인라인 JSON으로 박고, 채널 탭 전환은 클라이언트 JS로 처리.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { CycleRecord } from './orchestrator.js';
 import type { DesignStore } from './design.js';
@@ -28,12 +30,6 @@ const CHANNELS: Array<{ key: PlatformId; label: string; icon: string }> = [
   { key: 'youtube', label: '유튜브', icon: '▶️' },
   { key: 'linkedin', label: '링크드인', icon: '💼' },
 ];
-
-function seed(s: string): number {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-  return h;
-}
 
 interface ChannelPublished {
   topic: string;
@@ -120,54 +116,42 @@ function buildChannel(
   };
 }
 
-const BLOG_TIERS = [
-  '저품질',
-  '일반',
-  '준최적화 1',
-  '준최적화 2',
-  '준최적화 3',
-  '최적화 1',
-  '최적화 2',
-  '최적화 3',
-];
+function buildBlog(client: ClientConfig) {
+  // 키워드 데이터 (data/clients/<id>/keyword-trends.json)
+  //  v3(3시트): core/related/timely = {kw,pc,mobile,total,comp} + baseDate
+  //  v2:        keywords + related
+  //  v1(데이터랩): keywords={kw,index}  ← 폴백
+  type KW = { kw: string; index?: number | null; pc?: number; mobile?: number; total?: number; comp?: string };
+  let core: KW[] = [], related: KW[] = [], timely: KW[] = [], trends: KW[] = [];
+  let trendMeta = '', baseDate = '', updateCycle = '';
+  try {
+    const base = process.env.PSLAB_DASH_DATADIR || 'data/clients';
+    const raw = JSON.parse(
+      readFileSync(join(base, client.id, 'keyword-trends.json'), 'utf8'),
+    ) as { source?: string; baseDate?: string; updateCycle?: string; core?: KW[]; related?: KW[]; timely?: KW[]; keywords?: KW[] };
+    core = Array.isArray(raw.core) ? raw.core : (Array.isArray(raw.keywords) ? raw.keywords : []);
+    related = Array.isArray(raw.related) ? raw.related : [];
+    timely = Array.isArray(raw.timely) ? raw.timely : [];
+    trends = core; // 하위호환
+    trendMeta = String(raw.source || '');
+    baseDate = String(raw.baseDate || '');
+    updateCycle = String(raw.updateCycle || '');
+  } catch {
+    /* 파일 없으면 빈 트렌드 */
+  }
+  return { core, related, timely, trends, trendMeta, baseDate, updateCycle };
+}
 
-function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
-  // 블덱스 스타일: 등급 + 포스팅별 전문성/연관성/품질 + 키워드 분석
-  const postCount = blogPublished.length;
-  const avgEng =
-    postCount > 0
-      ? blogPublished.reduce((a, p) => a + p.engagementRate, 0) / postCount
-      : 0;
-  const rawScore = Math.min(100, postCount * 9 + avgEng * 100 * 4);
-  const measured = postCount > 0;
-  const tierIdx = Math.min(
-    BLOG_TIERS.length - 1,
-    Math.floor((rawScore / 100) * BLOG_TIERS.length),
-  );
-  const posts = blogPublished.map((p) => {
-    const r = seed(`blog:${p.topic}`);
-    const base = 55 + (r % 35);
-    return {
-      topic: p.topic,
-      time: p.time,
-      expertise: Math.min(99, base + ((r >> 3) % 15)),
-      relevance: Math.min(99, base + ((r >> 6) % 18)),
-      quality: Math.min(99, Math.round((base + p.engagementRate * 100) % 100) || base),
+function buildWeekPlan(client: ClientConfig) {
+  // 차주 콘텐츠 기획안 (data/clients/<id>/week-plan.json) — 키워드 기반 주간 스케줄
+  try {
+    const base = process.env.PSLAB_DASH_DATADIR || 'data/clients';
+    const raw = JSON.parse(readFileSync(join(base, client.id, 'week-plan.json'), 'utf8')) as {
+      weekStart?: string; weekEnd?: string; generatedAt?: string; note?: string;
+      items?: { date: string; channelLabel: string; keyword: string; sheet: string; volume: number; title: string }[];
     };
-  });
-  const keywords = client.keywords.map((kw) => {
-    const r = seed(`kw:${kw}`);
-    const idx = 1000 + (r % 90000);
-    const comp = ['낮음', '보통', '높음'][r % 3];
-    return { kw, searchIndex: idx, competition: comp };
-  });
-  return {
-    measured,
-    grade: measured ? BLOG_TIERS[tierIdx] : '측정 전',
-    score: Math.round(rawScore),
-    posts,
-    keywords,
-  };
+    return { weekStart: raw.weekStart || '', weekEnd: raw.weekEnd || '', note: raw.note || '', items: Array.isArray(raw.items) ? raw.items : [] };
+  } catch { return null; }
 }
 
 function buildClientData(
@@ -224,10 +208,10 @@ function buildClientData(
     switch (key) {
       case 'instagram': return handle ? `https://www.instagram.com/${handle}` : 'https://www.instagram.com/';
       case 'threads': return handle ? `https://www.threads.net/@${handle}` : 'https://www.threads.net/';
+      case 'linkedin': return handle ? `https://www.linkedin.com/in/${handle}` : 'https://www.linkedin.com/';
       case 'naver-blog': return 'https://admin.blog.naver.com/';
       case 'blogger': return 'https://www.blogger.com/';
       case 'youtube': return 'https://studio.youtube.com/';
-      case 'linkedin': return handle ? `https://www.linkedin.com/in/${handle}` : 'https://www.linkedin.com/';
       default: return '';
     }
   };
@@ -242,8 +226,7 @@ function buildClientData(
     .map(toCard)
     .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
-  const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
-  const blog = buildBlog(client, blogChannel.published as ChannelPublished[]);
+  const blog = buildBlog(client);
 
   return {
     id: client.id,
@@ -270,6 +253,7 @@ function buildClientData(
     channels,
     channelLinks,
     blog,
+    weekPlan: buildWeekPlan(client),
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
     weeklyReport: weeklyReport ?? null,
@@ -297,8 +281,8 @@ export function renderDashboard(
     anthropic: has('ANTHROPIC_API_KEY'),
     instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
-    linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
     blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
+    linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
   };
   const data = {
     generatedAt: new Date().toISOString(),
@@ -565,10 +549,13 @@ function guideView(client){
 function channelGuidePanel(client, key){
   const g=(client.channelGuides||{})[key];
   if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 수정 →</button></div>'+
-    ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (g.guide?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(g.guide)+'</div>':'')+
-    '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+  // 심플 버전: 핵심 소재(태그) + 가이드 첫 2줄 미리보기. 세부는 지침 탭에서.
+  var lines=(g.guide||'').split('\\n').map(function(s){return s.trim();}).filter(Boolean);
+  var preview=lines.slice(0,2).join(' ');
+  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
+    ((g.topics||[]).length?'<div style="margin-bottom:4px"><span class="muted" style="font-size:12px">핵심 소재</span></div><div style="margin-bottom:8px">'+(g.topics||[]).slice(0,6).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
+    (preview?'<div class="mcap" style="font-size:13px;color:#3a4254">'+esc(preview)+(lines.length>2?' <span class="muted">… 세부 지침은 지침 탭에서</span>':'')+'</div>':'')+
+    '</div>';
 }
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
@@ -667,12 +654,12 @@ function manualHelper(it, chDef){
   const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
   const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
-    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(가로)</a>':'');
+    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(정사각)</a>':'');
   const isYt=chDef.key==='youtube';
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(가로)”를 받아 네이버 대표사진으로 지정(가로 16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(정사각)”를 받아 네이버 대표사진으로 지정(정사각 1:1이라 네이버 피드·검색 썸네일에 딱 맞음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -778,7 +765,7 @@ function channelDetail(client, c){
   if(seriesF.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %) · '+periodLabel()+'</h3>'+sparkline(seriesF.slice(-12))+'</div>';}
   // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트) — 기간 반영
   h+=pubDataRows(planPubF);
-  // 네이버 블로그 → blogdex 스타일
+  // 네이버 블로그 → 네이버 검색 관심도(데이터랩 실측)
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
   h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+')</h2></div>';
@@ -789,22 +776,55 @@ function channelDetail(client, c){
   h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
   return h;
 }
+function weekPlanPanel(client){
+  const w=client.weekPlan;
+  if(!w||!w.items||!w.items.length) return '';
+  const chColor=function(c){ return c.indexOf('인스타')>=0?'#e2503f':(c.indexOf('네이버')>=0?'#2db400':'#c08a2a'); };
+  const sheetBadge=function(s){ var col=s==='시의성'?'#c08a2a':(s==='연관'?'#3a8f5a':'#e2503f'); return '<span class="badge" style="background:'+col+'22;color:'+col+'">'+esc(s)+'</span>'; };
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획 · 키워드 기반</h3><span class="muted">'+esc(w.weekStart)+' ~ '+esc(w.weekEnd)+' · 매주 토요일 자동 생성</span></div>';
+  if(w.note) h+='<div class="muted" style="font-size:12px;margin:0 0 8px">'+esc(w.note)+'</div>';
+  h+='<table><tr><th>날짜</th><th>채널</th><th>키워드</th><th>제안 제목</th></tr>'+
+    w.items.map(function(it){ return '<tr><td style="white-space:nowrap">'+esc(it.date)+'</td><td style="white-space:nowrap;color:'+chColor(it.channelLabel)+'">'+esc(it.channelLabel)+'</td><td style="white-space:nowrap">'+sheetBadge(it.sheet)+' #'+esc(it.keyword)+'</td><td>'+esc(it.title)+'</td></tr>'; }).join('')+'</table></div>';
+  return h;
+}
 function blogSection(client){
   const b=client.blog;
-  const color = b.score>=70?'#e4f7ea':b.score>=40?'#fdf3e0':'#eef1f6';
-  const fg = b.score>=70?'#15803d':b.score>=40?'#b45309':'#5a6274';
-  let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>📊 블로그 지수 (blogdex 스타일)</h3><span class="muted">내부 추정 · 네이버 연동 시 실측 교체</span></div>';
-  h+='<div class="row"><div class="grade" style="background:'+color+';color:'+fg+'">'+esc(b.grade)+'</div>'+
-     '<div style="flex:1;min-width:160px"><div class="muted">종합 점수 '+b.score+'/100</div><div class="bar"><i style="width:'+b.score+'%"></i></div></div></div>';
-  // 포스팅 분석
-  if(b.posts.length){
-    h+='<table style="margin-top:12px"><tr><th>포스팅</th><th>전문성</th><th>연관성</th><th>품질</th></tr>'+
-      b.posts.slice(0,8).map(p=>'<tr><td>'+esc(p.topic)+'</td><td>'+p.expertise+'</td><td>'+p.relevance+'</td><td>'+p.quality+'</td></tr>').join('')+'</table>';
+  if(!b) return '';
+  const core=b.core||b.trends||[];
+  if(!core.length) return '';
+  // 천단위 콤마 (정규식 없이 — 클라 템플릿리터럴 이스케이프 함정 회피)
+  const fmt=function(n){ n=Math.round(n||0); var s=String(n),o='',c=0; for(var i=s.length-1;i>=0;i--){o=s[i]+o; if(++c%3===0&&i>0)o=','+o;} return o; };
+  const isV2=core.some(function(t){return t.total!=null||t.pc!=null;});
+  const compBadge=function(cc){ if(!cc) return ''; var col=cc==='높음'?'#e2503f':(cc==='중간'?'#c08a2a':'#3a8f5a'); return '<span style="color:'+col+'">●</span> '+esc(cc); };
+  // 한 시트(표) 렌더 — 검색량順 top20
+  const sheet=function(title,sub,rows){
+    if(!rows||!rows.length) return '';
+    var max=Math.max.apply(null,[1].concat(rows.map(function(t){return t.total||0;})));
+    var h='<div style="margin-top:14px"><div class="sect-h" style="margin:0 0 6px"><h3 style="font-size:15px">'+title+'</h3><span class="muted" style="font-size:12px">'+sub+' · '+rows.length+'개</span></div>';
+    h+='<div style="max-height:340px;overflow:auto;border:1px solid #eee;border-radius:8px"><table><tr><th>키워드</th><th>월검색수</th><th>PC·모바일</th><th>경쟁</th><th></th></tr>'+
+      rows.map(function(t){ var v=t.total||0; var w=Math.round(v/max*100);
+        return '<tr><td>#'+esc(t.kw)+'</td><td><b>'+fmt(v)+'</b></td><td class="muted" style="font-size:12px">'+fmt(t.pc)+' · '+fmt(t.mobile)+'</td><td style="font-size:12px">'+compBadge(t.comp)+'</td><td style="width:24%"><div class="bar"><i style="width:'+w+'%"></i></div></td></tr>';
+      }).join('')+'</table></div></div>';
+    return h;
+  };
+  let h='<div class="panel">';
+  h+='<div class="sect-h" style="margin:0 0 6px"><h3>📊 '+(isV2?'네이버 월간 검색량 · 키워드 기반 기획':'네이버 검색 관심도')+'</h3><span class="muted">'+esc(b.trendMeta||'')+'</span></div>';
+  if(isV2){
+    if(b.baseDate) h+='<div class="muted" style="font-size:12px;margin:0 0 4px">📅 기준일 <b>'+esc(b.baseDate)+'</b> · '+esc(b.updateCycle||'매주 금요일')+' 자동 갱신 · 검색량順 = 기획 우선순위</div>';
+    h+=sheet('🎯 핵심 키워드','브랜드 최상위 연관',b.core||core);
+    h+=sheet('🔗 연관 키워드','핵심에서 파생·관련도 높음',b.related);
+    h+=sheet('🗓️ 시의성 키워드','시즌·이슈 연결',b.timely);
+    return h+'</div>';
   }
-  // 키워드 분석
-  h+='<table style="margin-top:12px"><tr><th>키워드</th><th>검색지수</th><th>경쟁도</th></tr>'+
-    b.keywords.map(k=>'<tr><td>#'+esc(k.kw)+'</td><td>'+k.searchIndex.toLocaleString()+'</td><td>'+esc(k.competition)+'</td></tr>').join('')+'</table>';
-  h+='</div>';
+  // v1 폴백 (데이터랩 상대지수)
+  var vals=core.map(function(t){return t.index==null?0:t.index;});
+  var max1=Math.max.apply(null,[1].concat(vals));
+  h+='<table><tr><th>키워드</th><th>상대 관심도</th><th></th></tr>'+
+    core.map(function(t){
+      var v=t.index==null?0:t.index; var w=Math.round(v/max1*100);
+      var disp=t.index==null?'데이터 부족':(t.index<1?'<1':String(t.index));
+      return '<tr><td>#'+esc(t.kw)+'</td><td>'+disp+'</td><td style="width:46%"><div class="bar"><i style="width:'+w+'%"></i></div></td></tr>';
+    }).join('')+'</table></div>';
   return h;
 }
 function tokenBanner(client){
@@ -866,20 +886,14 @@ function pubDataRows(items){
 function setupPanel(){
   const s=DATA.setup||{};
   const settingsUrl='https://github.com/'+REPO+'/settings/secrets/actions';
-  const varsUrl='https://github.com/'+REPO+'/settings/variables/actions';
-  const row=(ok,name,todo,url)=>'<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⬜')+'</td><td><b>'+esc(name)+'</b>'+(ok?'':'<div class="muted" style="margin-top:2px">'+todo+(url?' · <a href="'+url+'" target="_blank">설정 열기 ↗</a>':'')+'</div>')+'</td></tr>';
-  const done=[s.instagram,s.threads,s.telegram,s.anthropic,s.realPublish].filter(Boolean).length;
-  return '<div class="panel" style="border-color:#2b6fff">'+
-    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/5 완료</span></div>'+
-    '<table>'+
-    row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
-    row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
-    row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
-    row(s.blogger,'구글 블로그 자동발행','선택 — Blogger OAuth(클라이언트/리프레시 토큰/블로그ID) 시크릿',settingsUrl)+
-    row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
-    row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
-    '</table>'+
-    '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
+  const chip=(ok,name)=>'<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid '+(ok?'#a8dcbe':'#e2e5ea')+';background:'+(ok?'#eafaf0':'#f7f8fa')+';font-size:13px;font-weight:600;color:'+(ok?'#1a7a45':'#8a94a6')+'">'+(ok?'✅':'⬜')+' '+esc(name)+'</span>';
+  const done=[s.instagram,s.threads,s.telegram,s.blogger,s.anthropic,s.realPublish].filter(Boolean).length;
+  return '<div class="panel" style="margin-top:14px">'+
+    '<div class="sect-h" style="margin:0 0 8px"><h3 style="font-size:15px">🔌 채널 연결 상황</h3><span class="muted">'+done+'/6 · <a href="'+settingsUrl+'" target="_blank">설정 열기 ↗</a></span></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+      chip(s.instagram,'인스타그램')+chip(s.threads,'스레드')+chip(s.blogger,'구글 블로그')+chip(s.telegram,'텔레그램')+chip(s.anthropic,'AI 글')+chip(s.realPublish,'실제 발행 ON')+
+    '</div>'+
+    '<div class="muted" style="margin-top:8px;font-size:12px">네이버 블로그·유튜브는 공식 발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
     '</div>';
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
@@ -899,8 +913,8 @@ function channelLinksPanel(client){
 }
 function overview(client){
   let h=tokenBanner(client);
-  h+=setupPanel();
   h+=channelLinksPanel(client);
+  h+=weekPlanPanel(client);
   h+=weeklyPanel(client);
   h+=periodBar();
   h+='<div class="kpis">'+
@@ -944,6 +958,8 @@ function overview(client){
   h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
   // 경쟁사
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
+  // 채널 연결 상황(압축) — 최하단
+  h+=setupPanel();
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
