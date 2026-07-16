@@ -358,7 +358,14 @@ description: >-
     채널 가이드 topics → `reinforcement.favoredTopics` 선두 + research keywords 병합(소재 선정 우선),
     브랜드 노트(`brandNotesText`) + 가이드 본문 → `ContentBrief.brandNotes/channelGuide` →
     Claude systemPrompt에 "[운영자 브랜드 노트]" / "[채널 핵심 가이드]" 블록으로 주입.
-  - 각 채널 탭 상단에 현재 가이드 요약 패널(`channelGuidePanel`) 표시.
+  - 각 채널 탭 상단에 현재 가이드 요약 패널(`channelGuidePanel`) 표시 — **심플하게(핵심 소재 태그 + 가이드
+    첫 2줄 미리보기)만, 세부는 "지침 탭에서 전체 보기" 링크**로. 긴 가이드 전문을 채널 탭에 늘어놓지 않는다.
+- **대시보드 개요 레이아웃 원칙**: 중요도 순 — ①채널 바로가기 → ②📅 차주 콘텐츠 기획 → ③성과/발행 →
+  (**최하단**) 🔌 채널 연결 상황(압축 칩: 채널별 ✅/⬜ 만). 오픈 준비 체크리스트 같은 저중요 패널은 최하단으로.
+- **헤더 로고·타이틀**: 제품 브랜드 `ALWAYS ON 콘텐츠 관제실` 고정.
+- **채널 스코프**: 대시보드 채널 목록은 `dashboard.ts`의 `CHANNELS` 상수. 업체가 안 쓰는 채널(예: 링크드인)은
+  **`CHANNELS`에서 제거**하면 네비·바로가기·연결상황·캡션라벨 등에서 전부 사라진다(잔여 `linkedin` 흔적 문자열도
+  같이 정리).
 - **안정성 수칙**: 모든 외부 API 호출은 `timedFetch`(기본 60초, 유튜브 업로드 600초) 사용 —
   응답 없는 연결이 크론 잡을 몇십 분씩 묶어두는 사고 방지(2026-07-09 15분 행 사례).
   워크플로 잡에는 `timeout-minutes`(cron 25분/publish 15분/sync 15분) 필수.
