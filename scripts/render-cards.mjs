@@ -68,12 +68,28 @@ function fontFaces() {
     .join('\n');
 }
 
-// 디자인 변형 — 모두 잉크(다크) 계열, 액센트·레이아웃을 바꿔 A/B 테스트
-const VARIANTS = {
+// 디자인 변형 — 기본은 잉크(다크) 계열. 클라이언트별 브랜드 팔레트는
+// data/clients/<id>/design-variants.json 이 단일 출처로 오버라이드한다
+// (업체 감도조율 결과를 코드 수정 없이 반영 — 예: daeguis는 리서치 §0-3 기반
+//  딥 네이비 #0E2A3C + 화이트 여백(여름 확대) + 웜 레드 #E8503A + 미나리 그린).
+const DEFAULT_VARIANTS = {
   A: { name: '잉크·에디토리얼', bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', layout: 'editorial' },
   B: { name: '잉크·그래픽', bg: '#0b1a1c', fg: '#eef3f1', muted: '#8fb0ab', accent: '#36d6c4', layout: 'graphic' },
   C: { name: '잉크·스포트라이트', bg: '#14121d', fg: '#f3eff6', muted: '#a99fc0', accent: '#ffc24a', layout: 'spotlight' },
 };
+function loadVariants() {
+  const f = join(ROOT, 'data/clients', clientId, 'design-variants.json');
+  try {
+    const j = JSON.parse(readFileSync(f, 'utf8'));
+    const out = {};
+    for (const k of ['A', 'B', 'C']) if (j[k] && j[k].bg && j[k].fg) out[k] = { ...DEFAULT_VARIANTS[k], ...j[k] };
+    if (Object.keys(out).length) { console.log(`🎨 브랜드 디자인 변형 적용: ${f}`); return { ...DEFAULT_VARIANTS, ...out }; }
+  } catch { /* 파일 없으면 기본 */ }
+  return DEFAULT_VARIANTS;
+}
+const VARIANTS = loadVariants();
+// 밝은 배경(화이트 확대 시즌)에서도 보이도록 변형별 괘선 색을 쓸 수 있게 한다.
+const ruleOf = (v) => v.rule || 'rgba(255,255,255,.16)';
 
 // 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
 function motifSVG(key, color, size, opacity) {
@@ -107,6 +123,30 @@ function motifSVG(key, color, size, opacity) {
       `<circle cx="50" cy="40" r="23" ${common}/>` +
       `<line x1="41" y1="66" x2="59" y2="66" ${common}/><line x1="43" y1="73" x2="57" y2="73" ${common}/><line x1="45" y1="80" x2="55" y2="80" ${common}/>` +
       `<polyline points="43,40 50,49 57,40" ${common}/>`,
+    pot:
+      `<path d="M28 48 h44 l-3 26 a10 10 0 0 1 -10 8 h-18 a10 10 0 0 1 -10 -8 Z" ${common}/>` +
+      `<line x1="22" y1="48" x2="78" y2="48" ${common}/>` +
+      `<path d="M40 38 q-4 -7 1 -13" ${common}/><path d="M52 38 q-4 -7 1 -13" ${common}/><path d="M64 38 q-4 -7 1 -13" ${common}/>`,
+    wave:
+      `<path d="M14 42 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>` +
+      `<path d="M14 58 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>` +
+      `<path d="M14 74 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>`,
+    chili:
+      `<path d="M62 30 C74 42 66 70 42 78 C30 82 24 74 30 68 C46 58 54 46 56 34 Z" ${common}/>` +
+      `<path d="M58 30 q2 -10 12 -12" ${common}/><path d="M58 30 q8 -4 12 2" ${common}/>`,
+    mountain:
+      `<polyline points="14,80 38,40 52,60 66,32 88,80" ${common}/>` +
+      `<line x1="10" y1="80" x2="90" y2="80" ${common}/>` +
+      `<path d="M34 46 q4 6 8 0" ${common}/><path d="M62 38 q4 6 8 0" ${common}/>`,
+    fish:
+      `<path d="M18 52 C32 34 58 32 74 46 L86 36 L84 56 L86 74 L74 62 C58 76 32 72 18 56 Z" ${common}/>` +
+      `<circle cx="34" cy="49" r="2.6" fill="${color}" stroke="none"/>` +
+      `<path d="M46 42 q6 8 0 18" ${common}/>`,
+    leaf:
+      `<path d="M50 82 V34" ${common}/>` +
+      `<path d="M50 46 C38 44 30 34 30 22 C42 22 50 30 50 42 Z" ${common}/>` +
+      `<path d="M50 46 C62 44 70 34 70 22 C58 22 50 30 50 42 Z" ${common}/>` +
+      `<path d="M50 66 C42 64 36 58 36 50" ${common}/>`,
     growth:
       `<line x1="16" y1="84" x2="88" y2="84" ${common}/><line x1="16" y1="84" x2="16" y2="16" ${common}/>` +
       `<path d="M20 78 Q44 76 58 50 T88 18" ${common}/>` +
@@ -155,7 +195,7 @@ function slideBg(v, n) {
 
 function cardHTML(item, no, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
-  const rule = `rgba(255,255,255,.16)`;
+  const rule = ruleOf(v);
   let body;
   if (v.layout === 'graphic') {
     // B: 좌측 텍스트 + 우측 큰 주제 그래픽(액센트, 선명)
@@ -226,7 +266,7 @@ const bodyHTML = (s) =>
 // 캐러셀 내용 슬라이드 (커버 다음 장들) — 큰 라벨 + 제목 + 본문, 변형 팔레트 사용
 function contentSlideHTML(item, slide, n, total, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
-  const rule = 'rgba(255,255,255,.16)';
+  const rule = ruleOf(v);
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;
