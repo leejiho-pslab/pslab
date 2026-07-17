@@ -1,0 +1,43 @@
+# [템플릿] 무드필름 합성 (CI). data/<brand>-video.json 경로·브랜치명을 교체.
+name: mts video
+
+# AWK 유튜브 무드필름을 CI(ffmpeg)에서 합성한다.
+# Higgsfield 클립(cloudfront)은 개발 환경 프록시에서 막히므로 러너에서 받아 잇는다.
+on:
+  push:
+    branches: [claude/eager-mayer-tknneh]
+    paths:
+      - 'data/awk-video.json'
+      - 'scripts/awk-video.sh'
+      - 'assets/awk-video/*.png'
+      - '.github/workflows/awk-video.yml'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: awk-video
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: ffmpeg 설치
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg jq bc
+      - name: 무드필름 합성
+        run: bash scripts/awk-video.sh
+      - name: 커밋
+        run: |
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f assets/awk-video/awk-mood-film.mp4
+          git commit -m "chore(awk): 유튜브 무드필름 합성" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push ok"; exit 0; }
+            echo "retry $i"; sleep 4
+          done

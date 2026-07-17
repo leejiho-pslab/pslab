@@ -8,10 +8,22 @@
       "title": "브랜드 분석 — 비츠(VITTZ)",
       "summary": "**\"인테리어의 모든 것\"** — 조명 전문몰에서 출발해 실링팬·커튼/블라인드·타일·침구로 확장 중인 토탈 인테리어 플랫폼. 핵심 차별화는 제품이 아니라 **배달+설치를 묶은 경험**(비츠 딜리버리)입니다.",
       "stats": [
-        { "v": "3천원~89만원", "l": "제품 가격 스펙트럼" },
-        { "v": "6,290+", "l": "자사몰 등록 상품" },
-        { "v": "3회", "l": "소비자만족지수 1위 이력" },
-        { "v": "1877-9920", "l": "고객센터" }
+        {
+          "v": "3천원~89만원",
+          "l": "제품 가격 스펙트럼"
+        },
+        {
+          "v": "6,290+",
+          "l": "자사몰 등록 상품"
+        },
+        {
+          "v": "3회",
+          "l": "소비자만족지수 1위 이력"
+        },
+        {
+          "v": "1877-9920",
+          "l": "고객센터"
+        }
       ],
       "bullets": [
         "제품 3라인: **비츠 스탠다드**(가성비, 방등 60W 13,200원) / **OV 라인**(자체 디자인·미드센추리, 15~17만원) / 수입·하이엔드(베르판 등, ~89만원)",
@@ -20,9 +32,18 @@
         "유의: AS 관련 부정 후기 존재(단종 제품) → SNS에서 보증·효능 **확정 표현 금지**, 셀프 시공 콘텐츠에 안전 고지 필수"
       ],
       "links": [
-        { "label": "공식몰 vittz.co.kr", "url": "https://www.vittz.co.kr/" },
-        { "label": "비츠 스탠다드 기획전", "url": "https://www.vittz.co.kr/shop/plan.html?plan_id=66" },
-        { "label": "상세 문서 01-브랜드-분석", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/01-브랜드-분석.md" }
+        {
+          "label": "공식몰 vittz.co.kr",
+          "url": "https://www.vittz.co.kr/"
+        },
+        {
+          "label": "비츠 스탠다드 기획전",
+          "url": "https://www.vittz.co.kr/shop/plan.html?plan_id=66"
+        },
+        {
+          "label": "상세 문서 01-브랜드-분석",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/01-브랜드-분석.md"
+        }
       ]
     },
     {
@@ -31,10 +52,22 @@
       "title": "시장·계절성 — 언제 무엇이 검색되나",
       "summary": "네이버 데이터랩 12개월(2025-07~2026-06) 분석. 조명 검색은 **가을 이사철에 폭증**하고, 실링팬은 여름에 역주행합니다. 8월 자동화 시작은 성수기 직전 발행 리듬을 만드는 최적 타이밍입니다.",
       "stats": [
-        { "v": "2.3배", "l": "조명교체 검색 가을 증폭" },
-        { "v": "9~10월", "l": "연중 최대 성수기" },
-        { "v": "7월·5월", "l": "실링팬 피크(여름 역계절)" },
-        { "v": "30~50대", "l": "핵심 구매층 (남녀 균형)" }
+        {
+          "v": "2.3배",
+          "l": "조명교체 검색 가을 증폭"
+        },
+        {
+          "v": "9~10월",
+          "l": "연중 최대 성수기"
+        },
+        {
+          "v": "7월·5월",
+          "l": "실링팬 피크(여름 역계절)"
+        },
+        {
+          "v": "30~50대",
+          "l": "핵심 구매층 (남녀 균형)"
+        }
       ],
       "charts": [
         {
@@ -42,18 +75,58 @@
           "unit": "상대지수, 최대=100",
           "max": 100,
           "items": [
-            { "label": "7월", "value": 44 },
-            { "label": "8월", "value": 50 },
-            { "label": "9월", "value": 85, "accent": true, "hint": "성수기 진입" },
-            { "label": "10월", "value": 100, "accent": true, "hint": "연중 피크" },
-            { "label": "11월", "value": 60 },
-            { "label": "12월", "value": 63 },
-            { "label": "1월", "value": 59 },
-            { "label": "2월", "value": 34 },
-            { "label": "3월", "value": 33 },
-            { "label": "4월", "value": 27 },
-            { "label": "5월", "value": 26 },
-            { "label": "6월", "value": 25 }
+            {
+              "label": "7월",
+              "value": 44
+            },
+            {
+              "label": "8월",
+              "value": 50
+            },
+            {
+              "label": "9월",
+              "value": 85,
+              "accent": true,
+              "hint": "성수기 진입"
+            },
+            {
+              "label": "10월",
+              "value": 100,
+              "accent": true,
+              "hint": "연중 피크"
+            },
+            {
+              "label": "11월",
+              "value": 60
+            },
+            {
+              "label": "12월",
+              "value": 63
+            },
+            {
+              "label": "1월",
+              "value": 59
+            },
+            {
+              "label": "2월",
+              "value": 34
+            },
+            {
+              "label": "3월",
+              "value": 33
+            },
+            {
+              "label": "4월",
+              "value": 27
+            },
+            {
+              "label": "5월",
+              "value": 26
+            },
+            {
+              "label": "6월",
+              "value": 25
+            }
           ]
         },
         {
@@ -61,18 +134,58 @@
           "unit": "상대지수, 최대=100",
           "max": 100,
           "items": [
-            { "label": "7월", "value": 100, "accent": true, "hint": "연중 피크" },
-            { "label": "8월", "value": 69 },
-            { "label": "9월", "value": 51 },
-            { "label": "10월", "value": 41 },
-            { "label": "11월", "value": 44 },
-            { "label": "12월", "value": 36 },
-            { "label": "1월", "value": 41 },
-            { "label": "2월", "value": 33 },
-            { "label": "3월", "value": 43 },
-            { "label": "4월", "value": 55 },
-            { "label": "5월", "value": 80, "accent": true, "hint": "선구매 시즌" },
-            { "label": "6월", "value": 74 }
+            {
+              "label": "7월",
+              "value": 100,
+              "accent": true,
+              "hint": "연중 피크"
+            },
+            {
+              "label": "8월",
+              "value": 69
+            },
+            {
+              "label": "9월",
+              "value": 51
+            },
+            {
+              "label": "10월",
+              "value": 41
+            },
+            {
+              "label": "11월",
+              "value": 44
+            },
+            {
+              "label": "12월",
+              "value": 36
+            },
+            {
+              "label": "1월",
+              "value": 41
+            },
+            {
+              "label": "2월",
+              "value": 33
+            },
+            {
+              "label": "3월",
+              "value": 43
+            },
+            {
+              "label": "4월",
+              "value": 55
+            },
+            {
+              "label": "5월",
+              "value": 80,
+              "accent": true,
+              "hint": "선구매 시즌"
+            },
+            {
+              "label": "6월",
+              "value": 74
+            }
           ]
         }
       ],
@@ -82,8 +195,14 @@
         "고객 언어: 플리커프리 · 눈 안 아픈 조명 · 몽돌조명 · 안정기/모듈 · 셀프 가능? · 바리솔 대안"
       ],
       "links": [
-        { "label": "네이버 데이터랩 (직접 조회)", "url": "https://datalab.naver.com/keyword/trendSearch.naver" },
-        { "label": "상세 문서 02-시장-트렌드-분석", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/02-시장-트렌드-분석.md" }
+        {
+          "label": "네이버 데이터랩 (직접 조회)",
+          "url": "https://datalab.naver.com/keyword/trendSearch.naver"
+        },
+        {
+          "label": "상세 문서 02-시장-트렌드-분석",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/02-시장-트렌드-분석.md"
+        }
       ]
     },
     {
@@ -97,22 +216,66 @@
           "unit": "상대지수 평균",
           "max": 100,
           "items": [
-            { "label": "비츠조명", "value": 67, "accent": true, "hint": "편차 최소 = 안정적 고정 수요" },
-            { "label": "공간조명", "value": 52, "hint": "프로모션 스파이크형 (8월 100 후 급락)" },
-            { "label": "루이스폴센", "value": 27, "hint": "수입 프리미엄 수요 꾸준" },
-            { "label": "필립스휴", "value": 5, "hint": "스마트 조명 니치" },
-            { "label": "라이마스", "value": 4 },
-            { "label": "마르조명", "value": 1, "hint": "미미" }
+            {
+              "label": "비츠조명",
+              "value": 67,
+              "accent": true,
+              "hint": "편차 최소 = 안정적 고정 수요"
+            },
+            {
+              "label": "공간조명",
+              "value": 52,
+              "hint": "프로모션 스파이크형 (8월 100 후 급락)"
+            },
+            {
+              "label": "루이스폴센",
+              "value": 27,
+              "hint": "수입 프리미엄 수요 꾸준"
+            },
+            {
+              "label": "필립스휴",
+              "value": 5,
+              "hint": "스마트 조명 니치"
+            },
+            {
+              "label": "라이마스",
+              "value": 4
+            },
+            {
+              "label": "마르조명",
+              "value": 1,
+              "hint": "미미"
+            }
           ]
         }
       ],
       "table": {
-        "head": ["업체 (상위 링)", "데이터 근거", "비츠 시사점"],
+        "head": [
+          "업체 (상위 링)",
+          "데이터 근거",
+          "비츠 시사점"
+        ],
         "rows": [
-          ["오늘의집", "2025 매출 3,215억 · 첫 연간 흑자 · 인테리어 검색 1위", "'공간 콘텐츠 → 제품 태그' 문법 차용 — 딜리버리 시공 사진이 비츠의 UGC 원천"],
-          ["한샘", "2024 매출 1조 9,084억", "공간 패키지 제안(조명+커튼+타일) 콘텐츠 여지"],
-          ["현대리바트", "2024 매출 1조 8,707억 (B2B 70%+)", "시공사·자영업자용 B2B 콘텐츠 축(링크드인) 잠재"],
-          ["이케아코리아", "검색지수 58~77 (플랫폼 다음)", "3D AR·쇼룸 체험을 콘텐츠 소재로 쓰는 같은 문법"]
+          [
+            "오늘의집",
+            "2025 매출 3,215억 · 첫 연간 흑자 · 인테리어 검색 1위",
+            "'공간 콘텐츠 → 제품 태그' 문법 차용 — 딜리버리 시공 사진이 비츠의 UGC 원천"
+          ],
+          [
+            "한샘",
+            "2024 매출 1조 9,084억",
+            "공간 패키지 제안(조명+커튼+타일) 콘텐츠 여지"
+          ],
+          [
+            "현대리바트",
+            "2024 매출 1조 8,707억 (B2B 70%+)",
+            "시공사·자영업자용 B2B 콘텐츠 소재 잠재(블로그 활용)"
+          ],
+          [
+            "이케아코리아",
+            "검색지수 58~77 (플랫폼 다음)",
+            "3D AR·쇼룸 체험을 콘텐츠 소재로 쓰는 같은 문법"
+          ]
         ]
       },
       "bullets": [
@@ -120,8 +283,14 @@
         "공간조명의 스파이크형(할인 화력전) 전략은 따라가지 않는다 — 자동화 기반 **상시 발행**이 구조적 우위"
       ],
       "links": [
-        { "label": "오늘의집", "url": "https://ohou.se" },
-        { "label": "상세 문서 06-국내-최상위-업체-분석", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/06-국내-최상위-업체-분석.md" }
+        {
+          "label": "오늘의집",
+          "url": "https://ohou.se"
+        },
+        {
+          "label": "상세 문서 06-국내-최상위-업체-분석",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/06-국내-최상위-업체-분석.md"
+        }
       ]
     },
     {
@@ -130,19 +299,54 @@
       "title": "글로벌 벤치마크 — 일본·유럽·미국",
       "summary": "매출 데이터 기준 각 시장 최상위 업체를 정의하고, 비츠에 이식할 문법 6가지를 추출했습니다.",
       "table": {
-        "head": ["기업 (시장)", "데이터 근거", "비츠 적용 지침"],
+        "head": [
+          "기업 (시장)",
+          "데이터 근거",
+          "비츠 적용 지침"
+        ],
         "rows": [
-          ["Signify (글로벌 1위, 네덜란드)", "매출 €61억 (2024)", "Philips Hue가 만든 '조명=분위기 연출' 인식 → 무드·간접조명 콘텐츠의 검증 근거"],
-          ["오델릭·코이즈미 (일본 주택조명)", "오델릭 ¥429억 · 닛케이 채용의향 3위", "**공간별 시공례 라이브러리** — 블로그를 현관→거실→주방→욕실 아카이브로 구조화"],
-          ["니토리 (일본 리테일 1위)", "매출 ¥9,122억 (FY2025)", "'값 이상' 고정 화법 → \"1만원대인데 정품 LED\" 반복 소구"],
-          ["IKEA (유럽/글로벌)", "소매판매 €446억 (FY25)", "AR·쇼룸 체험의 콘텐츠화 — 3D AR 시연·매장 투어 쇼츠"],
-          ["루이스폴센 (덴마크)", "매출 DKK 9.66억 · EBITDA 마진 30%", "디자인 서사가 가격을 만든다 → OV 라인 스토리 콘텐츠"],
-          ["Home Depot (미국)", "하우투 2,000편+ · 2,500만 뷰+", "**하우투가 유통 신뢰를 만든다** — 셀프 설치 쇼츠를 채널 기둥으로"],
-          ["Govee (미국/스마트 D2C)", "아마존 3년 연속 300% 성장", "15~30초 **비포애프터 비주얼 데모** 포맷 이식"]
+          [
+            "Signify (글로벌 1위, 네덜란드)",
+            "매출 €61억 (2024)",
+            "Philips Hue가 만든 '조명=분위기 연출' 인식 → 무드·간접조명 콘텐츠의 검증 근거"
+          ],
+          [
+            "오델릭·코이즈미 (일본 주택조명)",
+            "오델릭 ¥429억 · 닛케이 채용의향 3위",
+            "**공간별 시공례 라이브러리** — 블로그를 현관→거실→주방→욕실 아카이브로 구조화"
+          ],
+          [
+            "니토리 (일본 리테일 1위)",
+            "매출 ¥9,122억 (FY2025)",
+            "'값 이상' 고정 화법 → \"1만원대인데 정품 LED\" 반복 소구"
+          ],
+          [
+            "IKEA (유럽/글로벌)",
+            "소매판매 €446억 (FY25)",
+            "AR·쇼룸 체험의 콘텐츠화 — 3D AR 시연·매장 투어 쇼츠"
+          ],
+          [
+            "루이스폴센 (덴마크)",
+            "매출 DKK 9.66억 · EBITDA 마진 30%",
+            "디자인 서사가 가격을 만든다 → OV 라인 스토리 콘텐츠"
+          ],
+          [
+            "Home Depot (미국)",
+            "하우투 2,000편+ · 2,500만 뷰+",
+            "**하우투가 유통 신뢰를 만든다** — 셀프 설치 쇼츠를 채널 기둥으로"
+          ],
+          [
+            "Govee (미국/스마트 D2C)",
+            "아마존 3년 연속 300% 성장",
+            "15~30초 **비포애프터 비주얼 데모** 포맷 이식"
+          ]
         ]
       },
       "links": [
-        { "label": "상세 문서 07-글로벌-최상위-업체-분석", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/07-글로벌-최상위-업체-분석.md" }
+        {
+          "label": "상세 문서 07-글로벌-최상위-업체-분석",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/07-글로벌-최상위-업체-분석.md"
+        }
       ]
     },
     {
@@ -151,16 +355,52 @@
       "title": "키워드 전략 — 네이버 키워드 도구 입력 배치",
       "summary": "실제 월간검색수는 **검색광고 API(키워드 도구와 동일 데이터)**로 자동 수집됩니다 — 결과는 이 탭 맨 아래 '📊 실측 월간검색수' 표에 표시. 아래 배치표는 수집 대상 40개 키워드이며, API 연동 전이라면 광고주센터에서 **한 번에 5개씩** 직접 조회할 수도 있습니다.",
       "table": {
-        "head": ["배치", "입력 키워드 (5개)", "용도"],
+        "head": [
+          "배치",
+          "입력 키워드 (5개)",
+          "용도"
+        ],
         "rows": [
-          ["1. 브랜드", "비츠조명 · 비츠 조명 · 조명쇼핑몰 · 조명 전문점 · 인테리어조명", "지명 수요 방어·전환"],
-          ["2. 공간별", "거실등 · 방등 · 주방등 · 식탁등 · 현관 센서등", "구매 전환 핵심"],
-          ["3. 제품 유형", "펜던트조명 · 무드등 · 간접조명 · 벽등 · 레일조명", "디자인/감성 소재"],
-          ["4. 시즌", "실링팬 · 천장 선풍기 · 실링팬 방등 · LED 실링팬 · 우드 실링팬", "여름~초가을 주력"],
-          ["5. 교체·시공", "조명교체 · 전등교체 · LED방등 교체 · 조명 설치 · 거실등 교체", "가을 성수기 SEO"],
-          ["6. 스펙·신뢰", "LED방등 · 플리커프리 조명 · 삼색변환 LED · LED 매입등 · LED 평판등", "상세 검색형"],
-          ["7. 확장", "암막커튼 · 욕실등 · 욕실 리모델링 · 타일 시공 · 호텔침구", "토탈 인테리어 교차"],
-          ["8. 상황·타깃", "신혼집 조명 · 아이방 조명 · 책상 스탠드 · 학습용 스탠드 · 미드센추리 조명", "롱테일·블로그 소재"]
+          [
+            "1. 브랜드",
+            "비츠조명 · 비츠 조명 · 조명쇼핑몰 · 조명 전문점 · 인테리어조명",
+            "지명 수요 방어·전환"
+          ],
+          [
+            "2. 공간별",
+            "거실등 · 방등 · 주방등 · 식탁등 · 현관 센서등",
+            "구매 전환 핵심"
+          ],
+          [
+            "3. 제품 유형",
+            "펜던트조명 · 무드등 · 간접조명 · 벽등 · 레일조명",
+            "디자인/감성 소재"
+          ],
+          [
+            "4. 시즌",
+            "실링팬 · 천장 선풍기 · 실링팬 방등 · LED 실링팬 · 우드 실링팬",
+            "여름~초가을 주력"
+          ],
+          [
+            "5. 교체·시공",
+            "조명교체 · 전등교체 · LED방등 교체 · 조명 설치 · 거실등 교체",
+            "가을 성수기 SEO"
+          ],
+          [
+            "6. 스펙·신뢰",
+            "LED방등 · 플리커프리 조명 · 삼색변환 LED · LED 매입등 · LED 평판등",
+            "상세 검색형"
+          ],
+          [
+            "7. 확장",
+            "암막커튼 · 욕실등 · 욕실 리모델링 · 타일 시공 · 호텔침구",
+            "토탈 인테리어 교차"
+          ],
+          [
+            "8. 상황·타깃",
+            "신혼집 조명 · 아이방 조명 · 책상 스탠드 · 학습용 스탠드 · 미드센추리 조명",
+            "롱테일·블로그 소재"
+          ]
         ]
       },
       "bullets": [
@@ -168,9 +408,18 @@
         "조회 중 발견한 연관 롱테일(예: '거실등 교체 비용')은 이 대시보드 **🧭 지침 탭**의 채널 가이드 '주제:' 줄에 넣으면 다음 기획부터 자동 반영됩니다"
       ],
       "links": [
-        { "label": "네이버 광고주센터 키워드 도구 (내 계정)", "url": "https://ads.naver.com/manage/ad-accounts/2006250/sa/tool/keyword-planner" },
-        { "label": "광고주센터 홈", "url": "https://ads.naver.com" },
-        { "label": "상세 문서 03-키워드-전략 (기록표 포함)", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/03-키워드-전략.md" }
+        {
+          "label": "네이버 광고주센터 키워드 도구 (내 계정)",
+          "url": "https://ads.naver.com/manage/ad-accounts/2006250/sa/tool/keyword-planner"
+        },
+        {
+          "label": "광고주센터 홈",
+          "url": "https://ads.naver.com"
+        },
+        {
+          "label": "상세 문서 03-키워드-전략 (기록표 포함)",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/03-키워드-전략.md"
+        }
       ]
     },
     {
@@ -179,22 +428,49 @@
       "title": "채널 진단 — 보유 자산 현황",
       "summary": "이미 강한 채널 자산을 보유. 자동화의 가치는 0→1이 아니라 **\"매일 같은 시각, 같은 품질, 채널 맞춤 포맷\"의 일관성**을 만드는 것입니다.",
       "stats": [
-        { "v": "3.2만", "l": "인스타 팔로워 (게시물 3,559)" },
-        { "v": "6.5천", "l": "네이버 블로그 이웃 (글 1.4천)" },
-        { "v": "1,870만", "l": "유튜브 누적 조회 (영상 1,043)" },
-        { "v": "9.2만", "l": "최고 쇼츠 조회 (23초 셀프설치)" }
+        {
+          "v": "3.2만",
+          "l": "인스타 팔로워 (게시물 3,559)"
+        },
+        {
+          "v": "6.5천",
+          "l": "네이버 블로그 이웃 (글 1.4천)"
+        },
+        {
+          "v": "1,870만",
+          "l": "유튜브 누적 조회 (영상 1,043)"
+        },
+        {
+          "v": "9.2만",
+          "l": "최고 쇼츠 조회 (23초 셀프설치)"
+        }
       ],
       "bullets": [
         "유튜브는 구독(9,860) 대비 조회가 큰 **검색·추천 유입형** — 일반 1분30초 영상 1~2천 뷰 vs 23초 쇼츠 9.2만 뷰 = **초단편 하우투가 승리 공식**",
         "네이버 블로그는 발행 API가 없어 유일한 수동 채널 — 시스템이 원고·이미지를 전부 준비하고 담당자는 복붙 5분 (전환 기여 1순위 채널)",
-        "스레드는 인스타 연동으로 신규 개설 권장, 구글 블로그·링크드인은 선택 확장"
+        "스레드는 인스타 연동으로 신규 개설 권장, 구글 블로그는 선택 확장"
       ],
       "links": [
-        { "label": "인스타그램 @vittz_official", "url": "https://www.instagram.com/vittz_official" },
-        { "label": "네이버 블로그", "url": "https://blog.naver.com/vittzlighting" },
-        { "label": "유튜브 채널", "url": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw" },
-        { "label": "공식몰", "url": "https://www.vittz.co.kr/" },
-        { "label": "상세 문서 04-SNS-채널-진단", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/04-SNS-채널-진단.md" }
+        {
+          "label": "인스타그램 @vittz_official",
+          "url": "https://www.instagram.com/vittz_official"
+        },
+        {
+          "label": "네이버 블로그",
+          "url": "https://blog.naver.com/vittzlighting"
+        },
+        {
+          "label": "유튜브 채널",
+          "url": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw"
+        },
+        {
+          "label": "공식몰",
+          "url": "https://www.vittz.co.kr/"
+        },
+        {
+          "label": "상세 문서 04-SNS-채널-진단",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/04-SNS-채널-진단.md"
+        }
       ]
     },
     {
@@ -203,14 +479,43 @@
       "title": "채널별 운영 전략 — 벤치마크 이식 설계",
       "summary": "오늘의집(UGC·참여장치) · IKEA(무드 피드) · Govee(비포애프터) · Home Depot(하우투 미디어)의 디자인/기획/구성을 분해해 6개 채널 운영안으로 번역했습니다. 원칙: **1소재 → 6채널 리사이클링**, \"제품이 아니라 공간과 변화를 판다\".",
       "table": {
-        "head": ["채널", "퍼널 역할", "주력 포맷", "발행(안)"],
+        "head": [
+          "채널",
+          "퍼널 역할",
+          "주력 포맷",
+          "발행(안)"
+        ],
         "rows": [
-          ["인스타그램", "발견 (영감 탐색)", "캐러셀 6장 — 월 공간별 · 수 지식카드 · 금 비츠라서 · 일 시즌", "매일 18:00 로테이션"],
-          ["유튜브 쇼츠", "발견 (하우투 검색)", "30초 시리즈 — 30초 셀프 · 조명 응급실 · 비포애프터 · 스펙 30초", "주 2~3회"],
-          ["네이버 블로그", "탐색 (구매 직전) ★전환 1순위", "1,500자 SEO 원고 + 표 + 본문 이미지 (복붙 5분)", "주 2~3회"],
-          ["스레드", "관계 (대화)", "한 줄 팁 · 질문 유도 · 비하인드", "일 1회 (인스타 소재 재가공)"],
-          ["구글 블로그", "탐색 (구글 검색)", "네이버 원고 리라이트 + FAQ 블록", "주 1~2회"],
-          ["링크드인", "신뢰 (B2B·채용)", "시장 데이터 포스트 · 기업 스토리 · 파트너 제안", "주 1회 (선택)"]
+          [
+            "인스타그램",
+            "발견 (영감 탐색)",
+            "캐러셀 6장 — 월 공간별 · 수 지식카드 · 금 비츠라서 · 일 시즌",
+            "매일 18:00 로테이션"
+          ],
+          [
+            "유튜브 쇼츠",
+            "발견 (하우투 검색)",
+            "30초 시리즈 — 30초 셀프 · 조명 응급실 · 비포애프터 · 스펙 30초",
+            "주 2~3회"
+          ],
+          [
+            "네이버 블로그",
+            "탐색 (구매 직전) ★전환 1순위",
+            "1,500자 SEO 원고 + 표 + 본문 이미지 (복붙 5분)",
+            "주 2~3회"
+          ],
+          [
+            "스레드",
+            "관계 (대화)",
+            "한 줄 팁 · 질문 유도 · 비하인드",
+            "일 1회 (인스타 소재 재가공)"
+          ],
+          [
+            "구글 블로그",
+            "탐색 (구글 검색)",
+            "네이버 원고 리라이트 + FAQ 블록",
+            "주 1~2회"
+          ]
         ]
       },
       "bullets": [
@@ -218,10 +523,23 @@
         "감도 기준: 웜 미니멀(전구빛 3000K 무드) · 존댓말 실행형 · 구체적 숫자 소구 · 셀프 시공 안전 고지 필수 · 기존 피드와 연속성 유지",
         "90일 로드맵: 8월 발행 리듬 확립 → 9월 성수기 1차(학습 보정) → 10월 정점(상위 포맷 증량)"
       ],
-      "tags": ["웜미니멀", "전구빛무드", "30초하우투", "비포애프터", "공간별아카이브", "안전고지"],
+      "tags": [
+        "웜미니멀",
+        "전구빛무드",
+        "30초하우투",
+        "비포애프터",
+        "공간별아카이브",
+        "안전고지"
+      ],
       "links": [
-        { "label": "상세 문서 08-채널별-운영전략", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/08-채널별-운영전략.md" },
-        { "label": "상세 문서 05-콘텐츠-방향-제안", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/05-콘텐츠-방향-제안.md" }
+        {
+          "label": "상세 문서 08-채널별-운영전략",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/08-채널별-운영전략.md"
+        },
+        {
+          "label": "상세 문서 05-콘텐츠-방향-제안",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/research/05-콘텐츠-방향-제안.md"
+        }
       ]
     },
     {
@@ -236,17 +554,41 @@
         "채널별 콘텐츠 가이드·우선 주제는 **🧭 지침 탭**에 시드해 두었습니다 — 언제든 수정하면 다음 생성 사이클부터 자동 반영됩니다"
       ],
       "links": [
-        { "label": "오픈 가이드 (담당자용 계정 연결 준비물)", "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/오픈-가이드.md" }
+        {
+          "label": "오픈 가이드 (담당자용 계정 연결 준비물)",
+          "url": "https://github.com/leejiho-pslab/pslab/blob/main/data/clients/vittz/오픈-가이드.md"
+        }
       ]
     }
   ],
   "sources": [
-    { "label": "📁 전체 조사 문서 (research/01~08)", "url": "https://github.com/leejiho-pslab/pslab/tree/main/data/clients/vittz/research" },
-    { "label": "비츠 공식몰", "url": "https://www.vittz.co.kr/" },
-    { "label": "인스타그램", "url": "https://www.instagram.com/vittz_official" },
-    { "label": "네이버 블로그", "url": "https://blog.naver.com/vittzlighting" },
-    { "label": "유튜브", "url": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw" },
-    { "label": "네이버 키워드 도구", "url": "https://ads.naver.com/manage/ad-accounts/2006250/sa/tool/keyword-planner" },
-    { "label": "네이버 데이터랩", "url": "https://datalab.naver.com/keyword/trendSearch.naver" }
+    {
+      "label": "📁 전체 조사 문서 (research/01~08)",
+      "url": "https://github.com/leejiho-pslab/pslab/tree/main/data/clients/vittz/research"
+    },
+    {
+      "label": "비츠 공식몰",
+      "url": "https://www.vittz.co.kr/"
+    },
+    {
+      "label": "인스타그램",
+      "url": "https://www.instagram.com/vittz_official"
+    },
+    {
+      "label": "네이버 블로그",
+      "url": "https://blog.naver.com/vittzlighting"
+    },
+    {
+      "label": "유튜브",
+      "url": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw"
+    },
+    {
+      "label": "네이버 키워드 도구",
+      "url": "https://ads.naver.com/manage/ad-accounts/2006250/sa/tool/keyword-planner"
+    },
+    {
+      "label": "네이버 데이터랩",
+      "url": "https://datalab.naver.com/keyword/trendSearch.naver"
+    }
   ]
 }

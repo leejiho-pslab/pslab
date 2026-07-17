@@ -1,0 +1,12 @@
+{
+  "output": "assets/awk-video/awk-mood-film.mp4",
+  "bgm": "assets/awk-video/bgm.m4a",
+  "segments": [
+    { "type": "card", "img": "assets/awk-video/intro.png", "dur": 2.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260713_043823_e2e24282-067c-4a17-a5f4-235bee794bdd.mp4", "cap": "assets/awk-video/cap_pair.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260713_043839_0f9ef37d-5064-43f3-aa53-d7ee38a7539a.mp4", "cap": "assets/awk-video/cap_street.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260713_043831_ad6005bd-6666-4e9a-be2f-4205a79e259b.mp4", "cap": "assets/awk-video/cap_rash.png", "dur": 4.6 },
+    { "type": "clip", "url": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260713_043810_c858d260-2c5b-4578-8f16-39370d4d8d29.mp4", "cap": "assets/awk-video/cap_beach.png", "dur": 4.6 },
+    { "type": "card", "img": "assets/awk-video/outro.png", "dur": 3.2 }
+  ]
+}
