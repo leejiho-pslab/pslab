@@ -276,6 +276,7 @@ function buildClientData(
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
+    keywordVolumes: guidanceStore?.loadKeywordVolumes(client.id) ?? null,
   };
 }
 
@@ -968,9 +969,51 @@ function researchView(client){
     (r.updatedAt?'<div class="muted" style="margin-top:6px;font-size:12px">업데이트: '+esc(String(r.updatedAt).slice(0,10))+'</div>':'')+'</div>';
   h+='<div class="panel" style="padding:10px 14px;margin-top:12px">'+r.sections.map(function(s){return '<a class="tag" href="#rs-'+esc(s.id)+'">'+(s.icon?esc(s.icon)+' ':'')+esc(s.title)+'</a>';}).join(' ')+'</div>';
   h+=r.sections.map(researchSection).join('');
+  h+=kwVolumesPanel(client);
   if(r.sources&&r.sources.length) h+='<div class="panel rsec"><h3>🔗 원본 문서·확인 링크</h3><div class="rlinks">'+
     r.sources.map(function(l){return '<a class="btn" target="_blank" rel="noopener" href="'+esc(l.url)+'">'+esc(l.label)+'</a>';}).join('')+'</div></div>';
   return h;
+}
+function fmtN(n){ return (n==null||isNaN(n))?'-':Number(n).toLocaleString('ko-KR'); }
+function compBadge(c){
+  if(!c) return '<span class="muted">-</span>';
+  var cls=c==='높음'?'b-hold':(c==='중간'?'b-wait':'b-ok');
+  return '<span class="badge '+cls+'">'+esc(c)+'</span>';
+}
+// 실측 월간검색수 — 네이버 검색광고 API(keywordstool) 수집분. 없으면 연동 안내.
+function kwVolumesPanel(client){
+  const kv=client.keywordVolumes;
+  let h='<div class="panel rsec" id="rs-kwvol"><h3>📊 실측 월간검색수 — 네이버 키워드 도구</h3>';
+  if(!kv||!kv.requested||!kv.requested.length){
+    h+='<div class="rsum">아직 <b>실측 데이터가 비어 있습니다.</b> 위 차트의 수치는 데이터랩 <b>상대지수(추세 비교용)</b>이며 절대 검색량이 아닙니다. 실제 월간검색수는 검색광고 API 연동 후 이 자리에 자동 표시됩니다.</div>'+
+      '<ul class="rlist">'+
+      '<li>광고주센터 → 도구 → <b>API 사용 관리</b>에서 액세스라이선스·비밀키 발급</li>'+
+      '<li>GitHub Secrets에 <b>NAVER_SEARCHAD_API_KEY / NAVER_SEARCHAD_API_SECRET / NAVER_SEARCHAD_CUSTOMER_ID</b> 등록 (CUSTOMER_ID는 광고주센터 주소의 ad-accounts/ 뒤 숫자)</li>'+
+      '<li>Actions에서 <b>keyword volumes</b> 워크플로 실행 → 배치표 40개 키워드의 월간검색수(PC/모바일)·경쟁정도·연관키워드가 자동 수집됩니다</li>'+
+      '</ul>'+
+      '<div class="rlinks"><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+REPO+'/settings/secrets/actions">🔗 Secrets 설정 열기</a>'+
+      '<a class="btn" target="_blank" rel="noopener" href="https://github.com/'+REPO+'/actions">🔗 Actions 열기</a></div></div>';
+    return h;
+  }
+  const items=kv.requested;
+  const max=Math.max.apply(null,items.map(function(i){return i.total||0;}))||1;
+  h+='<div class="muted" style="margin-bottom:8px">수집 '+esc(String(kv.updatedAt||'').slice(0,10))+' · '+esc(kv.source||'')+'</div>';
+  h+='<div class="rchart"><div class="rchart-t">월간검색수 상위 (PC+모바일 합계)</div>'+
+    items.slice(0,12).map(function(i){
+      const w=Math.max(2,Math.round((i.total||0)/max*100));
+      return '<div class="rbar-row" title="PC '+fmtN(i.pc)+' · 모바일 '+fmtN(i.mobile)+'"><div class="rbar-l">'+esc(i.keyword)+'</div>'+
+        '<div class="rbar-t"><div class="rbar-f" style="width:'+w+'%"></div></div>'+
+        '<div class="rbar-v" style="width:70px">'+fmtN(i.total)+'</div></div>';
+    }).join('')+'</div>';
+  h+='<div style="overflow-x:auto;margin-top:10px"><table><tr><th>키워드</th><th>월간검색수 PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th><th>월평균노출 광고수</th></tr>'+
+    items.map(function(i){
+      return '<tr><td><b>'+esc(i.keyword)+'</b></td><td>'+fmtN(i.pc)+'</td><td>'+fmtN(i.mobile)+'</td><td><b>'+fmtN(i.total)+'</b></td><td>'+compBadge(i.compIdx)+'</td><td>'+fmtN(i.plAvgDepth)+'</td></tr>';
+    }).join('')+'</table></div>';
+  if(kv.related&&kv.related.length){
+    h+='<div class="rchart-t" style="margin-top:12px">🔎 연관키워드 발굴 상위 '+Math.min(20,kv.related.length)+' (소재 후보)</div><div>'+
+      kv.related.slice(0,20).map(function(i){return '<span class="tag" title="월간검색수 '+fmtN(i.total)+' · 경쟁 '+esc(i.compIdx||'-')+'">'+esc(i.keyword)+' '+fmtN(i.total)+'</span>';}).join('')+'</div>';
+  }
+  return h+'</div>';
 }
 function overview(client){
   let h=tokenBanner(client);
