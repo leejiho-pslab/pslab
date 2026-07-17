@@ -275,6 +275,7 @@ function buildClientData(
     weeklyReport: weeklyReport ?? null,
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
+    research: guidanceStore?.loadResearch(client.id) ?? null,
   };
 }
 
@@ -310,6 +311,8 @@ export function renderDashboard(
     ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
+  // 단일 업체 전용 대시보드(--client)는 그 업체 이름을 관제실 타이틀로 쓴다
+  const title = clients.length === 1 ? `${clients[0].name} 콘텐츠 관제실` : 'pslab 콘텐츠 관제실';
 
   return `<!doctype html>
 <html lang="ko">
@@ -317,7 +320,7 @@ export function renderDashboard(
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta http-equiv="refresh" content="300"/>
-<title>pslab 콘텐츠 관제실</title>
+<title>${title}</title>
 <style>
 :root{color-scheme:light}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
@@ -369,6 +372,20 @@ th{color:#6a7284;font-weight:600;font-size:12px}
 .spark{display:block}
 .empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
 .tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+.rsec{margin-top:16px}
+.rsum{color:#4a5468;font-size:13px;margin:6px 0 4px;line-height:1.55}
+.rlist{margin:8px 0 4px;padding-left:18px}
+.rlist li{font-size:13px;color:#39404f;line-height:1.6;margin:3px 0}
+.rchart{margin:12px 0 6px}
+.rchart-t{font-size:12.5px;font-weight:600;color:#39404f;margin-bottom:6px}
+.rbar-row{display:flex;align-items:center;gap:8px;margin:3px 0}
+.rbar-l{width:120px;font-size:11.5px;color:#4a5468;text-align:right;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbar-t{flex:1;background:#eef1f6;border-radius:4px;height:13px;overflow:hidden}
+.rbar-f{height:100%;border-radius:0 4px 4px 0;background:#3b6fd4;min-width:2px}
+.rbar-f.acc{background:#e8a13d}
+.rbar-v{width:46px;font-size:11px;color:#68738a;flex:none;font-variant-numeric:tabular-nums}
+.rlinks{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
+a.tag{text-decoration:none}
 footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
 .card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
@@ -411,7 +428,7 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ pslab 콘텐츠 관제실</div>
+  <div class="brand">🛰️ ${title}</div>
   <div class="sub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
@@ -897,6 +914,43 @@ function channelLinksPanel(client){
   return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
 }
+// ── 리서치 탭 — 브랜드·시장 학습 요약 (data/<id>/research.json) ──
+function rstat(s){return '<div class="kpi"><div class="v">'+esc(s.v)+'</div><div class="l">'+esc(s.l)+'</div></div>';}
+function rchart(c){
+  const vals=c.items.map(function(i){return i.value||0;});
+  const max=c.max||Math.max.apply(null,vals)||1;
+  return '<div class="rchart"><div class="rchart-t">'+esc(c.title)+(c.unit?' <span class="muted">('+esc(c.unit)+')</span>':'')+'</div>'+
+    c.items.map(function(i){
+      const w=Math.max(2,Math.round((i.value||0)/max*100));
+      return '<div class="rbar-row" title="'+esc(i.hint||i.label)+'"><div class="rbar-l">'+esc(i.label)+'</div>'+
+        '<div class="rbar-t"><div class="rbar-f'+(i.accent?' acc':'')+'" style="width:'+w+'%"></div></div>'+
+        '<div class="rbar-v">'+esc(String(i.value))+'</div></div>';
+    }).join('')+'</div>';
+}
+function researchSection(s){
+  let h='<div class="panel rsec" id="rs-'+esc(s.id)+'"><h3>'+(s.icon?esc(s.icon)+' ':'')+esc(s.title)+'</h3>';
+  if(s.summary) h+='<div class="rsum">'+mdInline(s.summary)+'</div>';
+  if(s.stats&&s.stats.length) h+='<div class="kpis" style="margin:10px 0 6px">'+s.stats.map(rstat).join('')+'</div>';
+  if(s.bullets&&s.bullets.length) h+='<ul class="rlist">'+s.bullets.map(function(b){return '<li>'+mdInline(b)+'</li>';}).join('')+'</ul>';
+  if(s.charts&&s.charts.length) h+=s.charts.map(rchart).join('');
+  if(s.table) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr>'+
+    s.table.rows.map(function(r){return '<tr>'+r.map(function(cell){return '<td>'+mdInline(cell)+'</td>';}).join('')+'</tr>';}).join('')+'</table></div>';
+  if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>';
+  if(s.links&&s.links.length) h+='<div class="rlinks">'+s.links.map(function(l){return '<a class="btn" target="_blank" rel="noopener" href="'+esc(l.url)+'">🔗 '+esc(l.label)+'</a>';}).join('')+'</div>';
+  return h+'</div>';
+}
+function researchView(client){
+  const r=client.research;
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 요약이 아직 없습니다. data/clients/'+esc(client.id)+'/research.json 에 채워 넣으면 이 탭에 표시됩니다.</div>';
+  let h='<div class="sect-h"><h2>📚 리서치 — 브랜드·시장 학습 요약</h2></div>';
+  if(r.intro) h+='<div class="panel" style="background:#f8fbff;border-color:#c4d6f4"><div class="rsum" style="margin:0">'+mdInline(r.intro)+'</div>'+
+    (r.updatedAt?'<div class="muted" style="margin-top:6px;font-size:12px">업데이트: '+esc(String(r.updatedAt).slice(0,10))+'</div>':'')+'</div>';
+  h+='<div class="panel" style="padding:10px 14px;margin-top:12px">'+r.sections.map(function(s){return '<a class="tag" href="#rs-'+esc(s.id)+'">'+(s.icon?esc(s.icon)+' ':'')+esc(s.title)+'</a>';}).join(' ')+'</div>';
+  h+=r.sections.map(researchSection).join('');
+  if(r.sources&&r.sources.length) h+='<div class="panel rsec"><h3>🔗 원본 문서·확인 링크</h3><div class="rlinks">'+
+    r.sources.map(function(l){return '<a class="btn" target="_blank" rel="noopener" href="'+esc(l.url)+'">'+esc(l.label)+'</a>';}).join('')+'</div></div>';
+  return h;
+}
 function overview(client){
   let h=tokenBanner(client);
   h+=setupPanel();
@@ -954,6 +1008,7 @@ function renderTabs(){
   const c=DATA.clients[ci];
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
     .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat(c.research&&c.research.sections&&c.research.sections.length?[{key:'research',label:'리서치',icon:'📚',active:true,noDot:true}]:[])
     .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
@@ -969,7 +1024,7 @@ function renderTabs(){
 }
 function renderView(){
   const c=DATA.clients[ci];
-  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):channelDetail(c,c.channels.find(x=>x.key===ch)));
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):channelDetail(c,c.channels.find(x=>x.key===ch))));
   document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
