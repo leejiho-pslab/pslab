@@ -1,5 +1,10 @@
 # 비츠(VITTZ) SNS 채널 자동화 — 사전 조사 자료집
 
+> 🖥️ **대시보드 확인 링크** (모든 작업 단계의 결과는 여기서 확인)
+> - **미리보기(즉시 확인)**: https://claude.ai/code/artifact/d668a081-66ca-4f76-ae73-393be495f687 — 매 작업 후 최신본으로 갱신됨
+> - **정식(독립 배포)**: https://leejiho-pslab.github.io/vittz-sns/ — `vittz-sns` 저장소 생성 후 활성화
+> - 원본 HTML: 작업 브랜치 `docs/vittz/index.html` · 이식용 브랜치 `vittz-standalone`의 `docs/index.html`
+
 > 작성일: 2026-07-17 · 목적: 8월 시작 예정 SNS 자동화 온보딩의 **브랜드 학습 단계** 산출물이자
 > 이후 **제안서 작성의 베이스 문서**. 계정 연결·자동화 세팅 전 단계이므로 모든 내용은 조사/정의만 담음.
 
