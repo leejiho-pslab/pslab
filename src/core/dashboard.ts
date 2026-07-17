@@ -281,6 +281,7 @@ function buildClientData(
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
+    weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
   };
 }
 
@@ -323,7 +324,7 @@ export function renderDashboard(
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta http-equiv="refresh" content="300"/>
-<title>pslab 콘텐츠 관제실</title>
+<title>ALWAYS ON 콘텐츠 관제실</title>
 <style>
 :root{color-scheme:light;--brand:#2b6fff}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
@@ -428,7 +429,7 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ <span id="dashtitle">pslab 콘텐츠 관제실</span></div>
+  <div class="brand">🛰️ <span id="dashtitle">ALWAYS ON 콘텐츠 관제실</span></div>
   <div class="sub" id="dashsub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
@@ -582,9 +583,12 @@ function guideView(client){
 function channelGuidePanel(client, key){
   const g=(client.channelGuides||{})[key];
   if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 수정 →</button></div>'+
+  // 심플 요약만 (docs/06-대시보드): 소재 태그 + 가이드 첫 2줄 미리보기, 전문은 지침 탭
+  const preview=(g.guide||'').split('\\n').slice(0,2).join('\\n');
+  const more=(g.guide||'').split('\\n').length>2;
+  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
     ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (g.guide?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(g.guide)+'</div>':'')+
+    (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
     '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
 }
 function submitReq(key, chLabel){
@@ -923,10 +927,38 @@ function channelLinksPanel(client){
   return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
 }
+// 📅 차주 콘텐츠 기획 (ADR-0006: 금 키워드 수집 → 토 기획 → week-plan.json, plan.json과 분리)
+function weekPlanPanel(client){
+  const wp=client.weekPlan;
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획</h3><span class="muted">'+
+    (wp&&wp.baseDate?'기준일 '+esc(String(wp.baseDate).slice(0,10)):'키워드 실측 연동 후 매주 토요일 자동 생성')+'</span></div>';
+  if(!wp){
+    h+='<div class="empty" style="padding:10px">아직 차주 기획이 없습니다 — 네이버 검색광고 키워드 수집(금) → 차주 기획(토) 파이프라인은 계정 연결 단계에서 켜집니다.</div>';
+  } else {
+    h+='<table><tr><th style="width:90px">날짜</th><th style="width:130px">채널</th><th>제안 제목</th><th style="width:80px">시트</th></tr>'+
+      wp.items.map(it=>{
+        const cd=DATA.channels.find(x=>x.key===it.channel)||{icon:'',label:it.channel||''};
+        return '<tr><td class="muted">'+esc(it.date||'')+'</td><td>'+cd.icon+' '+esc(cd.label)+'</td><td>'+esc(it.title||'')+'</td><td><span class="tag">'+esc(it.sheet||'')+'</span></td></tr>';
+      }).join('')+'</table>'+
+      '<div class="muted" style="margin-top:8px">이 기획안은 감도·가짜글자 검수를 거친 뒤에만 실제 제작으로 넘어갑니다 (자동발행 큐와 분리).</div>';
+  }
+  return h+'</div>';
+}
+// 🔌 채널 연결 상황 — 압축 칩 (개요 최하단, docs/06-대시보드 레이아웃 원칙)
+function connChips(client){
+  const st=DATA.setup||{};
+  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube,'linkedin':st.linkedin};
+  const chips=client.channels.map(c=>{
+    const lab=DATA.channels.find(x=>x.key===c.key)||{icon:'',label:c.key};
+    const mark=c.key==='naver-blog'?'✍️ 수동':(on[c.key]?'✅':'⬜');
+    return '<span class="tag" style="font-size:12px;padding:5px 10px">'+lab.icon+' '+esc(lab.label)+' '+mark+'</span>';
+  }).join(' ');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>🔌 채널 연결 상황</h3><span class="muted">계정 연결은 온보딩 마지막 단계 — 상세 절차는 아래 체크리스트</span></div><div>'+chips+'</div></div>';
+}
 function overview(client){
   let h=tokenBanner(client);
-  h+=setupPanel();
   h+=channelLinksPanel(client);
+  h+=weekPlanPanel(client);
   h+=weeklyPanel(client);
   h+=periodBar();
   h+='<div class="kpis">'+
@@ -970,6 +1002,9 @@ function overview(client){
   h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
   // 경쟁사
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
+  // 저중요 패널은 최하단 — 연결 상황 압축 칩 + 오픈 준비 체크리스트 (docs/06-대시보드 레이아웃 원칙)
+  h+=connChips(client);
+  h+=setupPanel();
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
@@ -998,13 +1033,11 @@ function researchView(client){
   return h;
 }
 function renderClients(){
-  document.getElementById('clients').innerHTML = DATA.clients.length>1 ? DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('') : '';
-  // 선택된 클라이언트에 맞춰 헤더·브랜드 컬러를 바꾼다 (업체 맞춤 관제실)
+  // 헤더 로고는 제품명 "ALWAYS ON 콘텐츠 관제실" 고정 — 업체 식별은 클라이언트 칩으로 (docs/06-대시보드)
+  document.getElementById('clients').innerHTML = DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('');
   const c=DATA.clients[ci];
   if(c){
-    document.getElementById('dashtitle').textContent=c.name+' 콘텐츠 관제실';
     document.getElementById('dashsub').textContent=(c.industry?c.industry+' · ':'')+'채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침';
-    document.title=c.name+' 콘텐츠 관제실';
     document.documentElement.style.setProperty('--brand', c.themeColor||'#2b6fff');
   }
 }

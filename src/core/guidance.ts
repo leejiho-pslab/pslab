@@ -163,6 +163,15 @@ export class GuidanceStore {
     return b;
   }
 
+  /** week-plan.json — 차주 콘텐츠 기획 (ADR-0006: 토요일 생성, plan.json과 분리) */
+  loadWeekPlan(clientId: string): { baseDate?: string; items: Array<{ date?: string; channel?: string; title?: string; sheet?: string }> } | undefined {
+    const raw = this.read<unknown>(this.file(clientId, 'week-plan.json'));
+    if (!raw) return undefined;
+    const items = Array.isArray(raw) ? raw : (raw as { items?: unknown }).items;
+    if (!Array.isArray(items) || !items.length) return undefined;
+    return { baseDate: (raw as { baseDate?: string }).baseDate, items: items as Array<{ date?: string; channel?: string; title?: string; sheet?: string }> };
+  }
+
   /** keyword-stats.json — 키워드 도구 실측 데이터 (없으면 undefined = '실측 대기' 표시) */
   loadKeywordStats(clientId: string): KeywordStats | undefined {
     const s = this.read<KeywordStats>(this.file(clientId, 'keyword-stats.json'));
