@@ -24,6 +24,15 @@ const arg = (k, d) => {
   return i >= 0 ? process.argv[i + 1] : d;
 };
 const clientId = arg('client', 'pslab');
+// 카드 하단 브랜드 핸들 — clients/<id>.json accounts에서 읽는다 (기본 @_pslab)
+function loadHandle() {
+  try {
+    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    const h = c.accounts && (c.accounts.instagram || c.accounts.threads);
+    return h ? `@${h}` : '@_pslab';
+  } catch { return '@_pslab'; }
+}
+const BRAND_HANDLE = loadHandle();
 
 function findChromium() {
   if (process.env.PSLAB_CHROMIUM && existsSync(process.env.PSLAB_CHROMIUM))
@@ -55,6 +64,9 @@ const VARIANTS = {
   A: { name: '잉크·에디토리얼', bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', layout: 'editorial' },
   B: { name: '잉크·그래픽', bg: '#0b1a1c', fg: '#eef3f1', muted: '#8fb0ab', accent: '#36d6c4', layout: 'graphic' },
   C: { name: '잉크·스포트라이트', bg: '#14121d', fg: '#f3eff6', muted: '#a99fc0', accent: '#ffc24a', layout: 'spotlight' },
+  // 웜 계열 (조명 브랜드용 — 비츠 등): 라이트 웜 / 저녁 전구빛 다크 웜
+  W: { name: '웜·에디토리얼', bg: '#FBF7F0', fg: '#26221D', muted: '#8A7B66', accent: '#D98A1F', layout: 'editorial' },
+  V: { name: '웜·전구빛 스포트라이트', bg: '#241C12', fg: '#F7F1E6', muted: '#B5A489', accent: '#F0B45C', layout: 'spotlight' },
 };
 
 // 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
@@ -149,7 +161,7 @@ function cardHTML(item, no, faces) {
       <div class="gtext"><div class="headline">${headlineHTML(item.headline)}</div><div class="sub">${esc(item.sub)}</div></div>
       <div class="gfig">${motifSVG(item.motif, v.accent, 380, 0.96)}</div>
     </div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else if (v.layout === 'spotlight') {
     // C: 거대 호수 + 중앙 정렬 헤드라인 + 상단 작은 그래픽
     body = `
@@ -159,7 +171,7 @@ function cardHTML(item, no, faces) {
       <div class="headline" style="text-align:center">${headlineHTML(item.headline)}</div>
       <div class="sub" style="text-align:center;margin-left:auto;margin-right:auto">${esc(item.sub)}</div>
     </div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else {
     // A: 에디토리얼 — 큰 그래픽 배경 워터마크 + 좌하단 헤드라인
     body = `
@@ -168,7 +180,7 @@ function cardHTML(item, no, faces) {
     <div class="rule"></div>
     <div class="headline" style="margin-top:auto">${headlineHTML(item.headline)}</div>
     <div class="sub">${esc(item.sub)}</div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
@@ -237,7 +249,7 @@ html,body{width:1080px;height:1350px}
   ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
   ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
   ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
-  <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>
+  <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>
 </div></body></html>`;
 }
 

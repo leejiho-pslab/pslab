@@ -68,7 +68,7 @@ html,body{width:1600px;height:900px}
 </style></head><body><div class="cover"><div class="bar"></div>
   <div class="kicker">${esc(kicker)}</div>
   <div class="title">${esc(title)}</div>
-  <div class="brand">@_pslab</div>
+  <div class="brand">${CLIENT_META.handle}</div>
 </div></body></html>`;
 }
 
@@ -118,7 +118,7 @@ function figureHtml(fig, t) {
   } else {
     inner = head(fig.kicker, fig.title || '');
   }
-  return `<div class="fig ${fig.type}">${inner}<div class="brand">@_pslab</div></div>`;
+  return `<div class="fig ${fig.type}">${inner}<div class="brand">${CLIENT_META.handle}</div></div>`;
 }
 
 function pageHtml(fig, t) {
@@ -180,7 +180,17 @@ if (!chromium) {
 }
 
 const titles = loadTitles();
-const KICKER = { 'naver-blog': 'pslab · 광고 인사이트', naver: 'pslab · 광고 인사이트', blogger: 'pslab journal' };
+// 브랜드 핸들·킥커 — clients/<id>.json 에서 읽어 채널 이미지에 반영 (없으면 pslab 기본)
+function loadClientMeta() {
+  try {
+    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    const name = String(c.name || clientId).replace(/\s*\(.*\)$/, '');
+    const handle = (c.accounts && (c.accounts.instagram || c.accounts['naver-blog'])) || clientId;
+    return { handle: `@${handle}`, kicker: { 'naver-blog': `${name} · 인사이트`, naver: `${name} · 인사이트`, blogger: `${name} journal` } };
+  } catch { return { handle: '@_pslab', kicker: { 'naver-blog': 'pslab · 광고 인사이트', naver: 'pslab · 광고 인사이트', blogger: 'pslab journal' } }; }
+}
+const CLIENT_META = loadClientMeta();
+const KICKER = CLIENT_META.kicker;
 
 let n = 0;
 for (const post of specs) {
