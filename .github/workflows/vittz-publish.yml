@@ -1,0 +1,93 @@
+name: vittz publish (수동 발행)
+
+# 승인된 기획안 1편을 실제 채널에 발행한다 (수동 트리거 전용).
+# 카드 이미지는 GitHub Pages 공개 URL(docs/cards)을 그대로 사용한다.
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        description: '발행할 기획안 항목 ID (예: w1-mon)'
+        required: true
+        default: 'w1-mon'
+      dry_run:
+        description: '시뮬레이션만 (true) / 실제 발행 (false)'
+        required: true
+        default: 'true'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pslab-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Seoul
+      PSLAB_REPO: ${{ github.repository }}
+      PSLAB_DRY_RUN: ${{ github.event.inputs.dry_run }}
+      PSLAB_LOG_LEVEL: info
+      PSLAB_INSTAGRAM_ACCESS_TOKEN: ${{ secrets.PSLAB_INSTAGRAM_ACCESS_TOKEN }}
+      PSLAB_INSTAGRAM_IG_USER_ID: ${{ secrets.PSLAB_INSTAGRAM_IG_USER_ID }}
+      PSLAB_THREADS_ACCESS_TOKEN: ${{ secrets.PSLAB_THREADS_ACCESS_TOKEN }}
+      PSLAB_THREADS_THREADS_USER_ID: ${{ secrets.PSLAB_THREADS_THREADS_USER_ID }}
+      PSLAB_LINKEDIN_ACCESS_TOKEN: ${{ secrets.PSLAB_LINKEDIN_ACCESS_TOKEN }}
+      PSLAB_LINKEDIN_AUTHOR_URN: ${{ secrets.PSLAB_LINKEDIN_AUTHOR_URN }}
+      PSLAB_BLOGGER_CLIENT_ID: ${{ secrets.PSLAB_BLOGGER_CLIENT_ID }}
+      PSLAB_BLOGGER_CLIENT_SECRET: ${{ secrets.PSLAB_BLOGGER_CLIENT_SECRET }}
+      PSLAB_BLOGGER_REFRESH_TOKEN: ${{ secrets.PSLAB_BLOGGER_REFRESH_TOKEN }}
+      PSLAB_BLOGGER_BLOG_ID: ${{ secrets.PSLAB_BLOGGER_BLOG_ID }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: 의존성 설치 + 빌드
+        run: |
+          npm ci
+          npm run build
+      - name: 발행 (publish-plan)
+        run: node dist/cli.js publish-plan --client vittz --id "${{ github.event.inputs.id }}"
+      - name: 대시보드 갱신 + 커밋
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        continue-on-error: true
+        run: |
+          node dist/cli.js dashboard --out docs/index.html
+          git config user.name "pslab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          touch docs/.nojekyll
+          git add -f data/ docs/index.html docs/.nojekyll 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "변경 없음"; exit 0
+          fi
+          git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin main && git push && { echo "push 성공"; exit 0; }
+            echo "push 재시도 $i"; sleep 4
+          done
+          echo "push 실패 — Pages 배포는 진행"
+
+      # 실제 발행 시 라이브 Pages 배포 (Settings → Pages → Source = "GitHub Actions")
+      - name: Pages 설정
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/configure-pages@v5
+      - name: Pages 아티팩트 업로드 (docs/)
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Pages 배포
+        id: deploy
+        if: ${{ github.event.inputs.dry_run == 'false' }}
+        uses: actions/deploy-pages@v4

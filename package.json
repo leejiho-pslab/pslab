@@ -1,0 +1,47 @@
+{
+  "name": "pslab-sns",
+  "version": "0.1.0",
+  "description": "플러그인 기반 SNS 자동화 도구 — 콘텐츠 생성·예약·멀티채널 발행·분석",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "pslab": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js",
+    "demo": "tsx examples/automate.ts",
+    "autopilot": "tsx examples/autopilot.ts",
+    "daemon-demo": "tsx examples/daemon.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --import tsx ./test/*.test.ts"
+  },
+  "keywords": [
+    "sns",
+    "automation",
+    "plugin",
+    "scheduler",
+    "youtube",
+    "instagram",
+    "threads",
+    "linkedin",
+    "naver-blog"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.40.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
