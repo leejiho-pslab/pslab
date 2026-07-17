@@ -1,0 +1,60 @@
+[
+  {
+    "id": "test-blog-livingroom",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "bars",
+        "kicker": "Guide",
+        "title": "거실 크기별 권장 밝기 (W)",
+        "bars": [
+          { "label": "20평대", "pct": 150, "val": "120~150W" },
+          { "label": "30평대", "pct": 180, "val": "150~180W" },
+          { "label": "40평대~", "pct": 200, "val": "180W~" }
+        ]
+      },
+      {
+        "type": "checklist",
+        "kicker": "Checklist",
+        "title": "거실등 고르기 전 확인 4가지",
+        "items": [
+          "플리커프리 — 눈이 편한 빛인가",
+          "색온도 변환 — 주광·주백·전구색 전환",
+          "KC 인증 — 안전 기준 통과 제품",
+          "설치 — 배달+설치(딜리버리) 가능 여부"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "test-blog-midcentury",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "steps",
+        "kicker": "Styling",
+        "title": "카페 같은 거실, 5단계 스타일링",
+        "steps": [
+          { "label": "① 펜던트 낮게", "desc": "식탁 위 60~80cm — 머큐리 펜던트" },
+          { "label": "② 전체는 은은, 포인트는 밝게", "desc": "빛의 웅덩이 만들기" },
+          { "label": "③ 색온도 통일", "desc": "전구색 3000K — 사진 톤이 달라짐" },
+          { "label": "④ 벽등 레이어", "desc": "입체감 — 패브릭·골드 벽등" },
+          { "label": "⑤ 테이블 조명", "desc": "꺼도 오브제, 켜면 무드메이커" }
+        ]
+      },
+      {
+        "type": "compare",
+        "kicker": "Before / After",
+        "title": "사무실 같은 거실 vs 카페 같은 거실",
+        "left": {
+          "label": "지금의 거실",
+          "items": ["형광등 주광색 하나", "그림자 없는 평평한 빛", "색온도 뒤죽박죽"]
+        },
+        "right": {
+          "label": "미드센추리 거실",
+          "items": ["펜던트+포인트 조명", "빛의 레이어와 입체감", "전구색 3000K 통일"]
+        }
+      }
+    ]
+  }
+]
