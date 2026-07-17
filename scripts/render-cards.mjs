@@ -25,6 +25,24 @@ const arg = (k, d) => {
 };
 const clientId = arg('client', 'pslab');
 
+// 브랜드 표기(카드 푸터) — ADR-0009: 계정 핸들은 clients/<id>.json 단일 출처.
+// accounts.instagram이 있으면 @핸들, 없으면 브랜드명으로 표기(하드코딩 금지).
+function brandLabel() {
+  for (const p of [
+    join(dirname(fileURLToPath(import.meta.url)), '..', 'clients', `${clientId}.json`),
+    join(dirname(fileURLToPath(import.meta.url)), '..', `clients-${clientId}`, `${clientId}.json`),
+  ]) {
+    try {
+      const c = JSON.parse(readFileSync(p, 'utf8'));
+      const h = c.accounts && c.accounts.instagram;
+      if (h) return `@${String(h).replace(/^@/, '')}`;
+      if (c.name) return c.name;
+    } catch { /* try next */ }
+  }
+  return `@${clientId}`;
+}
+const BRAND_LABEL = brandLabel();
+
 function findChromium() {
   if (process.env.PSLAB_CHROMIUM && existsSync(process.env.PSLAB_CHROMIUM))
     return process.env.PSLAB_CHROMIUM;
@@ -149,7 +167,7 @@ function cardHTML(item, no, faces) {
       <div class="gtext"><div class="headline">${headlineHTML(item.headline)}</div><div class="sub">${esc(item.sub)}</div></div>
       <div class="gfig">${motifSVG(item.motif, v.accent, 380, 0.96)}</div>
     </div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else if (v.layout === 'spotlight') {
     // C: 거대 호수 + 중앙 정렬 헤드라인 + 상단 작은 그래픽
     body = `
@@ -159,7 +177,7 @@ function cardHTML(item, no, faces) {
       <div class="headline" style="text-align:center">${headlineHTML(item.headline)}</div>
       <div class="sub" style="text-align:center;margin-left:auto;margin-right:auto">${esc(item.sub)}</div>
     </div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else {
     // A: 에디토리얼 — 큰 그래픽 배경 워터마크 + 좌하단 헤드라인
     body = `
@@ -168,7 +186,7 @@ function cardHTML(item, no, faces) {
     <div class="rule"></div>
     <div class="headline" style="margin-top:auto">${headlineHTML(item.headline)}</div>
     <div class="sub">${esc(item.sub)}</div>
-    <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
@@ -237,7 +255,7 @@ html,body{width:1080px;height:1350px}
   ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
   ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
   ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
-  <div class="foot"><div class="brand">@_pslab</div><div class="tag">${esc(item.dayLabel)}</div></div>
+  <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>
 </div></body></html>`;
 }
 
