@@ -300,6 +300,7 @@ export function renderDashboard(
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
     linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
     blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
+    youtube: has('PSLAB_YOUTUBE_CLIENT_ID', 'PSLAB_YOUTUBE_CLIENT_SECRET', 'PSLAB_YOUTUBE_REFRESH_TOKEN'),
   };
   const data = {
     generatedAt: new Date().toISOString(),
@@ -313,6 +314,24 @@ export function renderDashboard(
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
   // 단일 업체 전용 대시보드(--client)는 그 업체 이름을 관제실 타이틀로 쓴다
   const title = clients.length === 1 ? `${clients[0].name} 콘텐츠 관제실` : 'pslab 콘텐츠 관제실';
+  // 단일 업체 테마 — clients/<id>.json 의 theme 색상으로 핵심 요소만 덮어쓴다(기본은 블루)
+  const th = clients.length === 1 ? clients[0].theme : undefined;
+  const themeCss = th
+    ? `
+/* ── 업체 브랜드 테마 오버라이드 ── */
+body{background:${th.bg ?? '#ffffff'}}
+header,.tabs{background:${th.bg ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
+.panel,.card,.kpi{background:${th.panel ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
+a{color:${th.accentInk ?? '#1d6ae5'}}
+.tab.on{border-bottom-color:${th.accent ?? '#2b6fff'}}
+.cbtn.on{background:${th.accent ?? '#2b6fff'};border-color:${th.accent ?? '#2b6fff'}}
+.kpi .v.accent{color:${th.accentInk ?? '#d97706'}}
+.btn.fb{background:${th.panel ?? '#f6effc'};border-color:${th.accent ?? '#d9c2ee'};color:${th.accentInk ?? '#7a35b8'}}
+.rbar-f{background:${th.accentInk ?? '#3b6fd4'}}
+.rbar-f.acc{background:${th.accent ?? '#e8a13d'}}
+.rbar-t{background:${th.border ?? '#eef1f6'}}
+`
+    : '';
 
   return `<!doctype html>
 <html lang="ko">
@@ -424,7 +443,7 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .reqta{width:100%;border:1px solid #dfe4ec;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#14171d;background:#fff;resize:vertical}
 .reqta:focus{outline:2px solid #2b6fff33;border-color:#2b6fff}
 @media(max-width:720px){.carou .slide img{height:60vh}}
-</style>
+${themeCss}</style>
 </head>
 <body>
 <header>
@@ -885,18 +904,20 @@ function setupPanel(){
   const settingsUrl='https://github.com/'+REPO+'/settings/secrets/actions';
   const varsUrl='https://github.com/'+REPO+'/settings/variables/actions';
   const row=(ok,name,todo,url)=>'<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⬜')+'</td><td><b>'+esc(name)+'</b>'+(ok?'':'<div class="muted" style="margin-top:2px">'+todo+(url?' · <a href="'+url+'" target="_blank">설정 열기 ↗</a>':'')+'</div>')+'</td></tr>';
-  const done=[s.instagram,s.threads,s.telegram,s.anthropic,s.realPublish].filter(Boolean).length;
+  const items=[s.instagram,s.threads,s.youtube,s.telegram,s.blogger,s.anthropic,s.realPublish];
+  const done=items.filter(Boolean).length;
   return '<div class="panel" style="border-color:#2b6fff">'+
-    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/5 완료</span></div>'+
+    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/'+items.length+' 완료</span></div>'+
     '<table>'+
     row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
     row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.youtube,'유튜브 쇼츠 자동 업로드','Google OAuth(클라이언트ID/시크릿/리프레시 토큰) 시크릿 — 앱 미검수 시 토큰 7일 만료 주의',settingsUrl)+
     row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
     row(s.blogger,'구글 블로그 자동발행','선택 — Blogger OAuth(클라이언트/리프레시 토큰/블로그ID) 시크릿',settingsUrl)+
     row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
     row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
     '</table>'+
-    '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
+    '<div class="muted" style="margin-top:8px"><b>인스타그램·스레드·구글 블로그·유튜브</b>는 API로 자동발행됩니다. <b>네이버 블로그</b>만 공식 발행 API가 없어 <b>수동(복붙)</b> 채널이며, 발행일에 본문 복사+이미지 다운로드 도우미가 여기 대시보드에 표시됩니다.</div>'+
     '</div>';
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)

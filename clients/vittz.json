@@ -49,6 +49,13 @@
     "naver-blog": "https://blog.naver.com/vittzlighting",
     "youtube": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw"
   },
+  "theme": {
+    "accent": "#E8A13D",
+    "accentInk": "#9A6410",
+    "bg": "#FBF8F3",
+    "panel": "#FFFFFF",
+    "border": "#EBE3D5"
+  },
   "scheduleTimes": ["18:00"],
   "manualPlan": true,
   "reviewMode": "manual",

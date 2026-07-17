@@ -54,6 +54,18 @@ export interface ClientConfig {
   reviewMode: ReviewMode;
   /** 성적표 받을 곳 (이메일/메신저 식별자) */
   reportTo?: string;
+  /**
+   * 대시보드 브랜드 테마 — 단일 업체 전용 대시보드(--client)에서만 적용되는 색상.
+   * accent(포인트), accentInk(포인트 텍스트·대비용 진한 색), bg(페이지 배경),
+   * panel(패널 배경), border(경계선). 없으면 기본(블루) 테마.
+   */
+  theme?: {
+    accent?: string;
+    accentInk?: string;
+    bg?: string;
+    panel?: string;
+    border?: string;
+  };
 }
 
 /** 설정표 유효성 검사. 문제 메시지 배열을 반환(빈 배열이면 정상). */
@@ -99,6 +111,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     manualPlan: c.manualPlan ?? false,
     reviewMode: c.reviewMode!,
     reportTo: c.reportTo,
+    theme: c.theme,
   };
 }
 
