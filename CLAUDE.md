@@ -23,7 +23,7 @@
 | C1 시스템 개요·철학 | 무료 24h 무인·대시보드=제품·멀티클라이언트·검수게이트 | `docs/00-개요와-온보딩.md` | `src/core/orchestrator·daemon.ts` |
 | C2 도메인·데이터 모델 | `ClientConfig` + `data/clients/<id>/*` 데이터 계약·격리 | `docs/01-도메인-데이터.md` | `src/core/client·types·config·plan.ts` |
 | C3 콘텐츠 생성 엔진 | AI글·렌더원칙(HTML→Chromium·세이프존·가짜글자)·이미지전면형·영상·미디어조달 | `docs/02-콘텐츠-엔진.md` | `scripts/render-*·build-shorts-video·fetch-photos`, `src/core/content·generate·design.ts` |
-| C4 기획 지능 | 키워드3시트·차주스케줄링·운영자지침v3·자체학습 | `docs/03-기획-지능.md` | `scripts/fetch-keywords·plan-week`, `src/core/guidance·insight·learning.ts` |
+| C4 기획 지능 | 키워드3시트·차주스케줄링·운영자지침v3·자체학습·레퍼런스벤치마킹수집 | `docs/03-기획-지능.md` | `scripts/fetch-keywords·plan-week·fetch-references`, `src/core/guidance·insight·learning.ts` |
 | C5 채널 연동·인증 | 플러그인구조·자동/수동채널·토큰발급플레이북·토큰건강 | `docs/04-채널연동.md` | `src/plugins/*`, `src/core/token-health·registry.ts` |
 | C6 발행·스케줄링 | publish 멱등·일일배치·DRY_RUN·무인안전장치3종 | `docs/05-발행-스케줄링.md` | `src/core/publisher·scheduler·notify·alerts.ts`, `scripts/schedule-daily` |
 | C7 대시보드(관제·제품) | 구성·기간·수정요청·지침탭·차주기획·키워드3시트·채널스코프·템플릿리터럴함정 | `docs/06-대시보드.md` | `src/core/dashboard·board.ts` |
