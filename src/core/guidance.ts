@@ -57,6 +57,33 @@ export interface ResearchSection {
   links?: Array<{ label: string; url: string }>;
 }
 
+/** 네이버 키워드 도구 실측 검색량 한 건 (검색광고 API keywordstool 응답 기반) */
+export interface KeywordVolume {
+  keyword: string;
+  /** 월간검색수 PC ("< 10"은 5로 정규화) */
+  pc: number;
+  /** 월간검색수 모바일 */
+  mobile: number;
+  total: number;
+  /** 경쟁정도 (높음/중간/낮음) */
+  compIdx?: string;
+  /** 월평균클릭수 PC/모바일 */
+  avgPcClicks?: number;
+  avgMobileClicks?: number;
+  /** 월평균노출 광고수 */
+  plAvgDepth?: number;
+}
+
+/** 실측 검색량 문서 — data/<clientId>/keyword-volumes.json */
+export interface KeywordVolumesDoc {
+  updatedAt: string;
+  source: string;
+  /** 우리가 요청한 키워드(배치표)의 실측값 */
+  requested: KeywordVolume[];
+  /** API가 함께 돌려준 연관키워드 중 검색량 상위 (소재 발굴용) */
+  related: KeywordVolume[];
+}
+
 /** 리서치 요약 문서 — data/<clientId>/research.json */
 export interface ResearchDoc {
   updatedAt?: string;
@@ -144,6 +171,14 @@ export class GuidanceStore {
   /** 리서치 요약(research.json) — 없으면 undefined (대시보드에서 탭 자체를 숨김) */
   loadResearch(clientId: string): ResearchDoc | undefined {
     return this.read<ResearchDoc>(this.file(clientId, 'research.json'));
+  }
+
+  /**
+   * 네이버 키워드 도구 실측 월간검색수(keyword-volumes.json) —
+   * scripts/fetch-keyword-volumes.mjs 가 검색광고 API(keywordstool)로 수집해 저장.
+   */
+  loadKeywordVolumes(clientId: string): KeywordVolumesDoc | undefined {
+    return this.read<KeywordVolumesDoc>(this.file(clientId, 'keyword-volumes.json'));
   }
 
   loadGuides(clientId: string): ChannelGuides {
