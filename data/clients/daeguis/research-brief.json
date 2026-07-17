@@ -215,6 +215,7 @@
         { "t": "계정 연결 (맨 마지막)", "d": "8월 — 채널 토큰 발급 → GitHub Secrets 등록 → DRY_RUN 해제" }
       ],
       "links": [
+        { "label": "📖 채널 연동 가이드 (단계별 링크·복사값 포함)", "url": "https://github.com/leejiho-pslab/pslab/blob/claude/sns-automation-brand-research-th4yll/data/clients/daeguis/%EC%97%B0%EB%8F%99-%EA%B0%80%EC%9D%B4%EB%93%9C.md" },
         { "label": "네이버 광고주센터 키워드 도구", "url": "https://ads.naver.com/manage/ad-accounts/2006250/sa/tool/keyword-planner" },
         { "label": "인스타그램에서 '대구일색' 검색", "url": "https://www.instagram.com/explore/search/keyword/?q=%EB%8C%80%EA%B5%AC%EC%9D%BC%EC%83%89" },
         { "label": "유튜브에서 '대구일색' 검색", "url": "https://www.youtube.com/results?search_query=%EB%8C%80%EA%B5%AC%EC%9D%BC%EC%83%89" }
