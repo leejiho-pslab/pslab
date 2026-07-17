@@ -147,6 +147,11 @@ jobs:
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
+      # 비츠(vittz) 전용 대시보드 — 업체 담당자용 별도 URL (docs/vittz/)
+      - name: 비츠 대시보드 생성
+        continue-on-error: true
+        run: node dist/cli.js dashboard --client vittz --out docs/vittz/index.html
+
       # 주의: 커밋 메시지에 [skip ci]를 넣지 말 것!
       # docs/ 변경은 pages-build-deployment(자동)를 트리거해 실제 사이트에 배포된다.
       # [skip ci]를 붙이면 Pages 배포까지 막혀 대시보드가 라이브에 반영되지 않는다.

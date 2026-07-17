@@ -289,7 +289,13 @@ async function cmdDashboard(args: Args): Promise<void> {
   const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
   const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
   const out = typeof args.out === 'string' ? args.out : './docs/index.html';
-  const clients = loadClients(dir);
+  const only = typeof args.client === 'string' ? args.client : undefined;
+  const clients = loadClients(dir).filter((c) => !only || c.id === only);
+  if (only && clients.length === 0) {
+    console.error(`클라이언트를 찾을 수 없습니다: ${only}`);
+    process.exitCode = 1;
+    return;
+  }
   const store = new ClientStore<CycleRecord>(dataDir);
   const designStore = new DesignStore(dataDir);
   const planStore = new PlanStore(dataDir);
@@ -663,7 +669,7 @@ function printHelp(): void {
       '  cycle [--client id]   오토파일럿 한 사이클 실행 (조사→제작→검수→발행→회의)',
       '  daemon [--once]       무인 데몬 — 시간표(scheduleTimes)에 맞춰 자동 트리거',
       '  board [--json]        관제실 상황판 — 클라이언트별 현황 한눈에',
-      '  dashboard [--out p]   실시간 대시보드 HTML 생성 (기본 docs/index.html)',
+      '  dashboard [--out p] [--client id]  실시간 대시보드 HTML 생성 (기본 docs/index.html, --client로 단일 업체 전용)',
       '  generate-plan         AI 기획 생성 (--channel instagram --count 6, 발행 전 검수)',
       '  publish-plan          승인된 기획안 발행 (--id <항목> | --due, 카드는 Pages URL 사용)',
       '  collect-insights      발행물 성과 수집 + 인사이트 코멘트 + 자체 학습 갱신',
