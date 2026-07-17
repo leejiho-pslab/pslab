@@ -3,6 +3,7 @@
 이 저장소의 기본 브랜치(`claude/eager-lamport-mX0eT`)와 공용 대시보드(`docs/index.html`)는
 **다른 업체(pslab)** 소유다. 대구일색은 섞이지 않도록 이 폴더와 아래 경로에서만 관리한다.
 
+| 대시보드(라이브 스냅샷) | https://claude.ai/code/artifact/55d76711-dff6-48e2-ab8b-856a3fc0526d |
 | 자산 | 경로 |
 |---|---|
 | 클라이언트 설정 | `clients-daeguis/daeguis.json` |
