@@ -56,6 +56,24 @@ const MOODS = {
 };
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// ── 제품 카탈로그 (지침⑥: 콘텐츠 50% 이상 제품 이미지 → 구매 연결) ──
+// data/clients/<id>/product-images.json + docs/products/<id>/<key>.jpg(CI 다운로드)
+function loadProducts() {
+  try {
+    const spec = JSON.parse(readFileSync(join(ROOT, 'data/clients', clientId, 'product-images.json'), 'utf8'));
+    const map = {};
+    for (const p of spec.products || []) map[p.key] = p;
+    return map;
+  } catch { return {}; }
+}
+const PRODUCTS = loadProducts();
+function productPhoto(key) {
+  const f = join(ROOT, 'docs/products', clientId, `${key}.jpg`);
+  if (!existsSync(f)) return null;
+  try { return `data:image/jpeg;base64,${readFileSync(f).toString('base64')}`; } catch { return null; }
+}
+const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const br = (s) => esc(s).replace(/\n/g, '<br>');
 // *강조* → 전구빛 하이라이트
 const hl = (s) => br(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -123,6 +141,25 @@ function frame(m, seriesLabel, inner, pageNo, pageTotal, handle) {
   </div>`;
 }
 
+// 제품 사진 패널 — 사진이 있으면 실사, 없으면(개발 환경) 감도 유지 실루엣 + 글로우
+function productPanel(m, p, size) {
+  const photo = p ? productPhoto(p.key) : null;
+  const h = size === 'big' ? 500 : 260;
+  if (photo) {
+    return `<div class="pph" style="height:${h}px"><img src="${photo}" alt=""/></div>`;
+  }
+  const art = size === 'big' ? svgPendant(m, true) : svgPendant(m);
+  return `<div class="pph ph" style="height:${h}px">${art}</div>`;
+}
+// 제품 미니 태그 — point/spec/cta 하단에 제품·가격·구매 동선 고정 노출
+function productTag(m, key) {
+  const p = PRODUCTS[key];
+  if (!p) return '';
+  const photo = productPhoto(key);
+  const thumb = photo ? `<img class="ptthumb" src="${photo}" alt=""/>` : `<span class="ptdot"></span>`;
+  return `<div class="ptag">${thumb}<div class="ptxt"><div class="ptname">${esc(p.name)}</div><div class="ptprice">${won(p.price)} · 프로필 링크에서 구매</div></div></div>`;
+}
+
 function sceneHTML(item, s, m, idx) {
   const art = { pendant: svgPendant(m), fan: svgFan(m), bulbs: svgBulbs(m) }[s.scene] || '';
   if (s.scene === 'cover' || idx === 0) {
@@ -132,6 +169,18 @@ function sceneHTML(item, s, m, idx) {
       <div class="art">${coverArt}</div>
       <div class="headline">${hl(s.title)}</div>
       ${s.body ? `<div class="chip">${br(s.body)}</div>` : ''}
+    </div>`;
+  }
+  if (s.scene === 'product') {
+    // 제품 카드 — 실사(또는 실루엣) + 이름 + 가격 히어로 + 구매 동선
+    const p = PRODUCTS[s.productKey] || {};
+    return `<div class="mid">
+      <div class="klabel">${esc(s.label || '비츠 제품')}</div>
+      ${productPanel(m, p, 'big')}
+      <div class="pname">${esc(p.name || s.title || '')}</div>
+      <div class="pprice">${p.price ? won(p.price) : ''}</div>
+      ${s.body ? `<div class="body" style="margin-top:20px;font-size:36px">${br(s.body)}</div>` : ''}
+      <div class="buy">프로필 링크에서 바로 구매 →</div>
     </div>`;
   }
   if (s.scene === 'split') {
@@ -150,23 +199,25 @@ function sceneHTML(item, s, m, idx) {
       <div class="big">${hl(s.big || '')}</div>
       <div class="title">${hl(s.title)}</div>
       <div class="body">${br(s.body)}</div>
-      ${art ? `<div class="artS">${art}</div>` : ''}
+      ${s.productKey ? `<div style="margin-top:56px">${productTag(m, s.productKey)}</div>` : (art ? `<div class="artS">${art}</div>` : '')}
     </div>`;
   }
   if (s.scene === 'cta') {
+    const p = s.productKey ? PRODUCTS[s.productKey] : null;
     return `<div class="mid cta">
-      <div class="artS">${svgPendant(m)}</div>
-      <div class="title" style="text-align:center">${hl(s.title)}</div>
+      ${p ? productPanel(m, p, 'small') : `<div class="artS">${svgPendant(m)}</div>`}
+      <div class="title" style="text-align:center;margin-top:44px">${hl(s.title)}</div>
       <div class="body" style="text-align:center;margin-left:auto;margin-right:auto">${br(s.body)}</div>
+      ${p ? `<div class="buy" style="margin-top:40px">${esc(p.name)} · ${won(p.price)} — 프로필 링크에서 구매 →</div>` : ''}
       <div class="ctaline">비츠 딜리버리 · 배달과 설치를 한 번에</div>
     </div>`;
   }
-  // point (기본): 한글 라벨 + 제목 + 본문 + 보조 아트
+  // point (기본): 한글 라벨 + 제목 + 본문 + (제품 태그 또는 보조 아트)
   return `<div class="mid">
     <div class="klabel">${esc(s.label || '')}</div>
     <div class="title">${hl(s.title)}</div>
     <div class="body">${br(s.body)}</div>
-    ${art ? `<div class="artS">${art}</div>` : ''}
+    ${s.productKey ? `<div style="margin-top:56px">${productTag(m, s.productKey)}</div>` : (art ? `<div class="artS">${art}</div>` : '')}
   </div>`;
 }
 
@@ -204,6 +255,17 @@ body{font-family:'Pretendard';color:${m.ink}}
 .artS{margin-top:56px;opacity:.98}
 .cta{align-items:center;text-align:center}
 .ctaline{margin-top:56px;border-top:1.5px solid ${m.line};padding-top:34px;font-size:32px;letter-spacing:.06em;color:${m.accent};font-weight:700;width:100%;text-align:center}
+.pph{border-radius:28px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${m === MOODS.dusk ? 'rgba(250,246,239,.96)' : '#FFFFFF'};border:1.5px solid ${m.line};box-shadow:0 22px 70px rgba(${m.glow},.20)}
+.pph img{width:100%;height:100%;object-fit:contain;padding:26px}
+.pph.ph{background:transparent;box-shadow:none;border-style:dashed}
+.pname{font-weight:800;font-size:44px;letter-spacing:-.02em;margin-top:36px;text-wrap:balance}
+.pprice{font-weight:800;font-size:72px;letter-spacing:-.03em;color:${m.accent};margin-top:8px}
+.buy{margin-top:26px;display:inline-block;background:${m.chip};border:1.5px solid ${m.line};border-radius:999px;padding:15px 30px;font-size:29px;font-weight:700;color:${m.ink}}
+.ptag{display:flex;align-items:center;gap:24px;background:${m.chip};border:1.5px solid ${m.line};border-radius:22px;padding:22px 28px}
+.ptthumb{width:120px;height:120px;border-radius:16px;object-fit:contain;background:#FFFFFF;flex:none}
+.ptdot{width:20px;height:20px;border-radius:50%;background:${m.accent};flex:none;box-shadow:0 0 24px rgba(${m.glow},.8)}
+.ptname{font-weight:700;font-size:31px;line-height:1.35}
+.ptprice{font-weight:600;font-size:28px;color:${m.accent};margin-top:6px}
 .split{display:flex;gap:0;border-radius:26px;overflow:hidden;border:1.5px solid ${m.line}}
 .half{flex:1;padding:56px 44px;min-height:420px;display:flex;flex-direction:column;gap:22px}
 .before{background:#12151C;color:#9AA3B5}
