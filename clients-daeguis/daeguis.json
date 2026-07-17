@@ -34,7 +34,7 @@
     "창업·가맹 인사이트"
   ],
   "bannedWords": ["100% 보장", "무조건", "최저가", "주가", "경영권", "확정 수익"],
-  "targets": ["instagram", "threads", "naver-blog", "blogger", "youtube", "linkedin"],
+  "targets": ["instagram", "threads", "naver-blog", "blogger", "youtube"],
   "accounts": {},
   "channelLinks": {},
   "scheduleTimes": ["18:00"],

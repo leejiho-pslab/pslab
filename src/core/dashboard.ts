@@ -26,7 +26,6 @@ const CHANNELS: Array<{ key: PlatformId; label: string; icon: string }> = [
   { key: 'naver-blog', label: '네이버 블로그', icon: '📝' },
   { key: 'blogger', label: '구글 블로그', icon: '🅱️' },
   { key: 'youtube', label: '유튜브', icon: '▶️' },
-  { key: 'linkedin', label: '링크드인', icon: '💼' },
 ];
 
 function seed(s: string): number {
@@ -231,7 +230,6 @@ function buildClientData(
       case 'naver-blog': return 'https://admin.blog.naver.com/';
       case 'blogger': return 'https://www.blogger.com/';
       case 'youtube': return 'https://studio.youtube.com/';
-      case 'linkedin': return handle ? `https://www.linkedin.com/in/${handle}` : 'https://www.linkedin.com/';
       default: return '';
     }
   };
@@ -304,7 +302,6 @@ export function renderDashboard(
     anthropic: has('ANTHROPIC_API_KEY'),
     instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
-    linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
     blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
   };
   const data = {
@@ -658,7 +655,7 @@ function openDetail(id){
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
   const isCarousel=imgs.length>1;
-  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':chDef.key==='linkedin'?'💼 링크드인 포스트':'📝 발행 캡션';
+  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
   const m=it.metrics;
@@ -914,9 +911,9 @@ function setupPanel(){
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
 function chGrad(key){
-  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)',linkedin:'linear-gradient(135deg,#ecf2fc,#dce8f8)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
+  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
 }
-function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e',linkedin:'#b8cef0'})[key]||'#dfe4ec'; }
+function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e'})[key]||'#dfe4ec'; }
 function channelLinksPanel(client){
   const links=client.channelLinks||[];
   if(!links.length) return '';
@@ -947,7 +944,7 @@ function weekPlanPanel(client){
 // 🔌 채널 연결 상황 — 압축 칩 (개요 최하단, docs/06-대시보드 레이아웃 원칙)
 function connChips(client){
   const st=DATA.setup||{};
-  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube,'linkedin':st.linkedin};
+  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube};
   const chips=client.channels.map(c=>{
     const lab=DATA.channels.find(x=>x.key===c.key)||{icon:'',label:c.key};
     const mark=c.key==='naver-blog'?'✍️ 수동':(on[c.key]?'✅':'⬜');
