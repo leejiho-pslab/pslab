@@ -249,6 +249,7 @@ function buildClientData(
     id: client.id,
     name: client.name,
     industry: client.industry,
+    themeColor: client.themeColor ?? null,
     brandTone: client.brandTone,
     keywords: client.keywords,
     competitors: client.competitors.map((x) => x.handle),
@@ -320,7 +321,7 @@ export function renderDashboard(
 <meta http-equiv="refresh" content="300"/>
 <title>pslab 콘텐츠 관제실</title>
 <style>
-:root{color-scheme:light}*{box-sizing:border-box}
+:root{color-scheme:light;--brand:#2b6fff}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
 a{color:#1d6ae5}
 header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:0;z-index:5}
@@ -329,10 +330,10 @@ header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;posi
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .clients{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .cbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
-.cbtn.on{background:#2b6fff;border-color:#2b6fff;color:#fff}
+.cbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:58px;z-index:4}
 .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a7284;padding:8px 12px;cursor:pointer;font-size:14px}
-.tab.on{color:#14171d;border-bottom-color:#2b6fff;font-weight:600}
+.tab.on{color:#14171d;border-bottom-color:var(--brand);font-weight:600}
 .tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
 .dot.live{background:#22c55e}.dot.off{background:#c6ccd8}
 .treq{font-size:10px;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700}
@@ -423,8 +424,8 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ pslab 콘텐츠 관제실</div>
-  <div class="sub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
+  <div class="brand">🛰️ <span id="dashtitle">pslab 콘텐츠 관제실</span></div>
+  <div class="sub" id="dashsub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -985,6 +986,14 @@ function researchView(client){
 }
 function renderClients(){
   document.getElementById('clients').innerHTML = DATA.clients.length>1 ? DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('') : '';
+  // 선택된 클라이언트에 맞춰 헤더·브랜드 컬러를 바꾼다 (업체 맞춤 관제실)
+  const c=DATA.clients[ci];
+  if(c){
+    document.getElementById('dashtitle').textContent=c.name+' 콘텐츠 관제실';
+    document.getElementById('dashsub').textContent=(c.industry?c.industry+' · ':'')+'채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침';
+    document.title=c.name+' 콘텐츠 관제실';
+    document.documentElement.style.setProperty('--brand', c.themeColor||'#2b6fff');
+  }
 }
 function renderTabs(){
   const c=DATA.clients[ci];

@@ -40,5 +40,6 @@
   "scheduleTimes": ["18:00"],
   "manualPlan": true,
   "reviewMode": "manual",
-  "reportTo": "pslab2026@gmail.com"
+  "reportTo": "pslab2026@gmail.com",
+  "themeColor": "#14476b"
 }

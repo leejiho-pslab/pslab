@@ -54,6 +54,8 @@ export interface ClientConfig {
   reviewMode: ReviewMode;
   /** 성적표 받을 곳 (이메일/메신저 식별자) */
   reportTo?: string;
+  /** 대시보드 브랜드 컬러 (hex) — 클라이언트 선택 시 탭·버튼 강조색에 적용 */
+  themeColor?: string;
 }
 
 /** 설정표 유효성 검사. 문제 메시지 배열을 반환(빈 배열이면 정상). */
@@ -99,6 +101,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     manualPlan: c.manualPlan ?? false,
     reviewMode: c.reviewMode!,
     reportTo: c.reportTo,
+    themeColor: c.themeColor,
   };
 }
 
