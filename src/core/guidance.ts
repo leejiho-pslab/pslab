@@ -36,6 +36,33 @@ export interface ChannelGuide {
 }
 export type ChannelGuides = Partial<Record<PlatformId, ChannelGuide>>;
 
+/** 리서치 브리프 — 온보딩 조사 결과를 대시보드 '리서치' 탭에 시각화하기 위한 구조 */
+export interface ResearchSection {
+  icon?: string;
+  title: string;
+  desc?: string;
+  /** KPI 숫자 카드 */
+  stats?: Array<{ v: string; l: string; accent?: boolean }>;
+  /** 가로 막대 차트 (value는 0~max 상대값) */
+  bars?: { title?: string; unit?: string; max?: number; items: Array<{ label: string; value: number; note?: string; color?: string }> };
+  /** 표 */
+  table?: { head: string[]; rows: string[][] };
+  /** 태그 뭉치 */
+  tags?: string[];
+  /** 불릿 리스트 (제목+설명) */
+  list?: Array<{ t: string; d?: string }>;
+  /** 타임라인 */
+  timeline?: Array<{ date: string; text: string; url?: string }>;
+  /** 확인용 외부 링크 */
+  links?: Array<{ label: string; url: string; note?: string }>;
+}
+export interface ResearchBrief {
+  title?: string;
+  updatedAt?: string;
+  note?: string;
+  sections: ResearchSection[];
+}
+
 export const BRAND_FIELDS: Record<string, keyof BrandBrief> = {
   분석: 'analysis',
   방향성: 'direction',
@@ -109,6 +136,12 @@ export class GuidanceStore {
     ].slice(0, 20);
     this.saveBrief(clientId, b);
     return b;
+  }
+
+  /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */
+  loadResearch(clientId: string): ResearchBrief | undefined {
+    const r = this.read<ResearchBrief>(this.file(clientId, 'research-brief.json'));
+    return r && Array.isArray(r.sections) && r.sections.length ? r : undefined;
   }
 
   loadGuides(clientId: string): ChannelGuides {

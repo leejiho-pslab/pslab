@@ -275,6 +275,7 @@ function buildClientData(
     weeklyReport: weeklyReport ?? null,
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
+    research: guidanceStore?.loadResearch(client.id) ?? null,
   };
 }
 
@@ -369,6 +370,17 @@ th{color:#6a7284;font-weight:600;font-size:12px}
 .spark{display:block}
 .empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
 .tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+.rbarrow{display:flex;align-items:center;gap:8px;margin:5px 0}
+.rbarrow .rl{width:150px;font-size:12px;color:#3a4254;flex:none;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbarrow .rtrack{flex:1;background:#eef1f6;border-radius:6px;height:18px;overflow:hidden}
+.rbarrow .rfill{height:100%;border-radius:6px;background:#2b6fff;min-width:2px}
+.rbarrow .rv{font-size:11.5px;color:#6a7284;width:120px;flex:none}
+.rtl{border-left:2px solid #dfe5ef;margin:6px 0 4px 6px;padding-left:14px}
+.rtl .ri{position:relative;margin-bottom:10px;font-size:13px;line-height:1.55}
+.rtl .ri:before{content:'';position:absolute;left:-19.5px;top:4px;width:9px;height:9px;border-radius:50%;background:#2b6fff}
+.rtl .rd{color:#6a7284;font-size:11.5px}
+.rlink{display:inline-block;background:#f2f6ff;border:1px solid #c9d8f0;border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:12.5px;text-decoration:none;color:#1c4fd6}
+.rlink:hover{background:#e6eeff}
 footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
 .card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
@@ -947,6 +959,30 @@ function overview(client){
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
+// ── 리서치 탭 — research-brief.json이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
+function researchView(client){
+  const r=client.research;
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 데이터가 없습니다.</div>';
+  let h='<div class="sect-h"><h2>📊 '+esc(r.title||'브랜드 리서치')+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
+  if(r.note) h+='<div class="muted" style="margin:0 0 14px;line-height:1.6">'+esc(r.note)+'</div>';
+  for(const s of r.sections){
+    h+='<div class="panel"><h3>'+esc((s.icon?s.icon+' ':'')+s.title)+'</h3>';
+    if(s.desc) h+='<div class="muted" style="margin:-4px 0 10px;font-size:12.5px;line-height:1.65">'+esc(s.desc)+'</div>';
+    if(s.stats&&s.stats.length) h+='<div class="kpis">'+s.stats.map(x=>kpi(esc(x.v),esc(x.l),x.accent)).join('')+'</div>';
+    if(s.bars&&s.bars.items&&s.bars.items.length){
+      const mx=s.bars.max||Math.max.apply(null,s.bars.items.map(x=>x.value))||1;
+      if(s.bars.title) h+='<div style="font-weight:700;font-size:12.5px;margin:4px 0 6px">'+esc(s.bars.title)+'</div>';
+      h+=s.bars.items.map(x=>'<div class="rbarrow"><div class="rl" title="'+esc(x.label)+'">'+esc(x.label)+'</div><div class="rtrack"><div class="rfill" style="width:'+Math.max(2,Math.round(x.value/mx*100))+'%'+(x.color?';background:'+esc(x.color):'')+'"></div></div><div class="rv">'+esc(String(x.value))+(s.bars.unit?esc(s.bars.unit):'')+(x.note?' · '+esc(x.note):'')+'</div></div>').join('');
+    }
+    if(s.table&&s.table.head) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+(s.table.rows||[]).map(row=>'<tr>'+row.map(cd=>'<td>'+esc(cd)+'</td>').join('')+'</tr>').join('')+'</table></div>';
+    if(s.list&&s.list.length) h+='<ul style="margin:8px 0 2px;padding-left:18px;font-size:13px;line-height:1.75">'+s.list.map(x=>'<li><b>'+esc(x.t)+'</b>'+(x.d?' — <span style="color:#4a5266">'+esc(x.d)+'</span>':'')+'</li>').join('')+'</ul>';
+    if(s.timeline&&s.timeline.length) h+='<div class="rtl" style="margin-top:10px">'+s.timeline.map(x=>'<div class="ri"><span class="rd">'+esc(x.date)+'</span> · '+esc(x.text)+(x.url?' <a href="'+esc(x.url)+'" target="_blank">확인↗</a>':'')+'</div>').join('')+'</div>';
+    if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div>';
+    if(s.links&&s.links.length) h+='<div style="margin-top:10px">'+s.links.map(x=>'<a class="rlink" href="'+esc(x.url)+'" target="_blank">🔗 '+esc(x.label)+' ↗</a>'+(x.note?'<span class="muted" style="font-size:11.5px;margin-right:8px">'+esc(x.note)+'</span>':'')).join('')+'</div>';
+    h+='</div>';
+  }
+  return h;
+}
 function renderClients(){
   document.getElementById('clients').innerHTML = DATA.clients.length>1 ? DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('') : '';
 }
@@ -954,6 +990,7 @@ function renderTabs(){
   const c=DATA.clients[ci];
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
     .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat(c.research?[{key:'research',label:'리서치',icon:'📊',active:true,noDot:true}]:[])
     .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
@@ -969,7 +1006,7 @@ function renderTabs(){
 }
 function renderView(){
   const c=DATA.clients[ci];
-  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):channelDetail(c,c.channels.find(x=>x.key===ch)));
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):channelDetail(c,c.channels.find(x=>x.key===ch))));
   document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
