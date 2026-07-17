@@ -63,6 +63,31 @@ export interface ResearchBrief {
   sections: ResearchSection[];
 }
 
+/**
+ * 네이버 광고주센터 키워드 도구 실측 데이터 — keyword-stats.json
+ * 반드시 실제 조회값만 넣는다 (허수 금지). scripts/import-keyword-stats.mjs로
+ * 키워드 도구 '전체 다운로드' CSV를 변환해 생성.
+ */
+export interface KeywordStat {
+  kw: string;
+  /** 월간검색수(PC) — 키워드 도구 '< 10'은 null로 */
+  pc: number | null;
+  /** 월간검색수(모바일) */
+  mobile: number | null;
+  /** 경쟁정도 (낮음/보통/높음) */
+  competition?: string;
+  /** 월평균노출광고수 */
+  adCount?: number | null;
+  /** 월평균클릭수 (PC+모바일 합) */
+  clicks?: number | null;
+}
+export interface KeywordStats {
+  source: string;
+  /** 조회(다운로드) 기준일 */
+  fetchedAt: string;
+  items: KeywordStat[];
+}
+
 export const BRAND_FIELDS: Record<string, keyof BrandBrief> = {
   분석: 'analysis',
   방향성: 'direction',
@@ -136,6 +161,12 @@ export class GuidanceStore {
     ].slice(0, 20);
     this.saveBrief(clientId, b);
     return b;
+  }
+
+  /** keyword-stats.json — 키워드 도구 실측 데이터 (없으면 undefined = '실측 대기' 표시) */
+  loadKeywordStats(clientId: string): KeywordStats | undefined {
+    const s = this.read<KeywordStats>(this.file(clientId, 'keyword-stats.json'));
+    return s && Array.isArray(s.items) && s.items.length ? s : undefined;
   }
 
   /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */

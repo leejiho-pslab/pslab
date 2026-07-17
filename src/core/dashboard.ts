@@ -131,7 +131,7 @@ const BLOG_TIERS = [
   '최적화 3',
 ];
 
-function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
+function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[], kwStats?: import('./guidance.js').KeywordStats) {
   // 블덱스 스타일: 등급 + 포스팅별 전문성/연관성/품질 + 키워드 분석
   const postCount = blogPublished.length;
   const avgEng =
@@ -155,11 +155,14 @@ function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
       quality: Math.min(99, Math.round((base + p.engagementRate * 100) % 100) || base),
     };
   });
+  // 키워드 검색량은 절대 추정/난수로 만들지 않는다 — 네이버 광고주센터 키워드 도구
+  // 실측(keyword-stats.json)이 있으면 그 값을, 없으면 null(→ 대시보드 '실측 대기')로.
+  const statMap = new Map((kwStats?.items ?? []).map((s) => [s.kw.replace(/\s/g, ''), s]));
   const keywords = client.keywords.map((kw) => {
-    const r = seed(`kw:${kw}`);
-    const idx = 1000 + (r % 90000);
-    const comp = ['낮음', '보통', '높음'][r % 3];
-    return { kw, searchIndex: idx, competition: comp };
+    const s = statMap.get(kw.replace(/\s/g, ''));
+    if (!s) return { kw, pc: null, mobile: null, total: null, competition: null };
+    const total = (s.pc ?? 0) + (s.mobile ?? 0);
+    return { kw, pc: s.pc, mobile: s.mobile, total: s.pc == null && s.mobile == null ? null : total, competition: s.competition ?? null };
   });
   return {
     measured,
@@ -167,6 +170,7 @@ function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
     score: Math.round(rawScore),
     posts,
     keywords,
+    kwSource: kwStats ? { source: kwStats.source, fetchedAt: kwStats.fetchedAt } : null,
   };
 }
 
@@ -243,7 +247,7 @@ function buildClientData(
     .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
   const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
-  const blog = buildBlog(client, blogChannel.published as ChannelPublished[]);
+  const blog = buildBlog(client, blogChannel.published as ChannelPublished[], guidanceStore?.loadKeywordStats(client.id));
 
   return {
     id: client.id,
@@ -814,9 +818,18 @@ function blogSection(client){
     h+='<table style="margin-top:12px"><tr><th>포스팅</th><th>전문성</th><th>연관성</th><th>품질</th></tr>'+
       b.posts.slice(0,8).map(p=>'<tr><td>'+esc(p.topic)+'</td><td>'+p.expertise+'</td><td>'+p.relevance+'</td><td>'+p.quality+'</td></tr>').join('')+'</table>';
   }
-  // 키워드 분석
-  h+='<table style="margin-top:12px"><tr><th>키워드</th><th>검색지수</th><th>경쟁도</th></tr>'+
-    b.keywords.map(k=>'<tr><td>#'+esc(k.kw)+'</td><td>'+k.searchIndex.toLocaleString()+'</td><td>'+esc(k.competition)+'</td></tr>').join('')+'</table>';
+  // 키워드 분석 — 네이버 광고주센터 키워드 도구 실측값만 표시 (허수 금지)
+  const src=b.kwSource;
+  h+='<div class="sect-h" style="margin:14px 0 6px"><h3 style="margin:0;font-size:14px">🔑 키워드 월간 검색수</h3><span class="muted">'+
+     (src?esc(src.source)+' 실측 · 기준 '+String(src.fetchedAt).slice(0,10):'광고주센터 키워드 도구 실측 데이터 연결 전 — 수치는 표시하지 않습니다')+'</span></div>';
+  h+='<table><tr><th>키워드</th><th>PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th></tr>'+
+    b.keywords.map(k=>{
+      const n=v=>v==null?'<span class="muted">—</span>':Number(v).toLocaleString();
+      const wait=k.total==null&&!src;
+      return '<tr><td>#'+esc(k.kw)+'</td>'+
+        (wait?'<td colspan="4"><span class="badge b-wait">실측 대기</span> <span class="muted" style="font-size:11px">키워드 도구 CSV 임포트 후 표시</span></td>'
+             :'<td>'+n(k.pc)+'</td><td>'+n(k.mobile)+'</td><td><b>'+n(k.total)+'</b></td><td>'+(k.competition?esc(k.competition):'<span class="muted">—</span>')+'</td>')+'</tr>';
+    }).join('')+'</table>';
   h+='</div>';
   return h;
 }
