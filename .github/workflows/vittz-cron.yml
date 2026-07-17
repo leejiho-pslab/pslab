@@ -122,6 +122,11 @@ jobs:
         continue-on-error: true
         run: node scripts/fetch-photos.mjs --client vittz
 
+      # 제품 이미지 다운로드 (지침⑥ — 콘텐츠 50%+ 제품 이미지 → 구매 연결)
+      - name: 제품 이미지 다운로드
+        continue-on-error: true
+        run: node scripts/fetch-product-images.mjs --client vittz
+
       # 카드 렌더 (배경 사진 위에 텍스트 합성. Chromium 없으면 skip → 커밋본 유지)
       - name: 매거진 카드 렌더
         continue-on-error: true
@@ -158,7 +163,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg docs/products 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi
