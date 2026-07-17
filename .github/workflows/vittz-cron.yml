@@ -125,7 +125,7 @@ jobs:
       # 카드 렌더 (배경 사진 위에 텍스트 합성. Chromium 없으면 skip → 커밋본 유지)
       - name: 매거진 카드 렌더
         continue-on-error: true
-        run: node scripts/render-cards.mjs --client vittz
+        run: node scripts/render-vittz-cards.mjs --client vittz
 
       # 블로그 본문 이미지 렌더 (네이버/구글 블로그 삽입용)
       - name: 블로그 이미지 렌더
