@@ -1,0 +1,94 @@
+# [템플릿] 브랜드 사이트 이미지+HTML 수집 (CI). BASE 도메인/pages 경로/브랜치명을 교체.
+name: awk assets
+
+# 신규 제안 업체(awkmall.com) 브랜드 분석·콘텐츠용 — 사이트 HTML + 이미지 수집.
+# 개발 환경은 외부 호스트가 프록시에서 막히므로 인터넷 열린 러너에서 받는다.
+on:
+  push:
+    branches: [claude/eager-mayer-tknneh]
+    paths:
+      - '.github/workflows/awk-assets.yml'
+      - 'data/awk-seed.json'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: awk-assets
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: 사이트 스크레이프 + 이미지 다운로드
+        run: |
+          mkdir -p assets/awk docs/awk-src
+          node -e '
+            const fs=require("fs");
+            const ua="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+            const BASE="https://awkmall.com/";
+            const pages=["index.html","",
+              "product/list.html","html/company.html","about.html","brand.html"];
+            const extOf=(ct,u)=>{ct=(ct||"").toLowerCase();
+              if(ct.includes("webp")||/\.webp/i.test(u))return"webp";
+              if(ct.includes("png")||/\.png/i.test(u))return"png";
+              if(ct.includes("gif")||/\.gif/i.test(u))return"gif";return"jpg";};
+            const abs=(u)=>{ if(!u)return null; u=u.trim().replace(/^["\x27]|["\x27]$/g,"");
+              if(u.startsWith("//"))return "https:"+u;
+              if(u.startsWith("http"))return u;
+              if(u.startsWith("/"))return "https://awkmall.com"+u;
+              return BASE+u.replace(/^\.\//,""); };
+            (async()=>{
+              const seen=new Set(); const imgs=new Set(); let htmlDump="";
+              for(const p of pages){
+                const url=BASE+p;
+                try{
+                  const r=await fetch(url,{headers:{"user-agent":ua}});
+                  if(!r.ok){console.log("PAGE",p||"/",r.status);continue;}
+                  const html=await r.text();
+                  htmlDump+="\n\n<!-- ===== "+url+" ===== -->\n"+html;
+                  console.log("PAGE ok",p||"/",html.length);
+                  // src / data-src / srcset / css url()
+                  const re=/(?:src|data-src|data-original|href)\s*=\s*["\x27]([^"\x27]+\.(?:jpg|jpeg|png|webp|gif)[^"\x27]*)["\x27]/gi;
+                  let m; while(m=re.exec(html)){ const a=abs(m[1]); if(a)imgs.add(a); }
+                  const re2=/url\(([^)]+\.(?:jpg|jpeg|png|webp|gif)[^)]*)\)/gi;
+                  while(m=re2.exec(html)){ const a=abs(m[1]); if(a)imgs.add(a); }
+                }catch(e){console.log("PAGE err",p,String(e).slice(0,80));}
+              }
+              fs.writeFileSync("docs/awk-src/pages.html", htmlDump);
+              console.log("총 이미지 후보:", imgs.size);
+              let i=0;
+              for(const u of imgs){
+                if(/logo|icon|btn|button|bg_|_bg|blank|dummy|arrow|sns_|common\//i.test(u)){continue;}
+                i++; if(i>60)break;
+                try{
+                  const r=await fetch(u,{headers:{"user-agent":ua,referer:BASE}});
+                  if(!r.ok){console.log("IMG",r.status,u.slice(0,80));continue;}
+                  const b=Buffer.from(await r.arrayBuffer());
+                  if(b.length<8000){continue;} // 작은 아이콘류 제외
+                  const ext=extOf(r.headers.get("content-type"),u);
+                  const name="awk-"+String(i).padStart(3,"0");
+                  fs.writeFileSync(`assets/awk/${name}.${ext}`, b);
+                  console.log("ok",name,ext,b.length, u.slice(0,70));
+                }catch(e){console.log("IMG err",String(e).slice(0,80));}
+              }
+            })();
+          '
+      - name: 목록
+        run: ls -la assets/awk | head -70; echo "---"; wc -c docs/awk-src/pages.html
+      - name: 커밋
+        run: |
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f assets/awk docs/awk-src/pages.html
+          git commit -m "chore(awk): awkmall 사이트 이미지+HTML 수집" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo ok; exit 0; }
+            echo retry $i; sleep 4
+          done
