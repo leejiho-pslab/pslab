@@ -10,9 +10,10 @@
  * 출력:  data/clients/<id>/keyword-volumes.json  (대시보드 리서치 탭이 자동 표시)
  *
  * 필요한 환경변수(GitHub Secrets):
- *   NAVER_SEARCHAD_API_KEY     광고주센터 → 도구 → API 사용 관리 → 액세스라이선스
- *   NAVER_SEARCHAD_API_SECRET  같은 화면의 비밀키
- *   NAVER_SEARCHAD_CUSTOMER_ID 광고주 ID (광고주센터 URL의 ad-accounts/<숫자>)
+ *   NAVER_AD_API_KEY      광고주센터 → 도구 → API 사용 관리 → 액세스라이선스
+ *   NAVER_AD_SECRET       같은 화면의 비밀키
+ *   NAVER_AD_CUSTOMER_ID  광고주 ID (광고주센터 URL의 ad-accounts/<숫자>)
+ *   (구명 NAVER_SEARCHAD_* 도 폴백 지원)
  *
  * 주의: 개발 컨테이너는 외부 API 접근이 막혀 있을 수 있다 — CI(GitHub Actions)에서 실행할 것.
  */
@@ -28,11 +29,11 @@ const dataDir = join('data', 'clients', clientId);
 const batchesPath = join(dataDir, 'keyword-batches.json');
 const outPath = join(dataDir, 'keyword-volumes.json');
 
-const API_KEY = process.env.NAVER_SEARCHAD_API_KEY;
-const API_SECRET = process.env.NAVER_SEARCHAD_API_SECRET;
-const CUSTOMER_ID = process.env.NAVER_SEARCHAD_CUSTOMER_ID;
+const API_KEY = process.env.NAVER_AD_API_KEY || process.env.NAVER_SEARCHAD_API_KEY;
+const API_SECRET = process.env.NAVER_AD_SECRET || process.env.NAVER_SEARCHAD_API_SECRET;
+const CUSTOMER_ID = process.env.NAVER_AD_CUSTOMER_ID || process.env.NAVER_SEARCHAD_CUSTOMER_ID;
 if (!API_KEY || !API_SECRET || !CUSTOMER_ID) {
-  console.error('NAVER_SEARCHAD_API_KEY / NAVER_SEARCHAD_API_SECRET / NAVER_SEARCHAD_CUSTOMER_ID 가 필요합니다.');
+  console.error('NAVER_AD_API_KEY / NAVER_AD_SECRET / NAVER_AD_CUSTOMER_ID 가 필요합니다 (스킬 표준 시크릿명).');
   console.error('광고주센터 → 도구 → API 사용 관리에서 발급 후 GitHub Secrets에 등록하세요.');
   process.exit(1);
 }

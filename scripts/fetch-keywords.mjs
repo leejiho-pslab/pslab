@@ -29,6 +29,16 @@ if (!API_KEY || !SECRET || !CUSTOMER) {
   process.exit(0);
 }
 
+// 업체별 기획 시드 — clients/<id>.json 의 keywordPlan { coreSeeds, season, commonTimely, relatedFilter }
+// (단일 출처 · 없으면 아래 예시 시드로 폴백)
+function loadKeywordPlan() {
+  try {
+    const cfg = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    return cfg.keywordPlan || null;
+  } catch { return null; }
+}
+const PLAN = loadKeywordPlan();
+
 const BASE = 'https://api.searchad.naver.com';
 const PATH = '/keywordstool';
 const TOP = 20; // 시트별 상위 N
@@ -63,7 +73,9 @@ const COMMON_TIMELY = ['기업답례품', '웨딩답례품', 'VIP선물', '창�
 function timelySeeds() {
   const m = new Date().getUTCMonth() + 1;
   const next = (m % 12) + 1;
-  return [...new Set([...(SEASON[m] || []), ...(SEASON[next] || []), ...COMMON_TIMELY].map((s) => s.replace(/\s+/g, '')))];
+  const season = (PLAN && PLAN.season) || SEASON;
+  const common = (PLAN && Array.isArray(PLAN.commonTimely)) ? PLAN.commonTimely : COMMON_TIMELY;
+  return [...new Set([...(season[m] || []), ...(season[next] || []), ...common].map((s) => s.replace(/\s+/g, '')))];
 }
 
 // clients/<id>.json 의 keywords도 핵심에 합침
@@ -91,7 +103,7 @@ async function keywordstool(hints) {
   return Array.isArray(j.keywordList) ? j.keywordList : [];
 }
 
-const core = coreSeeds();
+const core = PLAN && Array.isArray(PLAN.coreSeeds) && PLAN.coreSeeds.length ? [...new Set([...PLAN.coreSeeds, ...coreSeeds()])] : coreSeeds();
 const timely = timelySeeds();
 const allSeeds = [...new Set([...core, ...timely])];
 
@@ -114,7 +126,9 @@ const timelySheet = bySeed(timely);
 
 // 연관: 시드에 없던 패키지/인쇄 관련 연관키워드 상위 20
 const seedSet = new Set(allSeeds);
-const PKG_RE = /(박스|상자|패키지|패키징|쇼핑백|지함|카톤|포장|인쇄|후가공|금박|은박|형압|에폭시|홀로그램|단상자|합지|굿즈|케이스|리플렛|명함|스티커|라벨|지기|틴|제작소|인쇄소|답례품|선물세트)/;
+const PKG_RE = (PLAN && PLAN.relatedFilter)
+  ? new RegExp(PLAN.relatedFilter)
+  : /(박스|상자|패키지|패키징|쇼핑백|지함|카톤|포장|인쇄|후가공|금박|은박|형압|에폭시|홀로그램|단상자|합지|굿즈|케이스|리플렛|명함|스티커|라벨|지기|틴|제작소|인쇄소|답례품|선물세트)/;
 const relatedSheet = [...rows.values()].map(mapRow)
   .filter((r) => !seedSet.has(r.kw) && r.total > 0 && PKG_RE.test(r.kw))
   .sort((a, b) => b.total - a.total).slice(0, TOP);

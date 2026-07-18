@@ -24,10 +24,37 @@ const spec = JSON.parse(readFileSync(specPath, 'utf8'));
 const outDir = join(ROOT, 'docs/products', clientId);
 mkdirSync(outDir, { recursive: true });
 
+// ── 이미지 출처 제한 (운영자 지시): 해당 프로젝트(업체) 영역의 호스트에서만 다운로드 ──
+// 허용 목록은 clients/<id>.json 의 imageAllowlist (단일 출처). 없으면 다운로드 자체를 거부해
+// 무관한 외부 이미지가 파이프라인에 섞이는 것을 원천 차단한다.
+function loadAllowlist() {
+  try {
+    const cfg = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    return Array.isArray(cfg.imageAllowlist) ? cfg.imageAllowlist.map((d) => String(d).toLowerCase()) : [];
+  } catch { return []; }
+}
+const ALLOW = loadAllowlist();
+function allowed(url) {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    return ALLOW.some((d) => host === d || host.endsWith(`.${d}`));
+  } catch { return false; }
+}
+if (!ALLOW.length) {
+  console.error(`imageAllowlist가 비어 있습니다 — clients/${clientId}.json 에 허용 도메인을 등록하세요. 전체 건너뜀.`);
+  process.exit(0);
+}
+console.log(`허용 도메인: ${ALLOW.join(', ')}`);
+
 let ok = 0, skip = 0, fail = 0;
 for (const p of spec.products || []) {
   const out = join(outDir, `${p.key}.jpg`);
   if (!force && existsSync(out)) { skip++; continue; }
+  if (!allowed(p.image)) {
+    console.log(`  ⛔ ${p.key} — 허용 도메인 밖(${p.image.slice(0, 60)}…) → 차단`);
+    fail++;
+    continue;
+  }
   try {
     const res = await fetch(p.image, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; pslab-sns)' },
