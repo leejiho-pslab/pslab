@@ -33,6 +33,9 @@ jobs:
     env:
       TZ: Asia/Seoul
       PSLAB_REPO: ${{ github.repository }}
+      NAVER_AD_API_KEY: ${{ secrets.NAVER_AD_API_KEY }}
+      NAVER_AD_SECRET: ${{ secrets.NAVER_AD_SECRET }}
+      NAVER_AD_CUSTOMER_ID: ${{ secrets.NAVER_AD_CUSTOMER_ID }}
       # 안전 기본값: 계정 연결 후 Variables PSLAB_DRY_RUN=false 로 실발행 ON
       PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'true' }}
       PSLAB_LOG_LEVEL: info
@@ -122,6 +125,27 @@ jobs:
         continue-on-error: true
         run: node scripts/fetch-photos.mjs --client vittz
 
+      # 키워드 3시트 수집 — 매주 금요일 (docs/03 기획 지능 · ADR-0005)
+      - name: 키워드 3시트 수집 (금요일)
+        continue-on-error: true
+        run: |
+          [ "$(TZ=Asia/Seoul date +%u)" = "5" ] || { echo "금요일 아님 — 건너뜀"; exit 0; }
+          node scripts/fetch-keywords.mjs --client vittz
+
+      # 차주 콘텐츠 기획 — 매주 토요일 (ADR-0006 차주 주간 스케줄링)
+      - name: 차주 콘텐츠 기획 (토요일)
+        continue-on-error: true
+        run: |
+          [ "$(TZ=Asia/Seoul date +%u)" = "6" ] || { echo "토요일 아님 — 건너뜀"; exit 0; }
+          node scripts/plan-week.mjs --client vittz
+
+      # 레퍼런스·벤치마킹 수집 — 매주 월요일 (ADR-0011 Business Discovery)
+      - name: 레퍼런스 수집 (월요일)
+        continue-on-error: true
+        run: |
+          [ "$(TZ=Asia/Seoul date +%u)" = "1" ] || { echo "월요일 아님 — 건너뜀"; exit 0; }
+          node scripts/fetch-references.mjs --client vittz
+
       # 제품 이미지 다운로드 (지침⑥ — 콘텐츠 50%+ 제품 이미지 → 구매 연결)
       - name: 제품 이미지 다운로드
         continue-on-error: true
@@ -163,7 +187,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg docs/products 2>/dev/null || true
+          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg docs/products docs/references 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi

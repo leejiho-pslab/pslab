@@ -1013,7 +1013,7 @@ function kwVolumesPanel(client){
     h+='<div class="rsum">아직 <b>실측 데이터가 비어 있습니다.</b> 위 차트의 수치는 데이터랩 <b>상대지수(추세 비교용)</b>이며 절대 검색량이 아닙니다. 실제 월간검색수는 검색광고 API 연동 후 이 자리에 자동 표시됩니다.</div>'+
       '<ul class="rlist">'+
       '<li>광고주센터 → 도구 → <b>API 사용 관리</b>에서 액세스라이선스·비밀키 발급</li>'+
-      '<li>GitHub Secrets에 <b>NAVER_SEARCHAD_API_KEY / NAVER_SEARCHAD_API_SECRET / NAVER_SEARCHAD_CUSTOMER_ID</b> 등록 (CUSTOMER_ID는 광고주센터 주소의 ad-accounts/ 뒤 숫자)</li>'+
+      '<li>GitHub Secrets에 <b>NAVER_AD_API_KEY / NAVER_AD_SECRET / NAVER_AD_CUSTOMER_ID</b> 등록 (CUSTOMER_ID는 광고주센터 주소의 ad-accounts/ 뒤 숫자)</li>'+
       '<li>Actions에서 <b>keyword volumes</b> 워크플로 실행 → 배치표 40개 키워드의 월간검색수(PC/모바일)·경쟁정도·연관키워드가 자동 수집됩니다</li>'+
       '</ul>'+
       '<div class="rlinks"><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+REPO+'/settings/secrets/actions">🔗 Secrets 설정 열기</a>'+
