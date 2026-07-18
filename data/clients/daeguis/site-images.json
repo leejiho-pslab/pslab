@@ -1,0 +1,15 @@
+{
+  "note": "대구일색 공식 사이트 이미지 수집 시드 — '해당 프로젝트 영역' 제한: allowedHosts(daeguis.co.kr) 밖의 URL은 페이지·이미지 모두 거부된다. 개발 환경은 외부 접근 불가 → CI 워크플로 'daeguis-assets'가 docs/site-assets/daeguis/ 로 다운로드하고 downloaded 목록을 채운다. 콘텐츠(카드·블로그·쇼츠)는 downloaded의 로컬 경로만 참조할 것 (ig-design-spec §3).",
+  "allowedHosts": [
+    "www.daeguis.co.kr",
+    "daeguis.co.kr"
+  ],
+  "pages": [
+    "https://www.daeguis.co.kr/",
+    "https://www.daeguis.co.kr/about.html"
+  ],
+  "maxImages": 40,
+  "images": [],
+  "downloaded": [],
+  "lastRunAt": "2026-07-18T01:19:13.573Z"
+}

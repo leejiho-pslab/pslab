@@ -31,7 +31,10 @@
 - 사진 확보 시 **이미지-전면형(cinema/photoA/photoB 3스타일)** 으로 전환하고, plan 항목에
   `slidePhotos`+`igStyle`을 지정한다. 사진 없는 동안은 현행 브랜드 카드(음식 라인아트 모티프:
   뚝배기·물결·고추·산더미·대구·미나리)로 발행.
-- 개발환경은 외부 이미지 403 — 사진 다운로드·합성은 **CI에서만**(URL을 `bg-sources.json`류에 저장).
+- 개발환경은 외부 이미지 403 — 사진 다운로드·합성은 **CI에서만**. 수집 파이프라인(프로젝트 영역 제한):
+  `data/clients/daeguis/site-images.json`(allowedHosts=daeguis.co.kr 강제) → Actions `daeguis-assets`
+  워크플로 실행 → `docs/site-assets/daeguis/`에 저장 + `downloaded` 목록 기록. **콘텐츠는 downloaded의
+  로컬 경로만 참조**하며, 허용 도메인 밖 이미지는 스크립트가 거부한다(`scripts/fetch-site-images.mjs`).
 
 ## 4. 가짜 글자 함정 (ADR-0004 — 대구일색 버전)
 
