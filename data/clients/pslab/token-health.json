@@ -1,11 +1,12 @@
 {
-  "checkedAt": "2026-07-18T10:47:35.110Z",
+  "checkedAt": "2026-07-19T10:39:20.622Z",
   "tokens": [
     {
       "label": "Instagram",
       "platform": "instagram",
-      "ok": true,
-      "warn": false
+      "ok": false,
+      "warn": true,
+      "detail": "토큰 오류(만료 가능): An unexpected error has occurred. Please retry your request later. — 새로 발급해 시크릿을 갱신하세요."
     },
     {
       "label": "Threads",
