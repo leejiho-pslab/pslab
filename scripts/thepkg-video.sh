@@ -16,20 +16,20 @@ for i in $(seq 0 $((n-1))); do
   type=$(jq -r ".segments[$i].type" "$J")
   dur=$(jq -r ".segments[$i].dur" "$J")
   seg="$tmp/seg_$i.mp4"
-  fo=$(echo "$dur - 0.4" | bc)
+  fo=$(echo "$dur - 0.3" | bc)
   if [ "$type" = "card" ]; then
     img=$(jq -r ".segments[$i].img" "$J")
     ffmpeg -y -loglevel error -loop 1 -i "$img" -t "$dur" \
-      -vf "scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fade=t=in:st=0:d=0.4,fade=t=out:st=${fo}:d=0.4,format=yuv420p" \
+      -vf "scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fade=t=in:st=0:d=0.3,fade=t=out:st=${fo}:d=0.3,format=yuv420p" \
       -r $FPS -c:v libx264 -pix_fmt yuv420p -profile:v high -preset medium -crf 19 "$seg"
   else
     url=$(jq -r ".segments[$i].url" "$J")
     cap=$(jq -r ".segments[$i].cap" "$J")
     clip="$tmp/clip_$i.mp4"
     curl -fsSL -o "$clip" "$url"
-    fo2=$(echo "$dur - 0.3" | bc)
+    fo2=$(echo "$dur - 0.2" | bc)
     ffmpeg -y -loglevel error -i "$clip" -i "$cap" -filter_complex \
-      "[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},trim=0:${dur},setpts=PTS-STARTPTS,fps=${FPS}[b];[b][1:v]overlay=0:0[c];[c]fade=t=in:st=0:d=0.3,fade=t=out:st=${fo2}:d=0.3,format=yuv420p[o]" \
+      "[0:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},trim=0:${dur},setpts=PTS-STARTPTS,fps=${FPS}[b];[b][1:v]overlay=0:0[c];[c]fade=t=in:st=0:d=0.2,fade=t=out:st=${fo2}:d=0.2,format=yuv420p[o]" \
       -map "[o]" -an -c:v libx264 -pix_fmt yuv420p -profile:v high -preset medium -crf 19 "$seg"
   fi
   echo "file 'seg_$i.mp4'" >> "$list"
