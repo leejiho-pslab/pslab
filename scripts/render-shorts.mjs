@@ -38,7 +38,8 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
 /** 대본 → 슬라이드 배열로 파싱 */
 export function parseScript(item) {
   const title = (item.headline ?? item.topic ?? '').replace(/<br>/g, ' ').replace(/\*/g, '');
-  const body = String(item.captionBody ?? '');
+  // 릴스는 대본(reelsScript)과 발행 캡션(captionBody)을 분리 — 대본이 있으면 그걸 쓴다
+  const body = String(item.reelsScript ?? item.captionBody ?? '');
   const slides = [];
   // 섹션 분리: [HOOK ...], [본론 ...], [CTA ...]
   const blocks = body.split(/\n(?=\[)/);
@@ -52,7 +53,7 @@ export function parseScript(item) {
     else if (text) main.push(...text.split('\n').map((x) => x.trim()).filter(Boolean));
   }
   // 1) 훅
-  slides.push({ kind: 'hook', kicker: 'pslab shorts', big: hook || title, title });
+  slides.push({ kind: 'hook', kicker: item.kicker || 'pslab shorts', big: hook || title, title });
   // 2) 본론 (불릿/문장별로, 최대 6장)
   let n = 0;
   for (const line of main.slice(0, 6)) {
@@ -111,7 +112,10 @@ body{background:transparent}
 const chromium = findChromium();
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
-const items = plan.items.filter((i) => i.channels[0] === 'youtube');
+// 유튜브 쇼츠 + 인스타 릴스(세로 영상) 항목 모두 렌더
+const items = plan.items.filter(
+  (i) => i.channels[0] === 'youtube' || (i.channels[0] === 'instagram' && /릴스|reels/i.test(i.format || '')),
+);
 if (!chromium) { console.log('Chromium 없음 → 쇼츠 슬라이드 렌더 건너뜀'); process.exit(0); }
 
 function shoot(html, outPng, transparent) {

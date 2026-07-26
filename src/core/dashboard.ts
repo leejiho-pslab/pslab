@@ -68,6 +68,7 @@ interface PendingCard {
   insightComment?: string;
   publishedAt?: string;
   videoFile?: string;
+  reelsScript?: string;
   ytTitle?: string;
   ytDescription?: string;
   ytTags?: string[];
@@ -209,6 +210,7 @@ function buildClientData(
     insightComment: it.insightComment,
     publishedAt: it.publishedAt,
     videoFile: it.videoFile,
+    reelsScript: it.reelsScript,
     ytTitle: it.ytTitle,
     ytDescription: it.ytDescription,
     ytTags: it.ytTags,
@@ -640,18 +642,23 @@ function openDetail(id){
   const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':chDef.key==='linkedin'?'💼 링크드인 포스트':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
+  const isReels=chDef.key==='instagram'&&it.reelsScript;
+  const reelsVideo=(chDef.key==='instagram'&&it.videoFile)?'<div style="margin:6px 0 14px"><video src="'+esc(it.videoFile)+'" controls playsinline style="max-height:430px;max-width:100%;border-radius:14px;border:1px solid #e4e8f0;background:#000"></video><div style="margin-top:8px"><a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 릴스 영상 다운로드</a></div></div>':'';
+  const reelsBox=isReels?'<div class="capbox" style="margin-top:12px"><div class="caphd">🎬 릴스 대본 (영상 자막 구성)</div><div class="mcap">'+fmtCaption(it.reelsScript)+'</div></div>':'';
   const m=it.metrics;
   const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#c9d8f0"><div class="caphd">📊 성과 데이터</div>'+
     '<div class="met" style="font-size:13px"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>참여율 '+pct(m.engagementRate||0)+'</span></div>'+
     (it.insightComment?'<div style="color:#15803d;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
   document.getElementById('mbody').innerHTML=
-    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+'</div>'+
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+(isReels?' · 🎬 릴스':'')+'</div>'+
     '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
     '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · '+chDef.icon+' '+esc(chDef.label)+' · <span class="badge b-plan">발행 대기</span></div>'+
     '<div class="carou">'+slides+'</div>'+
     (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
+    reelsVideo+
     perf+
     '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
+    reelsBox+
     manualHelper(it,chDef)+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');

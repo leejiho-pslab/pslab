@@ -386,14 +386,21 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       // 자동 채널만 추려 발행 (수동 채널이 섞여 있으면 제외)
       const autoChannels = it.channels.filter((c) => !MANUAL_CHANNELS.includes(c));
       const includesYoutube = autoChannels.includes('youtube');
+      const isReels =
+        autoChannels.includes('instagram') && /릴스|reels/i.test(it.format ?? '');
       const imgs = it.slideImages?.length
         ? it.slideImages
         : it.cardImage
           ? [it.cardImage]
           : [];
       // 유튜브 쇼츠 항목은 카드 이미지가 아니라 영상 파일로 발행하므로 이미지가 없어도 통과.
-      if (imgs.length === 0 && !(includesYoutube && it.videoFile)) {
+      if (imgs.length === 0 && !((includesYoutube || isReels) && it.videoFile)) {
         console.log(`  ${it.id}: 카드 이미지 없음 → 건너뜀`);
+        continue;
+      }
+      // 릴스인데 영상이 아직 합성 전이면 커버 이미지가 일반 피드로 잘못 나가지 않도록 대기.
+      if (isReels && !it.videoFile) {
+        console.log(`  ${it.id}: 릴스 영상 미합성 → 다음 사이클에 발행`);
         continue;
       }
       // 유튜브는 SEO용 별도 제목/설명/태그(ytTitle 등)가 있으면 그것을 우선 사용.
@@ -412,6 +419,9 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         // 영상은 공개 URL이 아니라 CI 작업 디렉터리의 로컬 파일을 직접 읽어 업로드한다
         // (Pages 배포 반영 지연에 의존하지 않기 위함 — docs/는 같은 체크아웃에 이미 존재).
         media.push({ kind: 'video' as const, source: `docs/${it.videoFile}` });
+      } else if (isReels && it.videoFile) {
+        // 인스타 릴스: Graph API가 공개 video_url을 요구하므로 Pages 공개 URL을 쓴다.
+        media.push({ kind: 'video' as const, source: `${pages}/${it.videoFile}` });
       }
       const content: PostContent = {
         id: it.id,

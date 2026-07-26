@@ -74,8 +74,10 @@ export interface PlanItem {
   insightComment?: string;
   /** 인사이트 코멘트 생성 시각 (ISO) */
   insightAt?: string;
-  /** 유튜브 쇼츠: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
+  /** 유튜브 쇼츠·인스타 릴스: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
   videoFile?: string;
+  /** 인스타 릴스: 영상 대본([HOOK]/[본론]/[CTA]) — captionBody(발행 캡션)와 분리 */
+  reelsScript?: string;
   /** 유튜브 업로드용 SEO 제목 */
   ytTitle?: string;
   /** 유튜브 업로드용 설명(멘션) — 키워드 기반 SEO */
