@@ -1,37 +1,71 @@
 {
   "id": "pslab",
   "name": "_pslab (테스트베이스)",
-  "industry": "온라인 컨설팅·광고대행 / 마케팅 인사이트 (15년차 전문가 개인 채널)",
+  "industry": "온라인 컨설팅·광고대행 / SNS 채널 자동화 솔루션 ALWAYS ON 운영 (16년차 종합광고대행사 P.S.LAB)",
   "keywords": [
     "온라인마케팅",
     "마케팅인사이트",
     "광고대행",
     "퍼포먼스마케팅",
-    "온라인시장트렌드",
     "마케팅전략",
+    "콘텐츠자산",
+    "SNS자동화",
+    "콘텐츠마케팅",
+    "AI검색",
+    "GEO",
+    "브랜딩",
     "사업이야기",
     "창업인사이트",
-    "브랜딩",
     "업계비하인드"
   ],
   "competitors": [
-    { "handle": "3dragon_pd", "platform": "instagram", "note": "벤치마킹" },
-    { "handle": "mindsseett", "platform": "instagram", "note": "벤치마킹" },
-    { "handle": "highclass_study2025", "platform": "instagram", "note": "벤치마킹" }
+    {
+      "handle": "3dragon_pd",
+      "platform": "instagram",
+      "note": "벤치마킹"
+    },
+    {
+      "handle": "mindsseett",
+      "platform": "instagram",
+      "note": "벤치마킹"
+    },
+    {
+      "handle": "highclass_study2025",
+      "platform": "instagram",
+      "note": "벤치마킹"
+    }
   ],
-  "brandTone": "15년차 실전 전문가의 시선으로 — 경험담은 진솔하게, 인사이트는 명확하고 단단하게. 과장 없이 신뢰감 있게",
-  "persona": "온라인 컨설팅·광고대행사를 15년간 운영해 온 대표. 수많은 광고 집행·브랜드 성장·실패를 직접 겪었고, 그 현장 경험과 업계 비하인드를 1인칭으로 솔직하게 풀어내는 사람. 교과서적 정의가 아니라 '실제로 해보니 이렇더라'를 말한다",
+  "brandTone": "16년차 실전 전문가의 시선으로 — 경험담은 진솔하게, 인사이트는 명확하고 단단하게. 과장 없이 신뢰감 있게. 콘텐츠 자산·지속의 힘을 일관되게 강조",
+  "persona": "온라인 마케팅·컨설팅 대행사를 16년간 운영해 온 P.S.LAB(문제 해결 연구소) 대표. 수많은 광고 집행·브랜드 성장·실패를 직접 겪었고, 지금은 그 노하우를 담은 SNS 채널 자동화 솔루션 ALWAYS ON을 직접 운영한다. 교과서적 정의가 아니라 \"실제로 해보니 이렇더라\"를 1인칭으로 말하며, 광고비 중심 사고에서 콘텐츠 자산 중심 사고로의 전환을 돕는 사람",
   "audience": "광고·마케팅 집행을 고민하는 소상공인과 사업주, 실무 마케팅 담당자, 대행사 선택이나 창업을 앞두고 현실 조언이 필요한 사람들",
-  "contentPillars": ["실전 광고 운영 노하우", "대행사·업계 비하인드", "마케팅 의사결정 기준", "브랜딩·성장 사례", "창업·사업 인사이트"],
-  "bannedWords": ["100% 보장", "무조건", "최저가"],
-  "targets": ["instagram"],
-  "accounts": { "instagram": "_pslab", "threads": "_pslab" },
+  "contentPillars": [
+    "콘텐츠 자산론 (광고는 지출, 콘텐츠는 자산)",
+    "고객 여정 4단계와 채널별 역할",
+    "SEO·GEO — 검색과 AI 추천 시대의 노출 전략",
+    "지속 발행 = 신뢰 (발행 기록이 브랜드 신용점수)",
+    "채널 운영 시스템·자동화 (5채널을 혼자 감당하지 않는 법)",
+    "실전 광고 운영 노하우·업계 비하인드"
+  ],
+  "bannedWords": [
+    "100% 보장",
+    "무조건",
+    "최저가"
+  ],
+  "targets": [
+    "instagram"
+  ],
+  "accounts": {
+    "instagram": "_pslab",
+    "threads": "_pslab"
+  },
   "channelLinks": {
     "instagram": "https://www.instagram.com/_pslab",
     "threads": "https://www.threads.net/@_pslab",
     "blogger": "https://pslab2026.blogspot.com"
   },
-  "scheduleTimes": ["19:00"],
+  "scheduleTimes": [
+    "19:00"
+  ],
   "manualPlan": true,
   "reviewMode": "manual",
   "reportTo": "ljhnimwithit@gmail.com"
