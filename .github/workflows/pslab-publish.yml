@@ -72,7 +72,7 @@ jobs:
           fi
           git commit -m "chore(pslab): 발행 상태·대시보드 갱신"
           for i in 1 2 3 4 5; do
-            git pull --rebase origin claude/eager-lamport-mX0eT && git push && { echo "push 성공"; exit 0; }
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push 성공"; exit 0; }
             echo "push 재시도 $i"; sleep 4
           done
           echo "push 실패 — Pages 배포는 진행"
