@@ -41,7 +41,7 @@ PRODUCTS = [
     },
 ]
 
-DEFAULT_IG_USERS = ["keek_kr", "keek_crew", "keek_jp"]
+DEFAULT_IG_USERS = ["keek_kr", "keek_jp"]
 
 UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
@@ -263,6 +263,103 @@ def _count_by(rows: list[dict], key: str) -> dict:
     return acc
 
 
+# --- 상세 덤프 (아티팩트를 못 받는 환경을 위해 로그로 전부 출력) ----------------
+
+def _kst(ts: str) -> "tuple[str, str, int]":
+    """ISO8601(+0000) → (YYYY-MM-DD, 요일, 시) KST 변환."""
+    from datetime import datetime, timedelta, timezone
+    try:
+        dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z").astimezone(timezone(timedelta(hours=9)))
+    except (ValueError, TypeError):
+        return ("?", "?", -1)
+    return (dt.strftime("%Y-%m-%d"), "월화수목금토일"[dt.weekday()], dt.hour)
+
+
+def dump_storefront(rows: list[dict]) -> None:
+    for d in rows:
+        print(f"\n--- [storefront] product_no={d.get('product_no')} ---")
+        print(f"og_title    : {d.get('og_title')}")
+        print(f"og_desc     : {(d.get('og_description') or '')[:400]}")
+        print(f"price       : sale={d.get('price_sale')} org={d.get('price_org')} "
+              f"custom={d.get('price_custom')}")
+        print(f"review_hint : {d.get('review_count_hint')}")
+        print("detail_table:")
+        for k, v in (d.get("detail_table") or {}).items():
+            print(f"   - {k}: {v[:200]}")
+        print("options:")
+        for k, v in (d.get("options") or {}).items():
+            if isinstance(v, list):
+                print(f"   - {k}: {v[:40]}")
+            else:
+                print(f"   - {k}: {json.dumps(v, ensure_ascii=False)[:1500]}")
+        print(f"size_hints  : {d.get('size_hints')}")
+        txt = (d.get("detail_text") or "").strip()
+        print(f"detail_text ({len(txt)}자):")
+        for line in [txt[i:i + 180] for i in range(0, min(len(txt), 4000), 180)]:
+            print(f"   {line}")
+        print(f"detail_images ({len(d.get('detail_images') or [])}):")
+        for u in (d.get("detail_images") or [])[:15]:
+            print(f"   {u}")
+
+
+def dump_cafe24(data: dict) -> None:
+    keep = ("product_no", "product_code", "product_name", "eng_product_name", "model_name",
+            "price", "retail_price", "supply_price", "display", "selling", "product_condition",
+            "summary_description", "simple_description", "made_in_code", "brand_code",
+            "created_date", "updated_date", "sold_out", "product_weight", "origin_place_value")
+    for no, entry in (data.get("products") or {}).items():
+        print(f"\n--- [cafe24] product_no={no} ---")
+        prod = (entry.get("product") or {}).get("product") or {}
+        if not prod and isinstance(entry.get("product"), dict):
+            print(f"product error: {json.dumps(entry['product'], ensure_ascii=False)[:600]}")
+        for k in keep:
+            if k in prod:
+                v = prod[k]
+                print(f"   {k}: {json.dumps(v, ensure_ascii=False)[:500]}")
+        desc = prod.get("description") or ""
+        if desc:
+            plain = re.sub(r"<[^>]+>", " ", desc)
+            plain = re.sub(r"\s+", " ", plain).strip()
+            print(f"   description(태그제거 {len(plain)}자): {plain[:2500]}")
+        for label in ("options", "variants", "inventory", "categories"):
+            v = entry.get(label)
+            print(f"   [{label}] {json.dumps(v, ensure_ascii=False)[:2500]}")
+
+
+def dump_instagram(data: dict) -> None:
+    for uname, acc in (data.get("accounts") or {}).items():
+        print(f"\n--- [instagram] @{uname} ---")
+        if "_error" in acc:
+            print(f"   ERROR {acc['_error']} {acc.get('_body', '')[:400]}")
+            continue
+        print(f"   name={acc.get('name')} followers={acc.get('followers_count')} "
+              f"media={acc.get('media_count')} website={acc.get('website')}")
+        print(f"   bio: {(acc.get('biography') or '')}")
+        media = (acc.get("media") or {}).get("data") or []
+        # 게시물 표 (최신순)
+        print(f"   게시물 {len(media)}건 (날짜 | 요일 | KST시 | 포맷 | ♥ | 💬 | 훅 첫 줄)")
+        tags: dict[str, int] = {}
+        wd: dict[str, int] = {}
+        hr: dict[int, int] = {}
+        mon: dict[str, int] = {}
+        for m in media:
+            date, w, h = _kst(m.get("timestamp") or "")
+            cap = (m.get("caption") or "").strip()
+            first = cap.split("\n")[0][:70]
+            print(f"     {date} {w} {h:02d}시 {m.get('media_product_type'):5} "
+                  f"♥{m.get('like_count') or 0:4} 💬{m.get('comments_count') or 0:3} | {first}")
+            for t in re.findall(r"#([0-9A-Za-z가-힣_ぁ-んァ-ン一-龥]+)", cap):
+                tags[t] = tags.get(t, 0) + 1
+            wd[w] = wd.get(w, 0) + 1
+            hr[h] = hr.get(h, 0) + 1
+            mon[date[:7]] = mon.get(date[:7], 0) + 1
+        print(f"   해시태그 TOP20: "
+              f"{sorted(tags.items(), key=lambda x: -x[1])[:20]}")
+        print(f"   요일분포: {sorted(wd.items(), key=lambda x: '월화수목금토일'.index(x[0]) if x[0] in '월화수목금토일' else 9)}")
+        print(f"   시간분포: {sorted(hr.items())}")
+        print(f"   월별발행: {sorted(mon.items())}")
+
+
 # --- 실행 ------------------------------------------------------------------
 
 def main() -> int:
@@ -271,6 +368,8 @@ def main() -> int:
     ap.add_argument("--only", default="", help="storefront,cafe24,instagram 중 콤마 구분 선택")
     ap.add_argument("--ig-users", default=",".join(DEFAULT_IG_USERS))
     ap.add_argument("--ig-media-limit", type=int, default=50)
+    ap.add_argument("--dump", action="store_true",
+                    help="아티팩트를 못 받는 환경용 — 수집 원본을 로그에 전부 출력")
     args = ap.parse_args()
 
     only = {s.strip() for s in args.only.split(",") if s.strip()}
@@ -298,6 +397,8 @@ def main() -> int:
                 print(f"[FAIL] {p['product_no']}: {type(exc).__name__}: {exc}")
         (outdir / "storefront.json").write_text(
             json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
+        if args.dump:
+            dump_storefront(results)
 
     if want("cafe24"):
         print("\n=== 2) Cafe24 Admin API ===", flush=True)
@@ -314,6 +415,8 @@ def main() -> int:
                     v = entry.get(label)
                     mark = "err" if isinstance(v, dict) and "_error" in v else "ok"
                     print(f"     - {label}: {mark}")
+            if args.dump:
+                dump_cafe24(d)
         except Exception as exc:
             failures.append(f"cafe24: {exc}")
             print(f"[FAIL] cafe24: {type(exc).__name__}: {exc}")
@@ -340,6 +443,8 @@ def main() -> int:
                     print(f"       ♥{t['like_count']} 💬{t['comments_count']} "
                           f"{t['media_product_type']} {t['timestamp']} {t['permalink']}")
                     print(f"         {t['caption']}")
+            if args.dump:
+                dump_instagram(d)
         except Exception as exc:
             failures.append(f"instagram: {exc}")
             print(f"[FAIL] instagram: {type(exc).__name__}: {exc}")

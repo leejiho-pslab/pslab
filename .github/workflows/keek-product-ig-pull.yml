@@ -20,11 +20,16 @@ on:
       ig_users:
         description: "조회할 인스타 계정 (콤마 구분)"
         required: false
-        default: "keek_kr,keek_crew,keek_jp"
+        default: "keek_kr,keek_jp"
       ig_media_limit:
         description: "계정당 가져올 게시물 수"
         required: false
         default: "50"
+      dump:
+        description: "수집 원본을 로그에 전부 출력 (아티팩트를 못 받는 환경용)"
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   pull:
@@ -58,8 +63,9 @@ jobs:
           python scripts/keek_product_ig_pull.py \
             --out out \
             --only "${{ github.event.inputs.only }}" \
-            --ig-users "${{ github.event.inputs.ig_users || 'keek_kr,keek_crew,keek_jp' }}" \
-            --ig-media-limit "${{ github.event.inputs.ig_media_limit || '50' }}"
+            --ig-users "${{ github.event.inputs.ig_users || 'keek_kr,keek_jp' }}" \
+            --ig-media-limit "${{ github.event.inputs.ig_media_limit || '50' }}" \
+            ${{ github.event.inputs.dump == 'false' && ' ' || '--dump' }}
 
       - name: Upload raw JSON
         if: ${{ always() }}
