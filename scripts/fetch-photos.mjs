@@ -86,6 +86,13 @@ function loadSources() {
   } catch { return []; }
 }
 
+// 특정 항목에 고정 배경을 지정 (bg-sources.json 의 overrides) — 회전 배정보다 우선
+function loadOverrides() {
+  const f = join(ROOT, 'data/clients', clientId, 'bg-sources.json');
+  if (!existsSync(f)) return {};
+  try { return JSON.parse(readFileSync(f, 'utf8')).overrides ?? {}; } catch { return {}; }
+}
+
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
 const outDir = join(ROOT, 'docs/bg');
@@ -97,16 +104,32 @@ console.log(
   `배경 사진 소스: ${sources.length ? `미리생성 ${sources.length}장(Higgsfield 등)` : usePexels ? 'Pexels(실사진)' : 'Pollinations(무료 AI)'}`,
 );
 
+const overrides = loadOverrides();
+// 같은 소스 이미지가 두 항목에 배정되지 않도록 이미 쓴 URL을 추적한다
+// (hash 충돌로 서로 다른 콘텐츠의 커버가 똑같아지는 사고가 있었음)
+const usedUrls = new Set(Object.values(overrides));
+
 let got = 0, skipped = 0;
 for (const it of plan.items) {
   const out = join(outDir, `${it.id}.jpg`);
-  if (existsSync(out) && !force) { skipped++; continue; }
+  const stamp = join(outDir, `${it.id}.src`);
+  const pinned = overrides[it.id];
+  // 고정 배경은 URL이 바뀌면 다시 받는다
+  const pinnedFresh = pinned && existsSync(out) && existsSync(stamp)
+    && readFileSync(stamp, 'utf8').trim() === pinned;
+  if (pinnedFresh || (!pinned && existsSync(out) && !force)) { skipped++; continue; }
   const scene = SCENES[hash(it.id) % SCENES.length];
   let buf = null, label = '';
-  // 우선순위: 미리생성 장면 URL → Pexels → Pollinations
-  if (sources.length) {
-    buf = await fromUrl(sources[hash(it.id) % sources.length]);
-    label = 'scene';
+  // 우선순위: 고정 배경 → 미리생성 장면 URL(중복 회피 회전) → Pexels → Pollinations
+  if (pinned) {
+    buf = await fromUrl(pinned);
+    if (buf) { label = 'pinned'; writeFileSync(stamp, pinned); }
+  }
+  if (!buf && sources.length) {
+    let i = hash(it.id) % sources.length;
+    for (let n = 0; n < sources.length && usedUrls.has(sources[i]); n++) i = (i + 1) % sources.length;
+    buf = await fromUrl(sources[i]);
+    if (buf) { usedUrls.add(sources[i]); label = 'scene'; }
   }
   if (!buf) { buf = await fromPexels(scene.q); if (buf) label = scene.q.slice(0, 28); }
   if (!buf) { buf = await fromPollinations(scene.p, hash(it.id) % 100000); if (buf) label = scene.q.slice(0, 28); }

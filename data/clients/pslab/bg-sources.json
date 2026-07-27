@@ -1,5 +1,5 @@
 {
-  "note": "Higgsfield(soul_2)로 생성한 인물·상황·배경 장면. fetch-photos가 CI에서 이 URL을 받아 docs/bg/<id>.jpg로 저장한다. 항목별로 회전 배정해 다양성 확보.",
+  "note": "Higgsfield(soul_2)로 생성한 인물·상황·배경 장면. fetch-photos가 CI에서 이 URL을 받아 docs/bg/<id>.jpg로 저장한다. 항목별로 회전 배정해 다양성 확보. overrides: 항목별 고정 배경(회전 배정보다 우선). 같은 URL이 두 항목에 배정되지 않도록 중복 회피 로직 적용.",
   "urls": [
     "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_044039_a22f1d4a-cde3-4975-8479-b32291ecd22f.png",
     "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_044321_693f0162-7838-4a17-a406-ceb39af83ef3.png",
@@ -10,5 +10,8 @@
     "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_044506_62e68480-960d-47bd-9c8b-c01ba92b4e54.png",
     "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_044507_35cd4d92-c5f0-4892-958a-25068a491f3f.png",
     "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260630_044508_88922ebb-d3c8-4e02-826b-f598d0f8f2db.png"
-  ]
+  ],
+  "overrides": {
+    "car-07-29": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_030013_8521155e-5426-4412-93fc-6bf92a2b1e61.png"
+  }
 }
