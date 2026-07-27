@@ -13,6 +13,7 @@
 | [`instagram.md`](./instagram.md) | 인스타그램 계정 분석 (@keek_crew / @keek_kr 확인 필요) |
 | [`core-features.md`](./core-features.md) | **핵심 기능 정리 — 제품 기능 + 계정 운영 기능 2축** |
 | [`knowledge.json`](./knowledge.json) | 위 내용의 기계 판독용 요약 (콘텐츠 생성 파이프라인 투입용) |
+| [`data-access-guide.md`](./data-access-guide.md) | **데이터 확인 가이드** — 연결된 API로 끌어오는 법 + API 없이 브라우저로 확인하는 법 |
 
 ## 수집 방법과 신뢰도 (반드시 먼저 읽을 것)
 
