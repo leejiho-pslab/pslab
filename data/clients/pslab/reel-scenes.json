@@ -1,0 +1,75 @@
+{
+  "note": "릴스/쇼츠 멀티씬 대본. 비트별로 '문장에 맞는 장면 클립'을 붙여 15초 이내로 합성한다. clip은 Higgsfield 생성 URL. build-reels.mjs가 씬별 애니메이션 자막을 합성하고 크로스페이드로 이어붙인다.",
+  "defaults": {
+    "beatSec": 3.5,
+    "xfade": 0.3
+  },
+  "reels": {
+    "reels-07-27": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "ALWAYS ON",
+          "text": "마지막 게시물,\n언제 올리셨어요?",
+          "accent": "언제",
+          "scene": "밤의 카페, 지친 사장님이 폰을 내려다봄",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260726_110245_8d6e906f-e7ea-4e3d-b27b-80d18082e125.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "3주 멈춘 계정은\n손님 눈엔 닫힌 가게",
+          "accent": "닫힌 가게",
+          "scene": "불 꺼진 가게 외관",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004128_0a5ec6b5-a49f-4fbd-bad0-9ff9e1dabb9d.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "이제 5채널이\n매일 자동으로",
+          "accent": "매일 자동으로",
+          "scene": "스스로 켜지는 화면들",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004132_0c26a0c1-790d-43e1-8faf-e9d95181062f.mp4"
+        },
+        {
+          "kicker": "P.S.LAB",
+          "text": "댓글에 \"온\"\n소개서 보내드려요",
+          "accent": "\"온\"",
+          "scene": "아침 햇살, 손님 들어오는 카페",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004135_a0a427af-c6f5-4eab-a1e8-447b82122668.mp4"
+        }
+      ]
+    },
+    "reels-07-31": {
+      "theme": "premium",
+      "beats": [
+        {
+          "kicker": "ALWAYS ON",
+          "text": "SNS 대행 견적,\n받아보셨어요?",
+          "accent": "견적",
+          "scene": "견적서를 든 손, 놀란 정적",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004138_db0b9330-01e5-4d81-aa8c-ff4dcb30fe7f.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "5채널이면\n월 500만원부터",
+          "accent": "월 500만원",
+          "scene": "쌓여 올라가는 금화",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004140_967743c0-80d4-46f2-9adb-df1599fc42fe.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "시스템은 1년에\n콘텐츠 700개",
+          "accent": "콘텐츠 700개",
+          "scene": "무한히 증식하는 콘텐츠 카드",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004143_b75b6569-1736-4c27-a71a-984d3ab69784.mp4"
+        },
+        {
+          "kicker": "P.S.LAB",
+          "text": "댓글에 \"견적\"\n소개서 보내드려요",
+          "accent": "\"견적\"",
+          "scene": "폰을 보며 미소짓는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004146_51121e64-6263-4cb2-8d1b-8fe78296381b.mp4"
+        }
+      ]
+    }
+  }
+}
