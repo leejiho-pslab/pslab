@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-07-27T12:43:19.935Z",
+  "checkedAt": "2026-07-27T13:41:10.406Z",
   "tokens": [
     {
       "label": "Instagram",
@@ -16,9 +16,8 @@
     {
       "label": "YouTube",
       "platform": "youtube",
-      "ok": false,
-      "warn": true,
-      "detail": "토큰 오류(invalid_grant): refresh token 만료/폐기 — OAuth Playground에서 재발급해 시크릿을 교체하세요 (미검수 앱은 7일마다 만료)."
+      "ok": true,
+      "warn": false
     },
     {
       "label": "Blogger",
