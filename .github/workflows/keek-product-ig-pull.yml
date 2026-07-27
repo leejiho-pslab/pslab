@@ -1,0 +1,70 @@
+name: keek product + instagram pull
+
+# 에이전트 샌드박스는 keek-line.com / instagram.com / api.cafe24.com egress 가 막혀 있어
+# 원본을 직접 못 읽는다. GitHub 러너는 열려 있으므로 여기서 끌어와 로그 + 아티팩트로 남긴다.
+# (keek-api-smoke.yml 이 onrender 를 확인하는 것과 동일한 패턴)
+#
+# 필요한 Secrets (있는 것만 채워도 나머지는 수집됨):
+#   Cafe24 상품:  DATABASE_URL, CAFE24_MALL_ID, CAFE24_CLIENT_ID, CAFE24_CLIENT_SECRET,
+#                 CAFE24_ACCESS_TOKEN, CAFE24_REFRESH_TOKEN
+#   인스타그램:   PSLAB_INSTAGRAM_ACCESS_TOKEN, PSLAB_INSTAGRAM_IG_USER_ID
+#   스토어프론트: (자격증명 불필요)
+
+on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "수집 대상 (storefront,cafe24,instagram 콤마 구분 / 빈값=전체)"
+        required: false
+        default: ""
+      ig_users:
+        description: "조회할 인스타 계정 (콤마 구분)"
+        required: false
+        default: "keek_kr,keek_crew,keek_jp"
+      ig_media_limit:
+        description: "계정당 가져올 게시물 수"
+        required: false
+        default: "50"
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt beautifulsoup4
+
+      - name: Pull product + instagram data
+        env:
+          CAFE24_OPS_MODE: live
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_CLIENT_SECRET: ${{ secrets.CAFE24_CLIENT_SECRET }}
+          CAFE24_ACCESS_TOKEN: ${{ secrets.CAFE24_ACCESS_TOKEN }}
+          CAFE24_REFRESH_TOKEN: ${{ secrets.CAFE24_REFRESH_TOKEN }}
+          PSLAB_INSTAGRAM_ACCESS_TOKEN: ${{ secrets.PSLAB_INSTAGRAM_ACCESS_TOKEN }}
+          PSLAB_INSTAGRAM_IG_USER_ID: ${{ secrets.PSLAB_INSTAGRAM_IG_USER_ID }}
+        run: |
+          python scripts/keek_product_ig_pull.py \
+            --out out \
+            --only "${{ github.event.inputs.only }}" \
+            --ig-users "${{ github.event.inputs.ig_users || 'keek_kr,keek_crew,keek_jp' }}" \
+            --ig-media-limit "${{ github.event.inputs.ig_media_limit || '50' }}"
+
+      - name: Upload raw JSON
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: keek-raw-data
+          path: cafe24-ops-status/out/*.json
+          if-no-files-found: warn
