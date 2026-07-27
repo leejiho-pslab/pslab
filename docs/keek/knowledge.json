@@ -1,0 +1,155 @@
+{
+  "brand": {
+    "id": "keek",
+    "name": "keek(키크)",
+    "company": "㈜커버써먼 (CVSM)",
+    "ceo": "이재호",
+    "positioning": "라이프스타일 테크 브랜드 / Urban Nomad Gear",
+    "tagline": "TECH THAT BREATHES",
+    "subTagline": "Sleep any-wear, Travel every-wear",
+    "coreTech": {
+      "name": "Pillowdy (Air Tech)",
+      "etymology": "Pillow(베개) + Hoodie(후드)",
+      "mechanism": "외부 가슴 포켓 공기주입구에 숨을 불어넣으면 원단이 부풀어 목베개가 됨",
+      "speed": { "official": "3초", "press": "5초" },
+      "valve": "인체무해 PE 소재, 분리 세척 가능",
+      "ergonomics": "3D 인체공학 패턴, 공기량으로 지지 강도 조절",
+      "v3Upgrade": "자체 개발 '필로우 키트(Pillow Kit)' 적용 — 목 지지력 강화",
+      "patent": "지지대가 포함된 인체 친화적 날개형 에어 쿠션",
+      "sustainabilityAngle": "다운/폼 대신 공기를 충전재로 사용"
+    },
+    "milestones": [
+      { "at": "2025-07", "event": "필로우디 V3 라인 공개 (후디 V3 / UV 라이트 윈드브레이커 V3)" },
+      { "at": "2025-08", "event": "성수 플래그십 스토어 오픈" },
+      { "at": "2025-12", "event": "누적 판매 10만 장 돌파 / 신세계·롯데면세점 신규 입점 / 서울경찰청 6기동단 MOU" },
+      { "at": "2026-04", "event": "일본 시부야 팝업 (11종 라인업)" },
+      { "at": "2026-05", "event": "일본 TikTok 라이브커머스 개시" }
+    ],
+    "channels": {
+      "d2c": ["keek-line.com", "en.keek-line.com", "keek-jp.com", "네이버 스마트스토어 keek"],
+      "retail": ["KREAM", "29CM", "무신사", "SSF샵", "지그재그", "컬리", "하프클럽", "G마켓", "버킷스토어"],
+      "offline": ["성수 플래그십", "한남 플래그십", "신세계면세점 인천공항 T2", "롯데면세점"],
+      "cafe24MallId": "keek"
+    },
+    "keywordClusters": {
+      "situation": ["여행룩", "공항룩", "장거리비행", "여행필수템", "짐줄이기"],
+      "category": ["기내용목베개", "비행기목베개", "초경량목베개", "경량바람막이", "패커블자켓", "고프코어"],
+      "brand": ["keek", "키크", "필로우디", "Pillowdy", "커버써먼", "CVSM"]
+    }
+  },
+  "products": [
+    {
+      "slug": "pillowdy-uv-light-windbreaker-v3",
+      "productNo": 1833,
+      "sourceUrl": "https://keek-line.com/product/keek-pillowdy-uv-light-windbreaker-v3/1833/category/24/display/3/",
+      "nameKo": "키크 필로우디 UV 라이트 윈드브레이커 V3",
+      "nameEn": "keek Pillowdy UV Light Windbreaker V3",
+      "styleCode": "K0HJK001",
+      "priceKrw": 159000,
+      "streetPriceKrw": 143100,
+      "priceUsd": 109,
+      "colors": ["라이트블루", "베이지", "다크카키", "블랙"],
+      "sizes": ["XS", "S", "M", "L", "XL", "XXL"],
+      "weightG": 150,
+      "fabric": "립스탑(Ripstop) 나일론",
+      "features": [
+        { "key": "pillowdy", "label": "3초 목베개 변환", "note": "필로우 키트 적용, 목 지지력 강화" },
+        { "key": "uv", "label": "UPF 50+ 자외선 차단", "note": "UV 가공 원단" },
+        { "key": "antistatic", "label": "정전기 방지", "note": "땀·물에 젖어도 피부에 붙지 않음" },
+        { "key": "ultralight", "label": "약 150g 초경량", "note": "스마트폰보다 가벼움" },
+        { "key": "packable", "label": "패커블 수납", "note": "왼쪽 주머니를 뒤집어 파우치화" },
+        { "key": "zipPocket", "label": "지퍼 포켓", "note": "소지품 안전 보관" },
+        { "key": "drawstring", "label": "후드·밑단 조절 스트링", "note": "시야 확보·기후 대응" },
+        { "key": "pattern", "label": "활동성 패턴", "note": "팔 움직임 고려 설계 (V3 신규)" }
+      ],
+      "measuredSizes": [
+        { "size": "M", "totalLength": 73, "shoulder": 48.5, "chest": 63.5, "sleeve": 63.3, "source": "blogger", "confidence": "low" }
+      ],
+      "fitNote": "여유 있는 릴랙스 핏. 오버핏 원하면 한 사이즈 업",
+      "vsPrevious": "V2와 동일 가격(159,000원)에 필로우 키트·립스탑·정전기 방지·라이트블루 컬러 추가",
+      "scenarios": ["장거리 비행", "공항룩", "여행 짐 줄이기", "등산·가을 아우터", "일상 경량 아우터"],
+      "oneLiner": "150g, 여권보다 작게 접히는 UPF 50+ 바람막이. 그런데 후드가 3초 만에 목베개가 된다."
+    },
+    {
+      "slug": "pillowdy-utility-nylon-vest-mesh-lining",
+      "productNo": 1793,
+      "sourceUrl": "https://keek-line.com/product/keek-pillowdy-utility-nylon-vest-mesh-lining/1793/category/24/display/1/",
+      "nameKo": "키크 필로우디 유틸리티 나일론 베스트 (메쉬 안감)",
+      "nameEn": "keek Pillowdy Utility Nylon Vest (Mesh lining)",
+      "styleCode": "P0FVT301",
+      "priceKrw": 149000,
+      "streetPriceKrw": 134100,
+      "priceUsd": 112,
+      "colors": ["블랙", "그레이"],
+      "sizes": ["M", "L"],
+      "unisex": true,
+      "fabric": { "shell": "나일론 100%", "lining": "폴리에스터 100% 메쉬", "coating": "PU 코팅" },
+      "features": [
+        { "key": "pillowdy", "label": "3초 목베개 변환", "note": "외부 가슴 포켓 공기주입구" },
+        { "key": "meshLining", "label": "메쉬 안감 통기성", "note": "활동성 우수, 운동 시에도 착용 가능 (핵심 차별점)" },
+        { "key": "waterResistant", "label": "생활 방수·방풍", "note": "PU 코팅 기능성 원단" },
+        { "key": "quickDry", "label": "속건·방오·강성", "note": "나일론 원단 특성" },
+        { "key": "ykk", "label": "YKK 지퍼", "note": "내구성" },
+        { "key": "elaString", "label": "후드 뒷편·밑단 엘라 스트링", "note": "고프코어 무드 스타일링" }
+      ],
+      "measuredSizes": [
+        { "size": "unspecified", "shoulder": 45, "chest": 60, "totalLength": 58, "source": "blogger", "confidence": "low" }
+      ],
+      "fitNote": "조끼 스타일로 기장이 짧은 편. 레이어드 전제",
+      "siblings": [
+        { "name": "Pillowdy Utility Light Vest (Single-layer)", "styleCode": "K0HVE201", "priceKrw": 149000, "diff": "안감 없음(홑겹)" },
+        { "name": "[아로치카 x keek] Pillowdy Utility Nylon Vest (Mesh lining)", "diff": "콜라보 에디션" }
+      ],
+      "scenarios": ["간절기 레이어드", "운동", "여행·캠핑", "고프코어 스타일링"],
+      "retailStatus": "신세계면세점 팝업 간판 제품 / 성수 플래그십 반응 상위",
+      "oneLiner": "팔이 자유롭고 안감이 메쉬라 운동까지 되는 목베개 조끼."
+    }
+  ],
+  "instagram": {
+    "requestedHandle": "keek_kr",
+    "requestedHandleStatus": "UNVERIFIED — 공개 검색 색인에서 발견되지 않음. 사용자 확인 필요",
+    "verifiedOfficialHandle": "keek_crew",
+    "displayName": "keek(키크)",
+    "location": "Seoul",
+    "followers": 42000,
+    "posts": 486,
+    "following": 2,
+    "bio": "TECH THAT BREATHES / Life Style Tech Brand, keek.",
+    "relatedAccounts": [
+      { "handle": "keek_jp", "role": "일본 공식" },
+      { "handle": "keek.official", "platform": "facebook", "role": "공식 페이스북" }
+    ],
+    "hookPatterns": [
+      { "type": "숫자·속도", "example": "언제 어디서든, 3초만에" },
+      { "type": "크기 비교", "example": "여권보다 작은 #초경량목베개" },
+      { "type": "반문·통념부정", "example": "설마 아직도 목베개를 따로 챙겨다녀요?" },
+      { "type": "카운트다운", "example": "keek 성수 플래그십 스토어 Opening D-5" }
+    ],
+    "coreFunctions": [
+      { "id": "demo", "label": "발상 전달 (Demo Engine)", "vehicle": "릴스" },
+      { "id": "reframe", "label": "습관 재정의 (Category Reframing)", "vehicle": "반문형 훅" },
+      { "id": "commerce", "label": "커머스 공지 (Conversion Layer)", "vehicle": "피드" },
+      { "id": "offline", "label": "오프라인 증폭기", "vehicle": "팝업·플래그십 카운트다운" },
+      { "id": "ugc", "label": "UGC 허브", "vehicle": "협찬 크리에이터·셀럽" }
+    ],
+    "gaps": [
+      "커뮤니티/상호작용 자산 부재 (팔로잉 2)",
+      "UPF 50+·립스탑·정전기 방지·패커블·메쉬 안감 등 기능 자산 미콘텐츠화",
+      "V2/V3, 메쉬/홑겹 제품 구분 콘텐츠 부재",
+      "사용 시나리오가 비행기에 편중",
+      "게시물별 정량 지표 미확보로 성과 학습 루프 없음"
+    ],
+    "dataLimitation": "instagram.com egress 차단 + 스크래퍼 MCP 미연결 → 좋아요/조회수/저장/발행시간대 등 정량 지표 없음"
+  },
+  "meta": {
+    "createdAt": "2026-07-27",
+    "collectionMethod": "네이버 검색 API(웹문서·쇼핑·블로그·뉴스) + 웹검색 + 리테일 리스팅 교차검증",
+    "blockedSources": ["keek-line.com", "www.instagram.com", "api.cafe24.com", "openapi.naver.com (직접 HTTP)"],
+    "confidenceLegend": {
+      "확인": "공식 페이지 원문 또는 2개 이상 독립 출처 일치",
+      "보도": "언론 1차 출처",
+      "리뷰": "개별 블로거 실측/체감, 오차 가능",
+      "추정": "근거에서 유도한 해석"
+    }
+  }
+}
