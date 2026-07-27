@@ -82,6 +82,10 @@ export interface PlanItem {
   videoFrom?: string;
   /** 합성된 영상 길이(초) */
   videoSeconds?: number;
+  /** 릴스 커버 프레임 위치(ms) — 인터랙션이 가장 높을 지점(보통 훅 문구가 다 보이는 시점)을
+   *  지정. 없으면 발행 시 기본값(900ms) 사용 — 인트로 페이드 중인 검은 프레임이 프로필
+   *  그리드 커버로 잡히는 사고를 막는다. */
+  coverOffsetMs?: number;
   /** 유튜브 업로드용 SEO 제목 */
   ytTitle?: string;
   /** 유튜브 업로드용 설명(멘션) — 키워드 기반 SEO */

@@ -429,6 +429,12 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         body,
         media,
         tags: includesYoutube && it.ytTags?.length ? it.ytTags : [],
+        // 릴스는 커버 프레임을 지정해 인스타 프로필 그리드에서 검은/전환중 프레임이
+        // 썸네일로 잡히지 않게 한다 (기본값: 인트로 페이드·자막 애니메이션이 끝나
+        // 훅 문구가 다 보이는 900ms 지점 — 스크롤을 멈출 확률이 가장 높은 프레임).
+        platformOptions: isReels && it.videoFile
+          ? { instagram: { coverOffsetMs: it.coverOffsetMs ?? 900 } }
+          : undefined,
       };
       // 자격 증명이 아예 없는 채널(의도적 미연결)은 조용히 건너뛴다.
       // 자격 증명이 "있는데" 발행이 실패하면(토큰 만료 등) 아래에서 즉시 알림.
