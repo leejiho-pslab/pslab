@@ -87,10 +87,9 @@ async function downloadClip(url, dest) {
 
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
-// 유튜브 쇼츠 + 인스타 릴스(세로 영상) 항목 모두 합성
-const items = plan.items.filter(
-  (i) => i.channels[0] === 'youtube' || (i.channels[0] === 'instagram' && /릴스|reels/i.test(i.format || '')),
-);
+// 유튜브 쇼츠 전용. 인스타 릴스는 멀티씬 합성기(build-reels.mjs)가 담당한다
+// — 여기서 다루면 멀티씬 결과물을 단일 배경 루프본으로 덮어써 버린다.
+const items = plan.items.filter((i) => i.channels[0] === 'youtube');
 const sources = loadVideoSources();
 
 if (!ffmpeg) { console.log('ffmpeg 없음 → 쇼츠 영상 합성 건너뜀 (슬라이드만 유지)'); process.exit(0); }

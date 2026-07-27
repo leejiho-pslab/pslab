@@ -112,10 +112,8 @@ body{background:transparent}
 const chromium = findChromium();
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
-// 유튜브 쇼츠 + 인스타 릴스(세로 영상) 항목 모두 렌더
-const items = plan.items.filter(
-  (i) => i.channels[0] === 'youtube' || (i.channels[0] === 'instagram' && /릴스|reels/i.test(i.format || '')),
-);
+// 유튜브 쇼츠 전용. 인스타 릴스 자막은 build-reels.mjs가 씬별로 직접 렌더한다
+const items = plan.items.filter((i) => i.channels[0] === 'youtube');
 if (!chromium) { console.log('Chromium 없음 → 쇼츠 슬라이드 렌더 건너뜀'); process.exit(0); }
 
 function shoot(html, outPng, transparent) {

@@ -144,6 +144,11 @@ jobs:
         continue-on-error: true
         run: node scripts/build-shorts-video.mjs --client pslab
 
+      # 인스타 릴스 멀티씬 합성 — 대본 비트마다 다른 장면 클립 + 애니메이션 자막 (15초 이내)
+      - name: 릴스 멀티씬 합성
+        continue-on-error: true
+        run: node scripts/build-reels.mjs --client pslab
+
       - name: 대시보드 생성 (실시간 현황)
         run: node dist/cli.js dashboard --out docs/index.html
 
