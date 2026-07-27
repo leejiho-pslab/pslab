@@ -1,14 +1,21 @@
-# 대구일색 전용 클라이언트 설정 (기존 업체와 분리)
+# 대구일색 전용 클라이언트 설정 (기존 업체와 분리) — ⚠️ 전용 저장소로 이전 완료
+
+> **2026-07-27부로 이 폴더는 더 이상 최신 소스가 아니다.** 대구일색은
+> **[leejiho-pslab/daeguis-sns](https://github.com/leejiho-pslab/daeguis-sns)** 전용 저장소로
+> 통째로 이전되었다(엔진 코드 + 이 폴더의 데이터 전부 포함). 신규 작업은 반드시 새 저장소에서
+> 진행할 것 — 이 폴더는 이전 시점의 참고용 스냅샷으로만 남긴다.
+>
+> - 🖥 라이브 대시보드: https://leejiho-pslab.github.io/daeguis-sns/ (GitHub Pages, 로그인 불필요)
+> - 📂 새 저장소 데이터 경로: `data/clients/daeguis/` (동일 구조)
 
 이 저장소의 기본 브랜치(`claude/eager-lamport-mX0eT`)와 공용 대시보드(`docs/index.html`)는
-**다른 업체(pslab)** 소유다. 대구일색은 섞이지 않도록 이 폴더와 아래 경로에서만 관리한다.
+**다른 업체(pslab)** 소유다. 대구일색은 섞이지 않도록 이 폴더와 아래 경로에서만 관리해왔다.
 
-| 대시보드(라이브 스냅샷) | https://claude.ai/code/artifact/55d76711-dff6-48e2-ab8b-856a3fc0526d |
 | 자산 | 경로 |
 |---|---|
 | 클라이언트 설정 | `clients-daeguis/daeguis.json` |
 | 데이터(디자인·지침·리서치) | `data/clients/daeguis/` |
-| 전용 대시보드 | `docs/daeguis/index.html` |
+| 전용 대시보드(구, 참고용) | `docs/daeguis/index.html` |
 | 작업 브랜치 | `claude/sns-automation-brand-research-th4yll` |
 
 ## 대시보드 재생성
