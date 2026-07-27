@@ -30,6 +30,10 @@ on:
         description: "최근 N일 백필 (빈값 = 스케줄과 동일: 3일 자가치유 수집 + 어제 경쟁사)"
         required: false
         default: ""
+      skip:
+        description: "제외할 수집기 (콤마). 과거 재수집 시 competitor 권장 — 경쟁사는 현재 스냅샷이라 과거 날짜에 덮으면 이력이 오염됨"
+        required: false
+        default: "competitor"
 
 jobs:
   collect:
@@ -90,10 +94,12 @@ jobs:
           #  - GA4 전환·Meta 광고비의 24~48h 늦은 보정을 매일 최근 이틀치에 반영
           #  - 단, 경쟁사는 '현재 스냅샷' 소스라 과거 날짜에 쓰면 이력이 오염됨 → 3일
           #    재수집에서 제외하고 어제 하루만 별도 수집
-          # 수동 실행(days 입력)은 기존처럼 그대로 N일 백필.
+          # 수동 실행(days 입력)은 그대로 N일 백필하되, skip 입력으로 제외 수집기를 지정한다
+          # (기본 competitor — 과거 날짜 재수집 시 경쟁사 스냅샷이 이력을 덮는 것 방지).
           collect() {
             if [ -n "${{ github.event.inputs.days }}" ]; then
-              python scripts/run_all.py --mode live --days "${{ github.event.inputs.days }}"
+              python scripts/run_all.py --mode live --days "${{ github.event.inputs.days }}" \
+                --skip "${{ github.event.inputs.skip }}"
             else
               python scripts/run_all.py --mode live --days 3 --skip competitor \
                 && python scripts/run_all.py --mode live --days 1 --skip cafe24,ads,creative,keyword
