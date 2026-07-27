@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-27T13:41:21.796Z",
+  "generatedAt": "2026-07-27T14:19:50.276Z",
   "sampleSize": 19,
   "variants": [
     {
@@ -12,9 +12,9 @@
     {
       "key": "A",
       "posts": 8,
-      "avgEngagement": 0.1830039718527908,
-      "avgLikes": 375.875,
-      "avgViews": 8647.625
+      "avgEngagement": 0.18616053750935646,
+      "avgLikes": 376,
+      "avgViews": 8648
     },
     {
       "key": "C",
@@ -28,9 +28,9 @@
     {
       "key": "instagram",
       "posts": 7,
-      "avgEngagement": 0.420995670995671,
-      "avgLikes": 1.4285714285714286,
-      "avgViews": 7.428571428571429
+      "avgEngagement": 0.42460317460317454,
+      "avgLikes": 1.5714285714285714,
+      "avgViews": 7.857142857142857
     },
     {
       "key": "youtube",
@@ -58,9 +58,9 @@
     {
       "key": "21:00",
       "posts": 9,
-      "avgEngagement": 0.2665918056771009,
-      "avgLikes": 235.11111111111111,
-      "avgViews": 4700.444444444444
+      "avgEngagement": 0.26939764181627035,
+      "avgLikes": 235.22222222222223,
+      "avgViews": 4700.777777777777
     },
     {
       "key": "19:00",
@@ -107,18 +107,18 @@
       "avgViews": 12988
     },
     {
+      "key": "lock",
+      "posts": 6,
+      "avgEngagement": 0.18514511318697202,
+      "avgLikes": 317.8333333333333,
+      "avgViews": 7057
+    },
+    {
       "key": "compass",
       "posts": 4,
       "avgEngagement": 0.18466619632128944,
       "avgLikes": 183.75,
       "avgViews": 4083.75
-    },
-    {
-      "key": "lock",
-      "posts": 6,
-      "avgEngagement": 0.1809363589782178,
-      "avgLikes": 317.6666666666667,
-      "avgViews": 7056.5
     },
     {
       "key": "chart",
