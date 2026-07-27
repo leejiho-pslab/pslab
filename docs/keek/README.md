@@ -16,7 +16,8 @@
 | [`instagram.md`](./instagram.md) | 인스타그램 실측 분석 (**@keek_kr** — 팔로워·게시물별 좋아요·참여율·발행 패턴) |
 | [`core-features.md`](./core-features.md) | **핵심 기능 정리 — 제품 기능 + 계정 기능 2축 + 콘텐츠 앵글 12개** |
 | [`knowledge.json`](./knowledge.json) | 기계 판독용 요약 (콘텐츠 생성 파이프라인 투입용) |
-| [`data-access-guide.md`](./data-access-guide.md) | **데이터 확인 가이드** — 연결된 API로 끌어오는 법 + API 없이 브라우저로 확인하는 법 |
+| [`data-access-guide.md`](./data-access-guide.md) | 데이터 확인 가이드 — 연결된 API로 끌어오는 법 + API 없이 브라우저로 확인하는 법 |
+| [`access-setup.md`](./access-setup.md) | ⭐ **접근 권한 설정 가이드 (3분)** — 자사몰·인스타를 직접 볼 수 있게 만드는 설정. 콘텐츠 작업 전 먼저 볼 것 |
 
 ## 수집 경로
 
