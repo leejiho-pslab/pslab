@@ -233,7 +233,8 @@ for (const [itemId, cfg] of Object.entries(spec.reels || {})) {
   if (only && only !== itemId) continue;
   const item = plan.items.find((i) => i.id === itemId);
   if (!item) { console.log(`  ${itemId}: plan에 없음 → 건너뜀`); continue; }
-  const beats = (cfg.beats || []).filter((b) => b.clip);
+  // 아직 클립이 준비되지 않은 비트는 건너뛴다 (부분 완성 상태에서도 나머지로 합성)
+  const beats = (cfg.beats || []).filter((b) => /^https?:\/\//.test(b.clip ?? ''));
   if (beats.length < 2) { console.log(`  ${itemId}: 장면 클립 부족(${beats.length}) → 건너뜀`); continue; }
 
   const dir = join(ROOT, 'docs/shorts', itemId);
@@ -272,7 +273,19 @@ for (const [itemId, cfg] of Object.entries(spec.reels || {})) {
   console.log(`  ✓ ${itemId}: ${beats.length}씬 · ${total}s → ${itemId}.mp4`);
 }
 
-if (made > 0) {
+// ── 영상 재사용: videoFrom 이 가리키는 항목의 영상을 그대로 쓴다 ──
+// (같은 콘텐츠를 인스타 릴스와 유튜브 쇼츠에 동시 발행할 때 중복 합성을 피한다)
+let linked = 0;
+for (const it of plan.items) {
+  if (!it.videoFrom) continue;
+  const src = plan.items.find((x) => x.id === it.videoFrom);
+  if (!src?.videoFile) { console.log(`  ${it.id}: 원본(${it.videoFrom}) 영상 없음 → 대기`); continue; }
+  if (it.videoFile !== src.videoFile) { it.videoFile = src.videoFile; linked++; }
+  if (src.videoSeconds) it.videoSeconds = src.videoSeconds;
+}
+if (linked > 0) console.log(`  영상 재사용 연결: ${linked}건`);
+
+if (made > 0 || linked > 0) {
   plan.updatedAt = new Date().toISOString();
   writeFileSync(planPath, JSON.stringify(plan, null, 2) + '\n');
 }

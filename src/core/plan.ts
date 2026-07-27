@@ -78,6 +78,10 @@ export interface PlanItem {
   videoFile?: string;
   /** 인스타 릴스: 영상 대본([HOOK]/[본론]/[CTA]) — captionBody(발행 캡션)와 분리 */
   reelsScript?: string;
+  /** 다른 항목의 영상을 그대로 재사용 (같은 콘텐츠를 릴스·쇼츠 양쪽에 발행할 때) */
+  videoFrom?: string;
+  /** 합성된 영상 길이(초) */
+  videoSeconds?: number;
   /** 유튜브 업로드용 SEO 제목 */
   ytTitle?: string;
   /** 유튜브 업로드용 설명(멘션) — 키워드 기반 SEO */

@@ -32,10 +32,10 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
-      # ⏸ 자동발행 홀드 (2026-07-10 운영자 요청) — 실제 발행 없이 시뮬레이션만.
-      # 대시보드·성과수집·렌더는 계속 동작. 재개하려면 이 값을 원래대로
-      # "vars.PSLAB_DRY_RUN || 'true'" 표현식으로 되돌리면 된다 (git log 참고).
-      PSLAB_DRY_RUN: 'true'
+      # ▶ 자동발행 재개 (2026-07-27 운영자 요청) — 예정 시각이 지난 승인 항목을 실제 발행.
+      # 다시 멈추려면 저장소 Variables 에 PSLAB_DRY_RUN=true 를 추가하면 된다
+      # (코드 수정 없이 홀드 가능. 변수가 없으면 실제 발행).
+      PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'false' }}
       PSLAB_LOG_LEVEL: info
       # --- AI 글 생성 ---
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

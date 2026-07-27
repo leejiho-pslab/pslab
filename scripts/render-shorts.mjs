@@ -112,8 +112,18 @@ body{background:transparent}
 const chromium = findChromium();
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
-// 유튜브 쇼츠 전용. 인스타 릴스 자막은 build-reels.mjs가 씬별로 직접 렌더한다
-const items = plan.items.filter((i) => i.channels[0] === 'youtube');
+// 유튜브 쇼츠 전용. 단, 멀티씬 합성기(build-reels.mjs)가 맡는 항목은 제외한다
+//  - reel-scenes.json 에 대본이 있는 항목 (씬별로 직접 렌더)
+//  - videoFrom 으로 다른 항목의 영상을 재사용하는 항목
+function multiSceneIds() {
+  const f = join(ROOT, 'data/clients', clientId, 'reel-scenes.json');
+  if (!existsSync(f)) return new Set();
+  try { return new Set(Object.keys(JSON.parse(readFileSync(f, 'utf8')).reels ?? {})); } catch { return new Set(); }
+}
+const msIds = multiSceneIds();
+const items = plan.items.filter(
+  (i) => i.channels[0] === 'youtube' && !i.videoFrom && !msIds.has(i.id),
+);
 if (!chromium) { console.log('Chromium 없음 → 쇼츠 슬라이드 렌더 건너뜀'); process.exit(0); }
 
 function shoot(html, outPng, transparent) {

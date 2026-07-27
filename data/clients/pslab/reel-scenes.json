@@ -70,6 +70,39 @@
           "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_004146_51121e64-6263-4cb2-8d1b-8fe78296381b.mp4"
         }
       ]
+    },
+    "youtube-07-29": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "ALWAYS ON",
+          "text": "오늘도 SNS,\n못 올리셨죠?",
+          "accent": "못 올리셨죠?",
+          "scene": "바쁜 꽃집 사장님, 엎어둔 폰",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034212_e2cde09b-85de-4d01-9d67-fb4ffab8cd42.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "괜찮습니다\n안 올려도 올라갑니다",
+          "accent": "안 올려도 올라갑니다",
+          "scene": "아무도 없는 카운터, 혼자 켜져 도는 폰",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034443_4bd2487e-fbf4-4810-9091-d317cbd6a385.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "조사·제작·발행까지\n매일 자동으로",
+          "accent": "매일 자동으로",
+          "scene": "4단계를 흐르는 빛의 리본",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034452_0055c17f-55df-477e-b723-542dbe5a270d.mp4"
+        },
+        {
+          "kicker": "P.S.LAB",
+          "text": "프로필 링크에서\n소개서를 받아보세요",
+          "accent": "소개서",
+          "scene": "창가에서 커피 마시며 미소짓는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_035405_9ca60faf-dd8a-4923-a698-ed323804a311.mp4"
+        }
+      ]
     }
   }
 }
