@@ -1,13 +1,13 @@
 {
-  "generatedAt": "2026-07-27T12:32:12.366Z",
+  "generatedAt": "2026-07-27T12:43:28.761Z",
   "sampleSize": 18,
   "variants": [
     {
       "key": "A",
       "posts": 7,
-      "avgEngagement": 0.33977337442185995,
+      "avgEngagement": 0.2683448029932885,
       "avgLikes": 157.85714285714286,
-      "avgViews": 3837.5714285714284
+      "avgViews": 3837.8571428571427
     },
     {
       "key": "B",
@@ -28,9 +28,9 @@
     {
       "key": "instagram",
       "posts": 7,
-      "avgEngagement": 0.5595238095238095,
+      "avgEngagement": 0.4880952380952381,
       "avgLikes": 1.4285714285714286,
-      "avgViews": 2.7142857142857144
+      "avgViews": 3
     },
     {
       "key": "youtube",
@@ -58,9 +58,9 @@
     {
       "key": "21:00",
       "posts": 9,
-      "avgEngagement": 0.37433591342120864,
+      "avgEngagement": 0.3187803578656531,
       "avgLikes": 235.11111111111111,
-      "avgViews": 4696.777777777777
+      "avgViews": 4697
     },
     {
       "key": "19:00",
@@ -86,18 +86,18 @@
   ],
   "motifs": [
     {
-      "key": "lock",
-      "posts": 5,
-      "avgEngagement": 0.4,
-      "avgLikes": 0.8,
-      "avgViews": 4.2
-    },
-    {
       "key": "rocket",
       "posts": 2,
       "avgEngagement": 0.3333333333333333,
       "avgLikes": 1,
       "avgViews": 37
+    },
+    {
+      "key": "lock",
+      "posts": 5,
+      "avgEngagement": 0.3,
+      "avgLikes": 0.8,
+      "avgViews": 4.6
     },
     {
       "key": "branch",
@@ -124,8 +124,8 @@
   "bestVariant": "A",
   "bestHour": "21:00",
   "hints": [
-    "디자인 A안이 평균 참여율 34.0%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "디자인 A안이 평균 참여율 26.8%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
     "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
-    "'lock' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
+    "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
