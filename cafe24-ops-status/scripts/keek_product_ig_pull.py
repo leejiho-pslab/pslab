@@ -320,10 +320,23 @@ def dump_cafe24(data: dict) -> None:
         if desc:
             plain = re.sub(r"<[^>]+>", " ", desc)
             plain = re.sub(r"\s+", " ", plain).strip()
-            print(f"   description(태그제거 {len(plain)}자): {plain[:2500]}")
-        for label in ("options", "variants", "inventory", "categories"):
+            print(f"   description(태그제거 {len(plain)}자):")
+            for i in range(0, min(len(plain), 6000), 200):
+                print(f"      {plain[i:i + 200]}")
+        for label in ("options", "inventory", "categories"):
             v = entry.get(label)
             print(f"   [{label}] {json.dumps(v, ensure_ascii=False)[:2500]}")
+        # variants 는 컬러×사이즈 전수라 잘리면 쓸모없다 → 표로 전량 출력
+        vs = ((entry.get("variants") or {}).get("variants")
+              if isinstance(entry.get("variants"), dict) else None)
+        if vs is None:
+            print(f"   [variants] {json.dumps(entry.get('variants'), ensure_ascii=False)[:800]}")
+        else:
+            print(f"   [variants] {len(vs)}건 — 변형코드 | 옵션 | 자체코드 | 진열 | 판매 | 재고")
+            for v in vs:
+                opt = " / ".join(f"{o.get('name')}={o.get('value')}" for o in (v.get("options") or []))
+                print(f"      {v.get('variant_code')} | {opt} | {v.get('custom_variant_code')} | "
+                      f"{v.get('display')} | {v.get('selling')} | {v.get('quantity')}")
 
 
 def dump_instagram(data: dict) -> None:
