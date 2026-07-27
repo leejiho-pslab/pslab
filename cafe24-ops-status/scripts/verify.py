@@ -175,6 +175,8 @@ def check_db(store: Store, start: _date, end: _date) -> int:
 
     # 5) 광고 채널 성과(최근 7일) — ROAS/전환매출 건강도 추적 -----------
     _ads_report(store, end)
+    # 6) 일자별 요약 — 특정 날짜가 튀는지 눈으로 확인(재수집 검증) --------
+    _daily_table(store, end)
     return 0
 
 
@@ -197,6 +199,36 @@ def _etc_share(store: Store, start: _date, end: _date) -> None:
     print(f"  카테고리 '기타' 비중 : {share:.1f}%  ({etc:,.0f} / {total:,.0f}원){flag}")
     top = sorted(by_cat.items(), key=lambda kv: -kv[1])[:5]
     print("  상위 카테고리: " + ", ".join(f"{c} {v/total*100:.0f}%" for c, v in top))
+
+
+def _daily_table(store: Store, end: _date, days: int = 10) -> None:
+    """최근 N일 일자별 요약 — "특정 날짜 값이 이상하다" 확인·재수집 검증용.
+
+    합계만으로는 어느 날이 튀는지 알 수 없어, 매출/주문/객단가/방문자/광고비/ROAS를
+    날짜별 한 줄로 보여준다.
+    """
+    dfrom = (end - timedelta(days=days - 1)).isoformat()
+    dto = end.isoformat()
+
+    kpi: dict[str, dict] = {}
+    for r in store.get_daily(dfrom, dto):
+        kpi.setdefault(r["date"], {})[r["metric"]] = r["value"]
+    ads: dict[str, dict] = {}
+    for r in store.get_facts(dfrom, dto, source="ads"):
+        m = ads.setdefault(r["date"], {})
+        m[r["metric"]] = m.get(r["metric"], 0.0) + float(r["value"])
+
+    print(f"\n[6] 일자별 요약 (최근 {days}일)")
+    print(f"  {'날짜':<11}{'매출':>12}{'주문':>6}{'객단가':>10}"
+          f"{'방문자':>8}{'광고비':>11}{'광고매출':>12}{'ROAS':>7}")
+    for d in [dd.isoformat() for dd in _daterange(_date.fromisoformat(dfrom), end)]:
+        k, a = kpi.get(d, {}), ads.get(d, {})
+        gross, orders = k.get("gross_sales"), k.get("order_count")
+        cost, asales = a.get("ad_cost", 0.0), a.get("ad_sales", 0.0)
+        roas = f"{asales / cost:.2f}" if cost else "—"
+        n = lambda v, unit="": "—" if v is None else f"{v:,.0f}{unit}"  # noqa: E731
+        print(f"  {d:<11}{n(gross):>12}{n(orders):>6}{n(k.get('aov')):>10}"
+              f"{n(k.get('visitors')):>8}{n(cost):>11}{n(asales):>12}{roas:>7}")
 
 
 def _ads_report(store: Store, end: _date) -> None:
