@@ -53,6 +53,11 @@ from cafe24_ops.etl.creative_metrics import (  # noqa: E402
 )
 from cafe24_ops.etl.ga4_site import (  # noqa: E402
     channel_breakdown,
+    entry_paths,
+    exit_pages,
+    funnel_by_channel,
+    prev_period,
+    purchase_funnel,
     site_summary,
     site_trend,
     source_medium_breakdown,
@@ -473,13 +478,15 @@ def ga4_channels_ep(
     cmp_from: str | None = Query(default=None),
     cmp_to: str | None = Query(default=None),
 ) -> dict:
-    """GA4 매체별 유입·전환 — 채널 합산(channels)과 원본 source/medium(rows) 둘 다."""
+    """GA4 매체별 유입·전환 — 채널 합산(channels)과 원본 source/medium(rows) 둘 다.
+    비교기간 미지정 시 직전 동일 길이 기간을 자동으로 쓴다."""
+    cf, ct = (cmp_from, cmp_to) if (cmp_from and cmp_to) else prev_period(date_from, date_to)
     store = _store()
     try:
         return {
-            "from": date_from, "to": date_to,
-            "channels": channel_breakdown(store, date_from, date_to, cmp_from, cmp_to),
-            "rows": source_medium_breakdown(store, date_from, date_to, cmp_from, cmp_to),
+            "from": date_from, "to": date_to, "cmp_from": cf, "cmp_to": ct,
+            "channels": channel_breakdown(store, date_from, date_to, cf, ct),
+            "rows": source_medium_breakdown(store, date_from, date_to, cf, ct),
         }
     finally:
         store.close()
@@ -496,6 +503,37 @@ def ga4_pages_ep(
     try:
         return {"from": date_from, "to": date_to,
                 "rows": top_pages(store, date_from, date_to, limit)}
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/journey")
+def ga4_journey_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    cmp_from: str | None = Query(default=None),
+    cmp_to: str | None = Query(default=None),
+    channel: str | None = Query(default=None),
+) -> dict:
+    """GA4 유입·이탈·구매 경로 한 번에.
+
+    - entry_paths : 어떤 광고가 어느 페이지로 보내는지(유입 경로 시작점)
+    - exit_pages  : 어느 페이지에서 이탈이 늘고 있는지(직전 기간 대비 %p)
+    - funnel      : 구매까지 단계별 통과율/병목
+    - funnel_channels : 채널별 시작→결제완료 전환율 비교
+    비교기간을 안 주면 직전 동일 길이 기간을 자동으로 쓴다.
+    """
+    cf, ct = (cmp_from, cmp_to) if (cmp_from and cmp_to) else prev_period(date_from, date_to)
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to, "cmp_from": cf, "cmp_to": ct,
+            "channel": channel,
+            "entry_paths": entry_paths(store, date_from, date_to),
+            "exit_pages": exit_pages(store, date_from, date_to, cf, ct),
+            "funnel": purchase_funnel(store, date_from, date_to, channel),
+            "funnel_channels": funnel_by_channel(store, date_from, date_to),
+        }
     finally:
         store.close()
 

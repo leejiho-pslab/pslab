@@ -66,7 +66,17 @@
   - 프론트: `MonthlyReportPage.tsx` 신설 + `App.tsx`에 5번째 탭("월간 리포트", 이 탭에서는 BriefingBanner 숨김) + `styles.css`에 `.mr-*` 블록(keek 의 `--blue` 액센트 사용, dbrick 원본은 브라운 계열).
   - 테스트 5종 추가(월 헬퍼, 구조, CPC 방향, 폴백, docx 바이트), 전체 114개 통과, 빌드 통과, 로컬 mock 데이터로 두 엔드포인트 실제 호출 검증 완료.
   - **다음 세션 확인 필요**: 라이브 배포 후 `keek-api-smoke.yml`로 `/api/report/monthly`·`/api/report/monthly.docx` 200 확인 + 실제 다운로드된 .docx 파일이 한글 폰트(맑은 고딕)로 깨짐 없이 열리는지 육안 확인(Render 서버에 한글 폰트가 없어도 Word 자체에 폰트명만 지정하는 방식이라 문제 없어야 하지만 미검증).
-- 테스트 114개 통과
+- **GA4 유입·구매 경로 탭 추가(2026-07-29)** — 사용자가 요청한 4가지(트래픽 이동경로 / 이탈 페이지 / 구매 경로 / 광고 유입 채널 변화)를 대시보드에 시각화. 2단계로 나눠 진행.
+  - **1단계(수집·집계 기반)**: `clients/ga4.py` 에 파서·조회 메서드, `collectors/ga4_site.py`(`source="ga4_site"`) 신설. 한 수집기가 6개 소스로 나눠 적재 — `ga4_site`(방문자/세션/페이지뷰/체류시간/신규·재방문), `ga4_channel`(sessionSourceMedium 별 세션/사용자/전환), `ga4_page`(pageTitle 별 조회수), `ga4_landing`(landingPage 별 세션/이탈률/참여율), `ga4_entry`(landingPage×매체 세션), `ga4_funnel`(퍼널 이벤트×매체 건수).
+  - **전환 정의 주의**: keek GA4 는 13개 이벤트 중 12개가 "키 이벤트"로 표시돼 있어 `keyEvents` 지표를 쓰면 전환이 크게 부풀려진다. 그래서 `eventName == 결제완료`(`GA4_CONVERSION_EVENT` 로 변경 가능) EXACT 필터로만 센다.
+  - **라이브 probe 로 확인한 API 한계**(`scripts/ga4_diag.py` 의 "심화 분석 probe" 섹션에 상시 내장): `landingPage`, `bounceRate`, `engagementRate`, `eventName×sessionSourceMedium`, `sessionDefaultChannelGroup`, `sessionCampaignName` 는 **지원**. UA 의 **종료수(`exits`) 지표는 존재하지 않음**(HTTP 400 "Field exits is not a valid metric") → 이탈 페이지는 **이탈률(bounceRate)** 로 대체. 또한 개인별 **A→B→C 이동 순서**는 Data API 로 못 받는다(BigQuery export 필요) → **유입 출발점(랜딩페이지×광고채널)** + **단계별 이벤트 감소(퍼널)** 조합으로 대체.
+  - **2단계(집계·API·화면)**: `etl/ga4_site.py` 에 `exit_pages`(세션 가중 이탈률 + 직전 동일 기간 대비 **%p** 변화, 세션 30 미만 제외 — 소량 트래픽 페이지의 이탈률 요동으로 인한 오독 방지), `entry_paths`(채널→착지 페이지 상위 N + 점유율), `purchase_funnel`(단계별 건수/직전단계 통과율/전체 대비/병목 자동 지목), `funnel_by_channel`(채널별 시작→결제완료 전환율 비교), `prev_period`(직전 동일 길이 기간) 추가.
+  - API: `/api/ga4/site`, `/api/ga4/channels`, `/api/ga4/pages`, `/api/ga4/journey`(4가지 분석을 한 번에 — 프론트 왕복 축소). `channels`·`journey` 는 비교기간 미지정 시 직전 동일 길이 기간을 자동 적용. `keek-api-smoke.yml` 에 4개 모두 추가.
+  - 프론트: `Ga4Page.tsx` 신설 + `App.tsx` 4번째 탭("유입·구매 경로(GA4)"). 요약 KPI → 일자별 추이 → ①채널별 세션·전환(매체 원본 펼치기, 증감) → ②채널별 첫 착지 페이지 → ③퍼널(병목 단계 주황 강조 + 채널 필터) → ④이탈률 상승 페이지(%p, +5%p 초과는 행 강조) → 많이 본 페이지. `styles.css` 에 `.funnel-*`, `.entry-*`, `.linkish`, `.sub-row`, `.warn-row` 추가.
+  - mock 데이터는 keek 의 **실제 source/medium 문자열**(`criteo / display`, `sns / meta`, `naver / gfa`, `KK_powerlink_MO / powerlink`, `KK_BS_MO / bs` 등)을 그대로 써서 채널 매핑·라벨까지 mock 에서 검증된다.
+  - 테스트: `test_ga4_site.py` 19개(파서/매핑/집계/퍼널/이탈/유입경로/비교기간), `test_api_ga4.py` 4개(엔드포인트 계약).
+  - **미해결 갭**: criteo(트래픽 약 42%) / 네이버 GFA(14%) / 네이버 브랜드검색(3%) 은 GA4 유입은 잡히지만 **광고비 소스가 대시보드에 없다** → 현재 ROAS 는 과대 계상 상태. 광고비 연동 전까지는 GA4 세션/전환만 신뢰할 것.
+- 테스트 137개 통과
 
 ## 5. 남은 일 / 알려진 갭
 

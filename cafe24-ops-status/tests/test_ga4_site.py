@@ -10,6 +10,11 @@ from cafe24_ops.config import load_config
 from cafe24_ops.etl.ga4_site import (
     channel_breakdown,
     classify_source_medium,
+    entry_paths,
+    exit_pages,
+    funnel_by_channel,
+    prev_period,
+    purchase_funnel,
     site_summary,
     site_trend,
     source_medium_breakdown,
@@ -160,5 +165,94 @@ def test_top_pages_limit(tmp_path):
         rows = top_pages(store, "2026-07-20", "2026-07-22", limit=3)
         assert len(rows) == 3
         assert rows == sorted(rows, key=lambda x: -x["views"])
+    finally:
+        store.close()
+
+
+# ── 비교기간 ──────────────────────────────────────────────────
+def test_prev_period_is_same_length_and_adjacent():
+    assert prev_period("2026-07-20", "2026-07-26") == ("2026-07-13", "2026-07-19")
+    assert prev_period("2026-07-20", "2026-07-20") == ("2026-07-19", "2026-07-19")
+
+
+# ── 이탈 페이지 ────────────────────────────────────────────────
+_WEEK = tuple(f"2026-07-{d:02d}" for d in range(14, 27))  # 07-14 ~ 07-26
+
+
+def _seeded_two_periods(tmp_path):
+    return _seeded(tmp_path, days=_WEEK)
+
+
+def test_exit_pages_ranks_worsening_first_and_reports_delta(tmp_path):
+    store = _seeded_two_periods(tmp_path)
+    try:
+        rows = exit_pages(store, "2026-07-21", "2026-07-26", "2026-07-14", "2026-07-20")
+        assert rows, "랜딩페이지 데이터가 있어야 한다"
+        assert all(r["sessions"] >= 30 for r in rows)      # 세션 적은 페이지는 제외
+        assert all(0 <= r["bounce_rate"] <= 100 for r in rows)
+        deltas = [r["bounce_delta"] for r in rows if r["bounce_delta"] is not None]
+        assert deltas == sorted(deltas, reverse=True)      # 악화(증가)한 페이지가 위로
+    finally:
+        store.close()
+
+
+def test_exit_pages_without_comparison_leaves_delta_none(tmp_path):
+    store = _seeded(tmp_path)
+    try:
+        rows = exit_pages(store, "2026-07-20", "2026-07-22")
+        assert rows and all(r["bounce_delta"] is None for r in rows)
+        assert all(r["prev_bounce_rate"] is None for r in rows)
+    finally:
+        store.close()
+
+
+# ── 유입 경로 ──────────────────────────────────────────────────
+def test_entry_paths_groups_by_channel_with_page_shares(tmp_path):
+    store = _seeded(tmp_path)
+    try:
+        rows = entry_paths(store, "2026-07-20", "2026-07-22", limit_per_channel=2)
+        assert rows and rows == sorted(rows, key=lambda x: -x["sessions"])
+        top = rows[0]
+        assert len(top["pages"]) <= 2
+        assert top["pages"] == sorted(top["pages"], key=lambda p: -p["sessions"])
+        assert 0 < top["pages"][0]["share"] <= 100
+        assert any(r["is_ad"] for r in rows)   # 광고 채널이 구분돼야 한다
+    finally:
+        store.close()
+
+
+# ── 구매 퍼널 ──────────────────────────────────────────────────
+def test_purchase_funnel_steps_decrease_and_report_rates(tmp_path):
+    store = _seeded(tmp_path)
+    try:
+        f = purchase_funnel(store, "2026-07-20", "2026-07-22")
+        counts = [s["count"] for s in f["steps"]]
+        assert counts == sorted(counts, reverse=True)      # mock 은 단계마다 줄어든다
+        assert f["steps"][0]["step_rate"] is None          # 첫 단계는 직전이 없음
+        assert f["steps"][0]["overall_rate"] == 100.0
+        assert all(s["step_rate"] <= 100 for s in f["steps"][1:])
+        assert f["bottleneck"]                             # 병목 단계가 지목돼야 한다
+    finally:
+        store.close()
+
+
+def test_purchase_funnel_channel_filter_is_subset_of_total(tmp_path):
+    store = _seeded(tmp_path)
+    try:
+        total = purchase_funnel(store, "2026-07-20", "2026-07-22")
+        meta = purchase_funnel(store, "2026-07-20", "2026-07-22", channel="meta")
+        assert meta["channel"] == "meta"
+        assert 0 < meta["steps"][0]["count"] < total["steps"][0]["count"]
+    finally:
+        store.close()
+
+
+def test_funnel_by_channel_compares_cvr_per_channel(tmp_path):
+    store = _seeded(tmp_path)
+    try:
+        rows = funnel_by_channel(store, "2026-07-20", "2026-07-22")
+        assert rows and rows == sorted(rows, key=lambda x: -x["start"])
+        assert all(r["purchases"] <= r["start"] for r in rows)
+        assert all(r["label"] for r in rows)
     finally:
         store.close()

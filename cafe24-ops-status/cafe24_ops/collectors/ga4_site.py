@@ -5,6 +5,9 @@
   - source='ga4_site'    : 사이트 요약 스칼라(방문자/세션/페이지뷰/체류시간/신규/재방문)
   - source='ga4_channel' : sessionSourceMedium 별 세션/사용자/전환 (dims.source_medium)
   - source='ga4_page'    : pageTitle 별 조회수 상위 (dims.page)
+  - source='ga4_landing' : landingPage 별 세션/이탈률/참여율 (dims.page) — 이탈 추적
+  - source='ga4_entry'   : (landingPage × 매체) 세션 (dims.page, dims.source_medium) — 유입 경로
+  - source='ga4_funnel'  : (퍼널 이벤트 × 매체) 건수 (dims.event, dims.source_medium) — 구매 경로
 
 전환은 GA4 keyEvents 지표가 아니라 결제완료 이벤트만 센다(clients/ga4.py CONVERSION_EVENT).
 활성화: GA4_PROPERTY_ID + GOOGLE_APPLICATION_CREDENTIALS_JSON.
@@ -28,6 +31,9 @@ _MOCK_PAGES = [
     "keek Pillowdy UV Light Windbreaker V3", "keek | 공식 온라인 스토어",
     "OUTER | keek", "keek Pillowdy Logo Hoodie V3", "장바구니 | keek", "BEST | keek",
 ]
+# 랜딩페이지는 경로(path) 형태 — GA4 landingPage 실제 값 형태와 동일하게
+_MOCK_LANDING = ["/product/detail.html", "/main.html", "/product/list.html",
+                 "/board/review", "/order/basket.html"]
 
 
 def _rng(date: str, salt: str) -> random.Random:
@@ -71,6 +77,30 @@ class Ga4SiteCollector(BaseCollector):
         for pg in _MOCK_PAGES:
             records.append({"date": date, "source": "ga4_page", "metric": "views",
                             "value": float(r.randint(50, 1300)), "dims": {"page": pg}})
+        # 랜딩페이지별 세션/이탈률/참여율
+        for lp in _MOCK_LANDING:
+            bounce = round(r.uniform(35, 85), 2)
+            for metric, val in (("sessions", float(r.randint(80, 900))),
+                                ("bounce_rate", bounce),
+                                ("engagement_rate", round(100 - bounce, 2))):
+                records.append({"date": date, "source": "ga4_landing", "metric": metric,
+                                "value": val, "dims": {"page": lp}})
+        # 유입 경로(랜딩페이지 × 매체)
+        for sm in _MOCK_SOURCE_MEDIUM[:5]:
+            for lp in _MOCK_LANDING[:3]:
+                records.append({"date": date, "source": "ga4_entry", "metric": "sessions",
+                                "value": float(r.randint(10, 600)),
+                                "dims": {"page": lp, "source_medium": sm}})
+        # 구매 퍼널(이벤트 × 매체) — 단계가 내려갈수록 줄어들게
+        from ..clients.ga4 import FUNNEL_STEPS
+
+        for sm in _MOCK_SOURCE_MEDIUM[:5]:
+            remain = float(r.randint(800, 4000))
+            for event, _ in FUNNEL_STEPS:
+                records.append({"date": date, "source": "ga4_funnel", "metric": "count",
+                                "value": round(remain),
+                                "dims": {"event": event, "source_medium": sm}})
+                remain = max(0.0, remain * r.uniform(0.25, 0.75))
         return records
 
     def collect_live(self, date: str) -> list[dict]:
@@ -98,6 +128,24 @@ class Ga4SiteCollector(BaseCollector):
             for row in (client.daily_top_pages(date) or []):
                 records.append({"date": date, "source": "ga4_page", "metric": "views",
                                 "value": float(row.get("views", 0)), "dims": {"page": row["page"]}})
+
+            # 랜딩페이지별 이탈률/참여율 — 어느 페이지에서 새는지
+            for row in (client.daily_landing_pages(date) or []):
+                for metric in ("sessions", "bounce_rate", "engagement_rate"):
+                    records.append({"date": date, "source": "ga4_landing", "metric": metric,
+                                    "value": float(row.get(metric, 0)), "dims": {"page": row["page"]}})
+
+            # 유입 경로 — 어떤 광고가 어느 페이지로 보내는지
+            for row in (client.daily_landing_by_channel(date) or []):
+                records.append({"date": date, "source": "ga4_entry", "metric": "sessions",
+                                "value": float(row.get("sessions", 0)),
+                                "dims": {"page": row["page"], "source_medium": row["source_medium"]}})
+
+            # 구매 퍼널 — 채널별 단계 이탈
+            for row in (client.daily_funnel(date) or []):
+                records.append({"date": date, "source": "ga4_funnel", "metric": "count",
+                                "value": float(row.get("count", 0)),
+                                "dims": {"event": row["event"], "source_medium": row["source_medium"]}})
         finally:
             client.close()
         return records

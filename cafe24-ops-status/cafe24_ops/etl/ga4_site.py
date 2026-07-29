@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+from datetime import date as _date, timedelta
+
 # facts metric 키(site_ 접두어) → API/프론트 노출 키
 FACT_TO_API = {
     "site_visitors": "visitors",
@@ -48,6 +50,13 @@ UNMAPPED = ("etc", "기타")
 def classify_source_medium(source_medium: str) -> tuple[str, str]:
     """source/medium → (채널키, 라벨). 매핑에 없으면 ("etc", "기타")."""
     return SOURCE_MEDIUM_CHANNEL.get(source_medium, UNMAPPED)
+
+
+def prev_period(date_from: str, date_to: str) -> tuple[str, str]:
+    """직전 동일 길이 기간 — 7일 조회면 그 앞 7일. 변화(%p, %) 비교의 기본 기준."""
+    a, b = _date.fromisoformat(date_from), _date.fromisoformat(date_to)
+    span = (b - a).days + 1
+    return (a - timedelta(days=span)).isoformat(), (a - timedelta(days=1)).isoformat()
 
 
 def _by_date(store, date_from: str, date_to: str) -> dict[str, dict]:
@@ -128,6 +137,8 @@ def source_medium_breakdown(store, sel_from, sel_to, cmp_from=None, cmp_to=None)
             "label": label,
             "is_ad": channel in AD_CHANNELS,
             **_derive_rate(m),
+            # 채널 단위로 다시 합산할 수 있게 비교기간 원값도 함께 둔다
+            "prev_sessions": prev,
             "sessions_delta": round((sessions - prev) / prev * 100, 1) if prev else None,
         })
     return sorted(rows, key=lambda x: -x["sessions"])
@@ -139,16 +150,22 @@ def channel_breakdown(store, sel_from, sel_to, cmp_from=None, cmp_to=None) -> li
     for row in source_medium_breakdown(store, sel_from, sel_to, cmp_from, cmp_to):
         e = agg.setdefault(row["channel"], {
             "channel": row["channel"], "label": row["label"], "is_ad": row["is_ad"],
-            "sessions": 0.0, "users": 0.0, "conversions": 0.0, "source_mediums": [],
+            "sessions": 0.0, "users": 0.0, "conversions": 0.0, "prev_sessions": 0.0,
+            "source_mediums": [],
         })
         e["sessions"] += row["sessions"]
         e["users"] += row["users"]
         e["conversions"] += row["conversions"]
+        e["prev_sessions"] += row["prev_sessions"] or 0.0
         e["source_mediums"].append(row["source_medium"])
     out = []
     for e in agg.values():
-        sessions, conv = e["sessions"], e["conversions"]
-        out.append({**e, "cvr": round(conv / sessions * 100, 2) if sessions else None})
+        sessions, conv, prev = e["sessions"], e["conversions"], e["prev_sessions"]
+        out.append({
+            **e,
+            "cvr": round(conv / sessions * 100, 2) if sessions else None,
+            "sessions_delta": round((sessions - prev) / prev * 100, 1) if prev else None,
+        })
     return sorted(out, key=lambda x: -x["sessions"])
 
 
@@ -157,3 +174,153 @@ def top_pages(store, date_from: str, date_to: str, limit: int = 10) -> list[dict
     agg = _sum_by_dim(store, date_from, date_to, "ga4_page", "page")
     rows = [{"page": p, "views": m.get("views", 0.0)} for p, m in agg.items()]
     return sorted(rows, key=lambda x: -x["views"])[:limit]
+
+
+# ── 이탈 페이지 (랜딩페이지 이탈률 + 기간 대비 변화) ───────────────
+def _landing_rates(store, date_from, date_to) -> dict[str, dict]:
+    """랜딩페이지별 세션 가중 이탈률/참여율. 이탈률은 세션수로 가중평균해야
+    (단순 평균은 세션 적은 날이 과대 반영) 기간 값이 실제와 맞는다."""
+    acc: dict[str, dict] = {}
+    for r in store.get_facts(date_from, date_to, source="ga4_landing"):
+        page = (r.get("dims") or {}).get("page")
+        if not page:
+            continue
+        acc.setdefault(page, {}).setdefault(r["date"], {})[r["metric"]] = float(r["value"])
+    out: dict[str, dict] = {}
+    for page, by_date in acc.items():
+        sessions = sum(m.get("sessions", 0.0) for m in by_date.values())
+        wb = sum(m.get("bounce_rate", 0.0) * m.get("sessions", 0.0) for m in by_date.values())
+        we = sum(m.get("engagement_rate", 0.0) * m.get("sessions", 0.0) for m in by_date.values())
+        out[page] = {
+            "sessions": sessions,
+            "bounce_rate": round(wb / sessions, 2) if sessions else None,
+            "engagement_rate": round(we / sessions, 2) if sessions else None,
+        }
+    return out
+
+
+def exit_pages(store, sel_from, sel_to, cmp_from=None, cmp_to=None,
+               limit: int = 15, min_sessions: float = 30) -> list[dict]:
+    """이탈이 심한 랜딩페이지 + 비교기간 대비 이탈률 변화(%p).
+
+    GA4 Data API 에는 UA 의 종료수(exits) 지표가 없어(400) 이탈률(bounceRate)로 본다.
+    세션이 너무 적은 페이지는 이탈률이 요동쳐 오해를 부르므로 min_sessions 미만은 제외.
+    """
+    sel = _landing_rates(store, sel_from, sel_to)
+    cmp = _landing_rates(store, cmp_from, cmp_to) if cmp_from and cmp_to else {}
+    rows = []
+    for page, m in sel.items():
+        if m["sessions"] < min_sessions:
+            continue
+        prev = (cmp.get(page) or {}).get("bounce_rate")
+        cur = m["bounce_rate"]
+        rows.append({
+            "page": page,
+            "sessions": m["sessions"],
+            "bounce_rate": cur,
+            "engagement_rate": m["engagement_rate"],
+            "prev_bounce_rate": prev,
+            # %p 변화 — 양수면 이탈이 늘어난 것(나빠짐)
+            "bounce_delta": round(cur - prev, 2) if (cur is not None and prev is not None) else None,
+        })
+    # 이탈이 늘어난 순 → 그다음 이탈률 높은 순 (악화 신호를 위로)
+    return sorted(rows, key=lambda x: (-(x["bounce_delta"] or -999), -(x["bounce_rate"] or 0)))[:limit]
+
+
+# ── 유입 경로 (광고 → 랜딩페이지) ──────────────────────────────
+def entry_paths(store, date_from: str, date_to: str, limit_per_channel: int = 5) -> list[dict]:
+    """채널별로 "어느 페이지로 착지했는지" 상위 N — 광고→페이지 유입 경로."""
+    agg: dict[tuple, float] = {}
+    for r in store.get_facts(date_from, date_to, source="ga4_entry"):
+        d = r.get("dims") or {}
+        page, sm = d.get("page"), d.get("source_medium")
+        if not page or not sm:
+            continue
+        agg[(sm, page)] = agg.get((sm, page), 0.0) + float(r["value"])
+
+    by_channel: dict[str, dict] = {}
+    for (sm, page), sessions in agg.items():
+        channel, label = classify_source_medium(sm)
+        e = by_channel.setdefault(channel, {
+            "channel": channel, "label": label, "is_ad": channel in AD_CHANNELS,
+            "sessions": 0.0, "_pages": {},
+        })
+        e["sessions"] += sessions
+        e["_pages"][page] = e["_pages"].get(page, 0.0) + sessions
+
+    out = []
+    for e in by_channel.values():
+        pages = sorted(e.pop("_pages").items(), key=lambda x: -x[1])[:limit_per_channel]
+        total = e["sessions"] or 1.0
+        out.append({**e, "pages": [
+            {"page": p, "sessions": s, "share": round(s / total * 100, 1)} for p, s in pages
+        ]})
+    return sorted(out, key=lambda x: -x["sessions"])
+
+
+# ── 구매 퍼널 (채널별 단계 이탈) ───────────────────────────────
+def purchase_funnel(store, date_from: str, date_to: str, channel: str | None = None) -> dict:
+    """구매 경로 퍼널 — 단계별 건수 + 직전 단계 대비 통과율.
+
+    channel 을 주면 그 채널 유입만(예: meta), 없으면 전체.
+    GA4 Data API 는 실제 이동 순서(A→B→C)를 주지 않으므로 이벤트 건수의 단계별
+    감소로 "어디서 많이 빠지는지"를 본다 — 개별 사용자 경로 추적이 아님에 유의.
+    """
+    from ..clients.ga4 import FUNNEL_STEPS
+
+    counts: dict[str, float] = {}
+    for r in store.get_facts(date_from, date_to, source="ga4_funnel"):
+        d = r.get("dims") or {}
+        ev, sm = d.get("event"), d.get("source_medium")
+        if not ev or not sm:
+            continue
+        if channel and classify_source_medium(sm)[0] != channel:
+            continue
+        counts[ev] = counts.get(ev, 0.0) + float(r["value"])
+
+    steps, prev = [], None
+    first = counts.get(FUNNEL_STEPS[0][0], 0.0)
+    for event, label in FUNNEL_STEPS:
+        c = counts.get(event, 0.0)
+        steps.append({
+            "event": event, "label": label, "count": c,
+            # 직전 단계 대비 통과율 — 낮은 단계가 병목
+            "step_rate": round(c / prev * 100, 1) if prev else None,
+            # 첫 단계 대비 — 전체 퍼널에서의 위치
+            "overall_rate": round(c / first * 100, 2) if first else None,
+            "drop": round(prev - c) if prev is not None else None,
+        })
+        prev = c
+
+    # 병목 = 통과율이 가장 낮은 단계(첫 단계 제외)
+    candidates = [s for s in steps[1:] if s["step_rate"] is not None]
+    bottleneck = min(candidates, key=lambda s: s["step_rate"]) if candidates else None
+    return {"channel": channel, "steps": steps,
+            "bottleneck": bottleneck["label"] if bottleneck else None}
+
+
+def funnel_by_channel(store, date_from: str, date_to: str) -> list[dict]:
+    """채널별 퍼널 요약 — 시작(페이지조회) → 결제완료 전환율 비교."""
+    from ..clients.ga4 import FUNNEL_STEPS
+
+    channels: set[str] = set()
+    for r in store.get_facts(date_from, date_to, source="ga4_funnel"):
+        sm = (r.get("dims") or {}).get("source_medium")
+        if sm:
+            channels.add(classify_source_medium(sm)[0])
+
+    first_ev, last_ev = FUNNEL_STEPS[0][0], FUNNEL_STEPS[-1][0]
+    out = []
+    for ch in channels:
+        f = purchase_funnel(store, date_from, date_to, channel=ch)
+        by_ev = {s["event"]: s["count"] for s in f["steps"]}
+        start, end = by_ev.get(first_ev, 0.0), by_ev.get(last_ev, 0.0)
+        label = next((lbl for sm, (c, lbl) in SOURCE_MEDIUM_CHANNEL.items() if c == ch),
+                     UNMAPPED[1])
+        out.append({
+            "channel": ch, "label": label, "is_ad": ch in AD_CHANNELS,
+            "start": start, "purchases": end,
+            "cvr": round(end / start * 100, 3) if start else None,
+            "bottleneck": f["bottleneck"],
+        })
+    return sorted(out, key=lambda x: -x["start"])

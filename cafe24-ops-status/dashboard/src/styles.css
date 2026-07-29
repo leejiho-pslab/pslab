@@ -370,3 +370,36 @@ button { cursor: pointer; }
 .mr-strat-h { font-weight: 800; font-size: 14px; }
 .mr-strat-h::before { content: counter(mrs)". "; color: var(--blue); font-family: Georgia,serif; font-style: italic; }
 .mr-strat-b { font-size: 13px; color: var(--sub,#6b7280); margin-top: 5px; }
+
+/* ── GA4 유입·구매 경로 탭 ───────────────────────────────────── */
+.linkish {
+  background: none; border: none; color: var(--blue); font-size: 12.5px;
+  cursor: pointer; padding: 0; text-decoration: underline;
+}
+.grid-table tbody tr.sub-row td { color: var(--sub); font-size: 12px; background: #fbfdff; }
+.grid-table tbody tr.warn-row { background: #fff7ed; }
+
+/* 구매 퍼널 — 단계가 내려갈수록 바가 짧아진다 */
+.funnel { display: flex; flex-direction: column; gap: 8px; }
+.funnel-step { display: grid; grid-template-columns: 120px 1fr 170px; align-items: center; gap: 10px; }
+.funnel-label { font-size: 12.5px; color: var(--ink); }
+.funnel-track { background: #eef2f7; border-radius: 6px; height: 20px; }
+.funnel-fill { background: var(--blue); height: 20px; border-radius: 6px; min-width: 2px; }
+.funnel-val { text-align: right; font-size: 12px; color: var(--sub); }
+.funnel-val em { font-style: normal; color: var(--sub); }
+/* 병목 단계는 붉게 — 여기서 가장 많이 빠진다 */
+.funnel-step.neck .funnel-fill { background: #f97316; }
+.funnel-step.neck .funnel-label { font-weight: 700; color: #c2410c; }
+
+/* 유입 경로 카드 — 채널마다 착지 페이지 상위 N */
+.entry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.entry-card { background: #f8fafc; border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.entry-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 13.5px; }
+.entry-head .muted { margin-left: auto; font-size: 12px; }
+.entry-card .hbar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 900px) {
+  .entry-grid { grid-template-columns: 1fr; }
+  .funnel-step { grid-template-columns: 90px 1fr; }
+  .funnel-val { grid-column: 2; text-align: left; }
+}

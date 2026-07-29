@@ -342,3 +342,119 @@ export interface DigestResponse {
   alerts: DigestAlert[];
   commentary?: DigestCommentary;
 }
+
+// ── GA4 사이트 분석 ────────────────────────────────────────────
+export interface Ga4Summary {
+  visitors: number;
+  sessions: number;
+  page_views: number;
+  new_users: number;
+  returning_users: number;
+  avg_session_duration: number | null;
+  pages_per_session: number | null;
+  days: number;
+}
+export interface Ga4TrendRow {
+  date: string;
+  visitors: number | null;
+  sessions: number | null;
+  page_views: number | null;
+  avg_session_duration: number | null;
+  new_users: number | null;
+  returning_users: number | null;
+}
+export interface Ga4SiteResponse {
+  from: string;
+  to: string;
+  summary: Ga4Summary;
+  trend: Ga4TrendRow[];
+}
+export interface Ga4ChannelRow {
+  channel: string;
+  label: string;
+  is_ad: boolean;
+  sessions: number;
+  users: number;
+  conversions: number;
+  cvr: number | null;
+  prev_sessions: number;
+  sessions_delta: number | null;
+  source_mediums: string[];
+}
+export interface Ga4SourceMediumRow {
+  source_medium: string;
+  channel: string;
+  label: string;
+  is_ad: boolean;
+  sessions: number;
+  users: number;
+  conversions: number;
+  cvr: number | null;
+  prev_sessions: number | null;
+  sessions_delta: number | null;
+}
+export interface Ga4ChannelsResponse {
+  from: string;
+  to: string;
+  cmp_from: string;
+  cmp_to: string;
+  channels: Ga4ChannelRow[];
+  rows: Ga4SourceMediumRow[];
+}
+export interface Ga4PageRow {
+  page: string;
+  views: number;
+}
+export interface Ga4EntryPage {
+  page: string;
+  sessions: number;
+  share: number;
+}
+export interface Ga4EntryPath {
+  channel: string;
+  label: string;
+  is_ad: boolean;
+  sessions: number;
+  pages: Ga4EntryPage[];
+}
+export interface Ga4ExitPage {
+  page: string;
+  sessions: number;
+  bounce_rate: number | null;
+  engagement_rate: number | null;
+  prev_bounce_rate: number | null;
+  bounce_delta: number | null;
+}
+export interface Ga4FunnelStep {
+  event: string;
+  label: string;
+  count: number;
+  step_rate: number | null;
+  overall_rate: number | null;
+  drop: number | null;
+}
+export interface Ga4Funnel {
+  channel: string | null;
+  steps: Ga4FunnelStep[];
+  bottleneck: string | null;
+}
+export interface Ga4FunnelChannel {
+  channel: string;
+  label: string;
+  is_ad: boolean;
+  start: number;
+  purchases: number;
+  cvr: number | null;
+  bottleneck: string | null;
+}
+export interface Ga4JourneyResponse {
+  from: string;
+  to: string;
+  cmp_from: string;
+  cmp_to: string;
+  channel: string | null;
+  entry_paths: Ga4EntryPath[];
+  exit_pages: Ga4ExitPage[];
+  funnel: Ga4Funnel;
+  funnel_channels: Ga4FunnelChannel[];
+}
