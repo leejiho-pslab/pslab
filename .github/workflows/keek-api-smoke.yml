@@ -79,6 +79,17 @@ jobs:
               print(f"GA4 데이터 있는 날: {len(rows)}일  ({rows[0]['date']} ~ {rows[-1]['date']})")
               print(f"  첫날 세션 {rows[0]['sessions']:.0f} / 마지막날 세션 {rows[-1]['sessions']:.0f}")
           PY
+          curl -s --max-time 90 "$HOST/api/ga4/journey?from=$F&to=$B" -o /tmp/ga4j.json || true
+          python3 - <<'PY' || echo "(journey 응답 파싱 실패)"
+          import json
+          d = json.load(open("/tmp/ga4j.json"))
+          f = d.get("funnel") or {}
+          steps = [s for s in f.get("steps", []) if s.get("count")]
+          print(f"유입경로 채널 {len(d.get('entry_paths') or [])}개 / "
+                f"이탈페이지 {len(d.get('exit_pages') or [])}개 / "
+                f"퍼널단계 {len(steps)}개(병목: {f.get('bottleneck')}) / "
+                f"채널별퍼널 {len(d.get('funnel_channels') or [])}개")
+          PY
           echo "----- 배포된 프론트 번들 확인(index.html 이 참조하는 assets 해시) -----"
           curl -s --max-time 60 "$HOST/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.\(js\|css\)' || echo "(assets 참조를 찾지 못함)"
           echo "-----"
