@@ -1,0 +1,30 @@
+name: cafe24 재인증 URL 만들기
+
+# refresh_token 이 끊겼을 때(invalid_grant) 복구 1단계.
+# 이 워크플로가 '승인 URL' 을 출력한다 → 브라우저로 열어 승인 → code 복사 →
+# 'cafe24 token bootstrap' 워크플로에 넣으면 복구 완료.
+on:
+  workflow_dispatch:
+    inputs:
+      redirect_uri:
+        description: "앱에 등록된 Redirect URI (개발자센터 앱 설정과 정확히 같아야 함)"
+        required: false
+        default: "https://coversomeone1.cafe24.com/"
+
+jobs:
+  url:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cafe24-ops-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: 승인 URL 출력
+        env:
+          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
+          CAFE24_REDIRECT_URI: ${{ github.event.inputs.redirect_uri }}
+        run: python scripts/cafe24_authorize_url.py
