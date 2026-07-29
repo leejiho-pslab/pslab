@@ -336,6 +336,25 @@ async function cmdGeneratePlan(args: Args): Promise<void> {
   }
 }
 
+// 브랜드 핵심 키워드 — 검색(네이버/구글) 유입을 위해 모든 발행 콘텐츠에
+// 최소 하나 이상은 반드시 등장하게 한다. 이미 자연스럽게 들어가 있으면
+// (기획 단계에서 "ALWAYS ON"·"얼웨이즈온" 등을 이미 언급한 경우) 손대지 않고,
+// 넷 중 아무것도 없을 때만 안전망으로 한 줄 덧붙인다 — 중복·스팸처럼 보이지 않게.
+// 'always on'처럼 띄어쓰기가 들어간 표기도 잡아내도록 공백 제거 후 비교한다.
+const BRAND_KEYWORDS = ['pslab', '문제해결연구소', 'alwayson', '얼웨이즈온'];
+function ensureBrandKeywords(body: string): string {
+  const compact = body.toLowerCase().replace(/\s+/g, '');
+  if (BRAND_KEYWORDS.some((k) => compact.includes(k))) return body;
+  return `${body}\n\n#pslab #문제해결연구소 #ALWAYSON #얼웨이즈온`;
+}
+function ensureBrandTags(tags: string[]): string[] {
+  const extra = ['pslab', '문제해결연구소', 'ALWAYSON', '얼웨이즈온'];
+  const have = new Set(tags.map((t) => t.toLowerCase()));
+  const merged = [...tags];
+  for (const k of extra) if (!have.has(k.toLowerCase())) merged.push(k);
+  return merged;
+}
+
 async function cmdPublishPlan(app: App, args: Args): Promise<void> {
   const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
   const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
@@ -377,7 +396,13 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
       // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
       if (isManualOnly(it.channels)) {
-        if (!dryRun) it.status = 'manual';
+        // 대시보드 "본문 전체 복사" 버튼이 그대로 이 값을 내보내므로, 여기서도
+        // 브랜드 키워드 안전망을 적용해야 네이버 블로그 등 수동 채널도 누락되지 않는다.
+        // (dry-run은 플랜 상태를 바꾸지 않는다는 기존 원칙과 동일하게 가드)
+        if (!dryRun) {
+          it.captionBody = ensureBrandKeywords(it.captionBody ?? it.captionNote ?? it.topic);
+          it.status = 'manual';
+        }
         console.log(
           `\n📋 수동 발행 대기: [${it.channels.join(',')}] ${it.topic} — 대시보드에서 복사해 직접 게시`,
         );
@@ -407,9 +432,11 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       const title = includesYoutube && it.ytTitle
         ? it.ytTitle
         : (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
-      const body = includesYoutube && it.ytDescription
-        ? it.ytDescription
-        : (it.captionBody ?? it.captionNote ?? it.topic);
+      const body = ensureBrandKeywords(
+        includesYoutube && it.ytDescription
+          ? it.ytDescription
+          : (it.captionBody ?? it.captionNote ?? it.topic),
+      );
       const media: PostContent['media'] = imgs.map((p) => ({
         kind: 'image' as const,
         source: `${pages}/${p}`,
@@ -428,7 +455,7 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         title,
         body,
         media,
-        tags: includesYoutube && it.ytTags?.length ? it.ytTags : [],
+        tags: includesYoutube ? ensureBrandTags(it.ytTags?.length ? it.ytTags : []) : [],
         // 릴스는 커버 프레임을 지정해 인스타 프로필 그리드에서 검은/전환중 프레임이
         // 썸네일로 잡히지 않게 한다 (기본값: 인트로 페이드·자막 애니메이션이 끝나
         // 훅 문구가 다 보이는 900ms 지점 — 스크롤을 멈출 확률이 가장 높은 프레임).
