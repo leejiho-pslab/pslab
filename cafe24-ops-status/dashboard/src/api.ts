@@ -17,6 +17,10 @@ import type {
   DailyDetailResponse,
   DailyResponse,
   DigestResponse,
+  Ga4ChannelsResponse,
+  Ga4JourneyResponse,
+  Ga4PageRow,
+  Ga4SiteResponse,
   MetricsConfig,
   MonthlyReport,
   PeriodResponse,
@@ -92,6 +96,24 @@ export const api = {
     ),
   competitorsBestChanges: (date?: string) =>
     get<{ date: string | null; items: BestChange[] }>(`/api/competitors/best-changes${q(date)}`),
+
+  // GA4 사이트 분석 (유입 → 이동 → 이탈 → 구매)
+  ga4Site: (from: string, to: string) =>
+    get<Ga4SiteResponse>(`/api/ga4/site?from=${from}&to=${to}`),
+  ga4Channels: (r: { selFrom: string; selTo: string; cmpFrom: string; cmpTo: string }) =>
+    get<Ga4ChannelsResponse>(
+      `/api/ga4/channels?from=${r.selFrom}&to=${r.selTo}&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}`,
+    ),
+  ga4Pages: (from: string, to: string, limit = 10) =>
+    get<{ rows: Ga4PageRow[] }>(`/api/ga4/pages?from=${from}&to=${to}&limit=${limit}`),
+  ga4Journey: (
+    r: { selFrom: string; selTo: string; cmpFrom: string; cmpTo: string },
+    channel?: string,
+  ) =>
+    get<Ga4JourneyResponse>(
+      `/api/ga4/journey?from=${r.selFrom}&to=${r.selTo}&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}` +
+        (channel ? `&channel=${channel}` : ""),
+    ),
 
   // 월간 리포트
   reportMonthly: (month?: string) =>

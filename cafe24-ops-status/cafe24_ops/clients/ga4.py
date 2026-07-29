@@ -30,6 +30,20 @@ log = logging.getLogger("cafe24_ops.ga4")
 # GA4 설정은 건드리지 않고(기존 리포트 보존) 이 이벤트만 세어 실구매를 집계한다.
 CONVERSION_EVENT = os.environ.get("GA4_CONVERSION_EVENT", "결제완료")
 
+# 구매 퍼널 단계 — (GA4 이벤트명, 표시 라벨). keek 스토어에 실제로 쌓이는 이벤트만 사용.
+# GA4 Data API 는 다단계 경로(A→B→C 순서)를 주지 않으므로(BigQuery 내보내기 필요),
+# 이벤트 건수의 단계별 감소로 "구매까지 어디서 새는지"를 본다.
+FUNNEL_STEPS = [
+    ("page_view", "페이지 조회"),
+    ("제품분류_클릭", "상품 탐색"),
+    ("buy_now_버튼_클릭", "바로구매 클릭"),
+    ("장바구니_버튼_클릭", "장바구니 담기"),
+    ("장바구니_보기", "장바구니 확인"),
+    ("구매하기_버튼_클릭", "구매하기 클릭"),
+    ("결제완료", "결제 완료"),
+]
+FUNNEL_EVENT_NAMES = [e for e, _ in FUNNEL_STEPS]
+
 
 def ga4_report_to_visitors(raw: dict) -> int | None:
     """runReport 응답 → 방문자수(totalUsers). 행이 없으면 None(데이터 없음)."""
@@ -146,6 +160,71 @@ def ga4_report_to_top_pages(raw: dict) -> list[dict]:
         except (TypeError, ValueError):
             views = 0.0
         out.append({"page": page, "views": views})
+    return out
+
+
+def ga4_report_to_landing_pages(raw: dict) -> list[dict]:
+    """landingPage 차원 runReport(sessions, bounceRate, engagementRate) → 랜딩페이지별 지표.
+
+    GA4 Data API 에는 UA 의 exits(종료수) 지표가 없다(probe 로 400 확인). 대신
+    bounceRate(이탈률)로 "들어와서 바로 나간 비율"을 본다.
+    """
+    out: list[dict] = []
+    for r in (raw or {}).get("rows") or []:
+        dims = r.get("dimensionValues") or [{}]
+        vals = r.get("metricValues") or []
+        page = (dims[0].get("value") or "").strip()
+        if not page:
+            continue
+
+        def _v(i):
+            try:
+                return float(vals[i].get("value", 0) or 0) if i < len(vals) else 0.0
+            except (TypeError, ValueError):
+                return 0.0
+
+        out.append({"page": page, "sessions": _v(0),
+                    "bounce_rate": round(_v(1) * 100, 2), "engagement_rate": round(_v(2) * 100, 2)})
+    return out
+
+
+def ga4_report_to_landing_by_channel(raw: dict) -> list[dict]:
+    """landingPage × sessionSourceMedium runReport → 광고별 착지 페이지 분포(유입 경로 시작점)."""
+    out: list[dict] = []
+    for r in (raw or {}).get("rows") or []:
+        dims = r.get("dimensionValues") or []
+        vals = r.get("metricValues") or []
+        if len(dims) < 2:
+            continue
+        page = (dims[0].get("value") or "").strip()
+        sm = (dims[1].get("value") or "").strip()
+        if not page or not sm:
+            continue
+        try:
+            sessions = float(vals[0].get("value", 0) or 0) if vals else 0.0
+        except (TypeError, ValueError):
+            sessions = 0.0
+        out.append({"page": page, "source_medium": sm, "sessions": sessions})
+    return out
+
+
+def ga4_report_to_funnel(raw: dict) -> list[dict]:
+    """eventName × sessionSourceMedium runReport → [{event, source_medium, count}] (퍼널 원자료)."""
+    out: list[dict] = []
+    for r in (raw or {}).get("rows") or []:
+        dims = r.get("dimensionValues") or []
+        vals = r.get("metricValues") or []
+        if len(dims) < 2:
+            continue
+        ev = (dims[0].get("value") or "").strip()
+        sm = (dims[1].get("value") or "").strip()
+        if not ev or not sm:
+            continue
+        try:
+            cnt = float(vals[0].get("value", 0) or 0) if vals else 0.0
+        except (TypeError, ValueError):
+            cnt = 0.0
+        out.append({"event": ev, "source_medium": sm, "count": cnt})
     return out
 
 
@@ -316,6 +395,47 @@ class GA4Client:
             "limit": limit,
         }, label="top_pages")
         return ga4_report_to_top_pages(raw) if raw is not None else None
+
+    def daily_landing_pages(self, date: str, limit: int = 20) -> list[dict] | None:
+        """일자 랜딩페이지별 세션·이탈률·참여율 — "어느 페이지에서 새는지" 추적용."""
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "landingPage"}],
+            "metrics": [{"name": "sessions"}, {"name": "bounceRate"}, {"name": "engagementRate"}],
+            "orderBys": [{"metric": {"metricName": "sessions"}, "desc": True}],
+            "limit": limit,
+        }, label="landing_pages")
+        return ga4_report_to_landing_pages(raw) if raw is not None else None
+
+    def daily_landing_by_channel(self, date: str, limit: int = 60) -> list[dict] | None:
+        """일자 (랜딩페이지 × 매체)별 세션 — 어떤 광고가 어디로 보내는지(유입 경로 시작점)."""
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "landingPage"}, {"name": "sessionSourceMedium"}],
+            "metrics": [{"name": "sessions"}],
+            "orderBys": [{"metric": {"metricName": "sessions"}, "desc": True}],
+            "limit": limit,
+        }, label="landing_by_channel")
+        return ga4_report_to_landing_by_channel(raw) if raw is not None else None
+
+    def daily_funnel(self, date: str, limit: int = 200) -> list[dict] | None:
+        """일자 (퍼널 이벤트 × 매체)별 건수 — 채널별 구매 퍼널 원자료.
+
+        FUNNEL_STEPS 이벤트만 inListFilter 로 받아 응답을 작게 유지한다.
+        """
+        raw = self._run_report({
+            "dateRanges": [{"startDate": date, "endDate": date}],
+            "dimensions": [{"name": "eventName"}, {"name": "sessionSourceMedium"}],
+            "metrics": [{"name": "eventCount"}],
+            "dimensionFilter": {
+                "filter": {
+                    "fieldName": "eventName",
+                    "inListFilter": {"values": FUNNEL_EVENT_NAMES},
+                }
+            },
+            "limit": limit,
+        }, label="funnel")
+        return ga4_report_to_funnel(raw) if raw is not None else None
 
     def daily_new_returning_metrics(self, date: str) -> dict[str, float] | None:
         """일자 신규/재방문 사용자수 → {'site_new','site_returning'}. 실패 시 None."""

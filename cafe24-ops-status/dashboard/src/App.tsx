@@ -6,12 +6,14 @@ import { Cafe24Page } from "./pages/Cafe24Page";
 import { AdsPage } from "./pages/AdsPage";
 import { CreativePage } from "./pages/CreativePage";
 import { CompetitorPage } from "./pages/CompetitorPage";
+import { Ga4Page } from "./pages/Ga4Page";
 import { MonthlyReportPage } from "./pages/MonthlyReportPage";
 
 const TABS = [
   { id: "cafe24", label: "카페24 어드민" },
   { id: "ads", label: "광고" },
   { id: "creative", label: "광고 히스토리" },
+  { id: "ga4", label: "유입·구매 경로(GA4)" },
   { id: "competitor", label: "경쟁사 모니터링" },
   { id: "report", label: "월간 리포트" },
 ] as const;
@@ -89,6 +91,7 @@ export default function App() {
       {tab === "cafe24" && <Cafe24Page date={date} config={config} />}
       {tab === "ads" && <AdsPage date={date} />}
       {tab === "creative" && <CreativePage date={date} />}
+      {tab === "ga4" && <Ga4Page date={date} />}
       {tab === "competitor" && <CompetitorPage date={date} />}
       {tab === "report" && <MonthlyReportPage dates={dates} />}
 
