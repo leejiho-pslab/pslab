@@ -49,6 +49,48 @@ def main() -> int:
     resp2 = c._http.post(path, headers={"Authorization": f"Bearer {tok}"}, json=ev_body)
     print(f"\n이벤트명별 건수 status = {resp2.status_code}")
     print("body:", resp2.text[:3000])
+
+    # 4) 심화 분석용 dimension/metric 가용성 probe.
+    #    "이탈 페이지", "유입 경로", "구매 퍼널"을 만들려면 GA4 Data API 가 해당
+    #    dimension/metric 을 실제로 지원하는지 먼저 확인해야 한다(문서만 믿고 만들면
+    #    400 으로 통째로 실패). 각 후보를 최소 요청으로 쏴보고 성공/실패만 찍는다.
+    probes = [
+        ("랜딩페이지×채널", {"dimensions": [{"name": "landingPage"}, {"name": "sessionSourceMedium"}],
+                        "metrics": [{"name": "sessions"}]}),
+        ("랜딩페이지+이탈률", {"dimensions": [{"name": "landingPage"}],
+                        "metrics": [{"name": "sessions"}, {"name": "bounceRate"},
+                                    {"name": "engagementRate"}]}),
+        ("페이지별 종료수(exits)", {"dimensions": [{"name": "pagePath"}],
+                             "metrics": [{"name": "screenPageViews"}, {"name": "exits"}]}),
+        ("페이지별 이탈률", {"dimensions": [{"name": "pagePath"}],
+                       "metrics": [{"name": "screenPageViews"}, {"name": "bounceRate"}]}),
+        ("이벤트×채널(퍼널)", {"dimensions": [{"name": "eventName"}, {"name": "sessionSourceMedium"}],
+                        "metrics": [{"name": "eventCount"}]}),
+        ("기본채널그룹", {"dimensions": [{"name": "sessionDefaultChannelGroup"}],
+                     "metrics": [{"name": "sessions"}]}),
+        ("캠페인명", {"dimensions": [{"name": "sessionCampaignName"}],
+                  "metrics": [{"name": "sessions"}]}),
+        ("페이지경로+제목", {"dimensions": [{"name": "pagePathPlusQueryString"}],
+                      "metrics": [{"name": "screenPageViews"}]}),
+    ]
+    print("\n===== 심화 분석 dimension/metric 가용성 probe =====")
+    for label, extra in probes:
+        body = {"dateRanges": [{"startDate": "8daysAgo", "endDate": "yesterday"}],
+                "limit": 3, **extra}
+        r = c._http.post(path, headers={"Authorization": f"Bearer {tok}"}, json=body)
+        if r.status_code == 200:
+            rows = (r.json() or {}).get("rows") or []
+            sample = ""
+            if rows:
+                dv = [d.get("value") for d in (rows[0].get("dimensionValues") or [])]
+                mv = [m.get("value") for m in (rows[0].get("metricValues") or [])]
+                sample = f" | 예시 {dv} = {mv}"
+            print(f"  ✅ {label:20s} rows={len(rows)}{sample}")
+        else:
+            # 실패 사유(어떤 필드가 없는지)를 그대로 남긴다
+            msg = r.text.replace("\n", " ")[:220]
+            print(f"  ❌ {label:20s} HTTP {r.status_code} — {msg}")
+
     c.close()
     return 0
 
