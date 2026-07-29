@@ -67,6 +67,18 @@ jobs:
           check "/api/report/monthly"
           check "/api/report/monthly.docx"
           check "/"
+          echo "----- GA4 실제 적재 범위 확인(백필이 어디까지 채워졌는지) -----"
+          curl -s --max-time 90 "$HOST/api/ga4/site?from=$F&to=$B" -o /tmp/ga4.json || true
+          python3 - <<'PY' || echo "(GA4 응답 파싱 실패)"
+          import json
+          d = json.load(open("/tmp/ga4.json"))
+          rows = [r for r in d.get("trend", []) if (r.get("sessions") or 0) > 0]
+          if not rows:
+              print("GA4 적재된 날짜 없음")
+          else:
+              print(f"GA4 데이터 있는 날: {len(rows)}일  ({rows[0]['date']} ~ {rows[-1]['date']})")
+              print(f"  첫날 세션 {rows[0]['sessions']:.0f} / 마지막날 세션 {rows[-1]['sessions']:.0f}")
+          PY
           echo "----- 배포된 프론트 번들 확인(index.html 이 참조하는 assets 해시) -----"
           curl -s --max-time 60 "$HOST/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.\(js\|css\)' || echo "(assets 참조를 찾지 못함)"
           echo "-----"
