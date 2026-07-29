@@ -160,9 +160,7 @@ def pull_cafe24() -> dict:
 
     config = load_config()
     kv = Store(config.data_dir)
-    access = kv.get_kv("cafe24_access_token")
-    refresh = kv.get_kv("cafe24_refresh_token")
-    client = Cafe24Client.from_config(config, access_override=access, refresh_override=refresh)
+    client = Cafe24Client.from_store(config, kv)
 
     out: dict = {"api_version": client.api_version, "mall_id": client.mall_id, "products": {}}
     try:
@@ -182,10 +180,6 @@ def pull_cafe24() -> dict:
                     entry[label] = {"_error": f"{type(exc).__name__}: {exc}"}
             out["products"][str(no)] = entry
 
-        # 회전된 토큰 보존 (daily-collect 와 동일)
-        kv.set_kv("cafe24_access_token", client.access_token)
-        if client.refresh_token:
-            kv.set_kv("cafe24_refresh_token", client.refresh_token)
     finally:
         client.close()
     return out

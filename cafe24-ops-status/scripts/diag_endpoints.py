@@ -54,9 +54,8 @@ def shape(v):
 def main() -> int:
     config = load_config()
     kv = Store(config.data_dir)
-    access = kv.get_kv("cafe24_access_token")
-    refresh = kv.get_kv("cafe24_refresh_token")
-    client = Cafe24Client.from_config(config, access_override=access, refresh_override=refresh)
+    # from_store: 갱신된 토큰이 DB 에 자동 반영된다(읽기만 하면 다음 실행이 죽는다)
+    client = Cafe24Client.from_store(config, kv)
     for name, path, params in PROBES:
         try:
             data = client.get(path, params)

@@ -269,9 +269,7 @@ def check_api(store: Store, config, sample_dates: list[str]) -> int:
     print("\n" + "=" * 64)
     print(f"■ 원천 대조(API)  표본 {len(sample_dates)}일")
     print("=" * 64)
-    access = store.get_kv("cafe24_access_token")
-    refresh = store.get_kv("cafe24_refresh_token")
-    client = Cafe24Client.from_config(config, access_override=access, refresh_override=refresh)
+    client = Cafe24Client.from_store(config, store)
     idx = _facts_index(store, min(sample_dates), max(sample_dates))
     mismatch = 0
     try:
@@ -298,7 +296,7 @@ def check_api(store: Store, config, sample_dates: list[str]) -> int:
             keys = [k for k in ("payment_amount", "product_price_amount", "actual_payment_amount",
                                 "product_price", "option_price", "quantity") if k in it]
             print(f"  [진단] {d} 품목필드 존재: {keys}")
-            print(f"         items[0]: " + ", ".join(f"{k}={it.get(k)}" for k in keys))
+            print("         items[0]: " + ", ".join(f"{k}={it.get(k)}" for k in keys))
             break
         for d in sample_dates:
             try:
@@ -319,10 +317,6 @@ def check_api(store: Store, config, sample_dates: list[str]) -> int:
             tag = "✅" if ok else "⚠"
             print(f"  {tag} {d}  매출 DB {db_gross:,.0f} / API {api_gross:,.0f}"
                   f"  · 주문 DB {db_count:.0f} / API {api_count}")
-        # 토큰이 회전됐으면 DB에 되돌려 저장(다음 실행 연속성)
-        store.set_kv("cafe24_access_token", client.access_token)
-        if client.refresh_token:
-            store.set_kv("cafe24_refresh_token", client.refresh_token)
     finally:
         client.close()
     print(f"\n  대조 결과: 불일치 {mismatch}/{len(sample_dates)}일")

@@ -31,9 +31,7 @@ def main(argv=None) -> int:
 
     config = load_config()
     kv = Store(config.data_dir)
-    access = kv.get_kv("cafe24_access_token")
-    refresh = kv.get_kv("cafe24_refresh_token")
-    client = Cafe24Client.from_config(config, access_override=access, refresh_override=refresh)
+    client = Cafe24Client.from_store(config, kv)
     try:
         orders = client.list_orders(args.date, args.date)
         print(f"== 주문 {len(orders)}건 ({args.date}) ==")
