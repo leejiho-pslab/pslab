@@ -37,32 +37,38 @@ load_secrets()
 
 ANALYTICS_HOST = "https://ca-api.cafe24data.com"
 
-# 구매·고객 퍼널과 직접 관련된 것부터. (문서 카탈로그: Adeffect/Carts/Members sales/
-# Pages/Products/Sales/Visitors/Visitpaths)
-ANALYTICS_PATHS = [
-    # 방문 → 사이트에 몇 명이 왔나
-    ("방문자 요약", "/visitors/view"),
-    ("방문자 신규/재방문", "/visitors/new"),
-    ("방문자 시간대", "/visitors/hour"),
-    # 유입 경로 → 어디서 왔나 (GA4 와 교차검증 가능)
-    ("유입 경로 요약", "/visitpaths/view"),
-    ("유입 도메인", "/visitpaths/domains"),
-    ("유입 검색어", "/visitpaths/keywords"),
-    # 페이지 → 어디를 봤나
-    ("페이지뷰", "/pages/view"),
-    # 장바구니 → 담고 안 산 사람 (퍼널의 핵심 구간)
-    ("장바구니 요약", "/carts/view"),
-    ("장바구니 상품", "/carts/products"),
-    # 상품/매출 → 무엇을 샀나
-    ("상품 통계", "/products/view"),
-    ("상품별 구매", "/products/buy"),
-    ("매출 통계", "/sales/view"),
-    ("결제수단별", "/sales/payments"),
-    # 회원 → 누가 샀나
-    ("회원/비회원 매출", "/memberssales/view"),
-    ("회원 통계", "/members/view"),
+# 1차 probe 로 확인된 사실(2026-07-29):
+#   · 호스트/인증은 열려 있고 접두어는 없음(/visitors/view 가 바로 200)
+#   · 200: /visitors/view, /visitpaths/domains, /visitpaths/keywords,
+#          /pages/view, /products/view
+#   · 404 는 "권한 없음"이 아니라 **하위 경로 이름이 틀린 것**
+#     ({"more_info":"No endpoint GET /carts/view."})
+# 그래서 이제는 네임스페이스별로 하위 경로 후보를 넓게 훑어 실제 이름을 찾아낸다.
+# (문서 카탈로그: Adeffect/Carts/Members sales/Pages/Products/Sales/Visitors/Visitpaths)
+_NAMESPACE_CANDIDATES = {
+    # 장바구니 = 퍼널의 핵심 구간(담고 안 산 사람)
+    "carts": ["", "/view", "/count", "/product", "/products", "/analysis",
+              "/conversion", "/abandoned", "/action"],
+    # 매출/주문
+    "sales": ["", "/view", "/count", "/order", "/orders", "/payment", "/payments"],
+    "salesvolume": ["", "/view", "/product", "/products", "/category"],
+    "orders": ["", "/view", "/count", "/payment"],
+    # 회원 (고객 퍼널)
+    "members": ["", "/view", "/sales", "/count", "/purchase"],
+    "memberssales": ["", "/view"],
     # 광고효과
-    ("광고효과", "/adeffect/view"),
+    "adeffect": ["", "/view", "/ads", "/keywords", "/media"],
+    # 방문/유입/페이지/상품 — 이미 열린 것 외에 더 있는지
+    "visitors": ["", "/view", "/hours", "/times", "/pages", "/devices",
+                 "/newandreturn", "/os", "/browser"],
+    "visitpaths": ["", "/domains", "/keywords", "/ads", "/urls", "/search"],
+    "pages": ["", "/view", "/exit", "/entrance"],
+    "products": ["", "/view", "/sales", "/buy", "/carts", "/best"],
+}
+ANALYTICS_PATHS = [
+    (f"{ns}{sub or ' (루트)'}", f"/{ns}{sub}")
+    for ns, subs in _NAMESPACE_CANDIDATES.items()
+    for sub in subs
 ]
 
 # Admin API 쪽 "접속통계" 후보. 문서에 없지만 몰/버전에 따라 열려 있을 수 있어 확인.
@@ -141,13 +147,21 @@ def main() -> int:
             if r.status_code != 404:
                 prefix = cand
                 break
+        # 후보가 수십 개라 404 를 한 줄씩 찍으면 로그가 묻힌다.
+        # 200(=쓸 수 있는 것)만 본문과 함께 자세히, 나머지는 뒤에 한 줄로 모아 출력.
+        missing: list[str] = []
         for label, path in ANALYTICS_PATHS:
             try:
                 r = http.get(f"{prefix}{path}", params=params, headers=headers)
             except httpx.HTTPError as exc:
                 _show(label, None, f"{type(exc).__name__}: {exc}")
                 continue
+            if r.status_code == 404:
+                missing.append(path)
+                continue
             _show(label, r)
+        if missing:
+            print(f"\n  (없는 경로 {len(missing)}개) {' '.join(missing)}")
 
     # 3) Admin API 쪽 통계 후보
     print("\n===== Admin API 통계 후보 경로 =====")
