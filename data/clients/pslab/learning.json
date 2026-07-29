@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-29T11:31:15.271Z",
-  "sampleSize": 20,
+  "generatedAt": "2026-07-29T11:42:35.213Z",
+  "sampleSize": 21,
   "variants": [
     {
       "key": "A",
@@ -11,10 +11,10 @@
     },
     {
       "key": "B",
-      "posts": 8,
-      "avgEngagement": 0.17255581325118607,
-      "avgLikes": 281.25,
-      "avgViews": 6549.75
+      "posts": 9,
+      "avgEngagement": 0.1533829451121654,
+      "avgLikes": 250,
+      "avgViews": 5822
     },
     {
       "key": "C",
@@ -27,10 +27,10 @@
   "channels": [
     {
       "key": "instagram",
-      "posts": 7,
-      "avgEngagement": 0.41958211856171035,
-      "avgLikes": 1.5714285714285714,
-      "avgViews": 16.714285714285715
+      "posts": 8,
+      "avgEngagement": 0.36713435374149656,
+      "avgLikes": 1.375,
+      "avgViews": 14.625
     },
     {
       "key": "youtube",
@@ -78,10 +78,10 @@
     },
     {
       "key": "20:00",
-      "posts": 6,
-      "avgEngagement": 0.014324749994571099,
-      "avgLikes": 328.1666666666667,
-      "avgViews": 8884.333333333334
+      "posts": 7,
+      "avgEngagement": 0.0122783571382038,
+      "avgLikes": 281.2857142857143,
+      "avgViews": 7615.142857142857
     },
     {
       "key": "11:00",
@@ -115,10 +115,10 @@
     },
     {
       "key": "branch",
-      "posts": 3,
-      "avgEngagement": 0.14750108119938043,
-      "avgLikes": 748.6666666666666,
-      "avgViews": 17443
+      "posts": 4,
+      "avgEngagement": 0.11062581089953533,
+      "avgLikes": 561.5,
+      "avgViews": 13082.25
     },
     {
       "key": "chart",
