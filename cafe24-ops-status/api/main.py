@@ -51,6 +51,13 @@ from cafe24_ops.etl.creative_metrics import (  # noqa: E402
     creative_trend,
     creatives_ranked,
 )
+from cafe24_ops.etl.ga4_site import (  # noqa: E402
+    channel_breakdown,
+    site_summary,
+    site_trend,
+    source_medium_breakdown,
+    top_pages,
+)
 from cafe24_ops.etl.keyword_metrics import keyword_report_range  # noqa: E402
 from cafe24_ops.etl.monthly_report import (  # noqa: E402
     latest_complete_month,
@@ -438,6 +445,57 @@ def dates() -> dict:
     store = _store()
     try:
         return {"dates": store.list_dates()}
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/site")
+def ga4_site_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+) -> dict:
+    """GA4 사이트 요약 + 일자별 추이."""
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to,
+            "summary": site_summary(store, date_from, date_to),
+            "trend": site_trend(store, date_from, date_to),
+        }
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/channels")
+def ga4_channels_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    cmp_from: str | None = Query(default=None),
+    cmp_to: str | None = Query(default=None),
+) -> dict:
+    """GA4 매체별 유입·전환 — 채널 합산(channels)과 원본 source/medium(rows) 둘 다."""
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to,
+            "channels": channel_breakdown(store, date_from, date_to, cmp_from, cmp_to),
+            "rows": source_medium_breakdown(store, date_from, date_to, cmp_from, cmp_to),
+        }
+    finally:
+        store.close()
+
+
+@app.get("/api/ga4/pages")
+def ga4_pages_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    limit: int = Query(default=10),
+) -> dict:
+    """GA4 인기 페이지 TOP N."""
+    store = _store()
+    try:
+        return {"from": date_from, "to": date_to,
+                "rows": top_pages(store, date_from, date_to, limit)}
     finally:
         store.close()
 
