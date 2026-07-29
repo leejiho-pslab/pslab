@@ -3,9 +3,17 @@ name: cafe24 재인증 URL 만들기
 # refresh_token 이 끊겼을 때(invalid_grant) 복구 1단계.
 # 이 워크플로가 '승인 URL' 을 출력한다 → 브라우저로 열어 승인 → code 복사 →
 # 'cafe24 token bootstrap' 워크플로에 넣으면 복구 완료.
+#
+# mall_id 를 시크릿이 아닌 입력으로 받는 이유: Actions 는 시크릿과 같은 문자열을
+# 로그에서 *** 로 가리는데, 호스트명(https://<mall>.cafe24api.com)은 인코딩으로
+# 우회할 수 없어 URL 자체가 못 쓰게 되기 때문.
 on:
   workflow_dispatch:
     inputs:
+      mall_id:
+        description: "카페24 몰 아이디 (예: coversomeone1)"
+        required: false
+        default: "coversomeone1"
       redirect_uri:
         description: "앱에 등록된 Redirect URI (개발자센터 앱 설정과 정확히 같아야 함)"
         required: false
@@ -19,12 +27,13 @@ jobs:
         working-directory: cafe24-ops-status
     steps:
       - uses: actions/checkout@v4
+      # 표준 라이브러리만 쓰는 스크립트라 pip install 없이 바로 실행(수초 내 완료).
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: 승인 URL 출력
         env:
-          CAFE24_MALL_ID: ${{ secrets.CAFE24_MALL_ID }}
+          CAFE24_MALL_ID_INPUT: ${{ github.event.inputs.mall_id }}
           CAFE24_CLIENT_ID: ${{ secrets.CAFE24_CLIENT_ID }}
           CAFE24_REDIRECT_URI: ${{ github.event.inputs.redirect_uri }}
         run: python scripts/cafe24_authorize_url.py
