@@ -11,6 +11,7 @@ from __future__ import annotations
 import base64
 import json
 import os
+from collections.abc import Callable
 from pathlib import Path
 
 import httpx
@@ -37,6 +38,7 @@ class Cafe24Client:
         transport: httpx.BaseTransport | None = None,
         base_url: str | None = None,
         timeout: float = 30.0,
+        token_sink: "Callable[[str, str | None], None] | None" = None,
     ):
         self.mall_id = mall_id
         self.client_id = client_id
@@ -45,6 +47,10 @@ class Cafe24Client:
         self.refresh_token = refresh_token
         self.api_version = api_version
         self.token_store = Path(token_store) if token_store else None
+        # 갱신된 토큰을 밖(=DB)에 다시 저장하는 훅.
+        # 카페24는 갱신 때마다 refresh_token 을 **회전**시키고 직전 것을 무효화하므로,
+        # 새 토큰을 저장하지 않으면 다음 실행이 invalid_grant 로 죽는다(재인증 필요).
+        self._token_sink = token_sink
         self.base_url = base_url or f"https://{mall_id}.cafe24api.com"
         self._http = httpx.Client(base_url=self.base_url, transport=transport, timeout=timeout)
 
@@ -56,6 +62,7 @@ class Cafe24Client:
         transport: httpx.BaseTransport | None = None,
         access_override: str | None = None,
         refresh_override: str | None = None,
+        token_sink: "Callable[[str, str | None], None] | None" = None,
     ) -> "Cafe24Client":
         """access_override/refresh_override 가 주어지면(예: DB 영속 토큰) 최우선 사용."""
         mall_id = os.environ.get("CAFE24_MALL_ID") or config.sources.shop.get("mall_id", "")
@@ -84,6 +91,28 @@ class Cafe24Client:
             api_version=os.environ.get("CAFE24_API_VERSION", DEFAULT_API_VERSION),
             token_store=token_store,
             transport=transport,
+            token_sink=token_sink,
+        )
+
+    @classmethod
+    def from_store(cls, config, store, transport: httpx.BaseTransport | None = None
+                   ) -> "Cafe24Client":
+        """DB(app_kv)의 토큰으로 만들고, 갱신되면 **자동으로 DB에 되쓴다**.
+
+        카페24 refresh_token 은 갱신 때마다 회전하고 직전 것이 즉시 무효가 된다.
+        읽기만 하고 되쓰지 않는 코드는 "한 번 돌면 다음 실행이 죽는" 시한폭탄이라
+        (실제로 2026-07-29 진단 스크립트가 이 방식으로 토큰을 끊어먹었다),
+        토큰을 쓰는 모든 곳은 이 팩토리를 써야 한다.
+        """
+        return cls.from_config(
+            config,
+            transport=transport,
+            access_override=store.get_kv("cafe24_access_token"),
+            refresh_override=store.get_kv("cafe24_refresh_token"),
+            token_sink=lambda access, refresh: (
+                store.set_kv("cafe24_access_token", access),
+                store.set_kv("cafe24_refresh_token", refresh) if refresh else None,
+            ),
         )
 
     # ---- 인증 -------------------------------------------------------
@@ -114,6 +143,10 @@ class Cafe24Client:
         if self.token_store:
             self.token_store.parent.mkdir(parents=True, exist_ok=True)
             self.token_store.write_text(json.dumps(tok, ensure_ascii=False), encoding="utf-8")
+        # 회전된 토큰을 영속 저장소에 즉시 반영. 여기서 실패하면 다음 실행이 못 살아나므로
+        # 조용히 삼키지 않고 그대로 올린다.
+        if self._token_sink:
+            self._token_sink(self.access_token, self.refresh_token)
 
     # ---- 요청 -------------------------------------------------------
     def get(self, path: str, params: dict | None = None, _retry: bool = True,

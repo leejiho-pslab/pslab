@@ -321,13 +321,11 @@ class Cafe24Collector(BaseCollector):
         from ..store import Store
 
         # DB 에 영속된 토큰을 최우선 사용(무인 환경 토큰 회전 대응). 없으면 env 폴백.
+        # from_store 는 갱신이 일어나는 **그 순간** 회전된 토큰을 DB 에 되쓴다.
+        # (수집 도중 예외가 나도 토큰은 이미 저장돼 다음 실행이 이어받는다)
         kv = Store(self.config.data_dir)
         try:
-            access = kv.get_kv("cafe24_access_token")
-            refresh = kv.get_kv("cafe24_refresh_token")
-            client = Cafe24Client.from_config(
-                self.config, access_override=access, refresh_override=refresh
-            )
+            client = Cafe24Client.from_store(self.config, kv)
             try:
                 orders = client.list_orders(date, date)
                 count = client.count_orders(date, date)
@@ -378,10 +376,6 @@ class Cafe24Collector(BaseCollector):
                                 ensure_ascii=False))
             finally:
                 client.close()
-            # 갱신(회전)되었을 수 있는 토큰을 DB 에 저장 → 다음 실행이 이어받음
-            kv.set_kv("cafe24_access_token", client.access_token)
-            if client.refresh_token:
-                kv.set_kv("cafe24_refresh_token", client.refresh_token)
         finally:
             kv.close()
         extra = []

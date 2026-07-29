@@ -102,14 +102,7 @@ def main() -> int:
     from cafe24_ops.store import Store  # noqa: PLC0415
 
     kv = Store(cfg.data_dir)
-    try:
-        client = Cafe24Client.from_config(
-            cfg,
-            access_override=kv.get_kv("cafe24_access_token"),
-            refresh_override=kv.get_kv("cafe24_refresh_token"),
-        )
-    finally:
-        kv.close()
+    client = Cafe24Client.from_store(cfg, kv)
     start, end = _dates()
     print(f"mall_id = {client.mall_id} / 조회기간 {start} ~ {end}")
 
@@ -175,6 +168,7 @@ def main() -> int:
             print(f"  ⚠️  {label:18s} {type(exc).__name__}: {exc}")
 
     client.close()
+    kv.close()
     return 0
 
 
