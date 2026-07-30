@@ -149,13 +149,20 @@ jobs:
         continue-on-error: true
         run: node scripts/build-reels.mjs --client pslab
 
-      - name: 대시보드 생성 (실시간 현황)
-        run: node dist/cli.js dashboard --out docs/index.html
+      # 대시보드는 업체(클라이언트)별 분리 — 루트(docs/index.html)는 _pslab 전용 관제실.
+      # 전 업체를 한 화면에 합치지 말 것(운영자 지시). 다른 업체는 각자 하위 경로로 별도 빌드.
+      - name: 대시보드 생성 (_pslab 전용 관제실)
+        run: node dist/cli.js dashboard --client pslab --out docs/index.html
 
       # 비츠(vittz) 전용 대시보드 — 업체 담당자용 별도 URL (docs/vittz/)
       - name: 비츠 대시보드 생성
         continue-on-error: true
         run: node dist/cli.js dashboard --client vittz --out docs/vittz/index.html
+
+      # 동성인쇄소(dongsung) 전용 대시보드 — 별도 URL (docs/dongsung/)
+      - name: 동성인쇄소 대시보드 생성
+        continue-on-error: true
+        run: node dist/cli.js dashboard --client dongsung --out docs/dongsung/index.html
 
       # 주의: 커밋 메시지에 [skip ci]를 넣지 말 것!
       # docs/ 변경은 pages-build-deployment(자동)를 트리거해 실제 사이트에 배포된다.
@@ -169,7 +176,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
+          git add -f data/ docs/index.html docs/vittz docs/dongsung docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi

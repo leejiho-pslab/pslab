@@ -62,7 +62,7 @@ jobs:
         if: ${{ github.event.inputs.dry_run == 'false' }}
         continue-on-error: true
         run: |
-          node dist/cli.js dashboard --out docs/index.html
+          node dist/cli.js dashboard --client pslab --out docs/index.html
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
