@@ -263,6 +263,7 @@ function buildClientData(
       mood: design.mood,
       composition: design.composition,
       notes: design.notes.slice(-4),
+      humanNotes: design.humanNotes ?? [],
     },
     heldCount,
     totalCycles: history.length,
@@ -551,6 +552,17 @@ function guideView(client){
       bb.log.slice(0,5).map(l=>'<tr><td class="muted">'+ftime(l.at)+'</td><td>'+esc(l.field)+'</td><td class="muted">'+esc(l.excerpt)+'…</td></tr>').join('')+'</table>';
   }
   h+='</div>';
+  // 디자인 피드백 — 사람 지시는 AI 학습 메모와 분리 보관되며 항상 최우선 반영
+  const hn=(client.designStyle||{}).humanNotes||[];
+  h+='<div class="panel" style="border-color:#e3cdf0;background:#fdfaff"><h3>🎨 디자인 피드백</h3>'+
+     '<div class="muted" style="margin:4px 0 10px">카드·릴스의 색감, 레이아웃, 톤에 대한 지시를 적어주세요. 여기 등록된 지시는 AI가 스스로 쌓는 학습 메모보다 <b>항상 우선</b> 반영되고, AI가 지우거나 덮어쓰지 못합니다. 한 줄에 하나씩 적으면 각각 별도 지시로 저장됩니다.</div>';
+  if(hn.length){
+    h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">현재 등록된 지시 ('+hn.length+')</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+hn.map(n=>'· '+esc(n)).join('\\n')+'</div></div>';
+  } else {
+    h+='<div class="muted" style="margin-bottom:8px">아직 등록된 디자인 지시가 없습니다.</div>';
+  }
+  h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[디자인피드백] '+esc(client.name)+'\\',\\'\\',\\'design-fb\\')">🎨 디자인 지시 등록</button></div></div>';
   // 채널별 가이드
   h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
   const guides=client.channelGuides||{};

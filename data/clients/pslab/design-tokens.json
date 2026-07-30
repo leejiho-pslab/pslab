@@ -1,0 +1,8 @@
+{
+  "_readme": "카드 렌더러(scripts/render-cards.mjs)의 디자인 토큰. 이 파일만 고치면 코드 수정 없이 색·레이아웃이 바뀝니다. layout은 editorial|graphic|spotlight 중 하나. 키를 지우면 그 키는 코드 기본값을 씁니다.",
+  "variants": {
+    "A": { "name": "잉크·에디토리얼", "bg": "#0e1726", "fg": "#f4f1ea", "muted": "#9aa6bd", "accent": "#ff8a3d", "layout": "editorial" },
+    "B": { "name": "잉크·그래픽", "bg": "#0b1a1c", "fg": "#eef3f1", "muted": "#8fb0ab", "accent": "#36d6c4", "layout": "graphic" },
+    "C": { "name": "잉크·스포트라이트", "bg": "#14121d", "fg": "#f3eff6", "muted": "#a99fc0", "accent": "#ffc24a", "layout": "spotlight" }
+  }
+}

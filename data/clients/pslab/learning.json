@@ -1,27 +1,27 @@
 {
-  "generatedAt": "2026-07-29T11:42:35.213Z",
-  "sampleSize": 21,
+  "generatedAt": "2026-07-30T02:30:12.281Z",
+  "sampleSize": 16,
   "variants": [
     {
       "key": "A",
-      "posts": 8,
-      "avgEngagement": 0.18176711347307528,
-      "avgLikes": 376,
-      "avgViews": 8656.375
-    },
-    {
-      "key": "B",
-      "posts": 9,
-      "avgEngagement": 0.1533829451121654,
-      "avgLikes": 250,
-      "avgViews": 5822
+      "posts": 3,
+      "avgEngagement": 0.4512471655328798,
+      "avgLikes": 2,
+      "avgViews": 34.666666666666664
     },
     {
       "key": "C",
+      "posts": 1,
+      "avgEngagement": 0.3333333333333333,
+      "avgLikes": 1,
+      "avgViews": 3
+    },
+    {
+      "key": "B",
       "posts": 4,
-      "avgEngagement": 0.0960137140517859,
-      "avgLikes": 183.25,
-      "avgViews": 4091
+      "avgEngagement": 0.3125,
+      "avgLikes": 1,
+      "avgViews": 2.5
     }
   ],
   "channels": [
@@ -31,13 +31,6 @@
       "avgEngagement": 0.36713435374149656,
       "avgLikes": 1.375,
       "avgViews": 14.625
-    },
-    {
-      "key": "youtube",
-      "posts": 5,
-      "avgEngagement": 0.05205736886491621,
-      "avgLikes": 1195.8,
-      "avgViews": 27547.4
     },
     {
       "key": "threads",
@@ -56,35 +49,28 @@
   ],
   "hours": [
     {
-      "key": "21:00",
-      "posts": 9,
-      "avgEngagement": 0.26549237600624265,
-      "avgLikes": 235.22222222222223,
-      "avgViews": 4707.666666666667
+      "key": "12:00",
+      "posts": 7,
+      "avgEngagement": 0.3243440233236151,
+      "avgLikes": 1.2857142857142858,
+      "avgViews": 15.857142857142858
     },
     {
-      "key": "19:00",
+      "key": "10:00",
       "posts": 3,
       "avgEngagement": 0.2293144208037825,
       "avgLikes": 1,
       "avgViews": 17.666666666666668
     },
     {
-      "key": "22:00",
-      "posts": 1,
-      "avgEngagement": 0.05531512356627646,
-      "avgLikes": 1902,
-      "avgViews": 42285
-    },
-    {
-      "key": "20:00",
-      "posts": 7,
-      "avgEngagement": 0.0122783571382038,
-      "avgLikes": 281.2857142857143,
-      "avgViews": 7615.142857142857
-    },
-    {
       "key": "11:00",
+      "posts": 5,
+      "avgEngagement": 0,
+      "avgLikes": 0,
+      "avgViews": 22.4
+    },
+    {
+      "key": "02:00",
       "posts": 1,
       "avgEngagement": 0,
       "avgLikes": 0,
@@ -93,46 +79,46 @@
   ],
   "motifs": [
     {
-      "key": "rocket",
-      "posts": 2,
-      "avgEngagement": 0.3333333333333333,
-      "avgLikes": 1,
-      "avgViews": 39.5
+      "key": "compass",
+      "posts": 1,
+      "avgEngagement": 0.6666666666666666,
+      "avgLikes": 2,
+      "avgViews": 3
     },
     {
-      "key": "compass",
-      "posts": 4,
-      "avgEngagement": 0.18466619632128944,
-      "avgLikes": 183.75,
-      "avgViews": 4083.75
+      "key": "rocket",
+      "posts": 1,
+      "avgEngagement": 0.6666666666666666,
+      "avgLikes": 2,
+      "avgViews": 3
     },
     {
       "key": "lock",
-      "posts": 6,
-      "avgEngagement": 0.17928721447193044,
-      "avgLikes": 317.8333333333333,
-      "avgViews": 7067.333333333333
-    },
-    {
-      "key": "branch",
-      "posts": 4,
-      "avgEngagement": 0.11062581089953533,
-      "avgLikes": 561.5,
-      "avgViews": 13082.25
+      "posts": 3,
+      "avgEngagement": 0.3401360544217687,
+      "avgLikes": 1.6666666666666667,
+      "avgViews": 34.666666666666664
     },
     {
       "key": "chart",
-      "posts": 5,
-      "avgEngagement": 0.05901605752393726,
-      "avgLikes": 220.2,
-      "avgViews": 5373.2
+      "posts": 1,
+      "avgEngagement": 0.25,
+      "avgLikes": 1,
+      "avgViews": 4
+    },
+    {
+      "key": "branch",
+      "posts": 2,
+      "avgEngagement": 0.16666666666666666,
+      "avgLikes": 0.5,
+      "avgViews": 1.5
     }
   ],
   "bestVariant": "A",
-  "bestHour": "21:00",
+  "bestHour": "12:00",
   "hints": [
-    "디자인 A안이 평균 참여율 18.2%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
-    "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
-    "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
+    "디자인 A안이 인스타 평균 참여율 45.1%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
+    "12:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
+    "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }

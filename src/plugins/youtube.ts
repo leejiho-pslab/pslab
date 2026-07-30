@@ -162,13 +162,40 @@ export class YouTubePlugin extends BasePlugin {
 
   async fetchAnalytics(remoteId: string): Promise<AnalyticsReport> {
     this.ensureConnected();
-    // YouTube Analytics API는 별도 OAuth 스코프·연동이 필요해 우선 의사 지표로 채운다.
-    const metrics = await simulateApiCall(pseudoMetrics(`yt:${remoteId}`));
+    // dryRun에서만 의사 지표. 실발행 지표는 반드시 실측 —
+    // 과거에 실측 대신 해시 기반 의사 지표(수만 뷰)를 반환해 변형(A/B/C) 학습을
+    // 오염시킨 사고가 있었다. 실패하면 조용히 가짜로 채우지 말고 throw 해서
+    // collect-insights가 "수집 실패"로 기록하게 둔다.
+    if (this.ctx.dryRun) {
+      const metrics = await simulateApiCall(pseudoMetrics(`yt:${remoteId}`));
+      return {
+        platform: this.platform,
+        remoteId,
+        url: `https://youtu.be/${remoteId}`,
+        metrics,
+        collectedAt: this.now(),
+      };
+    }
+    if (!this.accessToken) await this.refreshAccessToken();
+    const json = await this.apiGet('videos', { part: 'statistics', id: remoteId });
+    const st = json.items?.[0]?.statistics;
+    if (!st) {
+      throw new Error(`영상 통계를 찾을 수 없습니다 (삭제되었거나 ID 오류): ${remoteId}`);
+    }
+    const views = Number(st.viewCount ?? 0);
+    const likes = Number(st.likeCount ?? 0);
+    const comments = Number(st.commentCount ?? 0);
     return {
       platform: this.platform,
       remoteId,
       url: `https://youtu.be/${remoteId}`,
-      metrics,
+      metrics: {
+        views,
+        likes,
+        comments,
+        shares: 0, // Data API v3 statistics에는 공유 수가 없다
+        engagementRate: views > 0 ? (likes + comments) / views : 0,
+      },
       collectedAt: this.now(),
     };
   }

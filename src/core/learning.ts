@@ -94,14 +94,19 @@ export class LearningEngine {
       (it) => it.status === 'published' && it.metrics,
     );
 
-    const variants = groupBy(measured, (it) => it.variant);
+    // 디자인 학습(변형 A/B/C·모티프)은 인스타그램 발행분만 대상 —
+    // 카드 디자인이 실제로 노출되는 채널이 인스타이고, 채널마다 지표 스케일이
+    // 크게 달라(유튜브 조회수 vs 인스타 좋아요) 섞어 평균 내면 "어떤 디자인이
+    // 잘 먹혔는지"가 아니라 "어떤 채널에 실렸는지"를 학습해 버린다.
+    const igMeasured = measured.filter((it) => it.channels.includes('instagram'));
+    const variants = groupBy(igMeasured, (it) => it.variant);
     const channels = groupBy(measured, (it) => it.channels[0]);
     const hours = groupBy(measured, (it) =>
       it.publishedAt
         ? `${String(new Date(it.publishedAt).getHours()).padStart(2, '0')}:00`
         : undefined,
     );
-    const motifs = groupBy(measured, (it) => it.motif);
+    const motifs = groupBy(igMeasured, (it) => it.motif);
 
     const bestVariant = variants.length >= 2 ? variants[0].key : undefined;
     const bestHour = hours.length >= 2 ? hours[0].key : undefined;
@@ -115,7 +120,7 @@ export class LearningEngine {
     if (bestVariant) {
       const top = variants[0];
       hints.push(
-        `디자인 ${bestVariant}안이 평균 참여율 ${(top.avgEngagement * 100).toFixed(1)}%로 가장 좋음 → 비슷한 톤·구성을 더 자주.`,
+        `디자인 ${bestVariant}안이 인스타 평균 참여율 ${(top.avgEngagement * 100).toFixed(1)}%로 가장 좋음 → 비슷한 톤·구성을 더 자주.`,
       );
     }
     if (bestHour) {

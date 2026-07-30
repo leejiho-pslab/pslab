@@ -51,11 +51,31 @@ function fontFaces() {
 }
 
 // 디자인 변형 — 모두 잉크(다크) 계열, 액센트·레이아웃을 바꿔 A/B 테스트
-const VARIANTS = {
+// 기본값은 코드에 두되, data/clients/<id>/design-tokens.json 이 있으면 변형별로
+// 덮어쓴다(키 단위 병합). 레퍼런스 학습·디자인 조정을 코드 수정 없이 토큰 파일
+// 편집만으로 할 수 있게 하기 위한 외부화 지점.
+// 스키마: { "variants": { "A": { "name","bg","fg","muted","accent","layout" }, ... } }
+//   layout ∈ editorial | graphic | spotlight (렌더러가 아는 레이아웃만 유효)
+const DEFAULT_VARIANTS = {
   A: { name: '잉크·에디토리얼', bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', layout: 'editorial' },
   B: { name: '잉크·그래픽', bg: '#0b1a1c', fg: '#eef3f1', muted: '#8fb0ab', accent: '#36d6c4', layout: 'graphic' },
   C: { name: '잉크·스포트라이트', bg: '#14121d', fg: '#f3eff6', muted: '#a99fc0', accent: '#ffc24a', layout: 'spotlight' },
 };
+function loadDesignTokens(id) {
+  const f = join(ROOT, 'data/clients', id, 'design-tokens.json');
+  if (!existsSync(f)) return null;
+  try {
+    return JSON.parse(readFileSync(f, 'utf8'));
+  } catch (e) {
+    console.warn(`design-tokens.json 파싱 실패 — 기본값 사용 (${e.message})`);
+    return null;
+  }
+}
+const TOKENS = loadDesignTokens(clientId);
+const VARIANTS = Object.fromEntries(
+  Object.entries(DEFAULT_VARIANTS).map(([k, v]) => [k, { ...v, ...(TOKENS?.variants?.[k] ?? {}) }]),
+);
+if (TOKENS?.variants) console.log(`디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
 
 // 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
 function motifSVG(key, color, size, opacity) {
