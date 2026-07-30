@@ -36,6 +36,58 @@ export interface ChannelGuide {
 }
 export type ChannelGuides = Partial<Record<PlatformId, ChannelGuide>>;
 
+/** 리서치 브리프 — 온보딩 조사 결과를 대시보드 '리서치' 탭에 시각화하기 위한 구조 */
+export interface ResearchSection {
+  icon?: string;
+  title: string;
+  desc?: string;
+  /** KPI 숫자 카드 */
+  stats?: Array<{ v: string; l: string; accent?: boolean }>;
+  /** 가로 막대 차트 (value는 0~max 상대값) */
+  bars?: { title?: string; unit?: string; max?: number; items: Array<{ label: string; value: number; note?: string; color?: string }> };
+  /** 표 */
+  table?: { head: string[]; rows: string[][] };
+  /** 태그 뭉치 */
+  tags?: string[];
+  /** 불릿 리스트 (제목+설명) */
+  list?: Array<{ t: string; d?: string }>;
+  /** 타임라인 */
+  timeline?: Array<{ date: string; text: string; url?: string }>;
+  /** 확인용 외부 링크 */
+  links?: Array<{ label: string; url: string; note?: string }>;
+}
+export interface ResearchBrief {
+  title?: string;
+  updatedAt?: string;
+  note?: string;
+  sections: ResearchSection[];
+}
+
+/**
+ * 네이버 광고주센터 키워드 도구 실측 데이터 — keyword-stats.json
+ * 반드시 실제 조회값만 넣는다 (허수 금지). scripts/import-keyword-stats.mjs로
+ * 키워드 도구 '전체 다운로드' CSV를 변환해 생성.
+ */
+export interface KeywordStat {
+  kw: string;
+  /** 월간검색수(PC) — 키워드 도구 '< 10'은 null로 */
+  pc: number | null;
+  /** 월간검색수(모바일) */
+  mobile: number | null;
+  /** 경쟁정도 (낮음/보통/높음) */
+  competition?: string;
+  /** 월평균노출광고수 */
+  adCount?: number | null;
+  /** 월평균클릭수 (PC+모바일 합) */
+  clicks?: number | null;
+}
+export interface KeywordStats {
+  source: string;
+  /** 조회(다운로드) 기준일 */
+  fetchedAt: string;
+  items: KeywordStat[];
+}
+
 export const BRAND_FIELDS: Record<string, keyof BrandBrief> = {
   분석: 'analysis',
   방향성: 'direction',
@@ -109,6 +161,27 @@ export class GuidanceStore {
     ].slice(0, 20);
     this.saveBrief(clientId, b);
     return b;
+  }
+
+  /** week-plan.json — 차주 콘텐츠 기획 (ADR-0006: 토요일 생성, plan.json과 분리) */
+  loadWeekPlan(clientId: string): { baseDate?: string; items: Array<{ date?: string; channel?: string; title?: string; sheet?: string }> } | undefined {
+    const raw = this.read<unknown>(this.file(clientId, 'week-plan.json'));
+    if (!raw) return undefined;
+    const items = Array.isArray(raw) ? raw : (raw as { items?: unknown }).items;
+    if (!Array.isArray(items) || !items.length) return undefined;
+    return { baseDate: (raw as { baseDate?: string }).baseDate, items: items as Array<{ date?: string; channel?: string; title?: string; sheet?: string }> };
+  }
+
+  /** keyword-stats.json — 키워드 도구 실측 데이터 (없으면 undefined = '실측 대기' 표시) */
+  loadKeywordStats(clientId: string): KeywordStats | undefined {
+    const s = this.read<KeywordStats>(this.file(clientId, 'keyword-stats.json'));
+    return s && Array.isArray(s.items) && s.items.length ? s : undefined;
+  }
+
+  /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */
+  loadResearch(clientId: string): ResearchBrief | undefined {
+    const r = this.read<ResearchBrief>(this.file(clientId, 'research-brief.json'));
+    return r && Array.isArray(r.sections) && r.sections.length ? r : undefined;
   }
 
   loadGuides(clientId: string): ChannelGuides {

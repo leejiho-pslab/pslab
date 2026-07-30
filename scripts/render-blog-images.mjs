@@ -53,13 +53,14 @@ const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</
 // 가로 16:9 대표이미지(커버) — 배경사진은 오른쪽, 제목은 왼쪽 어두운 안전영역(인물과 안 겹침)
 function coverHtml(title, kicker, t, bgB64) {
   const bg = bgB64
-    ? `background-image:linear-gradient(90deg,rgba(9,13,22,.97) 0%,rgba(9,13,22,.92) 34%,rgba(9,13,22,.55) 62%,rgba(9,13,22,.15) 88%,rgba(9,13,22,.05) 100%),url(data:image/jpeg;base64,${bgB64});background-size:cover;background-position:right center;`
-    : `background:linear-gradient(135deg,#0d1526 0%,#101a2c 100%);`;
+    ? `background-image:linear-gradient(90deg,rgba(${COVER_DARK},.97) 0%,rgba(${COVER_DARK},.92) 34%,rgba(${COVER_DARK},.55) 62%,rgba(${COVER_DARK},.15) 88%,rgba(${COVER_DARK},.05) 100%),url(data:image/jpeg;base64,${bgB64});background-size:cover;background-position:right center;`
+    : `background:${COVER_BG};`;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${fontFaces()}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:break-word;text-wrap:pretty}
 html,body{width:1600px;height:900px}
-.cover{width:1600px;height:900px;position:relative;overflow:hidden;${bg}color:#f4f7fb;font-family:'Pretendard';
+body{background:${CLIENT_THEME ? '#1B130A' : '#0d1526'}}
+.cover{width:1600px;height:900px;position:relative;overflow:hidden;${bg}color:${CLIENT_THEME ? '#F7F0E1' : '#f4f7fb'};font-family:'Pretendard';
   display:flex;flex-direction:column;justify-content:center;padding:0 720px 0 104px}
 .bar{position:absolute;left:0;top:0;bottom:0;width:16px;background:${t.accentCover}}
 .kicker{font-weight:700;font-size:30px;letter-spacing:.16em;color:${t.accentCover};text-transform:uppercase;margin-bottom:26px}
@@ -68,7 +69,7 @@ html,body{width:1600px;height:900px}
 </style></head><body><div class="cover"><div class="bar"></div>
   <div class="kicker">${esc(kicker)}</div>
   <div class="title">${esc(title)}</div>
-  <div class="brand">@_pslab</div>
+  <div class="brand">${CLIENT_META.handle}</div>
 </div></body></html>`;
 }
 
@@ -118,7 +119,7 @@ function figureHtml(fig, t) {
   } else {
     inner = head(fig.kicker, fig.title || '');
   }
-  return `<div class="fig ${fig.type}">${inner}<div class="brand">@_pslab</div></div>`;
+  return `<div class="fig ${fig.type}">${inner}<div class="brand">${CLIENT_META.handle}</div></div>`;
 }
 
 function pageHtml(fig, t) {
@@ -180,7 +181,35 @@ if (!chromium) {
 }
 
 const titles = loadTitles();
-const KICKER = { 'naver-blog': 'pslab · 광고 인사이트', naver: 'pslab · 광고 인사이트', blogger: 'pslab journal' };
+// 브랜드 핸들·킥커 — clients/<id>.json 에서 읽어 채널 이미지에 반영 (없으면 pslab 기본)
+function loadClientMeta() {
+  try {
+    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    const name = String(c.name || clientId).replace(/\s*\(.*\)$/, '');
+    const handle = (c.accounts && (c.accounts.instagram || c.accounts['naver-blog'])) || clientId;
+    return { handle: `@${handle}`, kicker: { 'naver-blog': `${name} · 인사이트`, naver: `${name} · 인사이트`, blogger: `${name} journal` } };
+  } catch { return { handle: '@_pslab', kicker: { 'naver-blog': 'pslab · 광고 인사이트', naver: 'pslab · 광고 인사이트', blogger: 'pslab journal' } }; }
+}
+const CLIENT_META = loadClientMeta();
+const KICKER = CLIENT_META.kicker;
+// 업체 theme(웜 등)가 있으면 블로그 이미지·커버를 그 감도로 렌더 (research/05 감도 준수)
+function loadClientTheme() {
+  try {
+    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    return c.theme || null;
+  } catch { return null; }
+}
+const CLIENT_THEME = loadClientTheme();
+if (CLIENT_THEME) {
+  THEMES.naver = { bg: '#FAF6EF', panel: '#FFFFFF', fg: '#2A241B', muted: '#93826A', accent: '#B26E0F', accent2: '#E8A13D', line: '#EBDFC9', accentCover: '#F0B45C' };
+  THEMES['naver-blog'] = THEMES.naver;
+  THEMES.blogger = { bg: '#191209', panel: '#241B10', fg: '#F7F0E1', muted: '#C9B896', accent: '#E8A13D', accent2: '#F0B45C', line: '#3A2C17', accentCover: '#F0B45C' };
+}
+// 커버 딥톤 — 테마 있으면 저녁 전구빛 웜 브라운, 없으면 기존 네이비
+const COVER_DARK = CLIENT_THEME ? '25,18,9' : '9,13,22';
+const COVER_BG = CLIENT_THEME
+  ? 'radial-gradient(70% 90% at 82% 10%, rgba(240,180,92,.28) 0%, transparent 60%),linear-gradient(135deg,#1B130A 0%,#2A2013 100%)'
+  : 'linear-gradient(135deg,#0d1526 0%,#101a2c 100%)';
 
 let n = 0;
 for (const post of specs) {

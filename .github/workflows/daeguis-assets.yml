@@ -1,0 +1,42 @@
+name: daeguis assets (사이트 이미지 수집)
+
+# 대구일색 공식 사이트(daeguis.co.kr) 이미지 수집 — "프로젝트 영역 제한" 실행 장치.
+#  - 개발 컨테이너는 외부 이미지 호스트가 막혀 있어(스킬 §8) 다운로드는 이 CI에서만 수행한다.
+#  - fetch-site-images.mjs 가 allowedHosts(daeguis.co.kr) 밖 URL을 전부 거부하고,
+#    결과물은 docs/site-assets/daeguis/ 와 data/clients/daeguis/site-images.json 에만 기록한다.
+#  - 실행: Actions 탭 → 이 워크플로 선택 → Branch: claude/sns-automation-brand-research-th4yll → Run workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '기존 이미지도 다시 받기 (--force)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daeguis-assets
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 사이트 이미지 수집 (daeguis.co.kr 한정)
+        run: node scripts/fetch-site-images.mjs --client daeguis ${{ inputs.force && '--force' || '' }}
+      - name: 결과 커밋 (daeguis 영역 파일만)
+        run: |
+          git config user.name "pslab-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add -f docs/site-assets/daeguis data/clients/daeguis/site-images.json
+          if git diff --cached --quiet; then echo "변경 없음"; exit 0; fi
+          git commit -m "chore(daeguis): 공식 사이트 이미지 수집 (daeguis.co.kr 한정)"
+          for i in 1 2 3; do git pull --rebase && git push && break || sleep 5; done

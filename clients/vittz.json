@@ -1,0 +1,109 @@
+{
+  "id": "vittz",
+  "name": "비츠 (VITTZ)",
+  "industry": "조명 기반 토탈 인테리어 플랫폼 (LED조명·실링팬·커튼/블라인드·타일·침구, 배달+설치 딜리버리 서비스)",
+  "keywords": [
+    "비츠조명",
+    "인테리어조명",
+    "LED조명",
+    "거실등",
+    "방등",
+    "주방등",
+    "식탁등",
+    "펜던트조명",
+    "실링팬",
+    "무드등",
+    "간접조명",
+    "조명교체",
+    "셀프인테리어",
+    "집꾸미기"
+  ],
+  "competitors": [
+    { "handle": "공간조명", "platform": "naver-blog", "note": "직접 경쟁 조명몰 — 프로모션 스파이크형" },
+    { "handle": "todayhouse", "platform": "instagram", "note": "오늘의집 — 공간 콘텐츠·UGC 문법 벤치마크" },
+    { "handle": "ikeakreya", "platform": "instagram", "note": "이케아코리아 — 쇼룸·AR 체험 문법" },
+    { "handle": "louispoulsen", "platform": "instagram", "note": "루이스폴센 — 프리미엄 디자인 서사" }
+  ],
+  "brandTone": "우리 집 조명을 잘 아는 친절한 전문가 이웃 — 존댓말, 짧은 문장, 실행형 마무리(~해보세요). 가격·시간·스펙은 구체적 숫자로. 과장 없이 신뢰감 있게",
+  "persona": "조명 시공 기사님의 노하우와 스타일리스트의 감각을 함께 가진 조명 전문가. '실제로 설치해 보니 이렇더라'를 말하는 사람. 셀프 시공을 안내할 때는 반드시 안전(차단기 차단)을 먼저 챙긴다",
+  "audience": "집을 소유·관리하는 30~50대 (남녀 균형). 이사·새단장·부분 교체를 앞두고 조명을 검색하는 사람, 셀프 인테리어족, 신혼집·아이방을 꾸미는 부모",
+  "contentPillars": [
+    "5분 셀프 시공 (방등/센서등 교체, 잔광 해결)",
+    "공간별 조명 스타일링 (거실·주방·침실·욕실·현관)",
+    "조명 지식사전 (색온도·플리커프리·와트)",
+    "시즌 기획 (실링팬·조명교체·무드등·학습등)",
+    "비츠라서 가능한 것 (딜리버리 설치·무료 견적·3D AR·OV 디자인)",
+    "토탈 인테리어 (커튼·타일·침구)"
+  ],
+  "bannedWords": ["100% 보장", "무조건", "최저가 보장", "수면 치료", "업계 유일"],
+  "targets": ["instagram", "threads", "naver-blog", "youtube", "blogger"],
+  "accounts": {
+    "instagram": "vittz_official",
+    "threads": "vittz_official",
+    "naver-blog": "vittzlighting",
+    "youtube": "vittzlighting"
+  },
+  "channelLinks": {
+    "instagram": "https://www.instagram.com/vittz_official",
+    "threads": "https://www.threads.net/@vittz_official",
+    "naver-blog": "https://blog.naver.com/vittzlighting",
+    "youtube": "https://www.youtube.com/channel/UCqfOTULeIeIurfRY-DXEoyw"
+  },
+  "imageAllowlist": [
+    "vittz.co.kr",
+    "shopping-phinf.pstatic.net"
+  ],
+  "benchmarks": {
+    "instagram": ["todayhouse", "ikeakorea", "louispoulsen"]
+  },
+  "keywordPlan": {
+    "coreSeeds": ["비츠조명", "인테리어조명", "LED조명", "거실등", "방등", "주방등", "식탁등", "현관센서등", "펜던트조명", "무드등", "간접조명", "벽등", "레일조명", "LED방등", "플리커프리조명", "삼색변환LED", "LED매입등", "조명쇼핑몰"],
+    "commonTimely": ["조명교체", "전등교체", "조명설치", "셀프인테리어", "집꾸미기"],
+    "season": {
+      "1": ["신년인테리어", "무드등", "간접조명", "이사조명"],
+      "2": ["신학기스탠드", "학습용스탠드", "책상스탠드", "새학기준비"],
+      "3": ["봄인테리어", "신혼집조명", "이사철조명", "책상스탠드"],
+      "4": ["봄맞이인테리어", "신혼집인테리어", "거실등교체"],
+      "5": ["실링팬", "천장선풍기", "여름준비", "홈캉스"],
+      "6": ["실링팬", "LED실링팬", "실링팬방등", "천장선풍기"],
+      "7": ["실링팬", "실링팬방등", "천장선풍기", "열대야"],
+      "8": ["가을인테리어", "조명교체", "이사철", "실링팬"],
+      "9": ["조명교체", "전등교체", "거실등교체", "이사철조명", "가을인테리어"],
+      "10": ["조명교체", "전등교체", "거실등", "방등교체", "집들이선물"],
+      "11": ["무드등", "간접조명", "겨울인테리어", "연말홈파티"],
+      "12": ["무드등", "간접조명", "크리스마스조명", "연말인테리어"]
+    },
+    "relatedFilter": "(조명|등$|방등|거실|주방|욕실|현관|식탁|펜던트|샹들리에|실링팬|선풍기|램프|스탠드|무드|간접|매입|레일|벽등|전구|LED|led|플리커|커튼|블라인드|인테리어)"
+  },
+  "weekPlan": {
+    "schedule": ["naver-blog", "instagram", "blogger", "instagram", "naver-blog", "instagram", null],
+    "templates": {
+      "naver-blog": [
+        "{kw} 고르는 법 — 가격·스펙·설치까지 한 번에 정리",
+        "{kw} 교체 비용, 얼마면 될까? (2026 기준 총정리)",
+        "{kw}, 우리 집엔 뭐가 맞을까 — 조명 전문가의 기준"
+      ],
+      "blogger": [
+        "{kw} 완벽 가이드 — 종류·비용·설치 비교",
+        "{kw} 구매 전 체크리스트 (밝기·색온도·KC인증)",
+        "{kw}, 초보도 실패 안 하는 선택 기준"
+      ],
+      "instagram": [
+        "{kw}, 이것만 알면 우리 집이 달라집니다 ✨",
+        "{kw} 고를 때 놓치기 쉬운 포인트",
+        "{kw}의 한 끗 차이, 빛에서 갈립니다"
+      ]
+    }
+  },
+  "theme": {
+    "accent": "#E8A13D",
+    "accentInk": "#9A6410",
+    "bg": "#FBF8F3",
+    "panel": "#FFFFFF",
+    "border": "#EBE3D5"
+  },
+  "scheduleTimes": ["18:00"],
+  "manualPlan": true,
+  "reviewMode": "manual",
+  "reportTo": "pslab2026@gmail.com"
+}
