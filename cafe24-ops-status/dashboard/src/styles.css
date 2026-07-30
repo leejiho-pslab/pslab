@@ -403,3 +403,14 @@ button { cursor: pointer; }
   .funnel-step { grid-template-columns: 90px 1fr; }
   .funnel-val { grid-column: 2; text-align: left; }
 }
+
+/* ── 카페24 접속통계 탭 ──────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+/* 담기율이 유독 낮은 상품을 모아 보여주는 경고 카드 */
+.card.warn-card { border-color: #fdba74; background: #fffbf5; }
+/* 표 안 상품명 아래 조회수 비율 막대 — 어느 상품이 트래픽을 먹는지 한눈에 */
+.minibar { height: 3px; background: #eef2f7; border-radius: 2px; margin-top: 4px; }
+.minibar span { display: block; height: 3px; background: var(--blue); border-radius: 2px; }
+@media (max-width: 900px) {
+  .two-col { grid-template-columns: 1fr; }
+}

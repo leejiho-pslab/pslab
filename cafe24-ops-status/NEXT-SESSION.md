@@ -77,7 +77,21 @@
   - 테스트: `test_ga4_site.py` 19개(파서/매핑/집계/퍼널/이탈/유입경로/비교기간), `test_api_ga4.py` 4개(엔드포인트 계약).
   - **라이브 검증 완료(2026-07-29)**: 5/1~7/28 **89일 전부** GA4 수집 성공(하루 270~350건, 누락 0). `keek-api-smoke.yml` 에서 GA4 4개 엔드포인트 200 + 적재 범위/유입경로·이탈·퍼널 건수를 상시 출력하도록 추가. GA4 보관기간 때문에 과거가 비지 않을까 우려했으나 **5/1까지 정상 조회**됨(Data API 표준 리포트는 이벤트 보관기간 영향을 덜 받음).
   - **미해결 갭**: criteo(트래픽 약 42%) / 네이버 GFA(14%) / 네이버 브랜드검색(3%) 은 GA4 유입은 잡히지만 **광고비 소스가 대시보드에 없다** → 현재 ROAS 는 과대 계상 상태. 광고비 연동 전까지는 GA4 세션/전환만 신뢰할 것.
-- 테스트 137개 통과
+- **카페24 접속통계 연동(2026-07-30)** — Admin API 와 별도 호스트(`ca-api.cafe24data.com`, 경로 접두어 없음)인 통계 API. 문서상 "승인 제휴사 대상"이라 포기했던 것을 실제로 쏴보니 **열렸다**. 경로명을 추측하기 어려워(예: 장바구니는 `/carts/view` 가 아니라 **`/carts/action`**) 네임스페이스별 후보 60여 개를 전수 probe 해 확정. 사용 가능한 9개:
+  `/visitors/view`(방문/신규/재방문) · `/visitpaths/domains`(유입 도메인) · `/visitpaths/keywords`(**실제 검색어** — GA4 는 네이버·구글이 가려 organic 까지만 보임) · `/visitpaths/ads`(광고 채널별 방문) · `/pages/view` · `/products/view` · `/products/sales` · **`/carts/action`(상품별 조회→담기→담기율)** · `/members/sales`(회원/비회원).
+  없는 경로 52개도 스크립트 docstring 에 기록 — 추측으로 재호출하지 말 것.
+  - **핵심 가치**: GA4 퍼널이 "장바구니 담기"를 병목으로 지목해도 *어느 상품 때문인지*는 모른다. `/carts/action` 이 상품 단위로 알려준다. 라이브 첫 확인에서 조회 1위 상품(Windbreaker V3)이 조회 2,558 / 담기 26 = **담기율 1.02%**, 2위(Vest) 2,133 / 85 = 약 4% 로 4배 차이 — 1위 상품의 가격·옵션·품절 점검이 최우선 액션.
+  - `etl/cafe24_analytics.py`: `product_funnel`(담기율을 **기간 합계로 재계산** — 일자별 비율 합산은 틀린 값), `cart_bottleneck`(담기율 **중위값의 절반 미만**인 상품 지목 — 평균은 한 상품이 튀면 기준이 흔들림), `search_keywords`/`referrer_domains`/`ad_paths`(비교기간 대비 증감 + 신규 등장 플래그), `page_report`(방문당 조회수), `member_split`.
+  - API `/api/shop/analytics`(9개 블록 한 번에, 비교기간 자동), 프론트 `ShopAnalyticsPage.tsx` + 6번째 탭("접속통계·담기율"). 담기율 낮은 상품은 경고 카드 + 행 강조.
+  - 통계 API 실패는 **예외로 올리지 않고 부분 실패로만 기록**(보조 지표라 하루 수집 전체를 막으면 안 됨). 단 전부 실패면 예외 → 빈 결과로 기존 데이터를 덮지 않게.
+- **⚠ 사고 기록: 토큰 체인 끊김 + scope 축소 (2026-07-29~30)** — 재발 방지를 위해 상세히 남긴다.
+  1. **원인**: 카페24 refresh_token 은 갱신마다 **회전**하고 직전 것이 즉시 무효다. 진단 스크립트가 DB 토큰을 **읽기만 하고 회전분을 되쓰지 않아** 그 실행은 성공하고 **다음 실행이 invalid_grant 로 사망**(재인증 필요). 수집기·verify 도 "작업 끝난 뒤 저장" 구조라 중간에 죽으면 같은 결함.
+  2. **수정**: `Cafe24Client` 에 `token_sink` 훅 + **`from_store(config, store)` 팩토리** 추가 — 갱신되는 **그 순간** DB 에 되쓴다. 토큰을 쓰는 6곳 전부 전환. 회귀 테스트 2종(`test_cafe24_token_rotation.py`).
+  3. **2차 사고**: 재인증을 `mall.read_order,mall.read_customer` 만으로 해서 원래보다 scope 가 좁아졌다 → 후기·품절·통계가 전부 막혔는데 **오류가 아니라 '지표 결측'처럼 보였다**(가장 위험한 실패 모드). `DEFAULT_SCOPE` 를 실제 필요 범위 7개로 확대(order/customer/community/product/category/application/analytics).
+  4. **redirect_uri**: 워크플로·문서에 `https://coversomeone1.cafe24.com/` 로 적혀 있었지만 앱 등록값은 **`https://keek-ops-dashboard.onrender.com`**. 전부 교정.
+  5. **인가코드 1분 만료**: 기존 bootstrap 은 checkout+setup-python+pip 로 준비에만 30초 이상 써서 반복 실패했다. **`cafe24-token-fast.yml`** 신설 — checkout/setup-python/pip 전부 없이 stdlib urllib 로 즉시 교환(실측 2초), DB 저장은 그 뒤에. 부여된 scope 를 출력하고 필수 권한 누락을 경고하며 `app_kv.cafe24_token_scopes` 에 저장.
+  6. **복구 절차**: `cafe24-authorize-url.yml`(승인 URL 생성 — client_id 는 Actions 마스킹을 피해 첫 글자만 퍼센트 인코딩) → 브라우저 승인 → `cafe24-token-fast.yml` 에 code 입력. **사람이 직접 눌러야 함**(에이전트를 거치면 그 왕복에서 1분 초과).
+- 테스트 155개 통과
 
 ## 5. 남은 일 / 알려진 갭
 

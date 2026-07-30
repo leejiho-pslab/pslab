@@ -458,3 +458,78 @@ export interface Ga4JourneyResponse {
   funnel: Ga4Funnel;
   funnel_channels: Ga4FunnelChannel[];
 }
+
+// ── 카페24 접속통계 (GA4 가 못 주는 것) ─────────────────────────
+export interface ShopVisitSummary {
+  visits: number;
+  first_visits: number;
+  re_visits: number;
+  re_visit_rate: number | null;
+  days: number;
+}
+export interface ShopVisitRow {
+  date: string;
+  visits: number | null;
+  first_visits: number | null;
+  re_visits: number | null;
+}
+export interface ShopRankedRow {
+  name: string;
+  visits: number;
+  share: number;
+  prev_visits: number | null;
+  delta: number | null;
+  is_new: boolean;
+}
+export interface ShopFunnelRow {
+  product_no: string;
+  product: string;
+  views: number;
+  cart_adds: number;
+  cart_rate: number | null;
+  orders: number;
+  order_rate: number | null;
+  overall_rate: number | null;
+  amount: number;
+}
+export interface ShopBottleneck {
+  total_views: number;
+  total_cart_adds: number;
+  total_orders: number;
+  cart_rate: number | null;
+  order_rate: number | null;
+  median_cart_rate: number | null;
+  laggards: ShopFunnelRow[];
+}
+export interface ShopPageRow {
+  url: string;
+  views: number;
+  visits: number;
+  first_visits: number;
+  views_per_visit: number | null;
+}
+export interface ShopMemberSplit {
+  member_orders: number;
+  member_amount: number;
+  nonmember_orders: number;
+  nonmember_amount: number;
+  nonmember_order_share: number | null;
+  nonmember_amount_share: number | null;
+  member_aov: number | null;
+  nonmember_aov: number | null;
+}
+export interface ShopAnalytics {
+  from: string;
+  to: string;
+  cmp_from: string;
+  cmp_to: string;
+  summary: ShopVisitSummary;
+  trend: ShopVisitRow[];
+  funnel: ShopFunnelRow[];
+  bottleneck: ShopBottleneck;
+  keywords: ShopRankedRow[];
+  referrers: ShopRankedRow[];
+  ads: ShopRankedRow[];
+  pages: ShopPageRow[];
+  member: ShopMemberSplit;
+}

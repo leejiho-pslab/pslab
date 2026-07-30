@@ -36,6 +36,17 @@ from cafe24_ops.etl.ads_metrics import (  # noqa: E402
     ads_summary,
     ads_trend,
 )
+from cafe24_ops.etl.cafe24_analytics import (  # noqa: E402
+    ad_paths,
+    cart_bottleneck,
+    member_split,
+    page_report,
+    product_funnel,
+    referrer_domains,
+    search_keywords,
+    visit_summary,
+    visit_trend,
+)
 from cafe24_ops.etl.compare import period_comparison, summary_cards_range  # noqa: E402
 from cafe24_ops.etl.competitor_metrics import (  # noqa: E402
     bestseller_changes,
@@ -533,6 +544,41 @@ def ga4_journey_ep(
             "exit_pages": exit_pages(store, date_from, date_to, cf, ct),
             "funnel": purchase_funnel(store, date_from, date_to, channel),
             "funnel_channels": funnel_by_channel(store, date_from, date_to),
+        }
+    finally:
+        store.close()
+
+
+@app.get("/api/shop/analytics")
+def shop_analytics_ep(
+    date_from: str = Query(..., alias="from"),
+    date_to: str = Query(..., alias="to"),
+    cmp_from: str | None = Query(default=None),
+    cmp_to: str | None = Query(default=None),
+) -> dict:
+    """카페24 접속통계 — GA4 가 못 주는 것들.
+
+    - funnel/bottleneck : 상품별 조회→담기→주문. GA4 가 지목한 '장바구니 담기'
+                          병목이 **어느 상품 때문인지** 특정한다.
+    - keywords          : 자연 검색 유입 **실제 검색어**(GA4 는 organic 까지만 보임)
+    - referrers/ads     : 유입 도메인·광고 채널 방문(GA4 채널과 교차검증)
+    - member            : 회원 vs 비회원 주문·객단가
+    비교기간 미지정 시 직전 동일 길이 기간을 자동으로 쓴다.
+    """
+    cf, ct = (cmp_from, cmp_to) if (cmp_from and cmp_to) else prev_period(date_from, date_to)
+    store = _store()
+    try:
+        return {
+            "from": date_from, "to": date_to, "cmp_from": cf, "cmp_to": ct,
+            "summary": visit_summary(store, date_from, date_to),
+            "trend": visit_trend(store, date_from, date_to),
+            "funnel": product_funnel(store, date_from, date_to),
+            "bottleneck": cart_bottleneck(store, date_from, date_to),
+            "keywords": search_keywords(store, date_from, date_to, cf, ct),
+            "referrers": referrer_domains(store, date_from, date_to, cf, ct),
+            "ads": ad_paths(store, date_from, date_to, cf, ct),
+            "pages": page_report(store, date_from, date_to),
+            "member": member_split(store, date_from, date_to),
         }
     finally:
         store.close()
