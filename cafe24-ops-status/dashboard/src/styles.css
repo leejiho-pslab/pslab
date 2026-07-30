@@ -404,13 +404,12 @@ button { cursor: pointer; }
   .funnel-val { grid-column: 2; text-align: left; }
 }
 
-/* ── 카페24 접속통계 탭 ──────────────────────────────────────── */
-.two-col { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+/* ── 카페24 접속통계 (어드민 탭에 통합된 섹션) ─────────────────── */
+/* .two-col 은 위에서 이미 정의됨 — 재정의하지 않는다 */
 /* 담기율이 유독 낮은 상품을 모아 보여주는 경고 카드 */
 .card.warn-card { border-color: #fdba74; background: #fffbf5; }
 /* 표 안 상품명 아래 조회수 비율 막대 — 어느 상품이 트래픽을 먹는지 한눈에 */
 .minibar { height: 3px; background: #eef2f7; border-radius: 2px; margin-top: 4px; }
 .minibar span { display: block; height: 3px; background: var(--blue); border-radius: 2px; }
-@media (max-width: 900px) {
-  .two-col { grid-template-columns: 1fr; }
-}
+/* 섹션 제목 옆 보조 설명 — 지표 정의 차이를 그 자리에서 밝히기 위한 것 */
+.section-title .sub-note { display: block; font-weight: 400; font-size: 12px; margin-top: 3px; }

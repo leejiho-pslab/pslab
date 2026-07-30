@@ -24,6 +24,7 @@ import { NewReturningChart } from "../components/NewReturningChart";
 import { AdCostChart } from "../components/AdCostChart";
 import { PlannedGroups } from "../components/PlannedGroups";
 import { RangePicker } from "../components/RangePicker";
+import { ShopAnalyticsSection } from "../components/ShopAnalyticsSection";
 import { Loading, ErrorState } from "../components/States";
 
 // 방문자 추이 그래프는 2026년 6월부터 전체를 보여준다(상단 기간 선택과 별개, 장기 흐름용).
@@ -91,6 +92,7 @@ export function Cafe24Page({ date, config }: { date: string; config: MetricsConf
           <VisitorChart from={VISITOR_TREND_FROM} to={to} />
           <CategoryBar items={detail?.category ?? []} title="카테고리 매출 TOP 10" />
           <BestTable items={detail?.best ?? []} />
+          <ShopAnalyticsSection from={from} to={to} />
           <DailyTable rows={daily} metrics={config.summary_cards} />
           <PlannedGroups config={config} />
         </>
