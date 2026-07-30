@@ -21,9 +21,9 @@ on:
         description: "카페24 인가코드(code= 값)"
         required: true
       redirect_uri:
-        description: "앱에 등록한 Redirect URI"
+        description: "앱에 등록한 Redirect URI (개발자센터 App관리 > Redirect URI(s) 와 글자까지 동일해야 함)"
         required: true
-        default: "https://coversomeone1.cafe24.com/"
+        default: "https://keek-ops-dashboard.onrender.com"
 
 jobs:
   bootstrap:
