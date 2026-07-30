@@ -91,6 +91,25 @@ jobs:
                 f"퍼널단계 {len(steps)}개(병목: {f.get('bottleneck')}) / "
                 f"채널별퍼널 {len(d.get('funnel_channels') or [])}개")
           PY
+          curl -s --max-time 90 "$HOST/api/shop/analytics?from=$F&to=$B" -o /tmp/shop.json || true
+          python3 - <<'PY' || echo "(접속통계 응답 파싱 실패)"
+          import json
+          d = json.load(open("/tmp/shop.json"))
+          s, b = d.get("summary") or {}, d.get("bottleneck") or {}
+          print(f"카페24 접속통계: {s.get('days')}일 · 방문 {s.get('visits', 0):,.0f} · "
+                f"재방문율 {s.get('re_visit_rate')}%")
+          print(f"  전체 담기율 {b.get('cart_rate')}% (중위값 {b.get('median_cart_rate')}%) · "
+                f"담기→주문 {b.get('order_rate')}%")
+          for r in (b.get("laggards") or [])[:3]:
+              print(f"  ⚠ 담기율 낮음: {r['product'][:40]} 조회 {r['views']:,.0f} / "
+                    f"담기 {r['cart_adds']:,.0f} = {r['cart_rate']}%")
+          kw = d.get("keywords") or []
+          print("  검색어 TOP5: " + ", ".join(f"{k['name']}({k['visits']:.0f})" for k in kw[:5]))
+          ads = d.get("ads") or []
+          print("  광고채널 TOP5: " + ", ".join(f"{a['name']}({a['visits']:.0f})" for a in ads[:5]))
+          m = d.get("member") or {}
+          print(f"  비회원 주문비중 {m.get('nonmember_order_share')}%")
+          PY
           echo "----- 배포된 프론트 번들 확인(index.html 이 참조하는 assets 해시) -----"
           curl -s --max-time 60 "$HOST/" | grep -o 'assets/index-[A-Za-z0-9_-]*\.\(js\|css\)' || echo "(assets 참조를 찾지 못함)"
           echo "-----"
