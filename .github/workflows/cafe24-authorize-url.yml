@@ -15,9 +15,9 @@ on:
         required: false
         default: "coversomeone1"
       redirect_uri:
-        description: "앱에 등록된 Redirect URI (개발자센터 앱 설정과 정확히 같아야 함)"
+        description: "앱에 등록된 Redirect URI (개발자센터 App관리 > Redirect URI(s) 와 글자까지 동일해야 함)"
         required: false
-        default: "https://coversomeone1.cafe24.com/"
+        default: "https://keek-ops-dashboard.onrender.com"
 
 jobs:
   url:

@@ -26,7 +26,7 @@ Client Secret 을 재발급하면 기존 access/refresh 토큰이 무효화되�
 3. **DB 옛 토큰 비우기**: Actions → **`cafe24 token reset`** → Run
    (keys 기본값 그대로 = meta + cafe24 토큰 삭제, 또는 `cafe24_access_token,cafe24_refresh_token`)
 4. **재인증(부트스트랩)**:
-   - 인가 URL 생성(로컬): `python scripts/cafe24_auth.py --authorize --redirect-uri https://coversomeone1.cafe24.com/`
+   - 인가 URL 생성(로컬): `python scripts/cafe24_auth.py --authorize --redirect-uri https://keek-ops-dashboard.onrender.com`
    - 브라우저로 URL 열고 **승인** → 리다이렉트 주소창의 `code=` 값 복사 (⚠ 1분 내 사용)
    - Actions → **`cafe24 token bootstrap`** → Run → `code` 붙여넣기 / `redirect_uri` 동일 입력
 5. 확인: Actions → `ops daily collect` 실행 → cafe24 14건 등 정상 수집

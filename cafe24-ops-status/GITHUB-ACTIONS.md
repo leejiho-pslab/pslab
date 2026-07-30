@@ -55,11 +55,11 @@ cafe24 access 토큰은 2시간, refresh 토큰은 2주 만료되며 갱신 시 
 인가코드는 발급 후 ~1분 만료라 로컬이 안전합니다.
 ```bash
 # 1) 인가 URL 생성 → 브라우저 승인 → 주소창 code= 복사
-python scripts/cafe24_auth.py --authorize --redirect-uri "https://coversomeone1.cafe24.com/"
+python scripts/cafe24_auth.py --authorize --redirect-uri "https://keek-ops-dashboard.onrender.com"
 # 2) 코드 교환 + Postgres 에 저장 (DATABASE_URL 은 STEP1 값)
 DATABASE_URL="postgresql://..." \
 CAFE24_MALL_ID=coversomeone1 CAFE24_CLIENT_ID=... CAFE24_CLIENT_SECRET=... \
-python scripts/cafe24_auth.py --code <코드> --redirect-uri "https://coversomeone1.cafe24.com/" --to-db
+python scripts/cafe24_auth.py --code <코드> --redirect-uri "https://keek-ops-dashboard.onrender.com" --to-db
 ```
 → 이러면 `CAFE24_ACCESS_TOKEN/REFRESH_TOKEN` Secret 없이도 DB에서 바로 동작.
 
