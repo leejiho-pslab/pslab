@@ -66,9 +66,30 @@ jobs:
           # 토큰 자체는 절대 출력하지 않는다. 길이만 찍어 성공을 확인.
           print(f"✅ 교환 성공 (access {len(tok['access_token'])}자, "
                 f"refresh {len(tok.get('refresh_token') or '')}자)")
+          # 부여된 권한(scope)은 비밀이 아니고, **좁으면 지표가 조용히 결측**되므로
+          # 반드시 눈에 보이게 찍고 필수 권한 누락을 경고한다.
+          scopes = tok.get("scopes") or tok.get("scope") or []
+          if isinstance(scopes, str):
+              scopes = [x.strip() for x in scopes.split(",") if x.strip()]
+          print(f"부여된 권한 {len(scopes)}개: {', '.join(sorted(scopes)) or '(응답에 없음)'}")
+          NEEDED = {
+              "mall.read_order": "매출·주문",
+              "mall.read_customer": "고객",
+              "mall.read_community": "후기(게시판)",
+              "mall.read_product": "상품·품절",
+              "mall.read_category": "카테고리",
+              "mall.read_analytics": "접속통계(유입검색어 등)",
+          }
+          missing = [f"{k}({v})" for k, v in NEEDED.items() if scopes and k not in scopes]
+          if missing:
+              print("⚠ 권한 누락 — 아래 지표가 결측됩니다:")
+              for m in missing:
+                  print(f"   - {m}")
+              print("  → 승인 URL 의 scope 에 누락 권한을 넣어 다시 승인하세요.")
           with open("/tmp/tok.json", "w") as f:
               json.dump({"access_token": tok["access_token"],
-                         "refresh_token": tok.get("refresh_token")}, f)
+                         "refresh_token": tok.get("refresh_token"),
+                         "scopes": scopes}, f)
           PY
 
       # ── 2) 교환 성공 후: DB(app_kv)에 영속화 ─────────────────────
@@ -84,6 +105,9 @@ jobs:
           rows = [("cafe24_access_token", tok["access_token"])]
           if tok.get("refresh_token"):
               rows.append(("cafe24_refresh_token", tok["refresh_token"]))
+          # 권한 목록도 남긴다 — 나중에 "왜 이 지표가 비지?" 를 바로 판별할 수 있게.
+          if tok.get("scopes"):
+              rows.append(("cafe24_token_scopes", ",".join(tok["scopes"])))
           with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
               with conn.cursor() as cur:
                   cur.execute("CREATE TABLE IF NOT EXISTS app_kv ("
