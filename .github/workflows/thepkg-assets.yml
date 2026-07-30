@@ -1,0 +1,137 @@
+name: thepkg assets
+
+# 신규 제안 업체(더패키지 ThePKG, 인테리어) 브랜드 분석·콘텐츠용 이미지 수집.
+# 소스 3종: 유튜브 썸네일 + 네이버 블로그(RSS→포스트) + 인스타그램(best-effort).
+# 개발 환경은 외부 호스트가 프록시에서 막히므로 인터넷 열린 러너에서 받는다.
+on:
+  push:
+    branches: [claude/eager-mayer-tknneh]
+    paths:
+      - '.github/workflows/thepkg-assets.yml'
+      - 'data/thepkg-seed.json'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: thepkg-assets
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: 이미지 수집 (유튜브+블로그+인스타)
+        run: |
+          mkdir -p assets/thepkg/yt assets/thepkg/blog assets/thepkg/ig docs/thepkg-src
+          node -e '
+            const fs=require("fs");
+            const ua="Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1";
+            const seed=JSON.parse(fs.readFileSync("data/thepkg-seed.json","utf8"));
+            const dl=async(u,headers)=>{const r=await fetch(u,{headers:{"user-agent":ua,...(headers||{})}});
+              if(!r.ok)return{ok:false,status:r.status};
+              const b=Buffer.from(await r.arrayBuffer());return{ok:true,buf:b,ct:r.headers.get("content-type")||""};};
+            const extOf=(ct,u)=>{ct=(ct||"").toLowerCase();
+              if(ct.includes("webp")||/\.webp/i.test(u))return"webp";
+              if(ct.includes("png")||/\.png/i.test(u))return"png";return"jpg";};
+            (async()=>{
+              // ---------- 1) 유튜브 썸네일 (maxres, 실패시 hq) ----------
+              let yi=0;
+              for(const id of seed.videoIds){
+                let got=false;
+                for(const q of ["maxresdefault","sddefault","hqdefault"]){
+                  const u=`https://i.ytimg.com/vi/${id}/${q}.jpg`;
+                  try{const r=await dl(u); if(r.ok && r.buf.length>6000){
+                    yi++; fs.writeFileSync(`assets/thepkg/yt/yt-${String(yi).padStart(2,"0")}-${id}.jpg`, r.buf);
+                    console.log("YT ok",id,q,r.buf.length); got=true; break;
+                  }}catch(e){}
+                }
+                if(!got)console.log("YT miss",id);
+              }
+              // ---------- 2) 네이버 블로그: RSS로 포스트 URL 수집 → 각 포스트 이미지 ----------
+              const postNos=new Set();
+              try{
+                const rss=await fetch(`https://rss.blog.naver.com/${seed.blogHandle}.xml`,{headers:{"user-agent":ua}});
+                if(rss.ok){const xml=await rss.text();
+                  let m; const re=/blog\.naver\.com\/[^\/]+\/(\d{6,})/g;
+                  while(m=re.exec(xml)){postNos.add(m[1]);}
+                  console.log("RSS posts:",postNos.size);
+                }else console.log("RSS status",rss.status);
+              }catch(e){console.log("RSS err",String(e).slice(0,80));}
+              // 모바일 포스트 목록도 보강
+              try{
+                const lst=await fetch(`https://m.blog.naver.com/${seed.blogHandle}`,{headers:{"user-agent":ua}});
+                if(lst.ok){const h=await lst.text(); let m;
+                  const re=/logNo["\x27:=\s]+(\d{6,})/g;
+                  while(m=re.exec(h)){postNos.add(m[1]);}
+                  console.log("list posts total:",postNos.size);
+                }
+              }catch(e){}
+              const imgSet=new Set();
+              let pc=0;
+              for(const no of postNos){
+                if(pc++>25)break;
+                try{
+                  const r=await fetch(`https://m.blog.naver.com/${seed.blogHandle}/${no}`,{headers:{"user-agent":ua}});
+                  if(!r.ok){console.log("POST",no,r.status);continue;}
+                  const h=await r.text();
+                  let m;
+                  // 본문 이미지: data-lazy-src / src (pstatic 이미지 서버)
+                  const re=/(?:data-lazy-src|data-src|src)=["\x27](https?:\/\/[^"\x27]*(?:pstatic\.net|phinf)[^"\x27]*\.(?:jpg|jpeg|png)[^"\x27]*)["\x27]/gi;
+                  while(m=re.exec(h)){
+                    let u=m[1].replace(/\?type=.*$/,"").replace(/type=w\d+/,"type=w966");
+                    imgSet.add(u+"?type=w966");
+                  }
+                }catch(e){console.log("POST err",no,String(e).slice(0,60));}
+              }
+              console.log("blog img candidates:",imgSet.size);
+              let bi=0;
+              for(const u of imgSet){
+                if(/logo|icon|profile|badge|emoticon|ssl\.pstatic|blogpfthumb/i.test(u))continue;
+                if(bi>=60)break;
+                try{const r=await dl(u,{referer:"https://m.blog.naver.com/"});
+                  if(r.ok && r.buf.length>12000){ bi++;
+                    fs.writeFileSync(`assets/thepkg/blog/blog-${String(bi).padStart(2,"0")}.${extOf(r.ct,u)}`, r.buf);
+                    console.log("BLOG ok",bi,r.buf.length, u.slice(0,70));
+                  }
+                }catch(e){}
+              }
+              // ---------- 3) 인스타그램 (best-effort, 공개 프로필) ----------
+              try{
+                const r=await fetch(`https://www.instagram.com/${seed.instagram}/?__a=1&__d=dis`,{headers:{"user-agent":ua,"x-ig-app-id":"936619743392459"}});
+                console.log("IG status",r.status);
+                if(r.ok){const t=await r.text(); fs.writeFileSync("docs/thepkg-src/ig.json", t.slice(0,200000));
+                  let m; const re=/"display_url":"([^"]+)"/g; const igs=new Set();
+                  while(m=re.exec(t)){igs.add(m[1].replace(/\\u0026/g,"&").replace(/\\\//g,"/"));}
+                  let ii=0;
+                  for(const u of igs){ if(ii>=15)break;
+                    try{const rr=await dl(u,{referer:"https://www.instagram.com/"});
+                      if(rr.ok&&rr.buf.length>10000){ii++;
+                        fs.writeFileSync(`assets/thepkg/ig/ig-${String(ii).padStart(2,"0")}.jpg`, rr.buf);
+                        console.log("IG ok",ii,rr.buf.length);}
+                    }catch(e){}
+                  }
+                }
+              }catch(e){console.log("IG err",String(e).slice(0,80));}
+            })();
+          '
+      - name: 목록
+        run: |
+          echo "=== YT ==="; ls -la assets/thepkg/yt 2>/dev/null | head -40
+          echo "=== BLOG ==="; ls -la assets/thepkg/blog 2>/dev/null | head -70
+          echo "=== IG ==="; ls -la assets/thepkg/ig 2>/dev/null | head -30
+      - name: 커밋
+        run: |
+          git config user.name pslab-bot
+          git config user.email actions@users.noreply.github.com
+          git add -f assets/thepkg docs/thepkg-src 2>/dev/null || true
+          git commit -m "chore(thepkg): 유튜브+블로그+인스타 이미지 수집" || { echo "변경 없음"; exit 0; }
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo ok; exit 0; }
+            echo retry $i; sleep 4
+          done
