@@ -117,11 +117,9 @@ export const api = {
     ),
 
   // 카페24 접속통계 (상품 담기율 · 검색어 · 유입처)
-  shopAnalytics: (r: { selFrom: string; selTo: string; cmpFrom: string; cmpTo: string }) =>
-    get<ShopAnalytics>(
-      `/api/shop/analytics?from=${r.selFrom}&to=${r.selTo}` +
-        `&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}`,
-    ),
+  // 비교기간은 서버가 '직전 동일 길이 기간'으로 자동 계산한다.
+  shopAnalytics: (from: string, to: string) =>
+    get<ShopAnalytics>(`/api/shop/analytics?from=${from}&to=${to}`),
 
   // 월간 리포트
   reportMonthly: (month?: string) =>

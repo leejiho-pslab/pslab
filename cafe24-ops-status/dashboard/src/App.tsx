@@ -7,7 +7,6 @@ import { AdsPage } from "./pages/AdsPage";
 import { CreativePage } from "./pages/CreativePage";
 import { CompetitorPage } from "./pages/CompetitorPage";
 import { Ga4Page } from "./pages/Ga4Page";
-import { ShopAnalyticsPage } from "./pages/ShopAnalyticsPage";
 import { MonthlyReportPage } from "./pages/MonthlyReportPage";
 
 const TABS = [
@@ -15,7 +14,6 @@ const TABS = [
   { id: "ads", label: "광고" },
   { id: "creative", label: "광고 히스토리" },
   { id: "ga4", label: "유입·구매 경로(GA4)" },
-  { id: "shop", label: "접속통계·담기율" },
   { id: "competitor", label: "경쟁사 모니터링" },
   { id: "report", label: "월간 리포트" },
 ] as const;
@@ -94,7 +92,6 @@ export default function App() {
       {tab === "ads" && <AdsPage date={date} />}
       {tab === "creative" && <CreativePage date={date} />}
       {tab === "ga4" && <Ga4Page date={date} />}
-      {tab === "shop" && <ShopAnalyticsPage date={date} />}
       {tab === "competitor" && <CompetitorPage date={date} />}
       {tab === "report" && <MonthlyReportPage dates={dates} />}
 
