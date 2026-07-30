@@ -3,8 +3,8 @@ name: sns채널-자동화
 description: >-
   SNS 채널 자동 운영 시스템 — 브랜드/업체의 SNS(인스타그램·스레드·구글블로그·네이버블로그·유튜브·링크드인)를
   24시간 무인 자동 운영하는 시스템을 새 업체에 세팅하거나 점검/수정할 때 사용. 매일 정해진 시각 자동발행,
-  AI(클로드) 글 생성, 한글 카드/블로그 이미지 렌더(대표이미지 포함), 유튜브 쇼츠 모션영상(힉스필드)+무료 BGM,
-  실시간 대시보드(GitHub Pages, 채널 바로가기 포함), 성과 자체학습 선순환까지 포함. "다른 업체에도 적용",
+  AI(클로드) 글 생성, 한글 카드/블로그 이미지 렌더(대표이미지 포함), 릴스/쇼츠 멀티씬 영상(힉스필드, 무음),
+  실시간 대시보드(GitHub Pages, 채널 바로가기 포함), 실측 성과 자체학습 선순환까지 포함. "다른 업체에도 적용",
   "새 클라이언트 SNS 자동화 세팅", "SNS 무인 운영 붙여줘", "대시보드가 안 뜬다", "발행이 멈췄다" 같은
   요청에 사용.
 ---
@@ -27,14 +27,16 @@ description: >-
 - **콘텐츠 생성**:
   - 글: 클로드 API(`src/core/claude.ts`) — 키 없으면 규칙기반 폴백.
   - 이미지: **HTML→Chromium 스크린샷**으로 렌더(`scripts/render-*.mjs`). AI 확산모델은 한글을 깨뜨리므로 텍스트는 반드시 HTML로.
-  - 유튜브 쇼츠: 힉스필드 모션클립 배경 + 한글 투명 오버레이 + 무료 BGM(`scripts/render-shorts.mjs`, `build-shorts-video.mjs`).
+  - 릴스/쇼츠: 힉스필드 장면 클립(비트별) + 한글 자막 오버레이 멀티씬 합성(`scripts/build-reels.mjs`) — **현재 무음**(§5).
 - **자체 학습 선순환**: 발행 → 반응 수집(`collect-insights`) → `learning.json` → 다음 기획에 디자인/주제/시간대 반영.
+  **지표는 반드시 실측**(유튜브는 Data API v3 statistics) — 가짜/의사 지표가 학습에 들어가면 안 됨(§8).
+  디자인 변형(A/B/C)·모티프 비교는 **인스타 발행분 한정**(채널별 지표 스케일이 섞이면 왜곡).
 - **멀티 클라이언트**: 모든 데이터는 `data/clients/<clientId>/` 아래. 코드/스크립트/워크플로는 공유.
 
 ### 채널별 자동화 가능 여부 (정직하게)
 | 채널 | 자동발행 | 방식 |
 |---|---|---|
-| 인스타그램 | ✅ | Instagram Graph API (캐러셀) API에는 공개범위 파라미터가 없음 — 게시물 공개 여부는 **계정 설정**을 따르므로, 일부공개로 보이면 앱에서 계정을 공개(전문가 계정)로 전환 |
+| 인스타그램 | ✅ | Instagram Graph API — 캐러셀(자식 컨테이너) + **릴스**(media_type=REELS, 공개 video_url 필요, 커버는 `thumb_offset`). API에는 공개범위 파라미터가 없음 — 게시물 공개 여부는 **계정 설정**을 따르므로, 일부공개로 보이면 앱에서 계정을 공개(전문가 계정)로 전환 |
 | 스레드 | ✅ | Threads API |
 | 구글 블로그 | ✅ | Blogger API v3 (OAuth2 refresh token) |
 | 링크드인 | ✅ | LinkedIn Posts API (REST, 이미지는 Images API로 별도 업로드 후 첨부) |
@@ -53,15 +55,19 @@ description: >-
 **채널 플러그인** (`src/plugins/`): `instagram.ts`, `threads.ts`, `blogger.ts`, `linkedin.ts`,
 `naver-blog.ts`, `youtube.ts`, `shared.ts`.
 
-**렌더/미디어 스크립트** (`scripts/`): `render-cards.mjs`(인스타 캐러셀), `render-blog-images.mjs`,
-`render-shorts.mjs`(쇼츠 슬라이드+투명 오버레이), `build-shorts-video.mjs`(부메랑 배경+오버레이+BGM),
-`fetch-photos.mjs`(배경 사진 CI 다운로드), `seed-*.mjs`(초기 콘텐츠 시드), `schedule-daily.mjs`(일일 재배치).
+**렌더/미디어 스크립트** (`scripts/`): `render-cards.mjs`(인스타 캐러셀 — 색·레이아웃은
+`design-tokens.json` 우선), `render-blog-images.mjs`, `build-reels.mjs`(릴스/쇼츠 멀티씬 합성),
+`render-shorts.mjs`·`build-shorts-video.mjs`(구형 단일클립 방식), `fetch-photos.mjs`(배경 사진 CI 다운로드),
+`site-view.mjs`(외부 사이트 열람·릴스 프레임 추출 — §8), `seed-*.mjs`(초기 콘텐츠 시드),
+`schedule-daily.mjs`(일일 재배치).
 
 **워크플로** (`.github/workflows/`): `pslab-cron.yml`(무인 루프+Pages 배포), `pslab-publish.yml`,
 `pages-deploy.yml`(docs/ 배포).
 
-**클라이언트 데이터** (`data/clients/<id>/`): `plan.json`(기획안), `design.json`, `learning.json`,
-`bg-sources.json`(힉스필드 배경 URL), `video-sources.json`(쇼츠 모션클립 URL),
+**클라이언트 데이터** (`data/clients/<id>/`): `plan.json`(기획안), `design.json`(스타일 + AI 메모
+`notes` + **운영자 지시 `humanNotes`** — 사람 지시는 AI가 못 지우고 프롬프트 최우선), `learning.json`,
+`design-tokens.json`(카드 렌더러 색·레이아웃 — 코드 수정 없이 디자인 조정), `bg-sources.json`(힉스필드
+배경 URL), `video-sources.json`(쇼츠 모션클립 URL), `reel-scenes.json`(릴스 비트별 대본·장면 클립 URL),
 `blog-figures.json`(블로그 본문 삽입 이미지 시드), `weekly-reports.json`, `token-health.json`.
 **이 폴더는 기본 gitignore 대상이니, 시드 파일은 반드시 `git add -f`로 강제 커밋할 것** (§8 참고 — 안 하면 CI가 조용히 렌더를 건너뛴다).
 
@@ -142,12 +148,18 @@ description: >-
   운영한다. 다운로드 버튼은 `captionBody`의 `![](url)` 마크다운 이미지 참조를 전부 파싱해서
   만들어야 함(대표이미지 1장만 보여주면 본문 삽입 이미지가 빠짐 — `dashboard.ts`의
   `manualHelper`가 `bodyImgs` 정규식 파싱으로 처리).
-- **유튜브 쇼츠 모션영상**:
-  1) 힉스필드 시작이미지(`soul_2`) → `kling2_6` 이미지→영상(9:16, 5초, ~10크레딧, 무음).
-  2) URL을 `video-sources.json`에 저장.
-  3) `render-shorts.mjs`가 투명 오버레이(`ov-N.png`, 반투명 패널) 렌더.
-  4) `build-shorts-video.mjs`가 CI에서 클립 다운로드 → **부메랑(정+역) 끊김없는 배경** → 타임드 오버레이 → BGM.
-  - **무료 BGM**: `assets/bgm/*.mp3` 있으면 그것, 없으면 ffmpeg 합성 앰비언트 패드(저작권 0).
+- **릴스/쇼츠 멀티씬 영상** (`build-reels.mjs` — 현행 방식, pslab 검증):
+  1) 콘텐츠를 **4비트(장면) × ~3.5초 ≒ 13초**로 구성 — **15초 이내, 짧고 강하게**.
+  2) 비트마다 힉스필드로 **자막 내용과 일치하는 장면 클립** 생성(kling 계열, 9:16) →
+     `reel-scenes.json`에 비트별 kicker/text/accent/장면 클립 URL 저장 (**git add -f 필수** — gitignore).
+  3) Chromium으로 한글 자막 오버레이(2줄 스태거, 키워드 액센트+밑줄) 렌더 → CI에서 클립 다운로드 →
+     xfade 전환 + 색보정 + 진행 도트 합성.
+  - **장면-텍스트 일치가 품질의 핵심** — 텍스트만 나오는 단순 영상 금지(운영자 피드백).
+  - **무음 원칙(중요)**: BGM·음성 넣지 말 것 — 어색한 오디오로 품질이 떨어져 **운영자가 보류 지시**
+    (2026-07, "나중에 디벨롭"). 무음 트랙(anullsrc)으로 출력한다.
+  - **릴스 커버**: 영상 0초는 페이드인 검은 화면이라 그대로 두면 커버가 검게 나옴(사고 사례) →
+    인스타 발행 시 `thumb_offset`(기본 900ms, `coverOffsetMs`)으로 훅이 보이는 프레임을 커버로 지정.
+  - 구형 방식(단일 클립 부메랑+BGM, `build-shorts-video.mjs`)은 새 제작에 쓰지 말 것.
 
 ---
 
@@ -178,10 +190,12 @@ description: >-
      제목 규약을 파싱: open=🛠 처리중, closed=✅ 처리완료. 채널 탭 메뉴에 `treq` 배지(🛠n/✅),
      채널별 요약 표에 수정요청 열. **운영자는 이슈를 닫는 것으로 '처리완료' 처리**.
 - **지침 시스템(v3)** — AI가 "상시 학습"하는 운영자 입력 창구 (`src/core/guidance.ts`):
-  - 대시보드 **🧭 지침 탭**: 브랜드 노트(분석/방향성/감도) 3종 + 채널별 주제·핵심 가이드 작성 폼.
-    이슈 제목 규약 `[브랜드노트·분석|방향성|감도]`, `[가이드·<채널key>]` (본문 `주제:` 줄 = 우선 소재 풀).
+  - 대시보드 **🧭 지침 탭**: 브랜드 노트(분석/방향성/감도) 3종 + **🎨 디자인 피드백** + 채널별
+    주제·핵심 가이드 작성 폼. 이슈 제목 규약 `[브랜드노트·분석|방향성|감도]`, `[디자인피드백]`,
+    `[가이드·<채널key>]` (본문 `주제:` 줄 = 우선 소재 풀).
   - **guidance-sync.yml** (`on: issues`): 규약 이슈를 파싱해 `data/clients/<id>/brand-brief.json` +
-    `channel-guides.json`에 반영 → 대시보드 재생성·커밋 → **이슈 자동 닫기(반영 완료 코멘트)** → Pages 배포.
+    `channel-guides.json` + `design.json humanNotes`([디자인피드백] — 본문 한 줄 = 지시 1건)에 반영 →
+    대시보드 재생성·커밋 → **이슈 자동 닫기(반영 완료 코멘트)** → Pages 배포.
     ※ issues 이벤트는 **기본 브랜치의 워크플로만** 실행되므로 반드시 기본 브랜치에 있어야 함.
   - **생성 파이프라인 연동**: 오케스트레이터가 사이클마다 로드 —
     채널 가이드 topics → `reinforcement.favoredTopics` 선두 + research keywords 병합(소재 선정 우선),
@@ -215,8 +229,19 @@ description: >-
 
 ## 8. 반드시 아는 함정 (하드-원 교훈)
 
-- **개발환경은 외부 호스트 접근 불가**(cloudfront/외부 이미지 403). 미디어는 **세션에서 생성→URL 저장→
-  CI에서 다운로드**. 이미지 다운로드·영상 합성은 네트워크 열린 CI(GitHub Actions)에서만.
+- **세션의 외부 접근은 "환경의 네트워크 정책"이 결정** — 403/000이 나오면 사이트 고장이 아니라
+  정책 차단부터 의심(`curl -sS "$HTTPS_PROXY/__agentproxy/status"`로 확인). pslab 환경(Default)은
+  2026-07-30 운영자가 '전체'로 개방해 네이버·유튜브·인스타 접속 가능. 정책이 닫힌 환경에서는
+  기존 방식대로 **세션에서 생성→URL 저장→CI(GitHub Actions)에서 다운로드**.
+- **외부 사이트 열람·발행물 검수**: `node scripts/site-view.mjs shot <url>`(스크린샷) /
+  `reel <릴스url>`(인스타 릴스 mp4+3초 간격 프레임 — embed 페이지가 로그인 없이 영상을 서빙).
+  **크로미움은 프록시와 TLS1.3 충돌로 그냥 쓰면 전 사이트 연결 리셋** — 이 스크립트에 TLS1.2 강제
+  플래그(`--ssl-version-max=tls1.2 --disable-http2 --disable-quic`)가 내장돼 있으니 직접 크로미움을
+  띄우지 말고 이걸 쓸 것. 유튜브 영상 다운로드(yt-dlp)는 데이터센터 IP 봇체크로 실패 —
+  메타데이터·실조회수·자막·댓글은 YouTubeData MCP 도구로, 자사 영상 원본은 `docs/shorts/`에 있음.
+- **성과 지표는 실측만** — 유튜브 플러그인이 한때 해시 기반 의사 지표(수만 뷰)를 반환해 변형 학습이
+  통째로 오염된 사고(2026-07). `fetchAnalytics`는 dryRun에서만 시뮬레이션, 실발행은 실제 API 값.
+  수집 실패 시 가짜로 채우지 말고 실패로 기록되게 둘 것.
 - **한글은 HTML→Chromium**로 렌더. AI 확산 이미지에 한글 넣으면 깨진다.
 - **private 저장소 = 무료 플랜에서 Pages 꺼짐(404)**. public 유지(시크릿은 안전). visibility 바꾸면
   Pages Source가 None으로 초기화되니 다시 `GitHub Actions`로 켜야 함.
