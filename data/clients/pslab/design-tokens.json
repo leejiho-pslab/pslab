@@ -4,5 +4,10 @@
     "A": { "name": "잉크·에디토리얼", "bg": "#0e1726", "fg": "#f4f1ea", "muted": "#9aa6bd", "accent": "#ff8a3d", "layout": "editorial" },
     "B": { "name": "잉크·그래픽", "bg": "#0b1a1c", "fg": "#eef3f1", "muted": "#8fb0ab", "accent": "#36d6c4", "layout": "graphic" },
     "C": { "name": "잉크·스포트라이트", "bg": "#14121d", "fg": "#f3eff6", "muted": "#a99fc0", "accent": "#ffc24a", "layout": "spotlight" }
+  },
+  "reels": {
+    "_readme": "릴스/쇼츠 자막 테마(scripts/build-reels.mjs). 현재는 코드 기본값과 동일 — 레퍼런스 학습 후 이 값을 갱신하면 영상 자막 톤이 바뀝니다.",
+    "cinematic": { "accent": "#ff8a3d", "kicker": "#ffb37a" },
+    "premium": { "accent": "#ffc24a", "kicker": "#ffd98a" }
   }
 }

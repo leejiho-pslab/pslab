@@ -53,10 +53,28 @@ function fontFaces() {
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-const THEME = {
+// 자막 테마 — 기본값은 코드에, 실제 값은 design-tokens.json 의 reels 섹션이 덮어쓴다.
+// (레퍼런스 학습 결과가 카드뿐 아니라 릴스 자막에도 흐르게 하는 지점. §0 변수 #4)
+// 스키마: { "reels": { "cinematic": { "accent": "#...", "kicker": "#..." }, ... } }
+const DEFAULT_THEME = {
   cinematic: { accent: '#ff8a3d', kicker: '#ffb37a' },
   premium: { accent: '#ffc24a', kicker: '#ffd98a' },
 };
+function loadReelTokens(id) {
+  const f = join(ROOT, 'data/clients', id, 'design-tokens.json');
+  if (!existsSync(f)) return null;
+  try {
+    return JSON.parse(readFileSync(f, 'utf8')).reels ?? null;
+  } catch (e) {
+    console.warn(`design-tokens.json 파싱 실패 — 기본 테마 사용 (${e.message})`);
+    return null;
+  }
+}
+const REEL_TOKENS = loadReelTokens(clientId);
+const THEME = Object.fromEntries(
+  Object.entries(DEFAULT_THEME).map(([k, v]) => [k, { ...v, ...(REEL_TOKENS?.[k] ?? {}) }]),
+);
+if (REEL_TOKENS) console.log(`릴스 디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
 
 /** 키워드에 액센트 컬러 + 하이라이트 밑줄을 입힌 자막 HTML */
 function textHtml(text, accent, t) {

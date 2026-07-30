@@ -17,6 +17,14 @@
 - 디자인: AI 학습 메모(`design.json notes`)와 운영자 지시(`humanNotes`)는 분리 — humanNotes는 사람 경로([디자인피드백] 이슈)로만 수정.
 - 카드 색·레이아웃은 `data/clients/<id>/design-tokens.json` 우선.
 
+## 디자인 레퍼런스 (구글 드라이브)
+- 소장님이 `※alway on / 1. pslab / 1. 레퍼런스 모음/` 아래 채널별로 레퍼런스를 올린다.
+  폴더 ID는 `data/clients/pslab/design-reference.json`에 기록됨.
+- **작업 순서**: Drive 열람(세션에서만 가능) → `design-reference.json`에 채널별 디자인 언어 기록 →
+  렌더에 물리는 값은 `design-tokens.json`(카드 `variants` / 릴스 `reels`)으로 반영 →
+  힉스필드 장면 프롬프트에 문장으로 주입.
+- 폴더가 비어 있으면 **추측해서 채우지 말고** 대기 상태 유지 + 업로드 요청.
+
 ## 콘텐츠 규칙 (소장님 지시)
 - 릴스/쇼츠 15초 이내, BGM·음성 없이(무음) — 추후 디벨롭 예정.
 - 장면은 자막 텍스트와 내용이 일치해야 함. 텍스트만 나오는 단순 영상 금지.
