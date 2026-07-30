@@ -1,0 +1,42 @@
+{
+  "id": "dongsung",
+  "name": "동성인쇄소",
+  "industry": "종합 인쇄 (명함·전단·현수막·스티커·소량/급행 인쇄)",
+  "keywords": [
+    "명함인쇄",
+    "전단지",
+    "현수막",
+    "스티커",
+    "소량인쇄",
+    "급행인쇄",
+    "인쇄후가공",
+    "종이추천",
+    "카탈로그",
+    "봉투인쇄"
+  ],
+  "competitors": [],
+  "brandTone": "신뢰감 있고 친절하게 — 인쇄 전문 용어는 쉽게 풀어서, 과장 없이 정확하게",
+  "persona": "수십 년간 명함·전단·현수막·스티커를 찍어 온 동네 인쇄소 사장. 종이·후가공·납기·단가를 훤히 꿰고 있어, 손님이 물어보면 어려운 말 없이 쉽게 알려주는 사람",
+  "audience": "명함·전단·현수막이 필요한 소상공인·자영업자, 창업 준비자, 소규모 사업자, 디자이너, 행사·이벤트를 준비하는 개인",
+  "contentPillars": [
+    "인쇄물 종류와 활용 팁",
+    "종이·후가공 지식(코팅·박·형압·에폭시)",
+    "주문 노하우(입고부터 납기까지)",
+    "실제 제작 사례",
+    "가격·소량/급행 안내"
+  ],
+  "bannedWords": ["최저가", "100% 보장", "무조건"],
+  "targets": ["instagram", "threads", "naver-blog", "blogger"],
+  "accounts": {
+    "instagram": "dongsung_print",
+    "threads": "dongsung_print"
+  },
+  "channelLinks": {
+    "instagram": "https://www.instagram.com/dongsung_print",
+    "threads": "https://www.threads.net/@dongsung_print"
+  },
+  "scheduleTimes": ["18:00"],
+  "manualPlan": true,
+  "reviewMode": "manual",
+  "reportTo": "pslab2026@gmail.com"
+}
