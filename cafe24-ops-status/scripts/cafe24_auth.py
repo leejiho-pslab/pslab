@@ -27,7 +27,22 @@ import httpx  # noqa: E402
 from cafe24_ops.config import load_config  # noqa: E402
 from cafe24_ops.secrets import load_secrets  # noqa: E402
 
-DEFAULT_SCOPE = "mall.read_order,mall.read_customer"
+# 이 프로젝트가 실제로 부르는 리소스 전부를 덮는 읽기 전용 scope.
+# ⚠ scope 를 좁히면 그 리소스만 조용히 404/403 이 되어 지표가 "결측"으로 보인다.
+#   (2026-07-30: read_order/read_customer 만으로 재인증했다가 후기·품절·통계가 막혔다)
+#   orders → read_order        고객 → read_customer
+#   게시판(후기) → read_community    상품/품절 → read_product
+#   카테고리 → read_category    앱 → read_application
+#   통계(ca-api.cafe24data.com) → read_analytics
+DEFAULT_SCOPE = ",".join([
+    "mall.read_order",
+    "mall.read_customer",
+    "mall.read_community",
+    "mall.read_product",
+    "mall.read_category",
+    "mall.read_application",
+    "mall.read_analytics",
+])
 
 
 def _env(key: str) -> str:
