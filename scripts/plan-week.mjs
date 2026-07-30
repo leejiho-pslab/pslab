@@ -26,8 +26,23 @@ try {
   core = (kw.core || kw.keywords || []).filter((k) => k && k.kw);
   timely = (kw.timely || []).filter((k) => k && k.kw);
 } catch { /* 키워드 없으면 기본 시드로 */ }
-// 예시 시드 — 업체별로 교체
-if (!core.length) core = ['싸바리박스', '패키지제작', '화장품박스', '단상자', '금박인쇄', '선물세트박스'].map((kw) => ({ kw, total: 0 }));
+// 폴백 시드 — clients/<id>.json keywords(단일 출처), 없으면 예시
+if (!core.length) {
+  let seeds = [];
+  try {
+    const cfg = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    if (Array.isArray(cfg.keywords)) seeds = cfg.keywords;
+  } catch { /* noop */ }
+  if (!seeds.length) seeds = ['싸바리박스', '패키지제작', '화장품박스', '단상자', '금박인쇄', '선물세트박스'];
+  core = seeds.map((kw) => ({ kw: String(kw).replace(/\s+/g, ''), total: 0 }));
+}
+
+// 업체별 제목 템플릿·요일 스케줄 오버라이드 — clients/<id>.json weekPlan { schedule, templates }
+let CFG_WEEK = null;
+try {
+  const cfg = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+  CFG_WEEK = cfg.weekPlan || null;
+} catch { /* noop */ }
 
 // 다음 주 월요일(UTC) 계산 — 실행일(주말) 기준
 const now = new Date();
@@ -39,7 +54,7 @@ const monday = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.ge
 const weekNo = Math.floor((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - Date.UTC(now.getUTCFullYear(), 0, 1)) / 604800000);
 
 // 요일별 채널 스케줄(월~일). null=휴무
-const SCHEDULE = ['naver-blog', 'instagram', 'blogger', 'instagram', 'naver-blog', 'instagram', null];
+const SCHEDULE = (CFG_WEEK && Array.isArray(CFG_WEEK.schedule) && CFG_WEEK.schedule.length === 7) ? CFG_WEEK.schedule : ['naver-blog', 'instagram', 'blogger', 'instagram', 'naver-blog', 'instagram', null];
 
 // 제안 제목 템플릿(채널별) — {kw} 치환
 const T = {
@@ -59,6 +74,7 @@ const T = {
     '{kw}의 디테일, 여기서 갈립니다',
   ],
 };
+if (CFG_WEEK && CFG_WEEK.templates) for (const k of Object.keys(CFG_WEEK.templates)) T[k] = CFG_WEEK.templates[k];
 const pick = (arr, i) => arr[i % arr.length];
 const CH_LABEL = { 'naver-blog': '네이버 블로그', blogger: '구글 블로그', instagram: '인스타그램' };
 
