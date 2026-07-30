@@ -64,6 +64,7 @@ jobs:
           check "/api/ga4/channels?from=$F&to=$B"
           check "/api/ga4/pages?from=$F&to=$B&limit=10"
           check "/api/ga4/journey?from=$F&to=$B"
+          check "/api/shop/analytics?from=$F&to=$B"
           check "/api/report/monthly"
           check "/api/report/monthly.docx"
           check "/"

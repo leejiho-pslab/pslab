@@ -54,3 +54,17 @@ def test_ga4_journey_channel_filter(tmp_path, monkeypatch):
     meta = c.get(f"/api/ga4/journey?from={SEL[0]}&to={SEL[1]}&channel=meta").json()
     assert meta["funnel"]["channel"] == "meta"
     assert meta["funnel"]["steps"][0]["count"] < total["funnel"]["steps"][0]["count"]
+
+
+# ── 카페24 접속통계 엔드포인트 ─────────────────────────────────
+def test_shop_analytics_endpoint_returns_funnel_and_keywords(tmp_path, monkeypatch):
+    r = _client(tmp_path, monkeypatch).get(f"/api/shop/analytics?from={SEL[0]}&to={SEL[1]}")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["summary"]["visits"] > 0
+    assert body["funnel"] and "cart_rate" in body["funnel"][0]
+    assert body["bottleneck"]["cart_rate"] is not None
+    assert body["keywords"] and body["referrers"] and body["ads"]
+    assert body["pages"] and "member" in body
+    # 비교기간이 자동으로 잡힌다
+    assert (body["cmp_from"], body["cmp_to"]) == ("2026-07-15", "2026-07-20")

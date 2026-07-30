@@ -24,6 +24,7 @@ import type {
   MetricsConfig,
   MonthlyReport,
   PeriodResponse,
+  ShopAnalytics,
   SummaryResponse,
   TrendResponse,
   VisitorTrendResponse,
@@ -113,6 +114,13 @@ export const api = {
     get<Ga4JourneyResponse>(
       `/api/ga4/journey?from=${r.selFrom}&to=${r.selTo}&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}` +
         (channel ? `&channel=${channel}` : ""),
+    ),
+
+  // 카페24 접속통계 (상품 담기율 · 검색어 · 유입처)
+  shopAnalytics: (r: { selFrom: string; selTo: string; cmpFrom: string; cmpTo: string }) =>
+    get<ShopAnalytics>(
+      `/api/shop/analytics?from=${r.selFrom}&to=${r.selTo}` +
+        `&cmp_from=${r.cmpFrom}&cmp_to=${r.cmpTo}`,
     ),
 
   // 월간 리포트
