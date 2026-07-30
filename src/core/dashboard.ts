@@ -26,7 +26,6 @@ const CHANNELS: Array<{ key: PlatformId; label: string; icon: string }> = [
   { key: 'naver-blog', label: '네이버 블로그', icon: '📝' },
   { key: 'blogger', label: '구글 블로그', icon: '🅱️' },
   { key: 'youtube', label: '유튜브', icon: '▶️' },
-  { key: 'linkedin', label: '링크드인', icon: '💼' },
 ];
 
 function seed(s: string): number {
@@ -132,7 +131,7 @@ const BLOG_TIERS = [
   '최적화 3',
 ];
 
-function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
+function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[], kwStats?: import('./guidance.js').KeywordStats) {
   // 블덱스 스타일: 등급 + 포스팅별 전문성/연관성/품질 + 키워드 분석
   const postCount = blogPublished.length;
   const avgEng =
@@ -156,11 +155,14 @@ function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
       quality: Math.min(99, Math.round((base + p.engagementRate * 100) % 100) || base),
     };
   });
+  // 키워드 검색량은 절대 추정/난수로 만들지 않는다 — 네이버 광고주센터 키워드 도구
+  // 실측(keyword-stats.json)이 있으면 그 값을, 없으면 null(→ 대시보드 '실측 대기')로.
+  const statMap = new Map((kwStats?.items ?? []).map((s) => [s.kw.replace(/\s/g, ''), s]));
   const keywords = client.keywords.map((kw) => {
-    const r = seed(`kw:${kw}`);
-    const idx = 1000 + (r % 90000);
-    const comp = ['낮음', '보통', '높음'][r % 3];
-    return { kw, searchIndex: idx, competition: comp };
+    const s = statMap.get(kw.replace(/\s/g, ''));
+    if (!s) return { kw, pc: null, mobile: null, total: null, competition: null };
+    const total = (s.pc ?? 0) + (s.mobile ?? 0);
+    return { kw, pc: s.pc, mobile: s.mobile, total: s.pc == null && s.mobile == null ? null : total, competition: s.competition ?? null };
   });
   return {
     measured,
@@ -168,6 +170,7 @@ function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[]) {
     score: Math.round(rawScore),
     posts,
     keywords,
+    kwSource: kwStats ? { source: kwStats.source, fetchedAt: kwStats.fetchedAt } : null,
   };
 }
 
@@ -229,7 +232,6 @@ function buildClientData(
       case 'naver-blog': return 'https://admin.blog.naver.com/';
       case 'blogger': return 'https://www.blogger.com/';
       case 'youtube': return 'https://studio.youtube.com/';
-      case 'linkedin': return handle ? `https://www.linkedin.com/in/${handle}` : 'https://www.linkedin.com/';
       default: return '';
     }
   };
@@ -245,12 +247,13 @@ function buildClientData(
     .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
   const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
-  const blog = buildBlog(client, blogChannel.published as ChannelPublished[]);
+  const blog = buildBlog(client, blogChannel.published as ChannelPublished[], guidanceStore?.loadKeywordStats(client.id));
 
   return {
     id: client.id,
     name: client.name,
     industry: client.industry,
+    themeColor: client.themeColor ?? null,
     brandTone: client.brandTone,
     keywords: client.keywords,
     competitors: client.competitors.map((x) => x.handle),
@@ -278,6 +281,8 @@ function buildClientData(
     weeklyReport: weeklyReport ?? null,
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
+    research: guidanceStore?.loadResearch(client.id) ?? null,
+    weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
   };
 }
 
@@ -300,7 +305,6 @@ export function renderDashboard(
     anthropic: has('ANTHROPIC_API_KEY'),
     instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
-    linkedin: has('PSLAB_LINKEDIN_ACCESS_TOKEN', 'PSLAB_LINKEDIN_AUTHOR_URN'),
     blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
   };
   const data = {
@@ -320,9 +324,9 @@ export function renderDashboard(
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta http-equiv="refresh" content="300"/>
-<title>pslab 콘텐츠 관제실</title>
+<title>ALWAYS ON 콘텐츠 관제실</title>
 <style>
-:root{color-scheme:light}*{box-sizing:border-box}
+:root{color-scheme:light;--brand:#2b6fff}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
 a{color:#1d6ae5}
 header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:0;z-index:5}
@@ -331,10 +335,10 @@ header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;posi
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .clients{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .cbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
-.cbtn.on{background:#2b6fff;border-color:#2b6fff;color:#fff}
+.cbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:58px;z-index:4}
 .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a7284;padding:8px 12px;cursor:pointer;font-size:14px}
-.tab.on{color:#14171d;border-bottom-color:#2b6fff;font-weight:600}
+.tab.on{color:#14171d;border-bottom-color:var(--brand);font-weight:600}
 .tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
 .dot.live{background:#22c55e}.dot.off{background:#c6ccd8}
 .treq{font-size:10px;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700}
@@ -372,6 +376,17 @@ th{color:#6a7284;font-weight:600;font-size:12px}
 .spark{display:block}
 .empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
 .tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+.rbarrow{display:flex;align-items:center;gap:8px;margin:5px 0}
+.rbarrow .rl{width:150px;font-size:12px;color:#3a4254;flex:none;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbarrow .rtrack{flex:1;background:#eef1f6;border-radius:6px;height:18px;overflow:hidden}
+.rbarrow .rfill{height:100%;border-radius:6px;background:#2b6fff;min-width:2px}
+.rbarrow .rv{font-size:11.5px;color:#6a7284;width:120px;flex:none}
+.rtl{border-left:2px solid #dfe5ef;margin:6px 0 4px 6px;padding-left:14px}
+.rtl .ri{position:relative;margin-bottom:10px;font-size:13px;line-height:1.55}
+.rtl .ri:before{content:'';position:absolute;left:-19.5px;top:4px;width:9px;height:9px;border-radius:50%;background:#2b6fff}
+.rtl .rd{color:#6a7284;font-size:11.5px}
+.rlink{display:inline-block;background:#f2f6ff;border:1px solid #c9d8f0;border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:12.5px;text-decoration:none;color:#1c4fd6}
+.rlink:hover{background:#e6eeff}
 footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
 .card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
@@ -414,8 +429,8 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ pslab 콘텐츠 관제실</div>
-  <div class="sub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
+  <div class="brand">🛰️ <span id="dashtitle">ALWAYS ON 콘텐츠 관제실</span></div>
+  <div class="sub" id="dashsub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -579,9 +594,12 @@ function guideView(client){
 function channelGuidePanel(client, key){
   const g=(client.channelGuides||{})[key];
   if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 수정 →</button></div>'+
+  // 심플 요약만 (docs/06-대시보드): 소재 태그 + 가이드 첫 2줄 미리보기, 전문은 지침 탭
+  const preview=(g.guide||'').split('\\n').slice(0,2).join('\\n');
+  const more=(g.guide||'').split('\\n').length>2;
+  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
     ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (g.guide?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(g.guide)+'</div>':'')+
+    (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
     '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
 }
 function submitReq(key, chLabel){
@@ -651,7 +669,7 @@ function openDetail(id){
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
   const isCarousel=imgs.length>1;
-  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':chDef.key==='linkedin'?'💼 링크드인 포스트':'📝 발행 캡션';
+  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
   const isReels=chDef.key==='instagram'&&it.reelsScript;
@@ -820,9 +838,18 @@ function blogSection(client){
     h+='<table style="margin-top:12px"><tr><th>포스팅</th><th>전문성</th><th>연관성</th><th>품질</th></tr>'+
       b.posts.slice(0,8).map(p=>'<tr><td>'+esc(p.topic)+'</td><td>'+p.expertise+'</td><td>'+p.relevance+'</td><td>'+p.quality+'</td></tr>').join('')+'</table>';
   }
-  // 키워드 분석
-  h+='<table style="margin-top:12px"><tr><th>키워드</th><th>검색지수</th><th>경쟁도</th></tr>'+
-    b.keywords.map(k=>'<tr><td>#'+esc(k.kw)+'</td><td>'+k.searchIndex.toLocaleString()+'</td><td>'+esc(k.competition)+'</td></tr>').join('')+'</table>';
+  // 키워드 분석 — 네이버 광고주센터 키워드 도구 실측값만 표시 (허수 금지)
+  const src=b.kwSource;
+  h+='<div class="sect-h" style="margin:14px 0 6px"><h3 style="margin:0;font-size:14px">🔑 키워드 월간 검색수</h3><span class="muted">'+
+     (src?esc(src.source)+' 실측 · 기준 '+String(src.fetchedAt).slice(0,10):'광고주센터 키워드 도구 실측 데이터 연결 전 — 수치는 표시하지 않습니다')+'</span></div>';
+  h+='<table><tr><th>키워드</th><th>PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th></tr>'+
+    b.keywords.map(k=>{
+      const n=v=>v==null?'<span class="muted">—</span>':Number(v).toLocaleString();
+      const wait=k.total==null&&!src;
+      return '<tr><td>#'+esc(k.kw)+'</td>'+
+        (wait?'<td colspan="4"><span class="badge b-wait">실측 대기</span> <span class="muted" style="font-size:11px">키워드 도구 CSV 임포트 후 표시</span></td>'
+             :'<td>'+n(k.pc)+'</td><td>'+n(k.mobile)+'</td><td><b>'+n(k.total)+'</b></td><td>'+(k.competition?esc(k.competition):'<span class="muted">—</span>')+'</td>')+'</tr>';
+    }).join('')+'</table>';
   h+='</div>';
   return h;
 }
@@ -903,9 +930,9 @@ function setupPanel(){
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
 function chGrad(key){
-  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)',linkedin:'linear-gradient(135deg,#ecf2fc,#dce8f8)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
+  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
 }
-function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e',linkedin:'#b8cef0'})[key]||'#dfe4ec'; }
+function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e'})[key]||'#dfe4ec'; }
 function channelLinksPanel(client){
   const links=client.channelLinks||[];
   if(!links.length) return '';
@@ -916,10 +943,38 @@ function channelLinksPanel(client){
   return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
 }
+// 📅 차주 콘텐츠 기획 (ADR-0006: 금 키워드 수집 → 토 기획 → week-plan.json, plan.json과 분리)
+function weekPlanPanel(client){
+  const wp=client.weekPlan;
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획</h3><span class="muted">'+
+    (wp&&wp.baseDate?'기준일 '+esc(String(wp.baseDate).slice(0,10)):'키워드 실측 연동 후 매주 토요일 자동 생성')+'</span></div>';
+  if(!wp){
+    h+='<div class="empty" style="padding:10px">아직 차주 기획이 없습니다 — 네이버 검색광고 키워드 수집(금) → 차주 기획(토) 파이프라인은 계정 연결 단계에서 켜집니다.</div>';
+  } else {
+    h+='<table><tr><th style="width:90px">날짜</th><th style="width:130px">채널</th><th>제안 제목</th><th style="width:80px">시트</th></tr>'+
+      wp.items.map(it=>{
+        const cd=DATA.channels.find(x=>x.key===it.channel)||{icon:'',label:it.channel||''};
+        return '<tr><td class="muted">'+esc(it.date||'')+'</td><td>'+cd.icon+' '+esc(cd.label)+'</td><td>'+esc(it.title||'')+'</td><td><span class="tag">'+esc(it.sheet||'')+'</span></td></tr>';
+      }).join('')+'</table>'+
+      '<div class="muted" style="margin-top:8px">이 기획안은 감도·가짜글자 검수를 거친 뒤에만 실제 제작으로 넘어갑니다 (자동발행 큐와 분리).</div>';
+  }
+  return h+'</div>';
+}
+// 🔌 채널 연결 상황 — 압축 칩 (개요 최하단, docs/06-대시보드 레이아웃 원칙)
+function connChips(client){
+  const st=DATA.setup||{};
+  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube};
+  const chips=client.channels.map(c=>{
+    const lab=DATA.channels.find(x=>x.key===c.key)||{icon:'',label:c.key};
+    const mark=c.key==='naver-blog'?'✍️ 수동':(on[c.key]?'✅':'⬜');
+    return '<span class="tag" style="font-size:12px;padding:5px 10px">'+lab.icon+' '+esc(lab.label)+' '+mark+'</span>';
+  }).join(' ');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>🔌 채널 연결 상황</h3><span class="muted">계정 연결은 온보딩 마지막 단계 — 상세 절차는 아래 체크리스트</span></div><div>'+chips+'</div></div>';
+}
 function overview(client){
   let h=tokenBanner(client);
-  h+=setupPanel();
   h+=channelLinksPanel(client);
+  h+=weekPlanPanel(client);
   h+=weeklyPanel(client);
   h+=periodBar();
   h+='<div class="kpis">'+
@@ -963,16 +1018,50 @@ function overview(client){
   h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
   // 경쟁사
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
+  // 저중요 패널은 최하단 — 연결 상황 압축 칩 + 오픈 준비 체크리스트 (docs/06-대시보드 레이아웃 원칙)
+  h+=connChips(client);
+  h+=setupPanel();
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
+// ── 리서치 탭 — research-brief.json이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
+function researchView(client){
+  const r=client.research;
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 데이터가 없습니다.</div>';
+  let h='<div class="sect-h"><h2>📊 '+esc(r.title||'브랜드 리서치')+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
+  if(r.note) h+='<div class="muted" style="margin:0 0 14px;line-height:1.6">'+esc(r.note)+'</div>';
+  for(const s of r.sections){
+    h+='<div class="panel"><h3>'+esc((s.icon?s.icon+' ':'')+s.title)+'</h3>';
+    if(s.desc) h+='<div class="muted" style="margin:-4px 0 10px;font-size:12.5px;line-height:1.65">'+esc(s.desc)+'</div>';
+    if(s.stats&&s.stats.length) h+='<div class="kpis">'+s.stats.map(x=>kpi(esc(x.v),esc(x.l),x.accent)).join('')+'</div>';
+    if(s.bars&&s.bars.items&&s.bars.items.length){
+      const mx=s.bars.max||Math.max.apply(null,s.bars.items.map(x=>x.value))||1;
+      if(s.bars.title) h+='<div style="font-weight:700;font-size:12.5px;margin:4px 0 6px">'+esc(s.bars.title)+'</div>';
+      h+=s.bars.items.map(x=>'<div class="rbarrow"><div class="rl" title="'+esc(x.label)+'">'+esc(x.label)+'</div><div class="rtrack"><div class="rfill" style="width:'+Math.max(2,Math.round(x.value/mx*100))+'%'+(x.color?';background:'+esc(x.color):'')+'"></div></div><div class="rv">'+esc(String(x.value))+(s.bars.unit?esc(s.bars.unit):'')+(x.note?' · '+esc(x.note):'')+'</div></div>').join('');
+    }
+    if(s.table&&s.table.head) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+(s.table.rows||[]).map(row=>'<tr>'+row.map(cd=>'<td>'+esc(cd)+'</td>').join('')+'</tr>').join('')+'</table></div>';
+    if(s.list&&s.list.length) h+='<ul style="margin:8px 0 2px;padding-left:18px;font-size:13px;line-height:1.75">'+s.list.map(x=>'<li><b>'+esc(x.t)+'</b>'+(x.d?' — <span style="color:#4a5266">'+esc(x.d)+'</span>':'')+'</li>').join('')+'</ul>';
+    if(s.timeline&&s.timeline.length) h+='<div class="rtl" style="margin-top:10px">'+s.timeline.map(x=>'<div class="ri"><span class="rd">'+esc(x.date)+'</span> · '+esc(x.text)+(x.url?' <a href="'+esc(x.url)+'" target="_blank">확인↗</a>':'')+'</div>').join('')+'</div>';
+    if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div>';
+    if(s.links&&s.links.length) h+='<div style="margin-top:10px">'+s.links.map(x=>'<a class="rlink" href="'+esc(x.url)+'" target="_blank">🔗 '+esc(x.label)+' ↗</a>'+(x.note?'<span class="muted" style="font-size:11.5px;margin-right:8px">'+esc(x.note)+'</span>':'')).join('')+'</div>';
+    h+='</div>';
+  }
+  return h;
+}
 function renderClients(){
-  document.getElementById('clients').innerHTML = DATA.clients.length>1 ? DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('') : '';
+  // 헤더 로고는 제품명 "ALWAYS ON 콘텐츠 관제실" 고정 — 업체 식별은 클라이언트 칩으로 (docs/06-대시보드)
+  document.getElementById('clients').innerHTML = DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('');
+  const c=DATA.clients[ci];
+  if(c){
+    document.getElementById('dashsub').textContent=(c.industry?c.industry+' · ':'')+'채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침';
+    document.documentElement.style.setProperty('--brand', c.themeColor||'#2b6fff');
+  }
 }
 function renderTabs(){
   const c=DATA.clients[ci];
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
     .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat(c.research?[{key:'research',label:'리서치',icon:'📊',active:true,noDot:true}]:[])
     .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
@@ -988,7 +1077,7 @@ function renderTabs(){
 }
 function renderView(){
   const c=DATA.clients[ci];
-  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):channelDetail(c,c.channels.find(x=>x.key===ch)));
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):channelDetail(c,c.channels.find(x=>x.key===ch))));
   document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
