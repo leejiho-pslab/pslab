@@ -326,7 +326,7 @@ main{padding:18px 22px;max-width:1180px;margin:0 auto}
 .kpi{background:#f7f9fc;border:1px solid #e4e8f0;border-radius:12px;padding:12px 14px}
 .kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#6a7284;font-size:12px;margin-top:2px}
 .kpi .v.accent{color:#d97706}
-.panel{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.panel{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,24,40,.04);overflow-x:auto}
 .panel h3{margin:0 0 10px;font-size:15px}
 .sect-h{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}
 .sect-h h2{font-size:16px;margin:0}
