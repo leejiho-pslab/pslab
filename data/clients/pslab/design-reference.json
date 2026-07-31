@@ -1,0 +1,83 @@
+{
+  "_readme": "구글 드라이브(※alway on) 레퍼런스·지침에서 학습한 채널별 디자인 언어. 사람이 올린 레퍼런스·지침을 Claude가 직접 보고 채운다. 여기의 결론이 design-tokens.json(렌더 값)·channel-guides.json·brand-brief.json·design.json humanNotes(지침)로 흘러간다. 저장소 CI는 드라이브에 접근하지 않는다 — 드라이브 열람은 Claude 세션의 Drive 연동으로만 이뤄진다. 콘텐츠 기획·제작 전 필수 열람(스킬 §0 변수 #11). 2026-07-31 드라이브 재편성으로 폴더 ID 갱신.",
+  "drive": {
+    "root": {
+      "title": "※alway on",
+      "folderId": "1gnER_6v_RqG5fTIYjY8lGP_RAT6C0a9V"
+    },
+    "clientFolder": {
+      "title": "※alway on / 1. pslab",
+      "folderId": "15HklDNozePQQCG_6srJiuR3Hvp91c7p0"
+    },
+    "refRoot": {
+      "title": "※alway on / 1. pslab / 1. 레퍼런스 모음",
+      "folderId": "1falZN_YhPoT0HZNk528UBUMBunn6KP-V"
+    },
+    "channels": {
+      "instagram": {
+        "folderId": "1LS-gU2B-EsUf6K7w0qBhEDMecCKVuJMo",
+        "title": "1. 인스타그램"
+      },
+      "youtube": {
+        "folderId": "1gVBFCLEdTZw_ZS8-SXJ97FEC5I347xk4",
+        "title": "2. 유튜브"
+      },
+      "threads": {
+        "folderId": "1vXTbn80nKURQ8GFM262ObfLsyklEpMP2",
+        "title": "3. 쓰레드"
+      },
+      "blog": {
+        "folderId": "1OVw9wXyeXXCZrf9cWu8PG4zP-0jJTUrF",
+        "title": "4. 블로그"
+      }
+    }
+  },
+  "channels": {
+    "instagram": {
+      "status": "대기",
+      "reviewedFiles": [],
+      "language": {
+        "palette": null,
+        "typography": null,
+        "layout": null,
+        "imagery": null,
+        "avoid": []
+      },
+      "notes": []
+    },
+    "youtube": {
+      "status": "대기",
+      "reviewedFiles": [],
+      "language": {
+        "palette": null,
+        "typography": null,
+        "layout": null,
+        "motion": null,
+        "avoid": []
+      },
+      "notes": []
+    },
+    "threads": {
+      "status": "대기",
+      "reviewedFiles": [],
+      "language": {
+        "tone": null,
+        "layout": null,
+        "avoid": []
+      },
+      "notes": []
+    },
+    "blog": {
+      "status": "대기",
+      "reviewedFiles": [],
+      "language": {
+        "cover": null,
+        "typography": null,
+        "figure": null,
+        "avoid": []
+      },
+      "notes": []
+    }
+  },
+  "updatedAt": "2026-07-31"
+}
