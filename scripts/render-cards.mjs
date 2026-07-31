@@ -97,6 +97,10 @@ const VARIANTS = Object.fromEntries(
 );
 if (TOKENS?.variants) console.log(`디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
 
+// 밝은 배경(화이트 확대 시즌)에서도 보이도록 변형별 괘선 색을 쓸 수 있게 한다.
+// (브랜치 통합 과정에서 정의가 유실돼 카드 렌더가 ReferenceError로 죽었던 이력 있음 — 삭제 금지)
+const ruleOf = (v) => v.rule || 'rgba(255,255,255,.16)';
+
 // 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
 function motifSVG(key, color, size, opacity) {
   const sw = 4.2;

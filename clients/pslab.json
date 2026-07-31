@@ -51,40 +51,96 @@
     "최저가"
   ],
   "targets": [
-    "instagram"
+    "instagram",
+    "youtube",
+    "threads",
+    "naver-blog",
+    "blogger"
   ],
   "accounts": {
     "instagram": "_pslab",
-    "threads": "_pslab"
+    "threads": "_pslab",
+    "youtube": "pslab2026",
+    "blogger": "pslab2026",
+    "naver-blog": "pslab"
   },
   "channelLinks": {
     "instagram": "https://www.instagram.com/_pslab",
     "threads": "https://www.threads.net/@_pslab",
-    "blogger": "https://pslab2026.blogspot.com"
+    "blogger": "https://pslab2026.blogspot.com",
+    "youtube": "https://www.youtube.com/@pslab2026",
+    "naver-blog": "https://blog.naver.com/pslab"
   },
   "scheduleTimes": [
-    "19:00"
+    "18:00",
+    "19:00",
+    "11:00"
   ],
   "manualPlan": true,
   "reviewMode": "manual",
   "reportTo": "ljhnimwithit@gmail.com",
   "cadence": {
-    "note": "주 3회 월·수·금 18:00 KST — 인스타그램 릴스 2회(월·금) + 캐러셀 1회(수). 토요일에 다음 주 기획 생성.",
+    "note": "주 5채널 상시 운영 — 월/수/금 인스타(릴스2·캐러셀1)+쓰레드, 월·금 유튜브 쇼츠(릴스 영상 재활용), 화 네이버블로그, 목 구글블로그. 주 10건. 토요일에 다음 주 기획 생성.",
     "weekly": [
       {
         "day": "mon",
         "channel": "instagram",
-        "format": "릴스"
+        "format": "릴스",
+        "time": "18:00"
+      },
+      {
+        "day": "mon",
+        "channel": "youtube",
+        "format": "쇼츠(릴스 재활용)",
+        "time": "18:00"
+      },
+      {
+        "day": "mon",
+        "channel": "threads",
+        "format": "스레드(타래)",
+        "time": "19:00"
+      },
+      {
+        "day": "tue",
+        "channel": "naver-blog",
+        "format": "롱폼(수동 발행)",
+        "time": "11:00"
       },
       {
         "day": "wed",
         "channel": "instagram",
-        "format": "카드뉴스"
+        "format": "카드뉴스(캐러셀)",
+        "time": "18:00"
+      },
+      {
+        "day": "wed",
+        "channel": "threads",
+        "format": "스레드(타래)",
+        "time": "19:00"
+      },
+      {
+        "day": "thu",
+        "channel": "blogger",
+        "format": "롱폼",
+        "time": "11:00"
       },
       {
         "day": "fri",
         "channel": "instagram",
-        "format": "릴스"
+        "format": "릴스",
+        "time": "18:00"
+      },
+      {
+        "day": "fri",
+        "channel": "youtube",
+        "format": "쇼츠(릴스 재활용)",
+        "time": "18:00"
+      },
+      {
+        "day": "fri",
+        "channel": "threads",
+        "format": "스레드(타래)",
+        "time": "19:00"
       }
     ]
   }
