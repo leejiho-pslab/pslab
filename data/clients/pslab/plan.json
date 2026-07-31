@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-07-31T01:50:08.176924+00:00",
+  "updatedAt": "2026-07-31T02:12:51.664Z",
   "items": [
     {
       "id": "w1-mon",
@@ -126,9 +126,9 @@
         "shares": 0,
         "engagementRate": 0.6666666666666666
       },
-      "metricsAt": "2026-07-29T11:42:24.761Z",
-      "insightComment": "참여율 66.7%로 평균(15.3%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:35.463Z"
+      "metricsAt": "2026-07-31T02:04:37.037Z",
+      "insightComment": "참여율 66.7%로 평균(49.2%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-31T02:04:45.023Z"
     },
     {
       "id": "w1-fri",
@@ -196,9 +196,9 @@
         "shares": 0,
         "engagementRate": 0.6666666666666666
       },
-      "metricsAt": "2026-07-29T11:42:26.231Z",
-      "insightComment": "참여율 66.7%로 평균(15.3%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:35.660Z"
+      "metricsAt": "2026-07-31T02:04:38.000Z",
+      "insightComment": "참여율 66.7%로 평균(49.2%)을 웃돌았어요. 디자인 A안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-31T02:04:45.149Z"
     },
     {
       "id": "w2-mon",
@@ -266,9 +266,9 @@
         "shares": 0,
         "engagementRate": 0.3333333333333333
       },
-      "metricsAt": "2026-07-29T11:42:27.362Z",
-      "insightComment": "참여율 33.3%로 평균(15.3%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:35.883Z"
+      "metricsAt": "2026-07-31T02:04:38.826Z",
+      "insightComment": "참여율 33.3%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:45.289Z"
     },
     {
       "id": "w2-wed",
@@ -336,9 +336,9 @@
         "shares": 0,
         "engagementRate": 0.25
       },
-      "metricsAt": "2026-07-29T11:42:28.731Z",
-      "insightComment": "참여율 25.0%로 평균(15.3%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:36.017Z"
+      "metricsAt": "2026-07-31T02:04:39.728Z",
+      "insightComment": "참여율 25.0%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:45.464Z"
     },
     {
       "id": "w2-fri",
@@ -406,9 +406,9 @@
         "shares": 0,
         "engagementRate": 0.6666666666666666
       },
-      "metricsAt": "2026-07-29T11:42:30.003Z",
-      "insightComment": "참여율 66.7%로 평균(15.3%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:36.123Z"
+      "metricsAt": "2026-07-31T02:04:40.789Z",
+      "insightComment": "참여율 66.7%로 평균(49.2%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-31T02:04:45.588Z"
     },
     {
       "id": "w3-mon",
@@ -482,9 +482,9 @@
         "shares": 0,
         "engagementRate": 0.3333333333333333
       },
-      "metricsAt": "2026-07-29T11:42:31.209Z",
-      "insightComment": "참여율 33.3%로 평균(15.3%)을 웃돌았어요. 디자인 C안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
-      "insightAt": "2026-07-29T11:42:36.255Z"
+      "metricsAt": "2026-07-31T02:04:41.619Z",
+      "insightComment": "참여율 33.3%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:45.748Z"
     },
     {
       "id": "threads-07-04",
@@ -555,9 +555,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:31.433Z",
+      "metricsAt": "2026-07-31T02:04:42.023Z",
       "insightComment": "조회 15·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:36.537Z"
+      "insightAt": "2026-07-31T02:04:45.974Z"
     },
     {
       "id": "threads-07-11",
@@ -594,15 +594,15 @@
         }
       ],
       "metrics": {
-        "views": 76,
+        "views": 77,
         "likes": 0,
         "comments": 0,
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:31.685Z",
-      "insightComment": "조회 76·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:36.663Z"
+      "metricsAt": "2026-07-31T02:04:42.250Z",
+      "insightComment": "조회 77·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-31T02:04:46.142Z"
     },
     {
       "id": "threads-07-14",
@@ -645,9 +645,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:31.911Z",
+      "metricsAt": "2026-07-31T02:04:42.452Z",
       "insightComment": "조회 21·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:36.798Z"
+      "insightAt": "2026-07-31T02:04:46.341Z"
     },
     {
       "id": "threads-07-18",
@@ -684,15 +684,15 @@
         }
       ],
       "metrics": {
-        "views": 47,
+        "views": 48,
         "likes": 1,
         "comments": 0,
         "shares": 0,
-        "engagementRate": 0.02127659574468085
+        "engagementRate": 0.020833333333333332
       },
-      "metricsAt": "2026-07-29T11:42:32.151Z",
-      "insightComment": "참여율 2.1%로 평균(15.3%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
-      "insightAt": "2026-07-29T11:42:36.976Z"
+      "metricsAt": "2026-07-31T02:04:42.700Z",
+      "insightComment": "참여율 2.1%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:46.647Z"
     },
     {
       "id": "youtube-07-05",
@@ -742,7 +742,17 @@
           "remoteId": "ulDu8KIb_0Y",
           "url": "https://youtu.be/ulDu8KIb_0Y"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 146,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-31T02:04:42.855Z",
+      "insightComment": "조회 146·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-31T02:04:46.763Z"
     },
     {
       "id": "youtube-07-12",
@@ -792,7 +802,17 @@
           "remoteId": "43G-r4KHvUs",
           "url": "https://youtu.be/43G-r4KHvUs"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 8,
+        "likes": 1,
+        "comments": 1,
+        "shares": 0,
+        "engagementRate": 0.25
+      },
+      "metricsAt": "2026-07-31T02:04:42.934Z",
+      "insightComment": "참여율 25.0%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:46.878Z"
     },
     {
       "id": "youtube-07-19",
@@ -842,7 +862,17 @@
           "remoteId": "rTEmo9xwl0o",
           "url": "https://youtu.be/rTEmo9xwl0o"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 218,
+        "likes": 1,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0.0045871559633027525
+      },
+      "metricsAt": "2026-07-31T02:04:43.055Z",
+      "insightComment": "참여율 0.5%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:46.998Z"
     },
     {
       "id": "blogger-07-02",
@@ -891,9 +921,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:32.303Z",
+      "metricsAt": "2026-07-31T02:04:43.055Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:38.829Z"
+      "insightAt": "2026-07-31T02:04:47.130Z"
     },
     {
       "id": "blogger-07-09",
@@ -942,9 +972,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:32.303Z",
+      "metricsAt": "2026-07-31T02:04:43.055Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:38.969Z"
+      "insightAt": "2026-07-31T02:04:47.250Z"
     },
     {
       "id": "blogger-07-16",
@@ -993,9 +1023,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:32.303Z",
+      "metricsAt": "2026-07-31T02:04:43.055Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:39.102Z"
+      "insightAt": "2026-07-31T02:04:47.402Z"
     },
     {
       "id": "blogger-07-23",
@@ -1044,9 +1074,9 @@
         "shares": 0,
         "engagementRate": 0
       },
-      "metricsAt": "2026-07-29T11:42:32.303Z",
+      "metricsAt": "2026-07-31T02:04:43.056Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:39.216Z"
+      "insightAt": "2026-07-31T02:04:47.515Z"
     },
     {
       "id": "reels-07-27",
@@ -1092,9 +1122,9 @@
         "shares": 0,
         "engagementRate": 0.02040816326530612
       },
-      "metricsAt": "2026-07-29T11:42:33.360Z",
-      "insightComment": "참여율 2.0%로 평균(15.3%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
-      "insightAt": "2026-07-29T11:42:39.577Z"
+      "metricsAt": "2026-07-31T02:04:43.857Z",
+      "insightComment": "참여율 2.0%로 평균(49.2%)을 밑돌았어요. 첫 슬라이드 후킹과 결론 한 줄을 더 세게, 저장 유도 문구를 명확히 해보세요.",
+      "insightAt": "2026-07-31T02:04:47.795Z"
     },
     {
       "id": "car-07-29",
@@ -1168,15 +1198,15 @@
         }
       ],
       "metrics": {
-        "views": 0,
-        "likes": 0,
+        "views": 1,
+        "likes": 1,
         "comments": 0,
         "shares": 0,
-        "engagementRate": 0
+        "engagementRate": 1
       },
-      "metricsAt": "2026-07-29T11:42:35.112Z",
-      "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-07-29T11:42:39.874Z"
+      "metricsAt": "2026-07-31T02:04:44.535Z",
+      "insightComment": "참여율 100.0%로 평균(49.2%)을 웃돌았어요. 디자인 B안·결론 우선 구조가 먹힌 것으로 보입니다 — 다음에도 같은 톤을 유지하세요.",
+      "insightAt": "2026-07-31T02:04:47.908Z"
     },
     {
       "id": "reels-07-31",
@@ -1258,7 +1288,17 @@
           "remoteId": "TbT1q1wWnK0",
           "url": "https://youtu.be/TbT1q1wWnK0"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 393,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-31T02:04:44.631Z",
+      "insightComment": "조회 393·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-31T02:04:48.105Z"
     },
     {
       "id": "youtube-07-29",
@@ -1310,7 +1350,17 @@
           "remoteId": "PGgCwIgEsaM",
           "url": "https://youtu.be/PGgCwIgEsaM"
         }
-      ]
+      ],
+      "metrics": {
+        "views": 66,
+        "likes": 0,
+        "comments": 0,
+        "shares": 0,
+        "engagementRate": 0
+      },
+      "metricsAt": "2026-07-31T02:04:44.744Z",
+      "insightComment": "조회 66·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
+      "insightAt": "2026-07-31T02:04:48.232Z"
     },
     {
       "id": "youtube-07-31",
