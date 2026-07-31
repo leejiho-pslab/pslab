@@ -103,6 +103,39 @@
           "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_035405_9ca60faf-dd8a-4923-a698-ed323804a311.mp4"
         }
       ]
+    },
+    "reels-08-07": {
+      "theme": "premium",
+      "beats": [
+        {
+          "kicker": "ALWAYS ON",
+          "text": "SNS 자동화,\n못 믿으시겠죠?",
+          "accent": "못 믿으시겠죠?",
+          "scene": "저녁 사무실, 팔짱 끼고 화면을 의심스럽게 보는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260731_082543_85288c94-2e1f-455a-b4b9-fd33ab340b69.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "16년 동안\n49개 브랜드",
+          "accent": "49개 브랜드",
+          "scene": "브랜드 자료가 켜켜이 쌓인 책상 위 오버헤드 이동",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260731_082552_85b3318e-b374-443c-b63e-543bdb91ae8b.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "패션 뷰티 식음료\n펫 금융까지",
+          "accent": "펫 금융까지",
+          "scene": "해질녘 여러 업종 매장 쇼윈도를 지나는 트래킹 샷",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260731_082600_e0d47289-5628-48a7-9763-3ffcd2b8ab09.mp4"
+        },
+        {
+          "kicker": "P.S.LAB",
+          "text": "지금 이 영상도\n자동입니다",
+          "accent": "자동입니다",
+          "scene": "아침 햇살 사무실, 커피 들고 미소 짓는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260731_082608_1bef3f2a-6dbb-4836-a168-ee5c61e9bd22.mp4"
+        }
+      ]
     }
   }
 }

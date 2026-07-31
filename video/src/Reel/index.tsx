@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
-import { linearTiming, TransitionSeries } from "@remotion/transitions";
+import { linearTiming, springTiming, TransitionSeries } from "@remotion/transitions";
 import { fade } from "@remotion/transitions/fade";
 import { slide } from "@remotion/transitions/slide";
 import { loadFonts } from "../fonts";
@@ -57,9 +57,16 @@ export const Reel: React.FC<ReelProps> = (props) => {
                         ? slide({ direction: "from-bottom" })
                         : fade()
                     }
-                    timing={linearTiming({
-                      durationInFrames: tr.durationInFrames,
-                    })}
+                    // 밀어 올리는 컷은 스프링으로 — 등속 슬라이드는 값싸 보인다.
+                    // 디졸브는 등속이 맞다(스프링을 걸면 밝기가 출렁인다).
+                    timing={
+                      tr.type === "slideup"
+                        ? springTiming({
+                            config: { damping: 200 },
+                            durationInFrames: tr.durationInFrames,
+                          })
+                        : linearTiming({ durationInFrames: tr.durationInFrames })
+                    }
                   />
                 ) : null}
                 <TransitionSeries.Sequence
@@ -76,6 +83,28 @@ export const Reel: React.FC<ReelProps> = (props) => {
             );
           })}
         </TransitionSeries>
+
+        {/* 전체 진행 바 — "얼마 안 남았다"는 신호가 이탈을 늦춘다.
+            씬 위에 얹어야 하므로 TransitionSeries 바깥에 둔다. */}
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 6,
+            background: "rgba(255,255,255,.12)",
+          }}
+        >
+          <div
+            style={{
+              width: `${(frame / durationInFrames) * 100}%`,
+              height: "100%",
+              background: theme.accent,
+              boxShadow: `0 0 14px ${theme.accent}`,
+            }}
+          />
+        </div>
       </AbsoluteFill>
     </AbsoluteFill>
   );
