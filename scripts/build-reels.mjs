@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 /**
- * 릴스·쇼츠 멀티씬 합성기 (무음판)
+ * 릴스·쇼츠 멀티씬 합성기 (무음판) — ffmpeg 경로 【폴백】
+ *
+ * ※ 기본 엔진은 Remotion 이다: scripts/render-reels-remotion.mjs
+ *    이 스크립트는 Remotion 렌더가 실패했을 때만 CI 에서 돌아간다.
+ *    테마 팔레트는 scripts/lib/reel-timeline.mjs 를 공유해 두 엔진의 색이 갈라지지 않게 했다.
  *
  * 대본 비트마다 그 문장에 맞는 장면 클립을 붙여 15초 이내로 합성한다.
  * 오디오는 당분간 넣지 않는다(BGM·음성 내레이션 모두 보류 — 시도해본 결과
@@ -25,6 +29,8 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node
 import { execFileSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { mergeTheme } from './lib/reel-timeline.mjs';
+import { fetchCached } from './lib/download.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i >= 0 ? process.argv[i + 1] : d; };
@@ -53,13 +59,11 @@ function fontFaces() {
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-// 자막 테마 — 기본값은 코드에, 실제 값은 design-tokens.json 의 reels 섹션이 덮어쓴다.
+// 자막 테마 — 기본 팔레트는 scripts/lib/reel-timeline.mjs 에 하나만 두고 여기서 가져온다.
+// (여기 따로 두면 Remotion 경로와 색이 갈라져 폴백이 폴백 구실을 못 한다)
+// 실제 값은 design-tokens.json 의 reels 섹션이 덮어쓴다.
 // (레퍼런스 학습 결과가 카드뿐 아니라 릴스 자막에도 흐르게 하는 지점. §0 변수 #4)
 // 스키마: { "reels": { "cinematic": { "accent": "#...", "kicker": "#..." }, ... } }
-const DEFAULT_THEME = {
-  cinematic: { accent: '#ff8a3d', kicker: '#ffb37a' },
-  premium: { accent: '#ffc24a', kicker: '#ffd98a' },
-};
 function loadReelTokens(id) {
   const f = join(ROOT, 'data/clients', id, 'design-tokens.json');
   if (!existsSync(f)) return null;
@@ -71,9 +75,7 @@ function loadReelTokens(id) {
   }
 }
 const REEL_TOKENS = loadReelTokens(clientId);
-const THEME = Object.fromEntries(
-  Object.entries(DEFAULT_THEME).map(([k, v]) => [k, { ...v, ...(REEL_TOKENS?.[k] ?? {}) }]),
-);
+const THEME = mergeTheme(REEL_TOKENS);
 if (REEL_TOKENS) console.log(`릴스 디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
 
 /** 키워드에 액센트 컬러 + 하이라이트 밑줄을 입힌 자막 HTML */
@@ -144,26 +146,6 @@ function shoot(html, outPng) {
     '--window-size=1080,1920', `--screenshot=${outPng}`, `file://${tmp}`,
   ], { stdio: 'pipe' });
   rmSync(tmp, { force: true });
-}
-
-async function download(url, dest) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return false;
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length < 2000) return false;
-    writeFileSync(dest, buf);
-    return true;
-  } catch { return false; }
-}
-
-/** 캐시된 파일을 재사용하되, 출처 URL이 바뀌면(재생성) 다시 받는다 */
-async function fetchCached(url, dest, stampPath) {
-  const cached = existsSync(dest) && existsSync(stampPath) && readFileSync(stampPath, 'utf8').trim() === url;
-  if (cached) return true;
-  const ok = await download(url, dest);
-  if (ok) writeFileSync(stampPath, url);
-  return ok;
 }
 
 // ── 씬 1개 합성: 클립 트림 + 그레이딩 + 2행 시차 슬라이드업 자막 (오디오 없음) ──

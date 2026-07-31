@@ -16,7 +16,10 @@
     "autopilot": "tsx examples/autopilot.ts",
     "daemon-demo": "tsx examples/daemon.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --import tsx ./test/*.test.ts"
+    "test": "node --test --import tsx ./test/*.test.ts",
+    "reels": "node scripts/render-reels-remotion.mjs --client pslab",
+    "reels:stage": "node scripts/render-reels-remotion.mjs --client pslab --stage-only",
+    "reels:studio": "npm --prefix video exec -- remotion studio"
   },
   "keywords": [
     "sns",

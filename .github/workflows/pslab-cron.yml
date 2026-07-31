@@ -145,7 +145,21 @@ jobs:
         run: node scripts/build-shorts-video.mjs --client pslab
 
       # 인스타 릴스 멀티씬 합성 — 대본 비트마다 다른 장면 클립 + 애니메이션 자막 (15초 이내)
-      - name: 릴스 멀티씬 합성
+      #
+      # 소재는 힉스필드(장면 클립 생성), 편집은 Remotion(코드 합성)이 맡는다.
+      # 폴백인 ffmpeg 경로는 같은 reel-scenes.json 과 같은 테마 모듈
+      # (scripts/lib/reel-timeline.mjs 의 mergeTheme)을 쓰므로 색·타이밍이 갈라지지 않는다.
+      - name: 릴스 합성 — Remotion (기본 엔진)
+        id: reels_remotion
+        continue-on-error: true
+        run: |
+          npm ci --prefix video --no-audit --no-fund
+          node scripts/render-reels-remotion.mjs --client pslab
+
+      # Remotion 이 실패했을 때만 기존 ffmpeg 경로로 되돌린다.
+      # (성공했는데도 돌리면 방금 뽑은 영상을 덮어써 버린다)
+      - name: 릴스 합성 폴백 — ffmpeg
+        if: steps.reels_remotion.outcome != 'success'
         continue-on-error: true
         run: node scripts/build-reels.mjs --client pslab
 
