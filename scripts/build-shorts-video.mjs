@@ -87,7 +87,17 @@ async function downloadClip(url, dest) {
 
 const FILE = join(ROOT, 'data/clients', clientId, 'plan.json');
 const plan = JSON.parse(readFileSync(FILE, 'utf8'));
-const items = plan.items.filter((i) => i.channels[0] === 'youtube');
+// 유튜브 쇼츠 전용. 멀티씬 합성기(build-reels.mjs)가 맡는 항목은 제외한다
+// — 여기서 다루면 멀티씬 결과물을 단일 배경 루프본으로 덮어써 버린다.
+function multiSceneIds() {
+  const f = join(ROOT, 'data/clients', clientId, 'reel-scenes.json');
+  if (!existsSync(f)) return new Set();
+  try { return new Set(Object.keys(JSON.parse(readFileSync(f, 'utf8')).reels ?? {})); } catch { return new Set(); }
+}
+const msIds = multiSceneIds();
+const items = plan.items.filter(
+  (i) => i.channels[0] === 'youtube' && !i.videoFrom && !msIds.has(i.id),
+);
 const sources = loadVideoSources();
 
 if (!ffmpeg) { console.log('ffmpeg 없음 → 쇼츠 영상 합성 건너뜀 (슬라이드만 유지)'); process.exit(0); }

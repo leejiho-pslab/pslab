@@ -56,7 +56,7 @@ jobs:
         run: |
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -f data/clients/vittz/keyword-volumes.json data/clients/vittz/keyword-trends.json data/clients/vittz/week-plan.json docs/
+          git add -f data/clients/vittz/keyword-volumes.json data/clients/vittz/keyword-stats.json data/clients/vittz/keyword-trends.json data/clients/vittz/week-plan.json docs/
           git commit -m "chore(vittz): 키워드 도구 실측 월간검색수 갱신" || { echo "변경 없음"; exit 0; }
           for i in 1 2 3 4 5; do
             git pull --rebase && git push && { echo "push 성공"; exit 0; }

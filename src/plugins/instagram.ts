@@ -124,6 +124,12 @@ export class InstagramPlugin extends BasePlugin {
       if (media.kind === 'video') {
         params.media_type = 'REELS';
         params.video_url = media.source;
+        // 커버 프레임 지정 — 없으면 인스타가 0ms(인트로 페이드 중 검은 프레임일 수 있음)를
+        // 기본 채택해 프로필 그리드 썸네일이 새까맣게 나오는 사고가 난다.
+        const coverMs = content.platformOptions?.instagram?.coverOffsetMs;
+        if (typeof coverMs === 'number' && coverMs > 0) {
+          params.thumb_offset = String(Math.round(coverMs));
+        }
       } else {
         params.image_url = media.source;
       }

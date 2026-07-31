@@ -74,8 +74,18 @@ export interface PlanItem {
   insightComment?: string;
   /** 인사이트 코멘트 생성 시각 (ISO) */
   insightAt?: string;
-  /** 유튜브 쇼츠: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
+  /** 유튜브 쇼츠·인스타 릴스: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
   videoFile?: string;
+  /** 인스타 릴스: 영상 대본([HOOK]/[본론]/[CTA]) — captionBody(발행 캡션)와 분리 */
+  reelsScript?: string;
+  /** 다른 항목의 영상을 그대로 재사용 (같은 콘텐츠를 릴스·쇼츠 양쪽에 발행할 때) */
+  videoFrom?: string;
+  /** 합성된 영상 길이(초) */
+  videoSeconds?: number;
+  /** 릴스 커버 프레임 위치(ms) — 인터랙션이 가장 높을 지점(보통 훅 문구가 다 보이는 시점)을
+   *  지정. 없으면 발행 시 기본값(900ms) 사용 — 인트로 페이드 중인 검은 프레임이 프로필
+   *  그리드 커버로 잡히는 사고를 막는다. */
+  coverOffsetMs?: number;
   /** 유튜브 업로드용 SEO 제목 */
   ytTitle?: string;
   /** 유튜브 업로드용 설명(멘션) — 키워드 기반 SEO */

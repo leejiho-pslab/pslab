@@ -36,61 +36,56 @@ export interface ChannelGuide {
 }
 export type ChannelGuides = Partial<Record<PlatformId, ChannelGuide>>;
 
-/** 리서치 요약 한 섹션 — 대시보드 '리서치' 탭에서 시각화되는 단위 */
+/** 리서치 브리프 — 온보딩 조사 결과를 대시보드 '리서치' 탭에 시각화하기 위한 구조 */
 export interface ResearchSection {
-  id: string;
   icon?: string;
   title: string;
-  summary?: string;
-  /** KPI 스탯 타일 */
-  stats?: Array<{ v: string; l: string }>;
-  bullets?: string[];
-  /** 가로 바 차트 (value는 0~max 상대값, accent=브랜드/피크 강조) */
-  charts?: Array<{
-    title: string;
-    unit?: string;
-    max?: number;
-    items: Array<{ label: string; value: number; hint?: string; accent?: boolean }>;
-  }>;
+  desc?: string;
+  /** KPI 숫자 카드 */
+  stats?: Array<{ v: string; l: string; accent?: boolean }>;
+  /** 가로 막대 차트 (value는 0~max 상대값) */
+  bars?: { title?: string; unit?: string; max?: number; items: Array<{ label: string; value: number; note?: string; color?: string }> };
+  /** 표 */
   table?: { head: string[]; rows: string[][] };
+  /** 태그 뭉치 */
   tags?: string[];
-  links?: Array<{ label: string; url: string }>;
+  /** 불릿 리스트 (제목+설명) */
+  list?: Array<{ t: string; d?: string }>;
+  /** 타임라인 */
+  timeline?: Array<{ date: string; text: string; url?: string }>;
+  /** 확인용 외부 링크 */
+  links?: Array<{ label: string; url: string; note?: string }>;
 }
-
-/** 네이버 키워드 도구 실측 검색량 한 건 (검색광고 API keywordstool 응답 기반) */
-export interface KeywordVolume {
-  keyword: string;
-  /** 월간검색수 PC ("< 10"은 5로 정규화) */
-  pc: number;
-  /** 월간검색수 모바일 */
-  mobile: number;
-  total: number;
-  /** 경쟁정도 (높음/중간/낮음) */
-  compIdx?: string;
-  /** 월평균클릭수 PC/모바일 */
-  avgPcClicks?: number;
-  avgMobileClicks?: number;
-  /** 월평균노출 광고수 */
-  plAvgDepth?: number;
-}
-
-/** 실측 검색량 문서 — data/<clientId>/keyword-volumes.json */
-export interface KeywordVolumesDoc {
-  updatedAt: string;
-  source: string;
-  /** 우리가 요청한 키워드(배치표)의 실측값 */
-  requested: KeywordVolume[];
-  /** API가 함께 돌려준 연관키워드 중 검색량 상위 (소재 발굴용) */
-  related: KeywordVolume[];
-}
-
-/** 리서치 요약 문서 — data/<clientId>/research.json */
-export interface ResearchDoc {
+export interface ResearchBrief {
+  title?: string;
   updatedAt?: string;
-  intro?: string;
+  note?: string;
   sections: ResearchSection[];
-  /** 원본 문서·확인 링크 모음 */
-  sources?: Array<{ label: string; url: string }>;
+}
+
+/**
+ * 네이버 광고주센터 키워드 도구 실측 데이터 — keyword-stats.json
+ * 반드시 실제 조회값만 넣는다 (허수 금지). scripts/import-keyword-stats.mjs로
+ * 키워드 도구 '전체 다운로드' CSV를 변환해 생성.
+ */
+export interface KeywordStat {
+  kw: string;
+  /** 월간검색수(PC) — 키워드 도구 '< 10'은 null로 */
+  pc: number | null;
+  /** 월간검색수(모바일) */
+  mobile: number | null;
+  /** 경쟁정도 (낮음/보통/높음) */
+  competition?: string;
+  /** 월평균노출광고수 */
+  adCount?: number | null;
+  /** 월평균클릭수 (PC+모바일 합) */
+  clicks?: number | null;
+}
+export interface KeywordStats {
+  source: string;
+  /** 조회(다운로드) 기준일 */
+  fetchedAt: string;
+  items: KeywordStat[];
 }
 
 export const BRAND_FIELDS: Record<string, keyof BrandBrief> = {
@@ -168,17 +163,25 @@ export class GuidanceStore {
     return b;
   }
 
-  /** 리서치 요약(research.json) — 없으면 undefined (대시보드에서 탭 자체를 숨김) */
-  loadResearch(clientId: string): ResearchDoc | undefined {
-    return this.read<ResearchDoc>(this.file(clientId, 'research.json'));
+  /** week-plan.json — 차주 콘텐츠 기획 (ADR-0006: 토요일 생성, plan.json과 분리) */
+  loadWeekPlan(clientId: string): { baseDate?: string; items: Array<{ date?: string; channel?: string; title?: string; sheet?: string }> } | undefined {
+    const raw = this.read<unknown>(this.file(clientId, 'week-plan.json'));
+    if (!raw) return undefined;
+    const items = Array.isArray(raw) ? raw : (raw as { items?: unknown }).items;
+    if (!Array.isArray(items) || !items.length) return undefined;
+    return { baseDate: (raw as { baseDate?: string }).baseDate, items: items as Array<{ date?: string; channel?: string; title?: string; sheet?: string }> };
   }
 
-  /**
-   * 네이버 키워드 도구 실측 월간검색수(keyword-volumes.json) —
-   * scripts/fetch-keyword-volumes.mjs 가 검색광고 API(keywordstool)로 수집해 저장.
-   */
-  loadKeywordVolumes(clientId: string): KeywordVolumesDoc | undefined {
-    return this.read<KeywordVolumesDoc>(this.file(clientId, 'keyword-volumes.json'));
+  /** keyword-stats.json — 키워드 도구 실측 데이터 (없으면 undefined = '실측 대기' 표시) */
+  loadKeywordStats(clientId: string): KeywordStats | undefined {
+    const s = this.read<KeywordStats>(this.file(clientId, 'keyword-stats.json'));
+    return s && Array.isArray(s.items) && s.items.length ? s : undefined;
+  }
+
+  /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */
+  loadResearch(clientId: string): ResearchBrief | undefined {
+    const r = this.read<ResearchBrief>(this.file(clientId, 'research-brief.json'));
+    return r && Array.isArray(r.sections) && r.sections.length ? r : undefined;
   }
 
   loadGuides(clientId: string): ChannelGuides {

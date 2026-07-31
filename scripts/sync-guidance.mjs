@@ -4,11 +4,13 @@
  *
  *   [브랜드노트·분석|방향성|감도] <업체명>  → data/clients/<id>/brand-brief.json
  *   [가이드·<채널key>] <업체명>            → data/clients/<id>/channel-guides.json
+ *   [디자인피드백] <업체명>                → data/clients/<id>/design.json humanNotes
  *
  * guidance-sync.yml(issues: opened/edited)에서 실행. 반영 후 이슈는 워크플로가 닫는다.
  * 사용: ISSUE_TITLE/ISSUE_BODY 환경변수 필요. PSLAB_CLIENT(기본 pslab).
  */
 import { GuidanceStore, parseGuideBody, BRAND_FIELDS } from '../dist/core/guidance.js';
+import { DesignStore } from '../dist/core/design.js';
 
 const title = process.env.ISSUE_TITLE ?? '';
 const body = process.env.ISSUE_BODY ?? '';
@@ -19,8 +21,18 @@ const CHANNELS = ['instagram', 'threads', 'naver-blog', 'blogger', 'youtube', 'l
 
 const brand = title.match(/^\[브랜드노트·(분석|방향성|감도)\]/);
 const guide = title.match(/^\[가이드·([a-z-]+)\]/);
+const design = title.startsWith('[디자인피드백]');
 
-if (brand) {
+if (design) {
+  // 본문 각 줄(불릿 기호 제거)을 개별 지시로 누적 — 사람 지시는 AI 메모와 분리 보관
+  const notes = body
+    .split('\n')
+    .map((l) => l.replace(/^[-*·•\s]+/, '').trim())
+    .filter(Boolean);
+  if (!notes.length) { console.log('본문이 비어 있어 건너뜀'); process.exit(0); }
+  const style = new DesignStore('./data/clients').appendHumanNotes(clientId, notes);
+  console.log(`디자인 피드백 반영: ${notes.length}건 (누적 ${style.humanNotes?.length ?? 0}건)`);
+} else if (brand) {
   const field = BRAND_FIELDS[brand[1]];
   const text = body.trim();
   if (!text) { console.log('본문이 비어 있어 건너뜀'); process.exit(0); }

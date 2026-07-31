@@ -342,6 +342,25 @@ async function cmdGeneratePlan(args: Args): Promise<void> {
   }
 }
 
+// 브랜드 핵심 키워드 — 검색(네이버/구글) 유입을 위해 모든 발행 콘텐츠에
+// 최소 하나 이상은 반드시 등장하게 한다. 이미 자연스럽게 들어가 있으면
+// (기획 단계에서 "ALWAYS ON"·"얼웨이즈온" 등을 이미 언급한 경우) 손대지 않고,
+// 넷 중 아무것도 없을 때만 안전망으로 한 줄 덧붙인다 — 중복·스팸처럼 보이지 않게.
+// 'always on'처럼 띄어쓰기가 들어간 표기도 잡아내도록 공백 제거 후 비교한다.
+const BRAND_KEYWORDS = ['pslab', '문제해결연구소', 'alwayson', '얼웨이즈온'];
+function ensureBrandKeywords(body: string): string {
+  const compact = body.toLowerCase().replace(/\s+/g, '');
+  if (BRAND_KEYWORDS.some((k) => compact.includes(k))) return body;
+  return `${body}\n\n#pslab #문제해결연구소 #ALWAYSON #얼웨이즈온`;
+}
+function ensureBrandTags(tags: string[]): string[] {
+  const extra = ['pslab', '문제해결연구소', 'ALWAYSON', '얼웨이즈온'];
+  const have = new Set(tags.map((t) => t.toLowerCase()));
+  const merged = [...tags];
+  for (const k of extra) if (!have.has(k.toLowerCase())) merged.push(k);
+  return merged;
+}
+
 async function cmdPublishPlan(app: App, args: Args): Promise<void> {
   const dir = typeof args['clients-dir'] === 'string' ? args['clients-dir'] : './clients';
   const dataDir = typeof args['data-dir'] === 'string' ? args['data-dir'] : './data/clients';
@@ -383,7 +402,13 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
       // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
       if (isManualOnly(it.channels)) {
-        if (!dryRun) it.status = 'manual';
+        // 대시보드 "본문 전체 복사" 버튼이 그대로 이 값을 내보내므로, 여기서도
+        // 브랜드 키워드 안전망을 적용해야 네이버 블로그 등 수동 채널도 누락되지 않는다.
+        // (dry-run은 플랜 상태를 바꾸지 않는다는 기존 원칙과 동일하게 가드)
+        if (!dryRun) {
+          it.captionBody = ensureBrandKeywords(it.captionBody ?? it.captionNote ?? it.topic);
+          it.status = 'manual';
+        }
         console.log(
           `\n📋 수동 발행 대기: [${it.channels.join(',')}] ${it.topic} — 대시보드에서 복사해 직접 게시`,
         );
@@ -392,23 +417,32 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       // 자동 채널만 추려 발행 (수동 채널이 섞여 있으면 제외)
       const autoChannels = it.channels.filter((c) => !MANUAL_CHANNELS.includes(c));
       const includesYoutube = autoChannels.includes('youtube');
+      const isReels =
+        autoChannels.includes('instagram') && /릴스|reels/i.test(it.format ?? '');
       const imgs = it.slideImages?.length
         ? it.slideImages
         : it.cardImage
           ? [it.cardImage]
           : [];
       // 유튜브 쇼츠 항목은 카드 이미지가 아니라 영상 파일로 발행하므로 이미지가 없어도 통과.
-      if (imgs.length === 0 && !(includesYoutube && it.videoFile)) {
+      if (imgs.length === 0 && !((includesYoutube || isReels) && it.videoFile)) {
         console.log(`  ${it.id}: 카드 이미지 없음 → 건너뜀`);
+        continue;
+      }
+      // 릴스인데 영상이 아직 합성 전이면 커버 이미지가 일반 피드로 잘못 나가지 않도록 대기.
+      if (isReels && !it.videoFile) {
+        console.log(`  ${it.id}: 릴스 영상 미합성 → 다음 사이클에 발행`);
         continue;
       }
       // 유튜브는 SEO용 별도 제목/설명/태그(ytTitle 등)가 있으면 그것을 우선 사용.
       const title = includesYoutube && it.ytTitle
         ? it.ytTitle
         : (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
-      const body = includesYoutube && it.ytDescription
-        ? it.ytDescription
-        : (it.captionBody ?? it.captionNote ?? it.topic);
+      const body = ensureBrandKeywords(
+        includesYoutube && it.ytDescription
+          ? it.ytDescription
+          : (it.captionBody ?? it.captionNote ?? it.topic),
+      );
       const media: PostContent['media'] = imgs.map((p) => ({
         kind: 'image' as const,
         source: `${pages}/${p}`,
@@ -418,13 +452,22 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         // 영상은 공개 URL이 아니라 CI 작업 디렉터리의 로컬 파일을 직접 읽어 업로드한다
         // (Pages 배포 반영 지연에 의존하지 않기 위함 — docs/는 같은 체크아웃에 이미 존재).
         media.push({ kind: 'video' as const, source: `docs/${it.videoFile}` });
+      } else if (isReels && it.videoFile) {
+        // 인스타 릴스: Graph API가 공개 video_url을 요구하므로 Pages 공개 URL을 쓴다.
+        media.push({ kind: 'video' as const, source: `${pages}/${it.videoFile}` });
       }
       const content: PostContent = {
         id: it.id,
         title,
         body,
         media,
-        tags: includesYoutube && it.ytTags?.length ? it.ytTags : [],
+        tags: includesYoutube ? ensureBrandTags(it.ytTags?.length ? it.ytTags : []) : [],
+        // 릴스는 커버 프레임을 지정해 인스타 프로필 그리드에서 검은/전환중 프레임이
+        // 썸네일로 잡히지 않게 한다 (기본값: 인트로 페이드·자막 애니메이션이 끝나
+        // 훅 문구가 다 보이는 900ms 지점 — 스크롤을 멈출 확률이 가장 높은 프레임).
+        platformOptions: isReels && it.videoFile
+          ? { instagram: { coverOffsetMs: it.coverOffsetMs ?? 900 } }
+          : undefined,
       };
       // 자격 증명이 아예 없는 채널(의도적 미연결)은 조용히 건너뛴다.
       // 자격 증명이 "있는데" 발행이 실패하면(토큰 만료 등) 아래에서 즉시 알림.

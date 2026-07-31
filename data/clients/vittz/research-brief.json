@@ -42,7 +42,7 @@
         },
         {
           "label": "상세 문서 01-브랜드-분석",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/01-브랜드-분석.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/01-%EB%B8%8C%EB%9E%9C%EB%93%9C-%EB%B6%84%EC%84%9D.md"
         }
       ]
     },
@@ -201,7 +201,7 @@
         },
         {
           "label": "상세 문서 02-시장-트렌드-분석",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/02-시장-트렌드-분석.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/02-%EC%8B%9C%EC%9E%A5-%ED%8A%B8%EB%A0%8C%EB%93%9C-%EB%B6%84%EC%84%9D.md"
         }
       ]
     },
@@ -289,7 +289,7 @@
         },
         {
           "label": "상세 문서 06-국내-최상위-업체-분석",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/06-국내-최상위-업체-분석.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/06-%EA%B5%AD%EB%82%B4-%EC%B5%9C%EC%83%81%EC%9C%84-%EC%97%85%EC%B2%B4-%EB%B6%84%EC%84%9D.md"
         }
       ]
     },
@@ -345,7 +345,7 @@
       "links": [
         {
           "label": "상세 문서 07-글로벌-최상위-업체-분석",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/07-글로벌-최상위-업체-분석.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/07-%EA%B8%80%EB%A1%9C%EB%B2%8C-%EC%B5%9C%EC%83%81%EC%9C%84-%EC%97%85%EC%B2%B4-%EB%B6%84%EC%84%9D.md"
         }
       ]
     },
@@ -418,7 +418,7 @@
         },
         {
           "label": "상세 문서 03-키워드-전략 (기록표 포함)",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/03-키워드-전략.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/03-%ED%82%A4%EC%9B%8C%EB%93%9C-%EC%A0%84%EB%9E%B5.md"
         }
       ]
     },
@@ -469,7 +469,7 @@
         },
         {
           "label": "상세 문서 04-SNS-채널-진단",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/04-SNS-채널-진단.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/04-SNS-%EC%B1%84%EB%84%90-%EC%A7%84%EB%8B%A8.md"
         }
       ]
     },
@@ -534,11 +534,11 @@
       "links": [
         {
           "label": "상세 문서 08-채널별-운영전략",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/08-채널별-운영전략.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/08-%EC%B1%84%EB%84%90%EB%B3%84-%EC%9A%B4%EC%98%81%EC%A0%84%EB%9E%B5.md"
         },
         {
           "label": "상세 문서 05-콘텐츠-방향-제안",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/05-콘텐츠-방향-제안.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/research/05-%EC%BD%98%ED%85%90%EC%B8%A0-%EB%B0%A9%ED%96%A5-%EC%A0%9C%EC%95%88.md"
         }
       ]
     },
@@ -556,7 +556,7 @@
       "links": [
         {
           "label": "오픈 가이드 (담당자용 계정 연결 준비물)",
-          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/오픈-가이드.md"
+          "url": "https://github.com/leejiho-pslab/vittz-sns/blob/main/data/clients/vittz/%EC%98%A4%ED%94%88-%EA%B0%80%EC%9D%B4%EB%93%9C.md"
         }
       ]
     }

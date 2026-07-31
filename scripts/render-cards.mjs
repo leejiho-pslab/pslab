@@ -24,15 +24,24 @@ const arg = (k, d) => {
   return i >= 0 ? process.argv[i + 1] : d;
 };
 const clientId = arg('client', 'pslab');
-// 카드 하단 브랜드 핸들 — clients/<id>.json accounts에서 읽는다 (기본 @_pslab)
-function loadHandle() {
-  try {
-    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
-    const h = c.accounts && (c.accounts.instagram || c.accounts.threads);
-    return h ? `@${h}` : '@_pslab';
-  } catch { return '@_pslab'; }
+
+// 브랜드 표기(카드 푸터) — ADR-0009: 계정 핸들은 clients/<id>.json 단일 출처.
+// accounts.instagram이 있으면 @핸들, 없으면 브랜드명으로 표기(하드코딩 금지).
+function brandLabel() {
+  for (const p of [
+    join(dirname(fileURLToPath(import.meta.url)), '..', 'clients', `${clientId}.json`),
+    join(dirname(fileURLToPath(import.meta.url)), '..', `clients-${clientId}`, `${clientId}.json`),
+  ]) {
+    try {
+      const c = JSON.parse(readFileSync(p, 'utf8'));
+      const h = c.accounts && c.accounts.instagram;
+      if (h) return `@${String(h).replace(/^@/, '')}`;
+      if (c.name) return c.name;
+    } catch { /* try next */ }
+  }
+  return `@${clientId}`;
 }
-const BRAND_HANDLE = loadHandle();
+const BRAND_LABEL = brandLabel();
 
 function findChromium() {
   if (process.env.PSLAB_CHROMIUM && existsSync(process.env.PSLAB_CHROMIUM))
@@ -60,14 +69,37 @@ function fontFaces() {
 }
 
 // 디자인 변형 — 모두 잉크(다크) 계열, 액센트·레이아웃을 바꿔 A/B 테스트
-const VARIANTS = {
+// 기본값은 코드에 두되, data/clients/<id>/design-tokens.json 이 있으면 변형별로
+// 덮어쓴다(키 단위 병합). 레퍼런스 학습·디자인 조정을 코드 수정 없이 토큰 파일
+// 편집만으로 할 수 있게 하기 위한 외부화 지점.
+// 스키마: { "variants": { "A": { "name","bg","fg","muted","accent","layout" }, ... } }
+// ※ 과거 브랜치에 동일 목적의 design-variants.json 구현이 병존했으나, SKILL §0 변수 #4가
+//    design-tokens.json 을 단일 출처로 고정했으므로 이쪽으로 통일한다(ADR-0013).
+//   layout ∈ editorial | graphic | spotlight (렌더러가 아는 레이아웃만 유효)
+const DEFAULT_VARIANTS = {
   A: { name: '잉크·에디토리얼', bg: '#0e1726', fg: '#f4f1ea', muted: '#9aa6bd', accent: '#ff8a3d', layout: 'editorial' },
   B: { name: '잉크·그래픽', bg: '#0b1a1c', fg: '#eef3f1', muted: '#8fb0ab', accent: '#36d6c4', layout: 'graphic' },
   C: { name: '잉크·스포트라이트', bg: '#14121d', fg: '#f3eff6', muted: '#a99fc0', accent: '#ffc24a', layout: 'spotlight' },
-  // 웜 계열 (조명 브랜드용 — 비츠 등): 라이트 웜 / 저녁 전구빛 다크 웜
-  W: { name: '웜·에디토리얼', bg: '#FBF7F0', fg: '#26221D', muted: '#8A7B66', accent: '#D98A1F', layout: 'editorial' },
-  V: { name: '웜·전구빛 스포트라이트', bg: '#241C12', fg: '#F7F1E6', muted: '#B5A489', accent: '#F0B45C', layout: 'spotlight' },
 };
+function loadDesignTokens(id) {
+  const f = join(ROOT, 'data/clients', id, 'design-tokens.json');
+  if (!existsSync(f)) return null;
+  try {
+    return JSON.parse(readFileSync(f, 'utf8'));
+  } catch (e) {
+    console.warn(`design-tokens.json 파싱 실패 — 기본값 사용 (${e.message})`);
+    return null;
+  }
+}
+const TOKENS = loadDesignTokens(clientId);
+const VARIANTS = Object.fromEntries(
+  Object.entries(DEFAULT_VARIANTS).map(([k, v]) => [k, { ...v, ...(TOKENS?.variants?.[k] ?? {}) }]),
+);
+if (TOKENS?.variants) console.log(`디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
+
+// 밝은 배경(화이트 확대 시즌)에서도 보이도록 변형별 괘선 색을 쓸 수 있게 한다.
+// (브랜치 통합 과정에서 정의가 유실돼 카드 렌더가 ReferenceError로 죽었던 이력 있음 — 삭제 금지)
+const ruleOf = (v) => v.rule || 'rgba(255,255,255,.16)';
 
 // 주제 그래픽 모티프 (라인아트 SVG, viewBox 0 0 100 100)
 function motifSVG(key, color, size, opacity) {
@@ -101,6 +133,30 @@ function motifSVG(key, color, size, opacity) {
       `<circle cx="50" cy="40" r="23" ${common}/>` +
       `<line x1="41" y1="66" x2="59" y2="66" ${common}/><line x1="43" y1="73" x2="57" y2="73" ${common}/><line x1="45" y1="80" x2="55" y2="80" ${common}/>` +
       `<polyline points="43,40 50,49 57,40" ${common}/>`,
+    pot:
+      `<path d="M28 48 h44 l-3 26 a10 10 0 0 1 -10 8 h-18 a10 10 0 0 1 -10 -8 Z" ${common}/>` +
+      `<line x1="22" y1="48" x2="78" y2="48" ${common}/>` +
+      `<path d="M40 38 q-4 -7 1 -13" ${common}/><path d="M52 38 q-4 -7 1 -13" ${common}/><path d="M64 38 q-4 -7 1 -13" ${common}/>`,
+    wave:
+      `<path d="M14 42 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>` +
+      `<path d="M14 58 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>` +
+      `<path d="M14 74 q9 -9 18 0 t18 0 t18 0 t18 0" ${common}/>`,
+    chili:
+      `<path d="M62 30 C74 42 66 70 42 78 C30 82 24 74 30 68 C46 58 54 46 56 34 Z" ${common}/>` +
+      `<path d="M58 30 q2 -10 12 -12" ${common}/><path d="M58 30 q8 -4 12 2" ${common}/>`,
+    mountain:
+      `<polyline points="14,80 38,40 52,60 66,32 88,80" ${common}/>` +
+      `<line x1="10" y1="80" x2="90" y2="80" ${common}/>` +
+      `<path d="M34 46 q4 6 8 0" ${common}/><path d="M62 38 q4 6 8 0" ${common}/>`,
+    fish:
+      `<path d="M18 52 C32 34 58 32 74 46 L86 36 L84 56 L86 74 L74 62 C58 76 32 72 18 56 Z" ${common}/>` +
+      `<circle cx="34" cy="49" r="2.6" fill="${color}" stroke="none"/>` +
+      `<path d="M46 42 q6 8 0 18" ${common}/>`,
+    leaf:
+      `<path d="M50 82 V34" ${common}/>` +
+      `<path d="M50 46 C38 44 30 34 30 22 C42 22 50 30 50 42 Z" ${common}/>` +
+      `<path d="M50 46 C62 44 70 34 70 22 C58 22 50 30 50 42 Z" ${common}/>` +
+      `<path d="M50 66 C42 64 36 58 36 50" ${common}/>`,
     growth:
       `<line x1="16" y1="84" x2="88" y2="84" ${common}/><line x1="16" y1="84" x2="16" y2="16" ${common}/>` +
       `<path d="M20 78 Q44 76 58 50 T88 18" ${common}/>` +
@@ -149,7 +205,7 @@ function slideBg(v, n) {
 
 function cardHTML(item, no, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
-  const rule = `rgba(255,255,255,.16)`;
+  const rule = ruleOf(v);
   let body;
   if (v.layout === 'graphic') {
     // B: 좌측 텍스트 + 우측 큰 주제 그래픽(액센트, 선명)
@@ -161,7 +217,7 @@ function cardHTML(item, no, faces) {
       <div class="gtext"><div class="headline">${headlineHTML(item.headline)}</div><div class="sub">${esc(item.sub)}</div></div>
       <div class="gfig">${motifSVG(item.motif, v.accent, 380, 0.96)}</div>
     </div>
-    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else if (v.layout === 'spotlight') {
     // C: 거대 호수 + 중앙 정렬 헤드라인 + 상단 작은 그래픽
     body = `
@@ -171,7 +227,7 @@ function cardHTML(item, no, faces) {
       <div class="headline" style="text-align:center">${headlineHTML(item.headline)}</div>
       <div class="sub" style="text-align:center;margin-left:auto;margin-right:auto">${esc(item.sub)}</div>
     </div>
-    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   } else {
     // A: 에디토리얼 — 큰 그래픽 배경 워터마크 + 좌하단 헤드라인
     body = `
@@ -180,7 +236,7 @@ function cardHTML(item, no, faces) {
     <div class="rule"></div>
     <div class="headline" style="margin-top:auto">${headlineHTML(item.headline)}</div>
     <div class="sub">${esc(item.sub)}</div>
-    <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
@@ -220,7 +276,7 @@ const bodyHTML = (s) =>
 // 캐러셀 내용 슬라이드 (커버 다음 장들) — 큰 라벨 + 제목 + 본문, 변형 팔레트 사용
 function contentSlideHTML(item, slide, n, total, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
-  const rule = 'rgba(255,255,255,.16)';
+  const rule = ruleOf(v);
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;
@@ -249,7 +305,7 @@ html,body{width:1080px;height:1350px}
   ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
   ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
   ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
-  <div class="foot"><div class="brand">${BRAND_HANDLE}</div><div class="tag">${esc(item.dayLabel)}</div></div>
+  <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>
 </div></body></html>`;
 }
 

@@ -51,7 +51,19 @@ const THEMES = {
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // 가로 16:9 대표이미지(커버) — 배경사진은 오른쪽, 제목은 왼쪽 어두운 안전영역(인물과 안 겹침)
+// 제목 길이에 따라 커버 타이틀 크기를 줄인다 — 고정 82px이면 긴 제목(검색어를 그대로 쓴
+// 네이버용 제목 등)이 4줄을 넘겨 하단 브랜드 표기를 덮고 잘려 나갔다.
+function coverTitleSize(title) {
+  const n = String(title).length;
+  if (n <= 22) return 82;
+  if (n <= 30) return 72;
+  if (n <= 40) return 62;
+  if (n <= 52) return 54;
+  return 48;
+}
+
 function coverHtml(title, kicker, t, bgB64) {
+  const titleSize = coverTitleSize(title);
   const bg = bgB64
     ? `background-image:linear-gradient(90deg,rgba(${COVER_DARK},.97) 0%,rgba(${COVER_DARK},.92) 34%,rgba(${COVER_DARK},.55) 62%,rgba(${COVER_DARK},.15) 88%,rgba(${COVER_DARK},.05) 100%),url(data:image/jpeg;base64,${bgB64});background-size:cover;background-position:right center;`
     : `background:${COVER_BG};`;
@@ -61,10 +73,10 @@ ${fontFaces()}
 html,body{width:1600px;height:900px}
 body{background:${CLIENT_THEME ? '#1B130A' : '#0d1526'}}
 .cover{width:1600px;height:900px;position:relative;overflow:hidden;${bg}color:${CLIENT_THEME ? '#F7F0E1' : '#f4f7fb'};font-family:'Pretendard';
-  display:flex;flex-direction:column;justify-content:center;padding:0 720px 0 104px}
+  display:flex;flex-direction:column;justify-content:center;padding:0 720px 120px 104px}
 .bar{position:absolute;left:0;top:0;bottom:0;width:16px;background:${t.accentCover}}
 .kicker{font-weight:700;font-size:30px;letter-spacing:.16em;color:${t.accentCover};text-transform:uppercase;margin-bottom:26px}
-.title{font-weight:800;font-size:82px;line-height:1.2;letter-spacing:-.03em;max-width:780px;text-shadow:0 4px 26px rgba(0,0,0,.6)}
+.title{font-weight:800;font-size:${titleSize}px;line-height:1.2;letter-spacing:-.03em;max-width:780px;text-shadow:0 4px 26px rgba(0,0,0,.6)}
 .brand{position:absolute;left:104px;bottom:60px;font-weight:700;font-size:34px;color:#e3e9f4;opacity:.92;text-shadow:0 2px 12px rgba(0,0,0,.6)}
 </style></head><body><div class="cover"><div class="bar"></div>
   <div class="kicker">${esc(kicker)}</div>

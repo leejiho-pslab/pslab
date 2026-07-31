@@ -136,3 +136,21 @@ const doc = {
 };
 writeFileSync(outPath, JSON.stringify(doc, null, 2), 'utf8');
 console.log(`\n저장: ${outPath} — 요청 키워드 ${doc.requested.length}개 실측, 연관키워드 상위 ${doc.related.length}개`);
+
+// 대시보드 계약(keyword-stats.json) — 엔진(guidance.ts KeywordStats)이 읽는 단일 출처.
+// '< 10'(비공개 소량)은 toVolume에서 5로 정규화되지만, 계약상 null 허용 — 실측값만 기록.
+const stats = {
+  source: doc.source,
+  fetchedAt: doc.updatedAt.slice(0, 10),
+  items: [...requested.values(), ...related.values()].map((v) => ({
+    kw: v.keyword,
+    pc: v.pc,
+    mobile: v.mobile,
+    competition: v.compIdx ?? undefined,
+    clicks: (v.avgPcClicks ?? 0) + (v.avgMobileClicks ?? 0) || undefined,
+    adCount: v.plAvgDepth ?? undefined,
+  })),
+};
+const statsPath = join(dataDir, 'keyword-stats.json');
+writeFileSync(statsPath, JSON.stringify(stats, null, 2), 'utf8');
+console.log(`저장: ${statsPath} — 대시보드 '키워드 월간 검색수' 실측 연결 (${stats.items.length}행)`);
