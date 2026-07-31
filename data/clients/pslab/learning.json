@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-07-31T02:04:44.746Z",
-  "sampleSize": 21,
+  "generatedAt": "2026-07-31T11:33:50.636Z",
+  "sampleSize": 24,
   "variants": [
     {
       "key": "B",
@@ -18,33 +18,33 @@
     },
     {
       "key": "C",
-      "posts": 1,
-      "avgEngagement": 0.3333333333333333,
-      "avgLikes": 1,
-      "avgViews": 3
+      "posts": 2,
+      "avgEngagement": 0.16666666666666666,
+      "avgLikes": 0.5,
+      "avgViews": 1.5
     }
   ],
   "channels": [
     {
       "key": "instagram",
-      "posts": 8,
-      "avgEngagement": 0.49213435374149656,
-      "avgLikes": 1.5,
-      "avgViews": 14.75
+      "posts": 9,
+      "avgEngagement": 0.4374527588813303,
+      "avgLikes": 1.3333333333333333,
+      "avgViews": 13.11111111111111
     },
     {
       "key": "youtube",
-      "posts": 5,
-      "avgEngagement": 0.050917431192660546,
-      "avgLikes": 0.4,
-      "avgViews": 166.2
+      "posts": 6,
+      "avgEngagement": 0.042431192660550454,
+      "avgLikes": 0.3333333333333333,
+      "avgViews": 138.5
     },
     {
       "key": "threads",
-      "posts": 4,
-      "avgEngagement": 0.005208333333333333,
-      "avgLikes": 0.25,
-      "avgViews": 40.25
+      "posts": 5,
+      "avgEngagement": 0.004166666666666667,
+      "avgLikes": 0.2,
+      "avgViews": 32.2
     },
     {
       "key": "blogger",
@@ -71,10 +71,10 @@
     },
     {
       "key": "20:00",
-      "posts": 7,
-      "avgEngagement": 0.14285714285714285,
-      "avgLikes": 0.14285714285714285,
-      "avgViews": 46.57142857142857
+      "posts": 10,
+      "avgEngagement": 0.1,
+      "avgLikes": 0.1,
+      "avgViews": 32.6
     },
     {
       "key": "11:00",
@@ -122,10 +122,10 @@
     },
     {
       "key": "chart",
-      "posts": 1,
-      "avgEngagement": 0.25,
-      "avgLikes": 1,
-      "avgViews": 4
+      "posts": 2,
+      "avgEngagement": 0.125,
+      "avgLikes": 0.5,
+      "avgViews": 2
     }
   ],
   "bestVariant": "B",
