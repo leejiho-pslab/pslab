@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   sync:
-    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·') || startsWith(github.event.issue.title, '[디자인피드백]')
+    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·') || startsWith(github.event.issue.title, '[디자인피드백]') || startsWith(github.event.issue.title, '[레퍼런스·')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:

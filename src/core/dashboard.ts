@@ -283,6 +283,7 @@ function buildClientData(
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
     weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
+    referenceLinks: guidanceStore?.loadReferenceLinks(client.id) ?? null,
   };
 }
 
@@ -595,6 +596,18 @@ function guideView(client){
   }
   h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
      '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[디자인피드백] '+esc(client.name)+'\\',\\'\\',\\'design-fb\\')">🎨 디자인 지시 등록</button></div></div>';
+  // 🔗 레퍼런스 링크 학습 현황 — 전 채널 요약 (등록은 각 채널 탭에서)
+  const rls=((client.referenceLinks||{}).links)||[];
+  h+='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크 학습 현황</h3><span class="muted">'+
+     (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
+     '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
+  if(rls.length){
+    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      rls.slice(-15).reverse().map(l=>{const cd=DATA.channels.find(x=>x.key===l.channel)||{label:l.channel,icon:''};
+        return '<tr><td>'+cd.icon+' '+esc(cd.label)+'</td><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>';}).join('')+'</table>';
+  }
+  h+='</div>';
   // 채널별 가이드
   h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
   const guides=client.channelGuides||{};
@@ -618,6 +631,28 @@ function channelGuidePanel(client, key){
     ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
     (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
     '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+}
+// 🔗 레퍼런스 링크 — 채널별 벤치마크 링크 등록(인박스). 등록=적재, 학습은 다음 기획 세션에서.
+function refBadge(st){
+  return st==='learned'?'<span class="badge b-ok">학습완료</span>'
+       : st==='failed'?'<span class="badge b-hold">열람실패</span>'
+       : '<span class="badge b-wait">학습대기</span>';
+}
+function refShort(u){ return esc(String(u).replace(/^https?:\\/\\/(www\\.)?/,'').slice(0,52)); }
+function referencePanel(client, key){
+  const all=(((client.referenceLinks||{}).links)||[]).filter(l=>l.channel===key);
+  const pend=all.filter(l=>l.status==='pending').length;
+  let h='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크</h3><span class="muted">'+
+    (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
+    '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
+  if(all.length){
+    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      all.slice(-8).reverse().map(l=>'<tr><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>').join('')+'</table>';
+  }
+  h+='<textarea id="rl-'+key+'" class="reqta" rows="2" placeholder="https://... (한 줄에 하나씩)"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[레퍼런스·'+key+'] '+esc(client.name)+'\\',\\'\\',\\'rl-'+key+'\\')">🔗 레퍼런스 등록</button></div></div>';
+  return h;
 }
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
@@ -804,6 +839,8 @@ function channelDetail(client, c){
   h+=periodBar();
   // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
   h+=channelGuidePanel(client, c.key);
+  // ④ 레퍼런스 링크 인박스 — 등록하면 다음 기획 세션에서 AI가 열람·학습
+  h+=referencePanel(client, c.key);
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';

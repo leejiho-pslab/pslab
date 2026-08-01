@@ -7,6 +7,7 @@
  * 사용:
  *   node scripts/site-view.mjs shot <url> [out.png]        # 페이지 스크린샷
  *   node scripts/site-view.mjs reel <릴스url> [outdir]      # 릴스 mp4 + 3초 간격 프레임
+ *   node scripts/site-view.mjs post <포스트url> [outdir]    # 인스타 포스트 — 캐러셀 전 슬라이드 캡처
  *
  * 필요: playwright (없으면: npm i --no-save playwright), ffmpeg.
  * 크로미움: /opt/pw-browsers/chromium (원격 세션에 사전 설치됨).
@@ -90,6 +91,33 @@ try {
       '-vsync', 'vfr', join(outDir, 'frame-%d.png'),
     ]);
     console.log(`저장: ${outDir}/ (reel.mp4 + frame-*.png)`);
+  } else if (cmd === 'post') {
+    // 캐러셀 포스트 전 슬라이드 열람 — /embed/captioned/ 페이지는 로그인 없이 미디어를
+    // 서빙하며 캐러셀 넘김 버튼이 동작한다. 다음 버튼을 눌러가며 슬라이드별 캡처.
+    const embed = url.replace(/\/?(\?.*)?$/, '').replace(/\/embed.*$/, '') + '/embed/captioned/';
+    const outDir = outArg ?? 'post-slides';
+    mkdirSync(outDir, { recursive: true });
+    const page = await ctx.newPage();
+    await page.goto(embed, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.waitForTimeout(4000);
+    let n = 1;
+    await page.screenshot({ path: join(outDir, 'slide-1.png') });
+    for (; n < 20; n++) {
+      // 임베드 캐러셀의 다음 화살표 (로케일별 aria-label 대응)
+      const next = page
+        .locator('[aria-label="Next"], [aria-label="다음"], [aria-label="다음 슬라이드"], button:has(svg[aria-label="Next"])')
+        .first();
+      if (!(await next.isVisible().catch(() => false))) break;
+      await next.click().catch(() => {});
+      await page.waitForTimeout(1200);
+      await page.screenshot({ path: join(outDir, `slide-${n + 1}.png`) });
+    }
+    // 원본 이미지 URL도 백업으로 수집 (스크린샷 실패 대비)
+    const imgs = await page.evaluate(() =>
+      [...document.querySelectorAll('img')].map((im) => im.currentSrc || im.src).filter((u) => u.includes('scontent')),
+    );
+    writeFileSync(join(outDir, 'images.json'), JSON.stringify([...new Set(imgs)], null, 2));
+    console.log(`저장: ${outDir}/ (slide-*.png ${n}장 + images.json)`);
   } else {
     console.log(`알 수 없는 명령: ${cmd}`);
   }
