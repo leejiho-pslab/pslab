@@ -154,6 +154,24 @@ function buildWeekPlan(client: ClientConfig) {
   } catch { return null; }
 }
 
+function buildReferences(client: ClientConfig) {
+  // 레퍼런스·벤치마킹 (data/clients/<id>/references.json) — 인스타 Business Discovery 수집.
+  // 데이터가 없어도 설정된 benchmarks가 있으면 "수집 대기" 상태로 표시한다.
+  const cfg = client as unknown as { benchmarks?: { instagram?: string[] } | string[] };
+  const bm = cfg.benchmarks;
+  const benchmarks = Array.isArray(bm) ? bm : (bm && Array.isArray(bm.instagram) ? bm.instagram : []);
+  let data: { baseDate: string; accounts: unknown[] } | null = null;
+  try {
+    const base = process.env.PSLAB_DASH_DATADIR || 'data/clients';
+    const raw = JSON.parse(readFileSync(join(base, client.id, 'references.json'), 'utf8')) as {
+      baseDate?: string; accounts?: unknown[];
+    };
+    data = { baseDate: raw.baseDate || '', accounts: Array.isArray(raw.accounts) ? raw.accounts : [] };
+  } catch { /* 아직 수집 전 */ }
+  if (!benchmarks.length && !data) return null;
+  return { benchmarks, baseDate: data?.baseDate || '', accounts: data?.accounts || [] };
+}
+
 function buildClientData(
   client: ClientConfig,
   store: ClientStore<CycleRecord>,
@@ -254,6 +272,7 @@ function buildClientData(
     channelLinks,
     blog,
     weekPlan: buildWeekPlan(client),
+    references: buildReferences(client),
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
     weeklyReport: weeklyReport ?? null,
@@ -785,6 +804,27 @@ function weekPlanPanel(client){
   if(w.note) h+='<div class="muted" style="font-size:12px;margin:0 0 8px">'+esc(w.note)+'</div>';
   h+='<table><tr><th>날짜</th><th>채널</th><th>키워드</th><th>제안 제목</th></tr>'+
     w.items.map(function(it){ return '<tr><td style="white-space:nowrap">'+esc(it.date)+'</td><td style="white-space:nowrap;color:'+chColor(it.channelLabel)+'">'+esc(it.channelLabel)+'</td><td style="white-space:nowrap">'+sheetBadge(it.sheet)+' #'+esc(it.keyword)+'</td><td>'+esc(it.title)+'</td></tr>'; }).join('')+'</table></div>';
+  return h;
+}
+function referencePanel(client){
+  var r=client.references;
+  if(!r) return '';
+  var fmtN=function(x){ var n=String(x||0),o='',c=0,i; for(i=n.length-1;i>=0;i--){ o=n[i]+o; c++; if(c%3===0&&i>0) o=','+o; } return o; };
+  var h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>🔍 레퍼런스·벤치마킹</h3><span class="muted">'+(r.baseDate?esc(r.baseDate)+' 수집 · ':'')+'경쟁·감도 참고(내부용)</span></div>';
+  if(!r.accounts||!r.accounts.length){
+    var tg=(r.benchmarks||[]).map(function(u){ return '@'+esc(u); }).join(' · ');
+    h+='<div class="muted" style="font-size:12px">수집 대기 — 대상 '+(tg||'미설정')+'. 매주 월요일 자동 수집(공개 비즈니스 계정만).</div></div>';
+    return h;
+  }
+  r.accounts.forEach(function(a){
+    h+='<div style="margin-top:10px"><div style="font-weight:700;font-size:13px">@'+esc(a.username)+(a.name?' <span class="muted" style="font-weight:400">· '+esc(a.name)+'</span>':'')+(a.followers?' <span class="muted" style="font-weight:400">· 팔로워 '+fmtN(a.followers)+'</span>':'')+'</div>';
+    h+='<div class="carou" style="margin-top:6px">'+(a.media||[]).map(function(m){
+      var img=m.image?'<img src="'+esc(m.image)+'" style="width:150px;height:150px;object-fit:cover;border-radius:10px" loading="lazy">':'<div style="width:150px;height:150px;border-radius:10px;background:#eef1f6"></div>';
+      var meta='<div class="muted" style="font-size:11px;margin-top:3px">♥ '+fmtN(m.likes||0)+' · 💬 '+fmtN(m.comments||0)+'</div>';
+      return '<a class="slide" href="'+esc(m.permalink||'#')+'" target="_blank" rel="noopener" style="flex:0 0 auto;text-decoration:none;color:inherit;width:150px">'+img+meta+'</a>';
+    }).join('')+'</div></div>';
+  });
+  h+='</div>';
   return h;
 }
 function blogSection(client){
