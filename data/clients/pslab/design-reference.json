@@ -6,15 +6,27 @@
       "folderId": "1GJa4ZWChN51bqqUGKw_hd9cbkWf9eZ3Q"
     },
     "channels": {
-      "instagram": { "folderId": "1TptK_tE7lW4pLmxpUiddC2cLPabEUcLl", "title": "1. 인스타그램" },
-      "youtube": { "folderId": "199LQwy9VetHxa8xT7Syc_IbHDGL7Eo4I", "title": "2. 유튜브" },
-      "threads": { "folderId": "1ooYVr-3FVH-w1jKqVjVOweZaGL8bCQ1i", "title": "3. 쓰레드" },
-      "blog": { "folderId": "1UM7J7yg-idHY-Gi1Cij0Y9i0wWSjw_Ki", "title": "4. 블로그" }
+      "instagram": {
+        "folderId": "1TptK_tE7lW4pLmxpUiddC2cLPabEUcLl",
+        "title": "1. 인스타그램"
+      },
+      "youtube": {
+        "folderId": "199LQwy9VetHxa8xT7Syc_IbHDGL7Eo4I",
+        "title": "2. 유튜브"
+      },
+      "threads": {
+        "folderId": "1ooYVr-3FVH-w1jKqVjVOweZaGL8bCQ1i",
+        "title": "3. 쓰레드"
+      },
+      "blog": {
+        "folderId": "1UM7J7yg-idHY-Gi1Cij0Y9i0wWSjw_Ki",
+        "title": "4. 블로그"
+      }
     }
   },
   "channels": {
     "instagram": {
-      "status": "대기",
+      "status": "대기(검토불가)",
       "reviewedFiles": [],
       "language": {
         "palette": null,
@@ -23,10 +35,14 @@
         "imagery": null,
         "avoid": []
       },
-      "notes": []
+      "notes": [
+        "업로드됨: 카드뉴스 레퍼런스 20장, 릴스 레퍼런스 8편, 인스타그램 콘텐츠 제작 지침.txt",
+        "제작 지침(텍스트)은 읽어 channel-guides.json 에 반영 완료 — 6~10장·첫장 표지·마지막 CTA·1080x1350",
+        "이미지·영상 파일이 올라와 있으나 이 세션에서 시각적 검토 불가 — Drive MCP 가 파일을 base64 로만 반환해 컨텍스트 한도를 넘는다. 텍스트 OCR 이 되는 파일만 읽힘(카드뉴스 레퍼런스는 OCR 결과가 비어 있음). 추측해서 채우지 않고 대기 유지."
+      ]
     },
     "youtube": {
-      "status": "대기",
+      "status": "대기(검토불가)",
       "reviewedFiles": [],
       "language": {
         "palette": null,
@@ -35,20 +51,52 @@
         "motion": null,
         "avoid": []
       },
-      "notes": []
+      "notes": [
+        "업로드됨: 레퍼런스 영상 8편(one_pd_edit, so_ok.tv, designer_kellys2, j2motion, onji.lab, hechi.soul.friends, iam.a.dob)",
+        "계정명으로 보아 모션그래픽·디자인 스튜디오 계열 — 편집 밀도가 높은 쪽",
+        "이미지·영상 파일이 올라와 있으나 이 세션에서 시각적 검토 불가 — Drive MCP 가 파일을 base64 로만 반환해 컨텍스트 한도를 넘는다. 텍스트 OCR 이 되는 파일만 읽힘(카드뉴스 레퍼런스는 OCR 결과가 비어 있음). 추측해서 채우지 않고 대기 유지."
+      ]
     },
     "threads": {
-      "status": "대기",
-      "reviewedFiles": [],
-      "language": { "tone": null, "layout": null, "avoid": [] },
-      "notes": []
+      "status": "학습완료",
+      "reviewedFiles": [
+        "KakaoTalk_20260730_222051690_01.png — jisiklunch · 조회 3.6만",
+        "KakaoTalk_20260730_222051690.png — tony_h.yun · 조회 12.4만",
+        "KakaoTalk_20260730_222051690_02.png — money_crazybird · 조회 10.6만",
+        "KakaoTalk_20260730_222051690_11.png — ex.treme.ai (AI 자동화 계정)"
+      ],
+      "language": {
+        "tone": "단정적 평서문. 설명하지 않고 사실만 던진다. 존댓말이되 군더더기 없음",
+        "layout": "번호 매긴 타래(1. 2. 3. …) + 파트 표기(1/8, 1/23). 한 문장 = 한 줄, 빈 줄로 호흡. 문단형 금지",
+        "avoid": [
+          "문단형 서술",
+          "기능 나열",
+          "해시태그 남발",
+          "마무리 상투어(감사합니다/문의주세요)"
+        ]
+      },
+      "notes": [
+        "조회 10만 넘은 3건 모두 첫 줄이 구체적 숫자·연도·상황이다. 형용사로 시작한 글은 없다",
+        "jisiklunch: 1938년 하버드 연구 → 85년 추적 → 반전 결론. 사실 축적 후 마지막에 뒤집는다",
+        "money_crazybird: 번호 문장을 짧게 끊어 23파트까지 끌고 간다. 각 파트 끝에 다음을 부르는 질문",
+        "tony_h.yun: 같은 구조를 반복하며 괄호를 점점 줄여(받아 적음 → 받아.. → ㅂ..) 리듬을 만든다",
+        "공통: 마지막은 반전 아니면 질문. 결론을 닫지 않는다"
+      ],
+      "updatedAt": "2026-08-01T01:12:44.679Z"
     },
     "blog": {
-      "status": "대기",
+      "status": "대기(비어있음)",
       "reviewedFiles": [],
-      "language": { "cover": null, "typography": null, "figure": null, "avoid": [] },
-      "notes": []
+      "language": {
+        "cover": null,
+        "typography": null,
+        "figure": null,
+        "avoid": []
+      },
+      "notes": [
+        "4. 블로그 폴더가 비어 있다 — 업로드 요청 필요"
+      ]
     }
   },
-  "updatedAt": null
+  "updatedAt": "2026-08-01T01:12:44.679Z"
 }
