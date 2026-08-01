@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   sync:
-    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·')
+    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·') || startsWith(github.event.issue.title, '[디자인피드백]') || startsWith(github.event.issue.title, '[레퍼런스·')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -49,11 +49,12 @@ jobs:
       - name: 대시보드 재생성 + 커밋
         if: steps.apply.outputs.synced == 'true'
         run: |
-          node dist/cli.js dashboard --out docs/index.html
+          node dist/cli.js dashboard --client pslab --out docs/index.html
           node dist/cli.js dashboard --client vittz --out docs/vittz/index.html
+          node dist/cli.js dashboard --client dongsung --out docs/dongsung/index.html
           git config user.name pslab-bot
           git config user.email actions@users.noreply.github.com
-          git add -f data/clients docs/index.html docs/vittz/index.html
+          git add -f data/clients docs/index.html docs/vittz/index.html docs/dongsung/index.html
           git commit -m "chore(guidance): 운영자 지침 반영 — ${ISSUE_TITLE}" || { echo "변경 없음"; exit 0; }
           for i in 1 2 3 4 5; do
             git pull --rebase origin ${{ github.ref_name }} && git push && { echo push ok; exit 0; }

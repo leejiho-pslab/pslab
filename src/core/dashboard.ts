@@ -3,13 +3,11 @@
  *
  * 벤치마킹:
  *  - Planable/Buffer: 채널 탭 + 콘텐츠 캘린더(발행/대기) + 기획안 피드백
- *  - 네이버 검색 관심도: 네이버 데이터랩 실측 상대지수(keyword-trends.json)
+ *  - blogdex(블덱스): 네이버 블로그 "지수 등급" + 포스팅 전문성/연관성 점수 + 키워드 분석
  *
  * 클라이언트별 격리 저장소(이력/디자인/플랜)를 모아 자가완결형 HTML 한 장으로
  * 렌더한다. 데이터는 인라인 JSON으로 박고, 채널 탭 전환은 클라이언트 JS로 처리.
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { CycleRecord } from './orchestrator.js';
 import type { DesignStore } from './design.js';
@@ -29,6 +27,12 @@ const CHANNELS: Array<{ key: PlatformId; label: string; icon: string }> = [
   { key: 'blogger', label: '구글 블로그', icon: '🅱️' },
   { key: 'youtube', label: '유튜브', icon: '▶️' },
 ];
+
+function seed(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return h;
+}
 
 interface ChannelPublished {
   topic: string;
@@ -63,6 +67,7 @@ interface PendingCard {
   insightComment?: string;
   publishedAt?: string;
   videoFile?: string;
+  reelsScript?: string;
   ytTitle?: string;
   ytDescription?: string;
   ytTags?: string[];
@@ -115,52 +120,58 @@ function buildChannel(
   };
 }
 
-function buildBlog(client: ClientConfig) {
-  // 키워드 데이터 (data/clients/<id>/keyword-trends.json)
-  //  v3(3시트): core/related/timely = {kw,pc,mobile,total,comp} + baseDate
-  //  v2:        keywords + related
-  //  v1(데이터랩): keywords={kw,index}  ← 폴백
-  type KW = { kw: string; index?: number | null; pc?: number; mobile?: number; total?: number; comp?: string };
-  let core: KW[] = [], related: KW[] = [], timely: KW[] = [], trends: KW[] = [];
-  let trendMeta = '', baseDate = '', updateCycle = '';
-  try {
-    const base = process.env.PSLAB_DASH_DATADIR || 'data/clients';
-    const raw = JSON.parse(
-      readFileSync(join(base, client.id, 'keyword-trends.json'), 'utf8'),
-    ) as { source?: string; baseDate?: string; updateCycle?: string; core?: KW[]; related?: KW[]; timely?: KW[]; keywords?: KW[] };
-    core = Array.isArray(raw.core) ? raw.core : (Array.isArray(raw.keywords) ? raw.keywords : []);
-    related = Array.isArray(raw.related) ? raw.related : [];
-    timely = Array.isArray(raw.timely) ? raw.timely : [];
-    trends = core; // 하위호환
-    trendMeta = String(raw.source || '');
-    baseDate = String(raw.baseDate || '');
-    updateCycle = String(raw.updateCycle || '');
-  } catch {
-    /* 파일 없으면 빈 트렌드 */
-  }
-  return { core, related, timely, trends, trendMeta, baseDate, updateCycle };
-}
+const BLOG_TIERS = [
+  '저품질',
+  '일반',
+  '준최적화 1',
+  '준최적화 2',
+  '준최적화 3',
+  '최적화 1',
+  '최적화 2',
+  '최적화 3',
+];
 
-function buildWeekPlan(client: ClientConfig) {
-  // 차주 콘텐츠 기획안 (data/clients/<id>/week-plan.json) — 키워드 기반 주간 스케줄
-  try {
-    const base = process.env.PSLAB_DASH_DATADIR || 'data/clients';
-    const raw = JSON.parse(readFileSync(join(base, client.id, 'week-plan.json'), 'utf8')) as {
-      weekStart?: string; weekEnd?: string; generatedAt?: string; note?: string;
-      items?: { date: string; channelLabel: string; keyword: string; sheet: string; volume: number; title: string }[];
+function buildBlog(client: ClientConfig, blogPublished: ChannelPublished[], kwStats?: import('./guidance.js').KeywordStats) {
+  // 블덱스 스타일: 등급 + 포스팅별 전문성/연관성/품질 + 키워드 분석
+  const postCount = blogPublished.length;
+  const avgEng =
+    postCount > 0
+      ? blogPublished.reduce((a, p) => a + p.engagementRate, 0) / postCount
+      : 0;
+  const rawScore = Math.min(100, postCount * 9 + avgEng * 100 * 4);
+  const measured = postCount > 0;
+  const tierIdx = Math.min(
+    BLOG_TIERS.length - 1,
+    Math.floor((rawScore / 100) * BLOG_TIERS.length),
+  );
+  const posts = blogPublished.map((p) => {
+    const r = seed(`blog:${p.topic}`);
+    const base = 55 + (r % 35);
+    return {
+      topic: p.topic,
+      time: p.time,
+      expertise: Math.min(99, base + ((r >> 3) % 15)),
+      relevance: Math.min(99, base + ((r >> 6) % 18)),
+      quality: Math.min(99, Math.round((base + p.engagementRate * 100) % 100) || base),
     };
-    return { weekStart: raw.weekStart || '', weekEnd: raw.weekEnd || '', note: raw.note || '', items: Array.isArray(raw.items) ? raw.items : [] };
-  } catch { return null; }
-}
-
-/** 업체가 실제 사용하는 채널 집합 (ADR-0008 채널 스코프) */
-function clientChannelScope(client: ClientConfig): typeof CHANNELS {
-  const used = new Set<string>([
-    ...client.targets,
-    ...Object.keys(client.accounts ?? {}),
-    ...Object.keys(client.channelLinks ?? {}),
-  ]);
-  return CHANNELS.filter((c) => used.has(c.key));
+  });
+  // 키워드 검색량은 절대 추정/난수로 만들지 않는다 — 네이버 광고주센터 키워드 도구
+  // 실측(keyword-stats.json)이 있으면 그 값을, 없으면 null(→ 대시보드 '실측 대기')로.
+  const statMap = new Map((kwStats?.items ?? []).map((s) => [s.kw.replace(/\s/g, ''), s]));
+  const keywords = client.keywords.map((kw) => {
+    const s = statMap.get(kw.replace(/\s/g, ''));
+    if (!s) return { kw, pc: null, mobile: null, total: null, competition: null };
+    const total = (s.pc ?? 0) + (s.mobile ?? 0);
+    return { kw, pc: s.pc, mobile: s.mobile, total: s.pc == null && s.mobile == null ? null : total, competition: s.competition ?? null };
+  });
+  return {
+    measured,
+    grade: measured ? BLOG_TIERS[tierIdx] : '측정 전',
+    score: Math.round(rawScore),
+    posts,
+    keywords,
+    kwSource: kwStats ? { source: kwStats.source, fetchedAt: kwStats.fetchedAt } : null,
+  };
 }
 
 function buildClientData(
@@ -202,15 +213,13 @@ function buildClientData(
     insightComment: it.insightComment,
     publishedAt: it.publishedAt,
     videoFile: it.videoFile,
+    reelsScript: it.reelsScript,
     ytTitle: it.ytTitle,
     ytDescription: it.ytDescription,
     ytTags: it.ytTags,
   });
 
-  // 채널 스코프(ADR-0008): 업체가 실제 쓰는 채널만(targets + accounts/channelLinks에 등장) —
-  // 미사용 채널(예: 링크드인 미운영 업체)은 요약표·탭·바로가기·연결상황에서 제외
-  const scopedChannels = clientChannelScope(client);
-  const channels = scopedChannels.map((c) => {
+  const channels = CHANNELS.map((c) => {
     const pending = plan.items.filter((it) => it.channels.includes(c.key)).map(toCard);
     return { ...c, ...buildChannel(client, history, pending, c.key) };
   });
@@ -226,7 +235,7 @@ function buildClientData(
       default: return '';
     }
   };
-  const channelLinks = scopedChannels.map((c) => {
+  const channelLinks = CHANNELS.map((c) => {
     const handle = client.accounts?.[c.key];
     const url = client.channelLinks?.[c.key] || defaultManageUrl(c.key, handle);
     return { key: c.key, label: c.label, icon: c.icon, url, sub: handle ? `@${handle}` : '관리 열기' };
@@ -237,12 +246,14 @@ function buildClientData(
     .map(toCard)
     .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
-  const blog = buildBlog(client);
+  const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
+  const blog = buildBlog(client, blogChannel.published as ChannelPublished[], guidanceStore?.loadKeywordStats(client.id));
 
   return {
     id: client.id,
     name: client.name,
     industry: client.industry,
+    themeColor: client.themeColor ?? null,
     brandTone: client.brandTone,
     keywords: client.keywords,
     competitors: client.competitors.map((x) => x.handle),
@@ -255,6 +266,7 @@ function buildClientData(
       mood: design.mood,
       composition: design.composition,
       notes: design.notes.slice(-4),
+      humanNotes: design.humanNotes ?? [],
     },
     heldCount,
     totalCycles: history.length,
@@ -264,14 +276,14 @@ function buildClientData(
     channels,
     channelLinks,
     blog,
-    weekPlan: buildWeekPlan(client),
     learning: learning ?? null,
     tokenHealth: tokenHealth ?? null,
     weeklyReport: weeklyReport ?? null,
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
-    keywordVolumes: guidanceStore?.loadKeywordVolumes(client.id) ?? null,
+    weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
+    referenceLinks: guidanceStore?.loadReferenceLinks(client.id) ?? null,
   };
 }
 
@@ -295,26 +307,24 @@ export function renderDashboard(
     instagram: has('PSLAB_INSTAGRAM_ACCESS_TOKEN', 'PSLAB_INSTAGRAM_IG_USER_ID'),
     threads: has('PSLAB_THREADS_ACCESS_TOKEN', 'PSLAB_THREADS_THREADS_USER_ID'),
     blogger: has('PSLAB_BLOGGER_REFRESH_TOKEN', 'PSLAB_BLOGGER_BLOG_ID'),
-    youtube: has('PSLAB_YOUTUBE_CLIENT_ID', 'PSLAB_YOUTUBE_CLIENT_SECRET', 'PSLAB_YOUTUBE_REFRESH_TOKEN'),
   };
-  // 채널 스코프(ADR-0008): 단일 업체 대시보드는 그 업체가 쓰는 채널만 노출
-  const channelScope = clients.length === 1 ? clientChannelScope(clients[0]) : CHANNELS;
   const data = {
     generatedAt: new Date().toISOString(),
     repo: REPO,
-    channels: channelScope,
+    channels: CHANNELS,
     setup,
     clients: clients.map((c) =>
       buildClientData(c, store, designStore, planStore, learnStore, tokenStore, reportStore, guidanceStore),
     ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
-  // 단일 업체 테마 — clients/<id>.json 의 theme 색상으로 핵심 요소만 덮어쓴다(라이트 유지).
-  // 타이틀은 스킬 규칙대로 제품명 "ALWAYS ON 콘텐츠 관제실" 고정(업체 식별은 헤더 칩).
-  const th = clients.length === 1 ? clients[0].theme : undefined;
+
+  // 업체 감도 팔레트(clients/<id>.json theme) — 있으면 기본 라이트 테마 위에 오버라이드
+  const th = clients.find((c) => c.theme)?.theme;
   const themeCss = th
     ? `
 /* ── 업체 브랜드 테마 오버라이드 ── */
+:root{--brand:${th.accent ?? '#2b6fff'}}
 body{background:${th.bg ?? '#ffffff'}}
 header,.tabs{background:${th.bg ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
 .panel,.card,.kpi{background:${th.panel ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
@@ -323,9 +333,6 @@ a{color:${th.accentInk ?? '#1d6ae5'}}
 .cbtn.on{background:${th.accent ?? '#2b6fff'};border-color:${th.accent ?? '#2b6fff'}}
 .kpi .v.accent{color:${th.accentInk ?? '#d97706'}}
 .btn.fb{background:${th.panel ?? '#f6effc'};border-color:${th.accent ?? '#d9c2ee'};color:${th.accentInk ?? '#7a35b8'}}
-.rbar-f{background:${th.accentInk ?? '#3b6fd4'}}
-.rbar-f.acc{background:${th.accent ?? '#e8a13d'}}
-.rbar-t{background:${th.border ?? '#eef1f6'}}
 `
     : '';
 
@@ -337,7 +344,7 @@ a{color:${th.accentInk ?? '#1d6ae5'}}
 <meta http-equiv="refresh" content="300"/>
 <title>ALWAYS ON 콘텐츠 관제실</title>
 <style>
-:root{color-scheme:light}*{box-sizing:border-box}
+:root{color-scheme:light;--brand:#2b6fff}*{box-sizing:border-box}
 body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
 a{color:#1d6ae5}
 header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:0;z-index:5}
@@ -346,10 +353,10 @@ header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;posi
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .clients{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .cbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
-.cbtn.on{background:#2b6fff;border-color:#2b6fff;color:#fff}
+.cbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:58px;z-index:4}
 .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a7284;padding:8px 12px;cursor:pointer;font-size:14px}
-.tab.on{color:#14171d;border-bottom-color:#2b6fff;font-weight:600}
+.tab.on{color:#14171d;border-bottom-color:var(--brand);font-weight:600}
 .tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
 .dot.live{background:#22c55e}.dot.off{background:#c6ccd8}
 .treq{font-size:10px;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700}
@@ -387,6 +394,17 @@ th{color:#6a7284;font-weight:600;font-size:12px}
 .spark{display:block}
 .empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
 .tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+.rbarrow{display:flex;align-items:center;gap:8px;margin:5px 0}
+.rbarrow .rl{width:150px;font-size:12px;color:#3a4254;flex:none;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbarrow .rtrack{flex:1;background:#eef1f6;border-radius:6px;height:18px;overflow:hidden}
+.rbarrow .rfill{height:100%;border-radius:6px;background:#2b6fff;min-width:2px}
+.rbarrow .rv{font-size:11.5px;color:#6a7284;width:120px;flex:none}
+.rtl{border-left:2px solid #dfe5ef;margin:6px 0 4px 6px;padding-left:14px}
+.rtl .ri{position:relative;margin-bottom:10px;font-size:13px;line-height:1.55}
+.rtl .ri:before{content:'';position:absolute;left:-19.5px;top:4px;width:9px;height:9px;border-radius:50%;background:#2b6fff}
+.rtl .rd{color:#6a7284;font-size:11.5px}
+.rlink{display:inline-block;background:#f2f6ff;border:1px solid #c9d8f0;border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:12.5px;text-decoration:none;color:#1c4fd6}
+.rlink:hover{background:#e6eeff}
 footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
 .card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
@@ -424,27 +442,13 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .pbar input[type=date]{border:1px solid #dfe4ec;border-radius:7px;padding:4px 6px;font-size:12px;color:#3a4254;background:#fff}
 .reqta{width:100%;border:1px solid #dfe4ec;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#14171d;background:#fff;resize:vertical}
 .reqta:focus{outline:2px solid #2b6fff33;border-color:#2b6fff}
-.rsec{margin-top:16px}
-.rsum{color:#4a5468;font-size:13px;margin:6px 0 4px;line-height:1.55}
-.rlist{margin:8px 0 4px;padding-left:18px}
-.rlist li{font-size:13px;color:#39404f;line-height:1.6;margin:3px 0}
-.rchart{margin:12px 0 6px}
-.rchart-t{font-size:12.5px;font-weight:600;color:#39404f;margin-bottom:6px}
-.rbar-row{display:flex;align-items:center;gap:8px;margin:3px 0}
-.rbar-l{width:120px;font-size:11.5px;color:#4a5468;text-align:right;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rbar-t{flex:1;background:#eef1f6;border-radius:4px;height:13px;overflow:hidden}
-.rbar-f{height:100%;border-radius:0 4px 4px 0;background:#3b6fd4;min-width:2px}
-.rbar-f.acc{background:#e8a13d}
-.rbar-v{width:46px;font-size:11px;color:#68738a;flex:none;font-variant-numeric:tabular-nums}
-.rlinks{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px}
-a.tag{text-decoration:none}
 @media(max-width:720px){.carou .slide img{height:60vh}}
 ${themeCss}</style>
 </head>
 <body>
 <header>
-  <div class="brand">🛰️ ALWAYS ON 콘텐츠 관제실</div>
-  <div class="sub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
+  <div class="brand">🛰️ <span id="dashtitle">ALWAYS ON 콘텐츠 관제실</span></div>
+  <div class="sub" id="dashsub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
   <div class="clients" id="clients"></div>
 </header>
 <div class="tabs" id="tabs"></div>
@@ -581,6 +585,29 @@ function guideView(client){
       bb.log.slice(0,5).map(l=>'<tr><td class="muted">'+ftime(l.at)+'</td><td>'+esc(l.field)+'</td><td class="muted">'+esc(l.excerpt)+'…</td></tr>').join('')+'</table>';
   }
   h+='</div>';
+  // 디자인 피드백 — 사람 지시는 AI 학습 메모와 분리 보관되며 항상 최우선 반영
+  const hn=(client.designStyle||{}).humanNotes||[];
+  h+='<div class="panel" style="border-color:#e3cdf0;background:#fdfaff"><h3>🎨 디자인 피드백</h3>'+
+     '<div class="muted" style="margin:4px 0 10px">카드·릴스의 색감, 레이아웃, 톤에 대한 지시를 적어주세요. 여기 등록된 지시는 AI가 스스로 쌓는 학습 메모보다 <b>항상 우선</b> 반영되고, AI가 지우거나 덮어쓰지 못합니다. 한 줄에 하나씩 적으면 각각 별도 지시로 저장됩니다.</div>';
+  if(hn.length){
+    h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">현재 등록된 지시 ('+hn.length+')</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+hn.map(n=>'· '+esc(n)).join('\\n')+'</div></div>';
+  } else {
+    h+='<div class="muted" style="margin-bottom:8px">아직 등록된 디자인 지시가 없습니다.</div>';
+  }
+  h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[디자인피드백] '+esc(client.name)+'\\',\\'\\',\\'design-fb\\')">🎨 디자인 지시 등록</button></div></div>';
+  // 🔗 레퍼런스 링크 학습 현황 — 전 채널 요약 (등록은 각 채널 탭에서)
+  const rls=((client.referenceLinks||{}).links)||[];
+  h+='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크 학습 현황</h3><span class="muted">'+
+     (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
+     '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
+  if(rls.length){
+    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      rls.slice(-15).reverse().map(l=>{const cd=DATA.channels.find(x=>x.key===l.channel)||{label:l.channel,icon:''};
+        return '<tr><td>'+cd.icon+' '+esc(cd.label)+'</td><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>';}).join('')+'</table>';
+  }
+  h+='</div>';
   // 채널별 가이드
   h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
   const guides=client.channelGuides||{};
@@ -597,13 +624,35 @@ function guideView(client){
 function channelGuidePanel(client, key){
   const g=(client.channelGuides||{})[key];
   if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  // 심플 버전: 핵심 소재(태그) + 가이드 첫 2줄 미리보기. 세부는 지침 탭에서.
-  var lines=(g.guide||'').split('\\n').map(function(s){return s.trim();}).filter(Boolean);
-  var preview=lines.slice(0,2).join(' ');
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
-    ((g.topics||[]).length?'<div style="margin-bottom:4px"><span class="muted" style="font-size:12px">핵심 소재</span></div><div style="margin-bottom:8px">'+(g.topics||[]).slice(0,6).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (preview?'<div class="mcap" style="font-size:13px;color:#3a4254">'+esc(preview)+(lines.length>2?' <span class="muted">… 세부 지침은 지침 탭에서</span>':'')+'</div>':'')+
-    '</div>';
+  // 심플 요약만 (docs/06-대시보드): 소재 태그 + 가이드 첫 2줄 미리보기, 전문은 지침 탭
+  const preview=(g.guide||'').split('\\n').slice(0,2).join('\\n');
+  const more=(g.guide||'').split('\\n').length>2;
+  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
+    ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
+    (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
+    '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+}
+// 🔗 레퍼런스 링크 — 채널별 벤치마크 링크 등록(인박스). 등록=적재, 학습은 다음 기획 세션에서.
+function refBadge(st){
+  return st==='learned'?'<span class="badge b-ok">학습완료</span>'
+       : st==='failed'?'<span class="badge b-hold">열람실패</span>'
+       : '<span class="badge b-wait">학습대기</span>';
+}
+function refShort(u){ return esc(String(u).replace(/^https?:\\/\\/(www\\.)?/,'').slice(0,52)); }
+function referencePanel(client, key){
+  const all=(((client.referenceLinks||{}).links)||[]).filter(l=>l.channel===key);
+  const pend=all.filter(l=>l.status==='pending').length;
+  let h='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크</h3><span class="muted">'+
+    (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
+    '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
+  if(all.length){
+    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      all.slice(-8).reverse().map(l=>'<tr><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>').join('')+'</table>';
+  }
+  h+='<textarea id="rl-'+key+'" class="reqta" rows="2" placeholder="https://... (한 줄에 하나씩)"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[레퍼런스·'+key+'] '+esc(client.name)+'\\',\\'\\',\\'rl-'+key+'\\')">🔗 레퍼런스 등록</button></div></div>';
+  return h;
 }
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
@@ -675,18 +724,23 @@ function openDetail(id){
   const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':'📝 발행 캡션';
   const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
   const cap=fmtCaption(it.captionBody||it.captionNote||'');
+  const isReels=chDef.key==='instagram'&&it.reelsScript;
+  const reelsVideo=(chDef.key==='instagram'&&it.videoFile)?'<div style="margin:6px 0 14px"><video src="'+esc(it.videoFile)+'" controls playsinline style="max-height:430px;max-width:100%;border-radius:14px;border:1px solid #e4e8f0;background:#000"></video><div style="margin-top:8px"><a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 릴스 영상 다운로드</a></div></div>':'';
+  const reelsBox=isReels?'<div class="capbox" style="margin-top:12px"><div class="caphd">🎬 릴스 대본 (영상 자막 구성)</div><div class="mcap">'+fmtCaption(it.reelsScript)+'</div></div>':'';
   const m=it.metrics;
   const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#c9d8f0"><div class="caphd">📊 성과 데이터</div>'+
     '<div class="met" style="font-size:13px"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>참여율 '+pct(m.engagementRate||0)+'</span></div>'+
     (it.insightComment?'<div style="color:#15803d;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
   document.getElementById('mbody').innerHTML=
-    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+'</div>'+
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+(isReels?' · 🎬 릴스':'')+'</div>'+
     '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
     '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · '+chDef.icon+' '+esc(chDef.label)+' · <span class="badge b-plan">발행 대기</span></div>'+
     '<div class="carou">'+slides+'</div>'+
     (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
+    reelsVideo+
     perf+
     '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
+    reelsBox+
     manualHelper(it,chDef)+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
   document.getElementById('modal').classList.add('on');
@@ -702,12 +756,12 @@ function manualHelper(it, chDef){
   const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
   const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
-    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(정사각)</a>':'');
+    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(가로)</a>':'');
   const isYt=chDef.key==='youtube';
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(정사각)”를 받아 네이버 대표사진으로 지정(정사각 1:1이라 네이버 피드·검색 썸네일에 딱 맞음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(가로)”를 받아 네이버 대표사진으로 지정(가로 16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -785,6 +839,8 @@ function channelDetail(client, c){
   h+=periodBar();
   // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
   h+=channelGuidePanel(client, c.key);
+  // ④ 레퍼런스 링크 인박스 — 등록하면 다음 기획 세션에서 AI가 열람·학습
+  h+=referencePanel(client, c.key);
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';
@@ -813,7 +869,7 @@ function channelDetail(client, c){
   if(seriesF.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %) · '+periodLabel()+'</h3>'+sparkline(seriesF.slice(-12))+'</div>';}
   // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트) — 기간 반영
   h+=pubDataRows(planPubF);
-  // 네이버 블로그 → 네이버 검색 관심도(데이터랩 실측)
+  // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
   h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+')</h2></div>';
@@ -824,55 +880,31 @@ function channelDetail(client, c){
   h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
   return h;
 }
-function weekPlanPanel(client){
-  const w=client.weekPlan;
-  if(!w||!w.items||!w.items.length) return '';
-  const chColor=function(c){ return c.indexOf('인스타')>=0?'#e2503f':(c.indexOf('네이버')>=0?'#2db400':'#c08a2a'); };
-  const sheetBadge=function(s){ var col=s==='시의성'?'#c08a2a':(s==='연관'?'#3a8f5a':'#e2503f'); return '<span class="badge" style="background:'+col+'22;color:'+col+'">'+esc(s)+'</span>'; };
-  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획 · 키워드 기반</h3><span class="muted">'+esc(w.weekStart)+' ~ '+esc(w.weekEnd)+' · 매주 토요일 자동 생성</span></div>';
-  if(w.note) h+='<div class="muted" style="font-size:12px;margin:0 0 8px">'+esc(w.note)+'</div>';
-  h+='<table><tr><th>날짜</th><th>채널</th><th>키워드</th><th>제안 제목</th></tr>'+
-    w.items.map(function(it){ return '<tr><td style="white-space:nowrap">'+esc(it.date)+'</td><td style="white-space:nowrap;color:'+chColor(it.channelLabel)+'">'+esc(it.channelLabel)+'</td><td style="white-space:nowrap">'+sheetBadge(it.sheet)+' #'+esc(it.keyword)+'</td><td>'+esc(it.title)+'</td></tr>'; }).join('')+'</table></div>';
-  return h;
-}
 function blogSection(client){
   const b=client.blog;
-  if(!b) return '';
-  const core=b.core||b.trends||[];
-  if(!core.length) return '';
-  // 천단위 콤마 (정규식 없이 — 클라 템플릿리터럴 이스케이프 함정 회피)
-  const fmt=function(n){ n=Math.round(n||0); var s=String(n),o='',c=0; for(var i=s.length-1;i>=0;i--){o=s[i]+o; if(++c%3===0&&i>0)o=','+o;} return o; };
-  const isV2=core.some(function(t){return t.total!=null||t.pc!=null;});
-  const compBadge=function(cc){ if(!cc) return ''; var col=cc==='높음'?'#e2503f':(cc==='중간'?'#c08a2a':'#3a8f5a'); return '<span style="color:'+col+'">●</span> '+esc(cc); };
-  // 한 시트(표) 렌더 — 검색량順 top20
-  const sheet=function(title,sub,rows){
-    if(!rows||!rows.length) return '';
-    var max=Math.max.apply(null,[1].concat(rows.map(function(t){return t.total||0;})));
-    var h='<div style="margin-top:14px"><div class="sect-h" style="margin:0 0 6px"><h3 style="font-size:15px">'+title+'</h3><span class="muted" style="font-size:12px">'+sub+' · '+rows.length+'개</span></div>';
-    h+='<div style="max-height:340px;overflow:auto;border:1px solid #eee;border-radius:8px"><table><tr><th>키워드</th><th>월검색수</th><th>PC·모바일</th><th>경쟁</th><th></th></tr>'+
-      rows.map(function(t){ var v=t.total||0; var w=Math.round(v/max*100);
-        return '<tr><td>#'+esc(t.kw)+'</td><td><b>'+fmt(v)+'</b></td><td class="muted" style="font-size:12px">'+fmt(t.pc)+' · '+fmt(t.mobile)+'</td><td style="font-size:12px">'+compBadge(t.comp)+'</td><td style="width:24%"><div class="bar"><i style="width:'+w+'%"></i></div></td></tr>';
-      }).join('')+'</table></div></div>';
-    return h;
-  };
-  let h='<div class="panel">';
-  h+='<div class="sect-h" style="margin:0 0 6px"><h3>📊 '+(isV2?'네이버 월간 검색량 · 키워드 기반 기획':'네이버 검색 관심도')+'</h3><span class="muted">'+esc(b.trendMeta||'')+'</span></div>';
-  if(isV2){
-    if(b.baseDate) h+='<div class="muted" style="font-size:12px;margin:0 0 4px">📅 기준일 <b>'+esc(b.baseDate)+'</b> · '+esc(b.updateCycle||'매주 금요일')+' 자동 갱신 · 검색량順 = 기획 우선순위</div>';
-    h+=sheet('🎯 핵심 키워드','브랜드 최상위 연관',b.core||core);
-    h+=sheet('🔗 연관 키워드','핵심에서 파생·관련도 높음',b.related);
-    h+=sheet('🗓️ 시의성 키워드','시즌·이슈 연결',b.timely);
-    return h+'</div>';
+  const color = b.score>=70?'#e4f7ea':b.score>=40?'#fdf3e0':'#eef1f6';
+  const fg = b.score>=70?'#15803d':b.score>=40?'#b45309':'#5a6274';
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>📊 블로그 지수 (blogdex 스타일)</h3><span class="muted">내부 추정 · 네이버 연동 시 실측 교체</span></div>';
+  h+='<div class="row"><div class="grade" style="background:'+color+';color:'+fg+'">'+esc(b.grade)+'</div>'+
+     '<div style="flex:1;min-width:160px"><div class="muted">종합 점수 '+b.score+'/100</div><div class="bar"><i style="width:'+b.score+'%"></i></div></div></div>';
+  // 포스팅 분석
+  if(b.posts.length){
+    h+='<table style="margin-top:12px"><tr><th>포스팅</th><th>전문성</th><th>연관성</th><th>품질</th></tr>'+
+      b.posts.slice(0,8).map(p=>'<tr><td>'+esc(p.topic)+'</td><td>'+p.expertise+'</td><td>'+p.relevance+'</td><td>'+p.quality+'</td></tr>').join('')+'</table>';
   }
-  // v1 폴백 (데이터랩 상대지수)
-  var vals=core.map(function(t){return t.index==null?0:t.index;});
-  var max1=Math.max.apply(null,[1].concat(vals));
-  h+='<table><tr><th>키워드</th><th>상대 관심도</th><th></th></tr>'+
-    core.map(function(t){
-      var v=t.index==null?0:t.index; var w=Math.round(v/max1*100);
-      var disp=t.index==null?'데이터 부족':(t.index<1?'<1':String(t.index));
-      return '<tr><td>#'+esc(t.kw)+'</td><td>'+disp+'</td><td style="width:46%"><div class="bar"><i style="width:'+w+'%"></i></div></td></tr>';
-    }).join('')+'</table></div>';
+  // 키워드 분석 — 네이버 광고주센터 키워드 도구 실측값만 표시 (허수 금지)
+  const src=b.kwSource;
+  h+='<div class="sect-h" style="margin:14px 0 6px"><h3 style="margin:0;font-size:14px">🔑 키워드 월간 검색수</h3><span class="muted">'+
+     (src?esc(src.source)+' 실측 · 기준 '+String(src.fetchedAt).slice(0,10):'광고주센터 키워드 도구 실측 데이터 연결 전 — 수치는 표시하지 않습니다')+'</span></div>';
+  h+='<table><tr><th>키워드</th><th>PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th></tr>'+
+    b.keywords.map(k=>{
+      const n=v=>v==null?'<span class="muted">—</span>':Number(v).toLocaleString();
+      const wait=k.total==null&&!src;
+      return '<tr><td>#'+esc(k.kw)+'</td>'+
+        (wait?'<td colspan="4"><span class="badge b-wait">실측 대기</span> <span class="muted" style="font-size:11px">키워드 도구 CSV 임포트 후 표시</span></td>'
+             :'<td>'+n(k.pc)+'</td><td>'+n(k.mobile)+'</td><td><b>'+n(k.total)+'</b></td><td>'+(k.competition?esc(k.competition):'<span class="muted">—</span>')+'</td>')+'</tr>';
+    }).join('')+'</table>';
+  h+='</div>';
   return h;
 }
 function tokenBanner(client){
@@ -934,16 +966,20 @@ function pubDataRows(items){
 function setupPanel(){
   const s=DATA.setup||{};
   const settingsUrl='https://github.com/'+REPO+'/settings/secrets/actions';
-  const chip=(ok,name)=>'<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;border:1px solid '+(ok?'#a8dcbe':'#e2e5ea')+';background:'+(ok?'#eafaf0':'#f7f8fa')+';font-size:13px;font-weight:600;color:'+(ok?'#1a7a45':'#8a94a6')+'">'+(ok?'✅':'⬜')+' '+esc(name)+'</span>';
-  const hasYt=(DATA.channels||[]).some(function(c){return c.key==='youtube';});
-  const items=[s.instagram,s.threads,s.blogger].concat(hasYt?[s.youtube]:[]).concat([s.telegram,s.anthropic,s.realPublish]);
-  const done=items.filter(Boolean).length;
-  return '<div class="panel" style="margin-top:14px">'+
-    '<div class="sect-h" style="margin:0 0 8px"><h3 style="font-size:15px">🔌 채널 연결 상황</h3><span class="muted">'+done+'/'+items.length+' · <a href="'+settingsUrl+'" target="_blank">설정 열기 ↗</a></span></div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
-      chip(s.instagram,'인스타그램')+chip(s.threads,'스레드')+chip(s.blogger,'구글 블로그')+(hasYt?chip(s.youtube,'유튜브'):'')+chip(s.telegram,'텔레그램')+chip(s.anthropic,'AI 글')+chip(s.realPublish,'실제 발행 ON')+
-    '</div>'+
-    '<div class="muted" style="margin-top:8px;font-size:12px"><b>네이버 블로그</b>만 공식 발행 API가 없어 <b>수동(복붙)</b> 채널입니다 — 발행일에 복사·다운로드 도우미가 표시됩니다.</div>'+
+  const varsUrl='https://github.com/'+REPO+'/settings/variables/actions';
+  const row=(ok,name,todo,url)=>'<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⬜')+'</td><td><b>'+esc(name)+'</b>'+(ok?'':'<div class="muted" style="margin-top:2px">'+todo+(url?' · <a href="'+url+'" target="_blank">설정 열기 ↗</a>':'')+'</div>')+'</td></tr>';
+  const done=[s.instagram,s.threads,s.telegram,s.anthropic,s.realPublish].filter(Boolean).length;
+  return '<div class="panel" style="border-color:#2b6fff">'+
+    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/5 완료</span></div>'+
+    '<table>'+
+    row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
+    row(s.blogger,'구글 블로그 자동발행','선택 — Blogger OAuth(클라이언트/리프레시 토큰/블로그ID) 시크릿',settingsUrl)+
+    row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
+    row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
+    '</table>'+
+    '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
     '</div>';
 }
 // 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
@@ -961,84 +997,33 @@ function channelLinksPanel(client){
   return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
     '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
 }
-// ── 리서치 탭 — 브랜드·시장 학습 요약 (data/<id>/research.json) ──
-function rstat(s){return '<div class="kpi"><div class="v">'+esc(s.v)+'</div><div class="l">'+esc(s.l)+'</div></div>';}
-function rchart(c){
-  const vals=c.items.map(function(i){return i.value||0;});
-  const max=c.max||Math.max.apply(null,vals)||1;
-  return '<div class="rchart"><div class="rchart-t">'+esc(c.title)+(c.unit?' <span class="muted">('+esc(c.unit)+')</span>':'')+'</div>'+
-    c.items.map(function(i){
-      const w=Math.max(2,Math.round((i.value||0)/max*100));
-      return '<div class="rbar-row" title="'+esc(i.hint||i.label)+'"><div class="rbar-l">'+esc(i.label)+'</div>'+
-        '<div class="rbar-t"><div class="rbar-f'+(i.accent?' acc':'')+'" style="width:'+w+'%"></div></div>'+
-        '<div class="rbar-v">'+esc(String(i.value))+'</div></div>';
-    }).join('')+'</div>';
-}
-function researchSection(s){
-  let h='<div class="panel rsec" id="rs-'+esc(s.id)+'"><h3>'+(s.icon?esc(s.icon)+' ':'')+esc(s.title)+'</h3>';
-  if(s.summary) h+='<div class="rsum">'+mdInline(s.summary)+'</div>';
-  if(s.stats&&s.stats.length) h+='<div class="kpis" style="margin:10px 0 6px">'+s.stats.map(rstat).join('')+'</div>';
-  if(s.bullets&&s.bullets.length) h+='<ul class="rlist">'+s.bullets.map(function(b){return '<li>'+mdInline(b)+'</li>';}).join('')+'</ul>';
-  if(s.charts&&s.charts.length) h+=s.charts.map(rchart).join('');
-  if(s.table) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(function(x){return '<th>'+esc(x)+'</th>';}).join('')+'</tr>'+
-    s.table.rows.map(function(r){return '<tr>'+r.map(function(cell){return '<td>'+mdInline(cell)+'</td>';}).join('')+'</tr>';}).join('')+'</table></div>';
-  if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>';
-  if(s.links&&s.links.length) h+='<div class="rlinks">'+s.links.map(function(l){return '<a class="btn" target="_blank" rel="noopener" href="'+esc(l.url)+'">🔗 '+esc(l.label)+'</a>';}).join('')+'</div>';
-  return h+'</div>';
-}
-function researchView(client){
-  const r=client.research;
-  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 요약이 아직 없습니다. data/clients/'+esc(client.id)+'/research.json 에 채워 넣으면 이 탭에 표시됩니다.</div>';
-  let h='<div class="sect-h"><h2>📚 리서치 — 브랜드·시장 학습 요약</h2></div>';
-  if(r.intro) h+='<div class="panel" style="background:#f8fbff;border-color:#c4d6f4"><div class="rsum" style="margin:0">'+mdInline(r.intro)+'</div>'+
-    (r.updatedAt?'<div class="muted" style="margin-top:6px;font-size:12px">업데이트: '+esc(String(r.updatedAt).slice(0,10))+'</div>':'')+'</div>';
-  h+='<div class="panel" style="padding:10px 14px;margin-top:12px">'+r.sections.map(function(s){return '<a class="tag" href="#rs-'+esc(s.id)+'">'+(s.icon?esc(s.icon)+' ':'')+esc(s.title)+'</a>';}).join(' ')+'</div>';
-  h+=r.sections.map(researchSection).join('');
-  h+=kwVolumesPanel(client);
-  if(r.sources&&r.sources.length) h+='<div class="panel rsec"><h3>🔗 원본 문서·확인 링크</h3><div class="rlinks">'+
-    r.sources.map(function(l){return '<a class="btn" target="_blank" rel="noopener" href="'+esc(l.url)+'">'+esc(l.label)+'</a>';}).join('')+'</div></div>';
-  return h;
-}
-function fmtN(n){ return (n==null||isNaN(n))?'-':Number(n).toLocaleString('ko-KR'); }
-function compBadge(c){
-  if(!c) return '<span class="muted">-</span>';
-  var cls=c==='높음'?'b-hold':(c==='중간'?'b-wait':'b-ok');
-  return '<span class="badge '+cls+'">'+esc(c)+'</span>';
-}
-// 실측 월간검색수 — 네이버 검색광고 API(keywordstool) 수집분. 없으면 연동 안내.
-function kwVolumesPanel(client){
-  const kv=client.keywordVolumes;
-  let h='<div class="panel rsec" id="rs-kwvol"><h3>📊 실측 월간검색수 — 네이버 키워드 도구</h3>';
-  if(!kv||!kv.requested||!kv.requested.length){
-    h+='<div class="rsum">아직 <b>실측 데이터가 비어 있습니다.</b> 위 차트의 수치는 데이터랩 <b>상대지수(추세 비교용)</b>이며 절대 검색량이 아닙니다. 실제 월간검색수는 검색광고 API 연동 후 이 자리에 자동 표시됩니다.</div>'+
-      '<ul class="rlist">'+
-      '<li>광고주센터 → 도구 → <b>API 사용 관리</b>에서 액세스라이선스·비밀키 발급</li>'+
-      '<li>GitHub Secrets에 <b>NAVER_AD_API_KEY / NAVER_AD_SECRET / NAVER_AD_CUSTOMER_ID</b> 등록 (CUSTOMER_ID는 광고주센터 주소의 ad-accounts/ 뒤 숫자)</li>'+
-      '<li>Actions에서 <b>keyword volumes</b> 워크플로 실행 → 배치표 40개 키워드의 월간검색수(PC/모바일)·경쟁정도·연관키워드가 자동 수집됩니다</li>'+
-      '</ul>'+
-      '<div class="rlinks"><a class="btn" target="_blank" rel="noopener" href="https://github.com/'+REPO+'/settings/secrets/actions">🔗 Secrets 설정 열기</a>'+
-      '<a class="btn" target="_blank" rel="noopener" href="https://github.com/'+REPO+'/actions">🔗 Actions 열기</a></div></div>';
-    return h;
-  }
-  const items=kv.requested;
-  const max=Math.max.apply(null,items.map(function(i){return i.total||0;}))||1;
-  h+='<div class="muted" style="margin-bottom:8px">수집 '+esc(String(kv.updatedAt||'').slice(0,10))+' · '+esc(kv.source||'')+'</div>';
-  h+='<div class="rchart"><div class="rchart-t">월간검색수 상위 (PC+모바일 합계)</div>'+
-    items.slice(0,12).map(function(i){
-      const w=Math.max(2,Math.round((i.total||0)/max*100));
-      return '<div class="rbar-row" title="PC '+fmtN(i.pc)+' · 모바일 '+fmtN(i.mobile)+'"><div class="rbar-l">'+esc(i.keyword)+'</div>'+
-        '<div class="rbar-t"><div class="rbar-f" style="width:'+w+'%"></div></div>'+
-        '<div class="rbar-v" style="width:70px">'+fmtN(i.total)+'</div></div>';
-    }).join('')+'</div>';
-  h+='<div style="overflow-x:auto;margin-top:10px"><table><tr><th>키워드</th><th>월간검색수 PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th><th>월평균노출 광고수</th></tr>'+
-    items.map(function(i){
-      return '<tr><td><b>'+esc(i.keyword)+'</b></td><td>'+fmtN(i.pc)+'</td><td>'+fmtN(i.mobile)+'</td><td><b>'+fmtN(i.total)+'</b></td><td>'+compBadge(i.compIdx)+'</td><td>'+fmtN(i.plAvgDepth)+'</td></tr>';
-    }).join('')+'</table></div>';
-  if(kv.related&&kv.related.length){
-    h+='<div class="rchart-t" style="margin-top:12px">🔎 연관키워드 발굴 상위 '+Math.min(20,kv.related.length)+' (소재 후보)</div><div>'+
-      kv.related.slice(0,20).map(function(i){return '<span class="tag" title="월간검색수 '+fmtN(i.total)+' · 경쟁 '+esc(i.compIdx||'-')+'">'+esc(i.keyword)+' '+fmtN(i.total)+'</span>';}).join('')+'</div>';
+// 📅 차주 콘텐츠 기획 (ADR-0006: 금 키워드 수집 → 토 기획 → week-plan.json, plan.json과 분리)
+function weekPlanPanel(client){
+  const wp=client.weekPlan;
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획</h3><span class="muted">'+
+    (wp&&wp.baseDate?'기준일 '+esc(String(wp.baseDate).slice(0,10)):'키워드 실측 연동 후 매주 토요일 자동 생성')+'</span></div>';
+  if(!wp){
+    h+='<div class="empty" style="padding:10px">아직 차주 기획이 없습니다 — 네이버 검색광고 키워드 수집(금) → 차주 기획(토) 파이프라인은 계정 연결 단계에서 켜집니다.</div>';
+  } else {
+    h+='<table><tr><th style="width:90px">날짜</th><th style="width:130px">채널</th><th>제안 제목</th><th style="width:80px">시트</th></tr>'+
+      wp.items.map(it=>{
+        const cd=DATA.channels.find(x=>x.key===it.channel)||{icon:'',label:it.channel||''};
+        return '<tr><td class="muted">'+esc(it.date||'')+'</td><td>'+cd.icon+' '+esc(cd.label)+'</td><td>'+esc(it.title||'')+'</td><td><span class="tag">'+esc(it.sheet||'')+'</span></td></tr>';
+      }).join('')+'</table>'+
+      '<div class="muted" style="margin-top:8px">이 기획안은 감도·가짜글자 검수를 거친 뒤에만 실제 제작으로 넘어갑니다 (자동발행 큐와 분리).</div>';
   }
   return h+'</div>';
+}
+// 🔌 채널 연결 상황 — 압축 칩 (개요 최하단, docs/06-대시보드 레이아웃 원칙)
+function connChips(client){
+  const st=DATA.setup||{};
+  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube};
+  const chips=client.channels.map(c=>{
+    const lab=DATA.channels.find(x=>x.key===c.key)||{icon:'',label:c.key};
+    const mark=c.key==='naver-blog'?'✍️ 수동':(on[c.key]?'✅':'⬜');
+    return '<span class="tag" style="font-size:12px;padding:5px 10px">'+lab.icon+' '+esc(lab.label)+' '+mark+'</span>';
+  }).join(' ');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>🔌 채널 연결 상황</h3><span class="muted">계정 연결은 온보딩 마지막 단계 — 상세 절차는 아래 체크리스트</span></div><div>'+chips+'</div></div>';
 }
 function overview(client){
   let h=tokenBanner(client);
@@ -1087,19 +1072,50 @@ function overview(client){
   h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
   // 경쟁사
   h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
-  // 채널 연결 상황(압축) — 최하단
+  // 저중요 패널은 최하단 — 연결 상황 압축 칩 + 오픈 준비 체크리스트 (docs/06-대시보드 레이아웃 원칙)
+  h+=connChips(client);
   h+=setupPanel();
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
+// ── 리서치 탭 — research-brief.json이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
+function researchView(client){
+  const r=client.research;
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 데이터가 없습니다.</div>';
+  let h='<div class="sect-h"><h2>📊 '+esc(r.title||'브랜드 리서치')+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
+  if(r.note) h+='<div class="muted" style="margin:0 0 14px;line-height:1.6">'+esc(r.note)+'</div>';
+  for(const s of r.sections){
+    h+='<div class="panel"><h3>'+esc((s.icon?s.icon+' ':'')+s.title)+'</h3>';
+    if(s.desc) h+='<div class="muted" style="margin:-4px 0 10px;font-size:12.5px;line-height:1.65">'+esc(s.desc)+'</div>';
+    if(s.stats&&s.stats.length) h+='<div class="kpis">'+s.stats.map(x=>kpi(esc(x.v),esc(x.l),x.accent)).join('')+'</div>';
+    if(s.bars&&s.bars.items&&s.bars.items.length){
+      const mx=s.bars.max||Math.max.apply(null,s.bars.items.map(x=>x.value))||1;
+      if(s.bars.title) h+='<div style="font-weight:700;font-size:12.5px;margin:4px 0 6px">'+esc(s.bars.title)+'</div>';
+      h+=s.bars.items.map(x=>'<div class="rbarrow"><div class="rl" title="'+esc(x.label)+'">'+esc(x.label)+'</div><div class="rtrack"><div class="rfill" style="width:'+Math.max(2,Math.round(x.value/mx*100))+'%'+(x.color?';background:'+esc(x.color):'')+'"></div></div><div class="rv">'+esc(String(x.value))+(s.bars.unit?esc(s.bars.unit):'')+(x.note?' · '+esc(x.note):'')+'</div></div>').join('');
+    }
+    if(s.table&&s.table.head) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+(s.table.rows||[]).map(row=>'<tr>'+row.map(cd=>'<td>'+esc(cd)+'</td>').join('')+'</tr>').join('')+'</table></div>';
+    if(s.list&&s.list.length) h+='<ul style="margin:8px 0 2px;padding-left:18px;font-size:13px;line-height:1.75">'+s.list.map(x=>'<li><b>'+esc(x.t)+'</b>'+(x.d?' — <span style="color:#4a5266">'+esc(x.d)+'</span>':'')+'</li>').join('')+'</ul>';
+    if(s.timeline&&s.timeline.length) h+='<div class="rtl" style="margin-top:10px">'+s.timeline.map(x=>'<div class="ri"><span class="rd">'+esc(x.date)+'</span> · '+esc(x.text)+(x.url?' <a href="'+esc(x.url)+'" target="_blank">확인↗</a>':'')+'</div>').join('')+'</div>';
+    if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div>';
+    if(s.links&&s.links.length) h+='<div style="margin-top:10px">'+s.links.map(x=>'<a class="rlink" href="'+esc(x.url)+'" target="_blank">🔗 '+esc(x.label)+' ↗</a>'+(x.note?'<span class="muted" style="font-size:11.5px;margin-right:8px">'+esc(x.note)+'</span>':'')).join('')+'</div>';
+    h+='</div>';
+  }
+  return h;
+}
 function renderClients(){
-  document.getElementById('clients').innerHTML = DATA.clients.length>1 ? DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('') : '';
+  // 헤더 로고는 제품명 "ALWAYS ON 콘텐츠 관제실" 고정 — 업체 식별은 클라이언트 칩으로 (docs/06-대시보드)
+  document.getElementById('clients').innerHTML = DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('');
+  const c=DATA.clients[ci];
+  if(c){
+    document.getElementById('dashsub').textContent=(c.industry?c.industry+' · ':'')+'채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침';
+    document.documentElement.style.setProperty('--brand', c.themeColor||'#2b6fff');
+  }
 }
 function renderTabs(){
   const c=DATA.clients[ci];
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
-    .concat(c.channels.map(cc=>({key:cc.key,label:cc.label,icon:cc.icon,active:cc.active})))
-    .concat(c.research&&c.research.sections&&c.research.sections.length?[{key:'research',label:'리서치',icon:'📚',active:true,noDot:true}]:[])
+    .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat(c.research?[{key:'research',label:'리서치',icon:'📊',active:true,noDot:true}]:[])
     .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
