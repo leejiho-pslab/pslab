@@ -206,18 +206,18 @@ export class GuidanceStore {
     return r && Array.isArray(r.links) && r.links.length ? r : undefined;
   }
 
-  /** 레퍼런스 링크 등록 — URL 기준 중복 제거, 새 링크만 pending으로 추가 */
+  /** 레퍼런스 링크 등록 — 채널+URL 기준 중복 제거(같은 링크를 다른 채널 레퍼런스로 재등록 가능) */
   addReferenceLinks(
     clientId: string,
     channel: string,
     entries: Array<{ url: string; note?: string }>,
   ): { added: number; total: number } {
     const doc = this.read<ReferenceLinks>(this.file(clientId, 'reference-links.json')) ?? { links: [] };
-    const seen = new Set(doc.links.map((l) => l.url));
+    const seen = new Set(doc.links.map((l) => `${l.channel}|${l.url}`));
     let added = 0;
     for (const e of entries) {
-      if (!e.url || seen.has(e.url)) continue;
-      seen.add(e.url);
+      if (!e.url || seen.has(`${channel}|${e.url}`)) continue;
+      seen.add(`${channel}|${e.url}`);
       doc.links.push({
         url: e.url,
         channel,
