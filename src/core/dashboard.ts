@@ -520,19 +520,40 @@ function setCustom(){
 }
 // ── 수정요청 (깃허브 이슈 연동: [수정요청·채널키] 제목 규약) ──
 let ISSUES=null; // null=로딩중, []=없음/실패
+let REF_ISSUES=[]; // [레퍼런스·채널] 이슈에서 즉시 파싱한 링크 (커밋 전에도 대시보드에 바로 표시)
 const REQ_RE=/^\\[수정요청·([a-z-]+)\\]\\s*(.*)$/;
+const REF_RE=/^\\[레퍼런스·([a-z-]+)\\]/;
 function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key); }
 function loadIssues(){
   fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
     .then(r=>r.ok?r.json():[])
     .then(arr=>{
-      ISSUES=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request).map(x=>{
+      const list=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request);
+      ISSUES=list.map(x=>{
         const m=REQ_RE.exec(x.title||''); if(!m) return null;
         return { chKey:m[1], titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
       }).filter(Boolean);
+      // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시
+      REF_ISSUES=[];
+      for(const x of list){
+        const m=REF_RE.exec(x.title||''); if(!m) continue;
+        for(const line of String(x.body||'').split('\\n')){
+          const t=line.replace(/^[-*·•\\s]+/,'').trim();
+          const um=t.match(/^(https?:\\/\\/\\S+)\\s*(?:[—–-]\\s*)?(.*)$/);
+          if(um) REF_ISSUES.push({channel:m[1], url:um[1], note:(um[2]||'').trim(), issueUrl:x.html_url, at:x.created_at});
+        }
+      }
       renderTabs(); renderView();
     })
     .catch(()=>{ ISSUES=[]; });
+}
+// 커밋된 링크 + 아직 반영 전인 이슈 링크(접수됨)를 채널 기준으로 병합
+function refLinksFor(client, key){
+  const saved=(((client.referenceLinks||{}).links)||[]).filter(l=>!key||l.channel===key);
+  const have=new Set(saved.map(l=>l.channel+'|'+l.url.replace(/\\/+$/,'')));
+  const incoming=REF_ISSUES.filter(r=>(!key||r.channel===key)&&!have.has(r.channel+'|'+r.url.replace(/\\/+$/,'')))
+    .map(r=>({url:r.url, channel:r.channel, note:r.note||undefined, status:'received', addedAt:r.at, issueUrl:r.issueUrl}));
+  return saved.concat(incoming);
 }
 function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
 function requestsPanel(key, chLabel){
@@ -597,7 +618,7 @@ function guideView(client){
   h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
      '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[디자인피드백] '+esc(client.name)+'\\',\\'\\',\\'design-fb\\')">🎨 디자인 지시 등록</button></div></div>';
   // 🔗 레퍼런스 링크 학습 현황 — 전 채널 요약 (등록은 각 채널 탭에서)
-  const rls=((client.referenceLinks||{}).links)||[];
+  const rls=refLinksFor(client, null);
   h+='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크 학습 현황</h3><span class="muted">'+
      (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
      '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
@@ -636,12 +657,13 @@ function channelGuidePanel(client, key){
 function refBadge(st){
   return st==='learned'?'<span class="badge b-ok">학습완료</span>'
        : st==='failed'?'<span class="badge b-hold">열람실패</span>'
+       : st==='received'?'<span class="badge b-plan">접수됨</span>'
        : '<span class="badge b-wait">학습대기</span>';
 }
 function refShort(u){ return esc(String(u).replace(/^https?:\\/\\/(www\\.)?/,'').slice(0,52)); }
 function referencePanel(client, key){
-  const all=(((client.referenceLinks||{}).links)||[]).filter(l=>l.channel===key);
-  const pend=all.filter(l=>l.status==='pending').length;
+  const all=refLinksFor(client, key);
+  const pend=all.filter(l=>l.status==='pending'||l.status==='received').length;
   let h='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크</h3><span class="muted">'+
     (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
     '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
