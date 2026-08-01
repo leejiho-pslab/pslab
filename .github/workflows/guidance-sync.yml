@@ -28,6 +28,7 @@ jobs:
     env:
       TZ: Asia/Seoul
       PSLAB_REPO: ${{ github.repository }}
+      PSLAB_CLIENT: vittz # 전용 인스턴스 — 미설정 시 sync-guidance가 기본값 pslab에 적재하는 사고
       ISSUE_TITLE: ${{ github.event.issue.title }}
       ISSUE_BODY: ${{ github.event.issue.body }}
       ISSUE_NUMBER: ${{ github.event.issue.number }}
