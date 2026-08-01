@@ -521,8 +521,20 @@ function setCustom(){
 // ── 수정요청 (깃허브 이슈 연동: [수정요청·채널키] 제목 규약) ──
 let ISSUES=null; // null=로딩중, []=없음/실패
 let REF_ISSUES=[]; // [레퍼런스·채널] 이슈에서 즉시 파싱한 링크 (커밋 전에도 대시보드에 바로 표시)
+let G_ISSUES=[]; // 지침 이슈(브랜드노트·디자인피드백·가이드) — 지침 탭 실시간 '접수됨' 표시용
 const REQ_RE=/^\\[수정요청·([a-z-]+)\\]\\s*(.*)$/;
 const REF_RE=/^\\[레퍼런스·([a-z-]+)\\]/;
+const GUID_RE=/^\\[(브랜드노트·(분석|방향성|감도)|디자인피드백|가이드·([a-z-]+))\\]/;
+// 아직 데이터에 반영 안 됐을 수 있는 지침 이슈: 열려 있거나, 이 대시보드 생성 이후 등록된 것
+function guidPending(kind, id){
+  return G_ISSUES.filter(g=>g.kind===kind&&(kind!=='brand'||g.field===id)&&(kind!=='guide'||g.chKey===id)&&
+    (g.state!=='closed'||String(g.created_at||'')>String(DATA.generatedAt||'')));
+}
+function pendBox(list){
+  return list.map(p=>'<div class="capbox" style="border:1px solid #f0d9a8;background:#fffaf0;margin-bottom:8px;border-radius:10px;padding:10px 12px">'+
+    '<div class="muted" style="font-size:11.5px;margin-bottom:4px">🕓 '+(p.state==='closed'?'반영 완료 — 잠시 후 본문에 표시됩니다':'접수됨 — 시스템 반영 처리중')+' · <a href="'+esc(p.html_url)+'" target="_blank">이슈↗</a></div>'+
+    '<div class="mcap" style="font-size:13px;white-space:pre-wrap">'+esc(p.body.slice(0,400))+(p.body.length>400?'…':'')+'</div></div>').join('');
+}
 function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key); }
 function loadIssues(){
   fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
@@ -542,6 +554,14 @@ function loadIssues(){
           const um=t.match(/^(https?:\\/\\/\\S+)\\s*(?:[—–-]\\s*)?(.*)$/);
           if(um) REF_ISSUES.push({channel:m[1], url:um[1], note:(um[2]||'').trim(), issueUrl:x.html_url, at:x.created_at});
         }
+      }
+      // 지침 이슈(브랜드노트·디자인피드백·가이드)도 즉시 수집 — 지침 탭에 실시간 표시
+      G_ISSUES=[];
+      for(const x of list){
+        const g=GUID_RE.exec(x.title||''); if(!g) continue;
+        G_ISSUES.push({kind:g[1].indexOf('브랜드노트')===0?'brand':(g[1]==='디자인피드백'?'design':'guide'),
+          field:g[2]||null, chKey:g[3]||null, body:String(x.body||''), state:x.state,
+          html_url:x.html_url, created_at:x.created_at});
       }
       renderTabs(); renderView();
     })
@@ -610,6 +630,7 @@ function guideView(client){
   for(const bf of BRAND_FIELDS){
     const cur=bb[bf.f];
     h+='<div style="margin:14px 0 4px;font-weight:700;font-size:13.5px">'+bf.label+'</div>'+
+       pendBox(guidPending('brand',bf.k))+
        (cur?'<div class="capbox" style="margin-bottom:8px"><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(cur)+'</div></div>'
            :'<div class="muted" style="margin-bottom:8px">아직 등록된 내용이 없습니다.</div>')+
        '<textarea id="bb-'+bf.f+'" class="reqta" rows="3" placeholder="'+esc(bf.ph)+'"></textarea>'+
@@ -625,6 +646,7 @@ function guideView(client){
   const hn=(client.designStyle||{}).humanNotes||[];
   h+='<div class="panel" style="border-color:#e3cdf0;background:#fdfaff"><h3>🎨 디자인 피드백</h3>'+
      '<div class="muted" style="margin:4px 0 10px">카드·릴스의 색감, 레이아웃, 톤에 대한 지시를 적어주세요. 여기 등록된 지시는 AI가 스스로 쌓는 학습 메모보다 <b>항상 우선</b> 반영되고, AI가 지우거나 덮어쓰지 못합니다. 한 줄에 하나씩 적으면 각각 별도 지시로 저장됩니다.</div>';
+  h+=pendBox(guidPending('design'));
   if(hn.length){
     h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">현재 등록된 지시 ('+hn.length+')</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+hn.map(n=>'· '+esc(n)).join('\\n')+'</div></div>';
   } else {
@@ -650,6 +672,7 @@ function guideView(client){
   for(const chDef of DATA.channels){
     const g=guides[chDef.key];
     h+='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>'+chDef.icon+' '+esc(chDef.label)+'</h3>'+(g&&g.updatedAt?'<span class="muted">갱신 '+ftime(g.updatedAt)+'</span>':'<span class="muted">미설정</span>')+'</div>';
+    h+=pendBox(guidPending('guide',chDef.key));
     if(g&&(g.topics||[]).length){ h+='<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>'; }
     if(g&&g.guide){ h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">핵심 가이드</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(g.guide)+'</div></div>'; }
     h+='<textarea id="cg-'+chDef.key+'" class="reqta" rows="4" placeholder="첫 줄에 \\'주제: 소재1, 소재2, 소재3\\' 형식으로 우선 소재를, 그 아래에 이 채널의 규칙·톤·금지사항 등 핵심 가이드를 적어주세요."></textarea>'+
@@ -657,16 +680,36 @@ function guideView(client){
   }
   return h;
 }
-function channelGuidePanel(client, key){
-  const g=(client.channelGuides||{})[key];
-  if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  // 심플 요약만 (docs/06-대시보드): 소재 태그 + 가이드 첫 2줄 미리보기, 전문은 지침 탭
-  const preview=(g.guide||'').split('\\n').slice(0,2).join('\\n');
-  const more=(g.guide||'').split('\\n').length>2;
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
-    ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
-    '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+// 📊 콘텐츠 리포트 — 채널 발행 콘텐츠의 KPI·추세 + 콘텐츠별 실측 성과 표 (기간 반영)
+function contentReportPanel(client, c, chLabel){
+  const pubF=c.published.filter(p=>inPeriod(p.time));
+  const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>it.status!=='published');
+  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
+    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
+  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
+  let h='<div class="panel" style="border-color:#c8e0d0;background:#f8fcf9"><div class="sect-h" style="margin:0 0 10px"><h3>📊 콘텐츠 리포트 · '+esc(chLabel)+'</h3><span class="muted">'+periodLabel()+' · 실측 집계</span></div>';
+  h+='<div class="kpis">'+
+    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
+    kpi(waiting.length,'발행 대기')+
+    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
+    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
+    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
+  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
+  if(seriesF.length>1){h+='<div style="margin-top:10px"><div class="muted" style="font-size:12px;margin-bottom:4px">반응도 추세 (참여율 %)</div>'+sparkline(seriesF.slice(-12))+'</div>';}
+  // 콘텐츠별 성과 — 기획 발행분(성과+인사이트) + 사이클 발행분
+  const rows=planPubF.slice().sort((a,b)=>String(b.publishedAt||'').localeCompare(String(a.publishedAt||''))).map(it=>{const m=it.metrics||{};
+    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt||it.scheduledFor)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
+      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
+      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
+      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
+  }).concat(pubF.map(p=>'<tr><td><b>'+esc(p.topic)+'</b><div class="muted">'+ftime(p.time)+'</div></td>'+
+    '<td>'+(p.views||0)+'</td><td>'+(p.likes||0)+'</td><td><span class="muted">—</span></td><td>'+pct(p.engagementRate||0)+'</td><td></td></tr>'));
+  h+= rows.length
+    ? '<table style="margin-top:10px"><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows.join('')+'</table>'
+    : '<div class="empty" style="padding:10px;margin-top:8px">아직 발행된 콘텐츠가 없습니다 — 첫 발행부터 콘텐츠별 조회·좋아요·댓글·참여율이 여기에 쌓입니다. (성과는 실측만 표시)</div>';
+  h+='</div>';
+  return h;
 }
 // 🔗 레퍼런스 링크 — 채널별 벤치마크 링크 등록(인박스). 등록=적재, 학습은 다음 기획 세션에서.
 function refBadge(st){
@@ -882,8 +925,8 @@ function channelDetail(client, c){
   h+=requestsPanel(client, c.key, chLabel);
   // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
   h+=periodBar();
-  // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
-  h+=channelGuidePanel(client, c.key);
+  // ③ 콘텐츠 리포트 — 발행 콘텐츠 실측 데이터 (가이드는 지침 탭 전용으로 이동)
+  h+=contentReportPanel(client, c, chLabel);
   // ④ 레퍼런스 링크 인박스 — 등록하면 다음 기획 세션에서 AI가 열람·학습
   h+=referencePanel(client, c.key);
   // 기획안 패널
@@ -896,24 +939,10 @@ function channelDetail(client, c){
   if(!c.active){
     h+='<div class="panel"><div class="empty">이 채널은 아직 <b>연결되지 않았습니다</b>. 설정표(targets)에 '+chLabel+'을 추가하고 키를 연결하면 자동 발행이 시작됩니다.</div></div>';
   }
-  // 선택 기간으로 필터한 히스토리·데이터
+  // 선택 기간으로 필터한 히스토리 (KPI·성과표는 ③ 콘텐츠 리포트 패널이 단일 출처)
   const pubF=c.published.filter(p=>inPeriod(p.time));
   const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
   const waiting=c.pending.filter(it=>it.status!=='published');
-  // KPI (기간 반영) — 사이클 발행분(pubF) + 기획 발행분(planPubF) 합산
-  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
-    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
-  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
-  h+='<div class="kpis">'+
-    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
-    kpi(waiting.length,'발행 대기')+
-    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
-    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
-    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
-  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
-  if(seriesF.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %) · '+periodLabel()+'</h3>'+sparkline(seriesF.slice(-12))+'</div>';}
-  // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트) — 기간 반영
-  h+=pubDataRows(planPubF);
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
@@ -993,20 +1022,6 @@ function weeklyPanel(client){
     (chRows?'<table style="margin:8px 0"><tr><th>채널</th><th>발행</th><th>평균 참여율</th><th>조회</th><th>좋아요</th></tr>'+chRows+'</table>':'')+
     (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#15803d;font-size:13px">'+recs+'</ul>':'')+
     '</div>';
-}
-function pubDataRows(items){
-  // 발행된 콘텐츠의 채널별 성과 데이터 + 인사이트 코멘트
-  const pub=items.filter(it=>it.status==='published'&&it.metrics);
-  if(!pub.length) return '';
-  pub.sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
-  const rows=pub.map(it=>{const m=it.metrics||{};
-    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
-      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
-      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
-      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
-  }).join('');
-  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📊 발행 콘텐츠 데이터</h3><span class="muted">'+pub.length+'건 · 성과+인사이트</span></div>'+
-    '<table><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows+'</table></div>';
 }
 function setupPanel(){
   const s=DATA.setup||{};
