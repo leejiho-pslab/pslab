@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-01T08:50:27.230Z",
+  "updatedAt": "2026-08-01T09:02:14.423Z",
   "items": [
     {
       "id": "w1-mon",
@@ -1834,7 +1834,9 @@
       "slideImages": [
         "cards/pslab/reels-08-07-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-07-1.png"
+      "cardImage": "cards/pslab/reels-08-07-1.png",
+      "videoFile": "shorts/reels-08-07/reels-08-07.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-07",
@@ -1876,7 +1878,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-07-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-07-1.png"
+      "cardImage": "cards/pslab/youtube-08-07-1.png",
+      "videoFile": "shorts/reels-08-07/reels-08-07.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-07",
@@ -1929,7 +1933,9 @@
       "slideImages": [
         "cards/pslab/reels-08-10-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-10-1.png"
+      "cardImage": "cards/pslab/reels-08-10-1.png",
+      "videoFile": "shorts/reels-08-10/reels-08-10.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-10",
@@ -1956,7 +1962,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-10-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-10-1.png"
+      "cardImage": "cards/pslab/youtube-08-10-1.png",
+      "videoFile": "shorts/reels-08-10/reels-08-10.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-10",
@@ -2162,7 +2170,9 @@
       "slideImages": [
         "cards/pslab/reels-08-14-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-14-1.png"
+      "cardImage": "cards/pslab/reels-08-14-1.png",
+      "videoFile": "shorts/reels-08-14/reels-08-14.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-14",
@@ -2189,7 +2199,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-14-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-14-1.png"
+      "cardImage": "cards/pslab/youtube-08-14-1.png",
+      "videoFile": "shorts/reels-08-14/reels-08-14.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-14",
