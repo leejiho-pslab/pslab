@@ -144,43 +144,11 @@ jobs:
         continue-on-error: true
         run: node scripts/build-shorts-video.mjs --client pslab
 
-      # 인스타 릴스 멀티씬 합성 — 대본 비트마다 다른 장면 클립 + 애니메이션 자막 (15초 이내)
-      #
-      # 소재는 힉스필드(장면 클립 생성), 편집은 Remotion(코드 합성)이 맡는다.
-      # 폴백인 ffmpeg 경로는 같은 reel-scenes.json 과 같은 테마 모듈
-      # (scripts/lib/reel-timeline.mjs 의 mergeTheme)을 쓰므로 색·타이밍이 갈라지지 않는다.
-      # timeout-minutes 필수 — 이게 없으면 렌더가 잡 전체 한도(25분)를 먹고,
-      # 뒤따르는 대시보드 생성·커밋·Pages 배포가 통째로 skipped 된다.
-      # (2026-08-01 런에서 실제로 발생 — 카드는 렌더됐는데 하나도 커밋되지 않았다)
-      # 스크립트는 증분이라 평소엔 몇 초, 새 릴스가 있을 때만 편당 2~3분이다.
-      # 콜드 스타트가 무겁다: npm ci(약 370패키지) + chrome-headless-shell 내려받기 + 번들 생성이
-      # 렌더 전에 5분 가까이 나간다. 캐시로 앞단을 줄이고 예산은 15분으로 잡는다
-      # (앞 단계 합계가 약 7분이라 7+15=22 < 잡 한도 25분).
-      - name: Remotion 캐시 (node_modules · headless shell)
-        uses: actions/cache@v4
-        with:
-          path: |
-            video/node_modules
-            video/node_modules/.remotion
-          key: remotion-${{ runner.os }}-${{ hashFiles('video/package-lock.json') }}
-
-      - name: 릴스 합성 — Remotion (기본 엔진)
-        id: reels_remotion
-        continue-on-error: true
-        timeout-minutes: 15
-        run: |
-          npm ci --prefix video --no-audit --no-fund
-          node scripts/render-reels-remotion.mjs --client pslab
-
-      # Remotion 이 실패했을 때만 기존 ffmpeg 경로로 되돌린다.
-      # (성공했는데도 돌리면 방금 뽑은 영상을 덮어써 버린다)
-      # 폴백에도 타임아웃 필수 — 폴백이 잡 한도를 먹으면 결국 같은 사고다.
-      # 이쪽은 증분이 없어 전 편을 다시 뽑으므로 오히려 더 위험하다.
-      - name: 릴스 합성 폴백 — ffmpeg
-        if: steps.reels_remotion.outcome != 'success'
-        continue-on-error: true
-        timeout-minutes: 6
-        run: node scripts/build-reels.mjs --client pslab
+      # ── 릴스 합성은 이 워크플로에 없다 (pslab-reels.yml 로 분리) ──
+      # 영상 렌더는 편당 2~3분이 튀고 콜드 스타트가 무겁다. 여기 두면 잡 한도를 먹고
+      # 뒤따르는 대시보드 생성·커밋·Pages 배포가 통째로 skipped 된다(2026-08-01 실제 사고, 2회).
+      # 매일 반드시 성공해야 하는 건 "대시보드가 최신인가"이지 "영상이 오늘 새로 나왔나"가 아니다.
+      # 릴스는 주간 스케줄 + 수동 실행으로 따로 돈다.
 
       # 대시보드는 업체(클라이언트)별 분리 — 루트(docs/index.html)는 _pslab 전용 관제실.
       # 전 업체를 한 화면에 합치지 말 것(운영자 지시). 다른 업체는 각자 하위 경로로 별도 빌드.

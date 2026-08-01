@@ -1,0 +1,103 @@
+name: pslab reels
+
+# 릴스·쇼츠 영상 합성 전용 워크플로.
+#
+# 왜 분리했나 (2026-08-01):
+#   원래는 pslab-cron 안에 있었다. 그런데 영상 렌더는 편당 2~3분이 튀고 콜드 스타트
+#   (npm ci 약 370패키지 + chrome-headless-shell 내려받기 + 번들)가 무겁다.
+#   그 결과 잡 한도(25분)를 렌더가 다 먹고 뒤따르는 **대시보드 생성·커밋·Pages 배포가
+#   통째로 skipped** 되는 사고가 두 번 났다. 카드는 정상 렌더됐는데 아무것도 반영되지 않아
+#   "CI는 성공처럼 보이는데 사이트는 그대로"인 증상이 됐다.
+#
+#   매일 반드시 성공해야 하는 건 "대시보드가 최신인가"이지 "영상이 오늘 새로 나왔나"가 아니다.
+#   그래서 느린 쪽을 떼어냈다. 여기서 아무리 오래 걸려도 대시보드는 영향받지 않는다.
+#
+# 언제 도나:
+#   · 매주 토요일 (다음 주 기획이 만들어진 뒤)
+#   · 새 릴스를 넣고 바로 뽑고 싶을 때 수동 실행 (force 로 전체 재렌더 가능)
+#
+# 렌더는 증분이다 — 타임라인이 안 바뀐 편은 건너뛴다(docs/shorts/<id>/.remotion-stamp).
+on:
+  schedule:
+    - cron: '0 4 * * 6'      # 04:00 UTC 토요일 = 13:00 KST — 주간 기획 직후
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '증분 무시하고 전부 재렌더'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pslab-reels
+  cancel-in-progress: false
+
+jobs:
+  reels:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45      # 영상은 오래 걸려도 된다 — 여기엔 대시보드가 안 걸려 있다
+    env:
+      TZ: Asia/Seoul
+      PSLAB_LOG_LEVEL: info
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 의존성 설치 + 빌드
+        run: |
+          npm ci
+          npm run build
+
+      # 콜드 스타트를 줄인다 — node_modules 와 chrome-headless-shell 을 함께 캐시
+      - name: Remotion 캐시 (node_modules · headless shell)
+        uses: actions/cache@v4
+        with:
+          path: video/node_modules
+          key: remotion-${{ runner.os }}-${{ hashFiles('video/package-lock.json') }}
+
+      - name: 릴스 합성 — Remotion (기본 엔진)
+        id: reels_remotion
+        continue-on-error: true
+        timeout-minutes: 30
+        run: |
+          npm ci --prefix video --no-audit --no-fund
+          node scripts/render-reels-remotion.mjs --client pslab \
+            ${{ inputs.force && '--force' || '' }}
+
+      # Remotion 이 실패했을 때만 기존 ffmpeg 경로로 되돌린다.
+      # (성공했는데도 돌리면 방금 뽑은 영상을 덮어써 버린다)
+      - name: ffmpeg 설치 (폴백용)
+        if: steps.reels_remotion.outcome != 'success'
+        continue-on-error: true
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: 릴스 합성 폴백 — ffmpeg
+        if: steps.reels_remotion.outcome != 'success'
+        continue-on-error: true
+        timeout-minutes: 10
+        run: node scripts/build-reels.mjs --client pslab
+
+      # docs/ 변경은 Pages 자동 배포를 트리거한다 — 커밋 메시지에 [skip ci] 금지.
+      # 같은 브랜치에 cron 이 동시 push 할 수 있어 rebase 후 재시도.
+      - name: 영상·기획 커밋
+        continue-on-error: true
+        run: |
+          git config user.name "pslab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f data/ docs/shorts 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "변경 없음 (전부 최신)"; exit 0
+          fi
+          git commit -m "chore(pslab): 릴스 영상 합성"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push 성공"; exit 0; }
+            echo "push 재시도 $i (동시 push 충돌)"; sleep 4
+          done
+          echo "push 실패"
+          exit 1
