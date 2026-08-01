@@ -92,6 +92,8 @@ export interface PlanItem {
   ytDescription?: string;
   /** 유튜브 업로드용 태그(키워드) */
   ytTags?: string[];
+  /** 발행 보류(미처리 수정요청) 알림을 이미 보낸 시각 — 사이클마다 중복 푸시 방지 */
+  holdNotifiedAt?: string;
 }
 
 /** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */

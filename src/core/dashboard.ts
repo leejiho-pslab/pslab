@@ -535,7 +535,13 @@ function pendBox(list){
     '<div class="muted" style="font-size:11.5px;margin-bottom:4px">🕓 '+(p.state==='closed'?'반영 완료 — 잠시 후 본문에 표시됩니다':'접수됨 — 시스템 반영 처리중')+' · <a href="'+esc(p.html_url)+'" target="_blank">이슈↗</a></div>'+
     '<div class="mcap" style="font-size:13px;white-space:pre-wrap">'+esc(p.body.slice(0,400))+(p.body.length>400?'…':'')+'</div></div>').join('');
 }
-function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key); }
+function myIssue(x){ return !x.clientId||x.clientId===DATA.clients[ci].id; } // 업체 스코프 (없으면 전 업체)
+function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key&&myIssue(x)); }
+// 발행 게이트 — 이 콘텐츠에 걸린 미처리(열림) 수정요청. 특정 id 지정 요청은 그 콘텐츠만,
+// '채널 공통' 요청은 그 채널의 발행 전 콘텐츠 전체를 보류시킨다 (publish-plan --due와 동일 규칙).
+function openHolds(it){
+  return (ISSUES||[]).filter(x=>x.state!=='closed'&&myIssue(x)&&(x.planId?x.planId===it.id:(it.channels||[]).includes(x.chKey)));
+}
 function loadIssues(){
   fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
     .then(r=>r.ok?r.json():[])
@@ -543,7 +549,11 @@ function loadIssues(){
       const list=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request);
       ISSUES=list.map(x=>{
         const m=REQ_RE.exec(x.title||''); if(!m) return null;
-        return { chKey:m[1], titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
+        // 본문 '대상 콘텐츠: … (id: xxx)' → 특정 콘텐츠 수정요청. id 없으면 채널 공통.
+        // '업체: xxx' → 여러 업체가 한 저장소를 쓸 때의 업체 스코프 (없으면 전 업체 적용 — 과거 이슈 호환)
+        const idm=/\\(id:\\s*([\\w.-]+)\\)/.exec(String(x.body||''));
+        const cm=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
+        return { chKey:m[1], planId:idm?idm[1]:null, clientId:cm?cm[1]:null, titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
       }).filter(Boolean);
       // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시
       REF_ISSUES=[];
@@ -576,15 +586,22 @@ function refLinksFor(client, key){
   return saved.concat(incoming);
 }
 function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
+// 수정요청의 대상 표시 — 특정 콘텐츠(id)면 그 헤드라인, 아니면 채널 공통
+function reqTarget(client,x){
+  if(!x.planId) return '채널 공통';
+  const p=(client.planCards||[]).find(t=>t.id===x.planId);
+  return esc(p?plainHead(p).slice(0,22):x.planId);
+}
 // 수정 항목 분류 — 이슈 제목 [항목] 태그 + 본문 '수정 항목:' 줄로 들어간다
 const REQ_TYPES=['텍스트(문구·카피)','이미지(사진·카드)','영상(릴스·쇼츠)','디자인(색·레이아웃)','해시태그·키워드','발행 일정','기타'];
 function requestsPanel(client, key, chLabel){
   const list=channelIssues(key);
   const open=list.filter(x=>x.state!=='closed').length;
-  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>';
+  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>'+
+    '<div class="muted" style="margin:0 0 10px">🚦 <b>발행 전 검수 게이트</b> — 접수된 수정요청이 <b>처리완료</b>되기 전에는 대상 콘텐츠의 자동 발행이 보류됩니다. 수정사항이 반영되고 요청이 처리완료로 바뀌면 다음 사이클에 자동 발행됩니다. (대상을 지정하지 않은 "채널 공통" 요청은 이 채널의 발행 대기 콘텐츠 전체를 보류)</div>';
   if(list.length){
-    h+='<table><tr><th style="width:92px">상태</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
-      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
+    h+='<table><tr><th style="width:92px">상태</th><th style="width:150px">대상</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
+      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td class="muted" style="font-size:12px">'+reqTarget(client,x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
   } else if(ISSUES!==null){
     h+='<div class="empty" style="padding:8px">아직 등록된 수정요청이 없습니다. 아래에 바로 작성해 보세요.</div>';
   }
@@ -745,7 +762,8 @@ function submitReq(key, chLabel){
   const rtype=typeSel?typeSel.value:'기타';
   const first=txt.split('\\n')[0].slice(0,42);
   const title='[수정요청·'+key+'] ['+rtype.split('(')[0]+'] '+first;
-  const body='채널: '+chLabel+
+  const body='업체: '+DATA.clients[ci].id+
+    '\\n채널: '+chLabel+
     '\\n대상 콘텐츠: '+(planId?planLabel+' (id: '+planId+')':'채널 공통')+
     '\\n수정 항목: '+rtype+
     '\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
@@ -789,7 +807,11 @@ function planCard(client, chLabel, it){
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
   const pub=it.status==='published';
   const manual=it.status==='manual';
-  const stBadge=pub?'<span class="badge b-ok">발행됨</span>':manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
+  // 발행 게이트 — 미처리 수정요청이 걸려 있으면 자동 발행이 보류됨을 카드에 표시
+  const held=!pub&&openHolds(it).length>0;
+  const stBadge=pub?'<span class="badge b-ok">발행됨</span>'
+    :held?'<span class="badge b-hold">⛔ 발행 보류 · 수정 반영 대기</span>'
+    :manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
   const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
   const m=it.metrics;
   const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
@@ -804,8 +826,15 @@ function planCard(client, chLabel, it){
 function openDetail(id){
   const c=DATA.clients[ci];
   const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
-  const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
-  const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
+  // 게이트 규약으로 등록 — [수정요청·채널] 제목 + 본문 (id: …) → 처리완료 전까지 이 콘텐츠 발행 보류
+  const dKey=(it.channels||[])[0]||'instagram';
+  const t='[수정요청·'+dKey+'] [콘텐츠] '+plainHead(it).slice(0,42);
+  const b='업체: '+c.id+
+    '\\n채널: '+dKey+
+    '\\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
+    '\\n수정 항목: 콘텐츠 상세'+
+    '\\n예정: '+ftime(it.scheduledFor)+' · 디자인: '+(it.variant||'')+
+    '\\n\\n[요청 내용]\\n\\n— 대시보드 콘텐츠 상세에서 작성됨';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
   const isCarousel=imgs.length>1;
@@ -927,8 +956,6 @@ function channelDetail(client, c){
   h+=periodBar();
   // ③ 콘텐츠 리포트 — 발행 콘텐츠 실측 데이터 (가이드는 지침 탭 전용으로 이동)
   h+=contentReportPanel(client, c, chLabel);
-  // ④ 레퍼런스 링크 인박스 — 등록하면 다음 기획 세션에서 AI가 열람·학습
-  h+=referencePanel(client, c.key);
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';
@@ -952,6 +979,8 @@ function channelDetail(client, c){
   h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 · '+periodLabel()+' ('+(planPubF.length+pubF.length)+')</h2></div>';
   const pubCards=planPubF.map(it=>planCard(client,chLabel,it)).concat(pubF.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
   h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
+  // ④ 레퍼런스 링크 인박스 — 채널 탭 최하단 (등록하면 다음 기획 세션에서 AI가 열람·학습)
+  h+=referencePanel(client, c.key);
   return h;
 }
 function blogSection(client){
