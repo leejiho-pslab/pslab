@@ -973,7 +973,8 @@ function channelDetail(client, c){
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
-  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+')</h2></div>';
+  const heldN=waiting.filter(it=>openHolds(it).length>0).length;
+  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+(heldN?' · ⛔ 보류 '+heldN:'')+')</h2></div>';
   h+= waiting.length? '<div class="cards">'+waiting.map(it=>planCard(client,chLabel,it)).join('')+'</div>' : '<div class="empty">예정된 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>';
   // 발행됨 — 기간 반영 히스토리 (기획 발행분 + 사이클 발행분)
   h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 · '+periodLabel()+' ('+(planPubF.length+pubF.length)+')</h2></div>';

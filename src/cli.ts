@@ -29,7 +29,11 @@ import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
-import { fetchOpenRevisionRequests, holdsForItem } from './core/revision-gate.js';
+import {
+  fetchOpenRevisionRequests,
+  holdsForItem,
+  shouldNotifyHold,
+} from './core/revision-gate.js';
 import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
@@ -401,8 +405,8 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         console.log(
           `\n⛔ 발행 보류: [${it.id}] ${holdTitle} — 미처리 수정요청 ${holds.length}건 (${holds.map((h) => '#' + h.number).join(', ')})`,
         );
-        if (!dryRun && !it.holdNotifiedAt) {
-          // 보류 사실을 한 번만 푸시 (매 사이클 반복 알림 방지)
+        if (!dryRun && shouldNotifyHold(it.holdNotifiedAt, now)) {
+          // 보류 푸시는 항목당 1회 + 72시간마다 재알림 (매 사이클 스팸도, 조용히 잊히는 보류도 방지)
           await notifier.send(
             `⏸ <b>발행 보류</b> [${it.id}]\n${escHtml(holdTitle)}\n미처리 수정요청 ${holds.length}건 — 수정 반영 후 이슈가 처리완료(닫힘)되면 자동 발행됩니다.\n${holds.map((h) => h.url).join('\n')}`,
           );
