@@ -153,19 +153,33 @@ jobs:
       # 뒤따르는 대시보드 생성·커밋·Pages 배포가 통째로 skipped 된다.
       # (2026-08-01 런에서 실제로 발생 — 카드는 렌더됐는데 하나도 커밋되지 않았다)
       # 스크립트는 증분이라 평소엔 몇 초, 새 릴스가 있을 때만 편당 2~3분이다.
+      # 콜드 스타트가 무겁다: npm ci(약 370패키지) + chrome-headless-shell 내려받기 + 번들 생성이
+      # 렌더 전에 5분 가까이 나간다. 캐시로 앞단을 줄이고 예산은 15분으로 잡는다
+      # (앞 단계 합계가 약 7분이라 7+15=22 < 잡 한도 25분).
+      - name: Remotion 캐시 (node_modules · headless shell)
+        uses: actions/cache@v4
+        with:
+          path: |
+            video/node_modules
+            video/node_modules/.remotion
+          key: remotion-${{ runner.os }}-${{ hashFiles('video/package-lock.json') }}
+
       - name: 릴스 합성 — Remotion (기본 엔진)
         id: reels_remotion
         continue-on-error: true
-        timeout-minutes: 10
+        timeout-minutes: 15
         run: |
           npm ci --prefix video --no-audit --no-fund
           node scripts/render-reels-remotion.mjs --client pslab
 
       # Remotion 이 실패했을 때만 기존 ffmpeg 경로로 되돌린다.
       # (성공했는데도 돌리면 방금 뽑은 영상을 덮어써 버린다)
+      # 폴백에도 타임아웃 필수 — 폴백이 잡 한도를 먹으면 결국 같은 사고다.
+      # 이쪽은 증분이 없어 전 편을 다시 뽑으므로 오히려 더 위험하다.
       - name: 릴스 합성 폴백 — ffmpeg
         if: steps.reels_remotion.outcome != 'success'
         continue-on-error: true
+        timeout-minutes: 6
         run: node scripts/build-reels.mjs --client pslab
 
       # 대시보드는 업체(클라이언트)별 분리 — 루트(docs/index.html)는 _pslab 전용 관제실.
