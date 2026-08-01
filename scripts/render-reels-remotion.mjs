@@ -17,10 +17,15 @@
  * 사용:
  *   node scripts/render-reels-remotion.mjs --client pslab [--only reels-07-27]
  *   node scripts/render-reels-remotion.mjs --client pslab --stage-only   # 렌더 없이 준비만
+ *   node scripts/render-reels-remotion.mjs --client pslab --force        # 증분 무시하고 전부 재렌더
+ *
+ * 증분 렌더: 타임라인이 그대로고 결과물이 있으면 건너뛴다(.remotion-stamp 로 판정).
+ * 매일 도는 크론이 안 바뀐 릴스까지 다시 뽑으면 잡 타임아웃을 넘긴다.
  *
  * video/node_modules 가 없으면 조용히 건너뛴다 — CI 를 깨지 않는다(커밋된 영상 유지).
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +40,8 @@ const has = (k) => process.argv.includes(`--${k}`);
 const clientId = arg('client', 'pslab');
 const only = arg('only', '');
 const stageOnly = has('stage-only');
+/** 변경 없는 릴스까지 강제로 다시 뽑는다 (증분 렌더 무시) */
+const force = has('force');
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 
@@ -83,6 +90,8 @@ for (const f of FONT_FILES) {
 const propsDir = join(VIDEO, 'out/props');
 mkdirSync(propsDir, { recursive: true });
 const items = [];
+/** 증분 렌더로 건너뛴 항목 — plan.json 갱신에는 그대로 반영해야 한다 */
+const skipped = [];
 
 for (const [itemId, cfg] of Object.entries(spec.reels || {})) {
   if (only && only !== itemId) continue;
@@ -118,32 +127,48 @@ for (const [itemId, cfg] of Object.entries(spec.reels || {})) {
   // 스튜디오에서 그대로 열어볼 수 있게 항목별 props 도 남긴다
   writeFileSync(join(propsDir, `${itemId}.json`), JSON.stringify(timeline, null, 2) + '\n');
 
-  items.push({
-    itemId,
-    out: join(ROOT, 'docs/shorts', itemId, `${itemId}.mp4`),
-    props: timeline,
-  });
+  const out = join(ROOT, 'docs/shorts', itemId, `${itemId}.mp4`);
+
+  // ── 증분 렌더 ──
+  // 매일 도는 크론이 안 바뀐 릴스까지 매번 다시 뽑으면 편당 2~3분이 그대로 쌓여
+  // 잡 타임아웃을 넘긴다(실제로 2026-08-01 런이 25분 한도에 걸려 대시보드 커밋까지 통째로
+  // 건너뛰었다). 타임라인이 그대로고 결과물이 있으면 건너뛴다.
+  const stampPath = join(ROOT, 'docs/shorts', itemId, '.remotion-stamp');
+  const stamp = createHash('sha1').update(JSON.stringify(timeline)).digest('hex');
+  if (!force && existsSync(out) && existsSync(stampPath) && readFileSync(stampPath, 'utf8').trim() === stamp) {
+    console.log(`  · ${itemId}: 변경 없음 → 건너뜀 (--force 로 재렌더)`);
+    skipped.push({ itemId, out, props: timeline });
+    continue;
+  }
+
+  items.push({ itemId, out, props: timeline, stampPath, stamp });
 }
 
-if (items.length === 0) { console.log('렌더할 릴스 없음'); process.exit(0); }
-
 if (stageOnly) {
-  console.log(`준비 완료 (${items.length}편). 스튜디오로 확인:`);
-  console.log(`  cd video && npx remotion studio --props=out/props/${items[0].itemId}.json`);
+  const all = [...items, ...skipped];
+  if (all.length === 0) { console.log('준비할 릴스 없음'); process.exit(0); }
+  console.log(`준비 완료 (${all.length}편). 스튜디오로 확인:`);
+  console.log(`  cd video && npx remotion studio --props=out/props/${all[0].itemId}.json`);
   process.exit(0);
 }
 
 // ── 4) 배치 렌더 ───────────────────────────────────────────────────────────
-const manifestPath = join(VIDEO, 'out/manifest.json');
-writeFileSync(manifestPath, JSON.stringify({ items }, null, 2) + '\n');
+// 렌더할 게 없어도 아래 plan.json 갱신(videoFrom 재사용 연결)은 계속 가야 한다.
+// 여기서 빠져나가면 새 쇼츠가 원본 릴스 영상을 물지 못한 채 남는다.
+if (items.length > 0) {
+  const manifestPath = join(VIDEO, 'out/manifest.json');
+  writeFileSync(manifestPath, JSON.stringify({ items }, null, 2) + '\n');
 
-const res = spawnSync(process.execPath, ['render.mjs', 'out/manifest.json'], {
-  cwd: VIDEO,
-  stdio: 'inherit',
-});
-if (res.status !== 0) {
-  console.error('Remotion 렌더 실패 → plan.json 갱신 생략 (커밋된 영상 유지)');
-  process.exit(1);
+  const res = spawnSync(process.execPath, ['render.mjs', 'out/manifest.json'], {
+    cwd: VIDEO,
+    stdio: 'inherit',
+  });
+  if (res.status !== 0) {
+    console.error('Remotion 렌더 실패 → plan.json 갱신 생략 (커밋된 영상 유지)');
+    process.exit(1);
+  }
+} else {
+  console.log('새로 렌더할 릴스 없음 (전부 최신)');
 }
 
 // ── 5) plan.json 갱신 ──────────────────────────────────────────────────────
@@ -153,7 +178,16 @@ for (const it of items) {
   const item = plan.items.find((i) => i.id === it.itemId);
   item.videoFile = `shorts/${it.itemId}/${it.itemId}.mp4`;
   item.videoSeconds = +(it.props.durationInFrames / it.props.fps).toFixed(2);
+  // 다음 실행이 건너뛸 수 있도록 타임라인 지문을 남긴다
+  writeFileSync(it.stampPath, it.stamp + '\n');
   made++;
+}
+// 건너뛴 항목도 plan 값은 맞춰둔다 (스탬프만 같을 뿐 plan 이 비어 있을 수 있다)
+for (const it of skipped) {
+  const item = plan.items.find((i) => i.id === it.itemId);
+  if (!item) continue;
+  item.videoFile = `shorts/${it.itemId}/${it.itemId}.mp4`;
+  item.videoSeconds = +(it.props.durationInFrames / it.props.fps).toFixed(2);
 }
 
 // 영상 재사용: videoFrom 이 가리키는 항목의 영상을 그대로 쓴다
@@ -168,8 +202,8 @@ for (const it of plan.items) {
 }
 if (linked > 0) console.log(`  영상 재사용 연결: ${linked}건`);
 
-if (made > 0 || linked > 0) {
+if (made > 0 || linked > 0 || skipped.length > 0) {
   plan.updatedAt = new Date().toISOString();
   writeFileSync(planPath, JSON.stringify(plan, null, 2) + '\n');
 }
-console.log(`릴스 합성 완료(Remotion): ${made}편`);
+console.log(`릴스 합성 완료(Remotion): 새로 ${made}편 · 유지 ${skipped.length}편`);

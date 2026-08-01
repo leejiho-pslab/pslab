@@ -149,9 +149,14 @@ jobs:
       # 소재는 힉스필드(장면 클립 생성), 편집은 Remotion(코드 합성)이 맡는다.
       # 폴백인 ffmpeg 경로는 같은 reel-scenes.json 과 같은 테마 모듈
       # (scripts/lib/reel-timeline.mjs 의 mergeTheme)을 쓰므로 색·타이밍이 갈라지지 않는다.
+      # timeout-minutes 필수 — 이게 없으면 렌더가 잡 전체 한도(25분)를 먹고,
+      # 뒤따르는 대시보드 생성·커밋·Pages 배포가 통째로 skipped 된다.
+      # (2026-08-01 런에서 실제로 발생 — 카드는 렌더됐는데 하나도 커밋되지 않았다)
+      # 스크립트는 증분이라 평소엔 몇 초, 새 릴스가 있을 때만 편당 2~3분이다.
       - name: 릴스 합성 — Remotion (기본 엔진)
         id: reels_remotion
         continue-on-error: true
+        timeout-minutes: 10
         run: |
           npm ci --prefix video --no-audit --no-fund
           node scripts/render-reels-remotion.mjs --client pslab
