@@ -76,12 +76,16 @@ export interface PlanItem {
   insightAt?: string;
   /** 유튜브 쇼츠: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
   videoFile?: string;
+  /** 릴스/쇼츠 대본 (영상 자막 구성 — 모달 상세에서 노출) */
+  reelsScript?: string;
   /** 유튜브 업로드용 SEO 제목 */
   ytTitle?: string;
   /** 유튜브 업로드용 설명(멘션) — 키워드 기반 SEO */
   ytDescription?: string;
   /** 유튜브 업로드용 태그(키워드) */
   ytTags?: string[];
+  /** 발행 보류(미처리 수정요청) 알림을 이미 보낸 시각 — 사이클마다 중복 푸시 방지 */
+  holdNotifiedAt?: string;
 }
 
 /** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */

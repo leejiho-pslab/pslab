@@ -35,6 +35,8 @@ export interface DesignStyle {
   avoid: string[];
   /** 누적 학습 메모 (회의 피드백) */
   notes: string[];
+  /** 운영자 직접 지시 ([디자인피드백] 이슈 경로) — AI 학습 메모와 분리, 항상 최우선·AI 수정 금지 */
+  humanNotes?: string[];
   /** 연속 하락 횟수 (탐색 트리거용) */
   declineStreak: number;
   updatedAt: string;

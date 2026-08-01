@@ -32,6 +32,9 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
+      # 발행 전 검수 게이트 — publish-plan --due가 열려 있는 [수정요청·채널] 이슈를 조회
+      PSLAB_REPO: ${{ github.repository }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # ⏸ 자동발행 홀드 (2026-07-10 운영자 요청) — 실제 발행 없이 시뮬레이션만.
       # 대시보드·성과수집·렌더는 계속 동작. 재개하려면 이 값을 원래대로
       # "vars.PSLAB_DRY_RUN || 'true'" 표현식으로 되돌리면 된다 (git log 참고).
