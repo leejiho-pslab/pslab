@@ -556,7 +556,9 @@ function refLinksFor(client, key){
   return saved.concat(incoming);
 }
 function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
-function requestsPanel(key, chLabel){
+// 수정 항목 분류 — 이슈 제목 [항목] 태그 + 본문 '수정 항목:' 줄로 들어간다
+const REQ_TYPES=['텍스트(문구·카피)','이미지(사진·카드)','영상(릴스·쇼츠)','디자인(색·레이아웃)','해시태그·키워드','발행 일정','기타'];
+function requestsPanel(client, key, chLabel){
   const list=channelIssues(key);
   const open=list.filter(x=>x.state!=='closed').length;
   let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>';
@@ -566,7 +568,20 @@ function requestsPanel(key, chLabel){
   } else if(ISSUES!==null){
     h+='<div class="empty" style="padding:8px">아직 등록된 수정요청이 없습니다. 아래에 바로 작성해 보세요.</div>';
   }
-  h+='<div style="margin-top:12px"><textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
+  // 대상 콘텐츠 선택 — 이 채널의 기획 콘텐츠(발행일순). 어떤 날짜 콘텐츠의 수정인지 특정한다
+  const plans=(client.planCards||[]).filter(p=>(p.channels||[]).includes(key));
+  const planOpt=plans.map(p=>{
+    const d=String(p.scheduledFor||'').slice(5,10).replace('-','/');
+    const st=p.status==='published'?' · 발행됨':'';
+    return '<option value="'+esc(p.id)+'">'+esc((d?d+' · ':'')+plainHead(p).slice(0,34)+st)+'</option>';
+  }).join('');
+  h+='<div style="margin-top:12px">'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">📅 대상 콘텐츠 '+
+    '<select id="reqplan-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px"><option value="">채널 공통 (특정 콘텐츠 아님)</option>'+planOpt+'</select></label>'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">🏷 수정 항목 '+
+    '<select id="reqtype-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px">'+REQ_TYPES.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select></label></div>'+
+    '<textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
     '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn fb" onclick="submitReq(\\''+esc(key)+'\\',\\''+esc(chLabel)+'\\')">✏️ 수정요청 등록</button>'+
     '<span class="muted">등록을 누르면 깃허브 창이 열립니다 — 초록색 “Submit new issue” 버튼만 누르면 접수 완료. 처리 상태는 이 게시판에 자동 표시됩니다.</span></div></div></div>';
   return h;
@@ -680,9 +695,17 @@ function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
   const txt=(ta&&ta.value.trim())||'';
   if(!txt){ alert('요청 내용을 먼저 적어주세요.'); return; }
+  const planSel=document.getElementById('reqplan-'+key);
+  const typeSel=document.getElementById('reqtype-'+key);
+  const planId=planSel?planSel.value:'';
+  const planLabel=planSel&&planSel.selectedIndex>=0?planSel.options[planSel.selectedIndex].text:'';
+  const rtype=typeSel?typeSel.value:'기타';
   const first=txt.split('\\n')[0].slice(0,42);
-  const title='[수정요청·'+key+'] '+first;
-  const body='채널: '+chLabel+'\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
+  const title='[수정요청·'+key+'] ['+rtype.split('(')[0]+'] '+first;
+  const body='채널: '+chLabel+
+    '\\n대상 콘텐츠: '+(planId?planLabel+' (id: '+planId+')':'채널 공통')+
+    '\\n수정 항목: '+rtype+
+    '\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
   window.open(issue(title,body),'_blank');
   if(ta) ta.value='';
 }
@@ -856,7 +879,7 @@ function channelDetail(client, c){
   const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
   let h='';
   // ① 수정요청 게시판 — 채널 최상단 (작성 + 처리 현황)
-  h+=requestsPanel(c.key, chLabel);
+  h+=requestsPanel(client, c.key, chLabel);
   // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
   h+=periodBar();
   // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
