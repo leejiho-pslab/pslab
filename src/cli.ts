@@ -348,14 +348,17 @@ async function cmdGeneratePlan(args: Args): Promise<void> {
 // (기획 단계에서 "ALWAYS ON"·"얼웨이즈온" 등을 이미 언급한 경우) 손대지 않고,
 // 넷 중 아무것도 없을 때만 안전망으로 한 줄 덧붙인다 — 중복·스팸처럼 보이지 않게.
 // 'always on'처럼 띄어쓰기가 들어간 표기도 잡아내도록 공백 제거 후 비교한다.
-const BRAND_KEYWORDS = ['pslab', '문제해결연구소', 'alwayson', '얼웨이즈온'];
-function ensureBrandKeywords(body: string): string {
+// 키워드 목록은 업체별 단일 출처(clients/<id>.json → brandKeywords) — 하드코딩 금지.
+// (pslab 키워드가 타 업체 발행물에 붙던 사고의 재발 방지. 미설정 업체는 안전망 미적용)
+function ensureBrandKeywords(brandKeywords: string[] | undefined, body: string): string {
+  const kws = brandKeywords ?? [];
+  if (kws.length === 0) return body;
   const compact = body.toLowerCase().replace(/\s+/g, '');
-  if (BRAND_KEYWORDS.some((k) => compact.includes(k))) return body;
-  return `${body}\n\n#pslab #문제해결연구소 #ALWAYSON #얼웨이즈온`;
+  if (kws.some((k) => compact.includes(k.toLowerCase().replace(/\s+/g, '')))) return body;
+  return `${body}\n\n${kws.map((k) => `#${k.replace(/\s+/g, '')}`).join(' ')}`;
 }
-function ensureBrandTags(tags: string[]): string[] {
-  const extra = ['pslab', '문제해결연구소', 'ALWAYSON', '얼웨이즈온'];
+function ensureBrandTags(brandKeywords: string[] | undefined, tags: string[]): string[] {
+  const extra = brandKeywords ?? [];
   const have = new Set(tags.map((t) => t.toLowerCase()));
   const merged = [...tags];
   for (const k of extra) if (!have.has(k.toLowerCase())) merged.push(k);
@@ -431,7 +434,10 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         // 브랜드 키워드 안전망을 적용해야 네이버 블로그 등 수동 채널도 누락되지 않는다.
         // (dry-run은 플랜 상태를 바꾸지 않는다는 기존 원칙과 동일하게 가드)
         if (!dryRun) {
-          it.captionBody = ensureBrandKeywords(it.captionBody ?? it.captionNote ?? it.topic);
+          it.captionBody = ensureBrandKeywords(
+            client.brandKeywords,
+            it.captionBody ?? it.captionNote ?? it.topic,
+          );
           it.status = 'manual';
         }
         console.log(
@@ -464,6 +470,7 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         ? it.ytTitle
         : (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
       const body = ensureBrandKeywords(
+        client.brandKeywords,
         includesYoutube && it.ytDescription
           ? it.ytDescription
           : (it.captionBody ?? it.captionNote ?? it.topic),
@@ -486,7 +493,9 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
         title,
         body,
         media,
-        tags: includesYoutube ? ensureBrandTags(it.ytTags?.length ? it.ytTags : []) : [],
+        tags: includesYoutube
+          ? ensureBrandTags(client.brandKeywords, it.ytTags?.length ? it.ytTags : [])
+          : [],
         // 릴스는 커버 프레임을 지정해 인스타 프로필 그리드에서 검은/전환중 프레임이
         // 썸네일로 잡히지 않게 한다 (기본값: 인트로 페이드·자막 애니메이션이 끝나
         // 훅 문구가 다 보이는 900ms 지점 — 스크롤을 멈출 확률이 가장 높은 프레임).

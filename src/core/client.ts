@@ -58,6 +58,12 @@ export interface ClientConfig {
   themeColor?: string;
   /** 대시보드 전체 팔레트 오버라이드 — 업체 감도(배경·패널·보더·강조)를 CSS에 주입 */
   theme?: { accent?: string; accentInk?: string; bg?: string; panel?: string; border?: string };
+  /**
+   * 브랜드 키워드 안전망 — 모든 발행물에 최소 1개는 들어가야 하는 브랜드 표기.
+   * 캡션에 하나도 없으면 발행 직전 해시태그 한 줄을 덧붙인다. 업체별 단일 출처
+   * (하드코딩 금지 — 타 업체 키워드가 발행물에 붙는 사고 방지). 미설정이면 안전망 미적용.
+   */
+  brandKeywords?: string[];
 }
 
 /** 설정표 유효성 검사. 문제 메시지 배열을 반환(빈 배열이면 정상). */
@@ -105,6 +111,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     reportTo: c.reportTo,
     themeColor: c.themeColor,
     theme: c.theme,
+    brandKeywords: c.brandKeywords ?? [],
   };
 }
 

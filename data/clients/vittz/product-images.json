@@ -1,16 +1,37 @@
 {
   "note": "비츠 공식 판매처(자사몰·스마트스토어) 제품 이미지 시드 — 개발 환경은 외부 이미지 접근 불가라 CI(fetch-product-images.mjs)가 docs/products/vittz/<key>.jpg 로 다운로드한다. 지침⑥: 콘텐츠의 50% 이상은 제품 이미지로 제품 구매까지 잇는다.",
   "products": [
-    { "key": "aven360", "name": "LED 에이븐 360 회전 실링팬 방등 45W", "price": 89000, "image": "https://shopping-phinf.pstatic.net/main_5872882/58728822461.jpg", "link": "https://www.vittz.co.kr/index.html?branduid=1100005865" },
-    { "key": "airleaf", "name": "에어리프 LED 실링팬 (조명 포함)", "price": 180000, "image": "https://shopping-phinf.pstatic.net/main_5950343/59503434032.20260402111124.jpg", "link": "https://search.shopping.naver.com/catalog/59503434032" },
-    { "key": "glowin", "name": "LED 글로윈 날개없는 실링팬 방등", "price": 221000, "image": "https://shopping-phinf.pstatic.net/main_6020773/60207731939.jpg", "link": "https://www.vittz.co.kr/index.html?branduid=1100006892" },
-    { "key": "standard60", "name": "비츠 스탠다드 LED 방등 60W (오스람)", "price": 13200, "image": "https://shopping-phinf.pstatic.net/main_8755160/87551600744.4.jpg", "link": "https://smartstore.naver.com/main/products/10007098391" },
-    { "key": "edge50", "name": "평판 LED 방등 직하형 엣지 50W", "price": 30900, "image": "https://shopping-phinf.pstatic.net/main_3607830/36078301675.jpg", "link": "https://www.vittz.co.kr/index.html?branduid=2085262" },
-    { "key": "living180", "name": "비츠 스탠다드 LED 거실등 180W", "price": 93500, "image": "https://shopping-phinf.pstatic.net/main_8370567/83705679975.4.jpg", "link": "https://smartstore.naver.com/main/products/6161180398" },
-    { "key": "living120", "name": "비츠 스탠다드 LED 거실등/방등 120W (B타입)", "price": 56100, "image": "https://shopping-phinf.pstatic.net/main_8372665/83726657601.2.jpg", "link": "https://smartstore.naver.com/main/products/6182158024" },
-    { "key": "mercury", "name": "OV-PL006 머큐리 펜던트 (비츠 오리지널)", "price": 170000, "image": "https://shopping-phinf.pstatic.net/main_5296407/52964079414.jpg", "link": "https://www.vittz.co.kr/index.html?branduid=1100005342" },
-    { "key": "gloren", "name": "글로렌 1등 유리갓 펜던트 (램프 포함)", "price": 50000, "image": "https://shopping-phinf.pstatic.net/main_8915071/89150717256.jpg", "link": "https://smartstore.naver.com/main/products/11606206850" },
-    { "key": "edis", "name": "에디스 1등 펜던트", "price": 49000, "image": "https://shopping-phinf.pstatic.net/main_8757127/87571272834.jpg", "link": "https://smartstore.naver.com/main/products/10026770398" },
-    { "key": "lunet", "name": "루네트 1등 펜던트", "price": 42000, "image": "https://shopping-phinf.pstatic.net/main_8757111/87571116664.jpg", "link": "https://smartstore.naver.com/main/products/10026614228" }
+    {
+      "key": "delun180",
+      "name": "LED 델룬 거실등 180W",
+      "price": 95000,
+      "image": "https://www.vittz.co.kr/shopimages/vittz/0630010005663.jpg",
+      "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100006932",
+      "note": "삼성 정품 LED 모듈·플리커프리 — 거실 베이스 조명"
+    },
+    {
+      "key": "jelrobi",
+      "name": "COB 젤로비 레일조명 10W/20W/30W",
+      "price": 13000,
+      "image": "https://www.vittz.co.kr/shopimages/vittz/0630090000433.jpg",
+      "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=2081318",
+      "note": "플리커프리 COB 스팟 — 포인트 조명(빛의 방향)"
+    },
+    {
+      "key": "seraphim",
+      "name": "세라핌 1등 인테리어 식탁등",
+      "price": 75000,
+      "image": "https://www.vittz.co.kr/shopimages/vittz/0630070013943.jpg",
+      "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100003357",
+      "note": "컬러 글라스 펜던트 — 무드 조명(색과 온도)"
+    },
+    {
+      "key": "blade",
+      "name": "LED 블레이드 BLDC 천장 실링팬 조명",
+      "price": 155000,
+      "image": "https://www.vittz.co.kr/shopimages/vittz/0630020001373.jpg",
+      "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100006949",
+      "note": "3색온도·역풍 모드 — 조명+공기순환 결합형"
+    }
   ]
 }

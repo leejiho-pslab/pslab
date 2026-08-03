@@ -16,6 +16,15 @@ import { fileURLToPath } from 'node:url';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i >= 0 ? process.argv[i + 1] : d; };
 const clientId = arg('client', 'pslab');
+// 브랜드 표기 — 계정 핸들 단일 출처(clients/<id>.json accounts). 하드코딩 금지(ADR-0009)
+function brandHandle() {
+  try {
+    const c = JSON.parse(readFileSync(join(ROOT, 'clients', `${clientId}.json`), 'utf8'));
+    const h = (c.accounts && (c.accounts.youtube || c.accounts.instagram)) || c.id || clientId;
+    return `@${String(h).replace(/^@/, '')}`;
+  } catch { return `@${clientId}`; }
+}
+const BRAND = brandHandle();
 
 function findChromium() {
   if (process.env.PSLAB_CHROMIUM && existsSync(process.env.PSLAB_CHROMIUM)) return process.env.PSLAB_CHROMIUM;
@@ -53,7 +62,7 @@ export function parseScript(item) {
     else if (text) main.push(...text.split('\n').map((x) => x.trim()).filter(Boolean));
   }
   // 1) 훅
-  slides.push({ kind: 'hook', kicker: item.kicker || 'pslab shorts', big: hook || title, title });
+  slides.push({ kind: 'hook', kicker: item.kicker || `${clientId} shorts`, big: hook || title, title });
   // 2) 본론 (불릿/문장별로, 최대 6장)
   let n = 0;
   for (const line of main.slice(0, 6)) {
@@ -93,7 +102,7 @@ function slideHtml(s) {
 ${fontFaces()}
 ${BASE_CSS}
 body{background:${T.bg}}
-</style></head><body><div class="wrap">${slideInner(s)}</div><div class="brand">@_pslab</div></body></html>`;
+</style></head><body><div class="wrap">${slideInner(s)}</div><div class="brand">${BRAND}</div></body></html>`;
 }
 
 // 투명 배경 오버레이(모션 영상 위에 합성용) — 텍스트 뒤 반투명 패널로 가독성 확보
@@ -106,7 +115,7 @@ body{background:transparent}
 .panel{width:100%;background:rgba(8,12,22,.58);border:1px solid rgba(255,255,255,.08);border-radius:44px;
   padding:80px 60px;box-shadow:0 30px 80px rgba(0,0,0,.45)}
 .brand{color:#cdd6e8;text-shadow:0 2px 10px rgba(0,0,0,.6)}
-</style></head><body><div class="wrap"><div class="panel">${slideInner(s)}</div></div><div class="brand">@_pslab</div></body></html>`;
+</style></head><body><div class="wrap"><div class="panel">${slideInner(s)}</div></div><div class="brand">${BRAND}</div></body></html>`;
 }
 
 const chromium = findChromium();
