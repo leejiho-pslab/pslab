@@ -11,7 +11,7 @@ export function PeriodSelector({
   ranges: Ranges;
   onChange: (r: Ranges, preset: Preset) => void;
 }) {
-  const [preset, setPreset] = useState<Preset>("week");
+  const [preset, setPreset] = useState<Preset>("yesterday");
 
   const pick = (p: Preset) => {
     setPreset(p);

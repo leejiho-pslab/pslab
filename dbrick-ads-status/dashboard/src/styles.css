@@ -331,7 +331,9 @@ button { cursor: pointer; }
 .ad-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 .ad-card { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
 .thumb-img { width: 100%; object-fit: cover; display: block; background: #f3f4f6; }
-.thumb-img.wide { height: 200px; }
+/* 소재 카드 썸네일: Meta 소재(1:1·4:5)는 상·하단에 카피/CTA가 있어 cover 로 자르면 잘림.
+   contain 으로 전체를 보여주고(잘림 없음), 세로 소재도 담기게 높이를 넉넉히. */
+.thumb-img.wide { height: 300px; object-fit: contain; background: #f3f4f6; }
 .thumb.wide { border-radius: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; }
 .ad-card-head { padding: 8px 10px 4px; }
 .ad-name { display: block; font-weight: 600; font-size: 13px; line-height: 1.3; max-height: 2.6em; overflow: hidden; }

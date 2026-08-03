@@ -32,7 +32,7 @@ export function CreativeThumb({
   const initials = (name.replace(/[^가-힣A-Za-z0-9]/g, "").slice(0, 2) || id.slice(-2)).toUpperCase();
   const hue = hashHue(id);
   const box = ratio
-    ? { width: "100%", height: 150, fontSize: 30 }
+    ? { width: "100%", height: 300, fontSize: 30 }
     : { width: size, height: size, fontSize: size / 3 };
   return (
     <div

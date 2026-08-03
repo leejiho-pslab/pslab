@@ -26,12 +26,13 @@ const pct = (cur: number | null, prev: number | null | undefined): number | null
   cur == null || prev == null || prev === 0 ? null : Math.round(((cur - prev) / prev) * 1000) / 10;
 
 export function AdsPage({ date }: { date: string }) {
-  const [ranges, setRanges] = useState<Ranges>(() => computeRanges(date, "week"));
+  // 조회일(date) 기본은 '그날 당일' 데일리 실적(전일 대비). 다른 기간은 프리셋으로 전환.
+  const [ranges, setRanges] = useState<Ranges>(() => computeRanges(date, "yesterday"));
   const [data, setData] = useState<AdsOverview | null>(null);
   const [chTrend, setChTrend] = useState<Record<string, AdsTrendRow[]>>({});
   const [err, setErr] = useState("");
 
-  useEffect(() => setRanges(computeRanges(date, "week")), [date]);
+  useEffect(() => setRanges(computeRanges(date, "yesterday")), [date]);
   useEffect(() => {
     api.adsOverview(ranges).then(setData).catch((e) => setErr(String(e)));
   }, [ranges]);

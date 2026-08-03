@@ -21,7 +21,7 @@ const addDays = (s: string, n: number) => {
 };
 
 export const PRESETS: { id: Preset; label: string }[] = [
-  { id: "yesterday", label: "어제" },
+  { id: "yesterday", label: "당일(조회일)" },
   { id: "week", label: "전주 동기간" },
   { id: "month", label: "전월 동기간" },
   { id: "year", label: "전년 동기간" },
