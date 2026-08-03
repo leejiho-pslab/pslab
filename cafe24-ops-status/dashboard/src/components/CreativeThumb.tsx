@@ -31,8 +31,9 @@ export function CreativeThumb({
   }
   const initials = (name.replace(/[^가-힣A-Za-z0-9]/g, "").slice(0, 2) || id.slice(-2)).toUpperCase();
   const hue = hashHue(id);
+  // placeholder 도 실제 썸네일과 같은 4:5 박스 — 섞여 있어도 카드 높이가 들쭉날쭉하지 않게.
   const box = ratio
-    ? { width: "100%", height: 150, fontSize: 30 }
+    ? { width: "100%", aspectRatio: "4 / 5", fontSize: 30 }
     : { width: size, height: size, fontSize: size / 3 };
   return (
     <div
