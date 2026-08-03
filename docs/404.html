@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>대시보드 다시 연결 중…</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+  font-family:'Apple SD Gothic Neo','Pretendard','Noto Sans KR',sans-serif;background:#fffdf7;color:#333}
+.box{text-align:center;padding:32px}
+.spin{width:34px;height:34px;border:3px solid #f0e2c8;border-top-color:#e8a33d;border-radius:50%;
+  margin:0 auto 18px;animation:r 0.9s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+p{margin:6px 0;font-size:15px}
+.muted{color:#8a8f98;font-size:12.5px}
+a{color:#b45309}
+</style>
+<script>
+// 배포 교체 순간이나 CDN 블립에 404로 튕긴 탭을 대시보드로 자동 복귀시킨다.
+// 사이트가 아직 죽어 있으면 이 페이지가 다시 뜨므로, 살아날 때까지 2.5초 간격 재시도가 된다.
+setTimeout(function(){
+  var seg = location.pathname.split('/')[1];
+  location.replace(seg ? '/' + seg + '/' : '/');
+}, 2500);
+</script>
+</head>
+<body>
+<div class="box">
+  <div class="spin"></div>
+  <p><b>대시보드로 다시 연결하는 중입니다…</b></p>
+  <p class="muted">업데이트 배포 직후 잠깐 생기는 공백입니다. 몇 초 안에 자동으로 돌아갑니다.<br/>
+  돌아가지 않으면 <a href="./">여기</a>를 눌러주세요.</p>
+</div>
+</body>
+</html>

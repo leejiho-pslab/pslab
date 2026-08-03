@@ -20,7 +20,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pslab-publish
+  # Pages 배포 워크플로는 그룹 통일 필수 — 다르면 동시배포 경쟁으로 404 창이 생긴다 (허브 docs/07)
+  group: pages
   cancel-in-progress: false
 
 jobs:
