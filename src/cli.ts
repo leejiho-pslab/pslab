@@ -29,11 +29,7 @@ import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
-import {
-  fetchOpenRevisionRequests,
-  holdsForItem,
-  shouldNotifyHold,
-} from './core/revision-gate.js';
+import { fetchOpenRevisionRequests, holdsForItem } from './core/revision-gate.js';
 import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
@@ -417,24 +413,17 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       continue;
     }
     for (const it of targets) {
-      // 미처리 수정요청이 걸린 콘텐츠는 보류 — 반영 완료(이슈 닫힘) 후 다음 사이클에 발행
+      // 미처리 수정요청이 걸린 콘텐츠는 보류 — 반영 완료(이슈 닫힘) 후 다음 사이클에 발행.
+      // 텔레그램 푸시는 하지 않는다(운영자 정책: 텔레그램은 발행 알림 전용) —
+      // 보류 상태는 대시보드 '⛔ 발행 보류' 배지와 수정요청 게시판에서 확인.
       const holds = gate ? holdsForItem(client.id, it, gate) : [];
       if (holds.length > 0) {
         const holdTitle = (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
         console.log(
           `\n⛔ 발행 보류: [${it.id}] ${holdTitle} — 미처리 수정요청 ${holds.length}건 (${holds.map((h) => '#' + h.number).join(', ')})`,
         );
-        if (!dryRun && shouldNotifyHold(it.holdNotifiedAt, now)) {
-          // 보류 푸시는 항목당 1회 + 72시간마다 재알림 (매 사이클 스팸도, 조용히 잊히는 보류도 방지)
-          await notifier.send(
-            `⏸ <b>발행 보류</b> [${it.id}]\n${escHtml(holdTitle)}\n미처리 수정요청 ${holds.length}건 — 수정 반영 후 이슈가 처리완료(닫힘)되면 자동 발행됩니다.\n${holds.map((h) => h.url).join('\n')}`,
-          );
-          it.holdNotifiedAt = new Date().toISOString();
-        }
         continue;
       }
-      // 보류가 풀렸으면 알림 플래그 리셋 (이후 새 수정요청이 오면 다시 1회 알림)
-      if (!dryRun && it.holdNotifiedAt) delete it.holdNotifiedAt;
       // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
       // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
       if (isManualOnly(it.channels)) {
