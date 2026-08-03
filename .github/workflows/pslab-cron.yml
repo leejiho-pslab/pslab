@@ -141,10 +141,16 @@ jobs:
         continue-on-error: true
         run: node scripts/render-cards.mjs --client pslab
 
-      # 블로그 본문 이미지 렌더 (네이버/구글 블로그 삽입용)
+      # 블로그 본문 이미지 렌더 (네이버/구글 블로그 삽입용) — 도표
       - name: 블로그 이미지 렌더
         continue-on-error: true
         run: node scripts/render-blog-images.mjs --client pslab
+
+      # 블로그 본문 실사 사진 수집 — 세션에서 힉스필드로 뽑아 URL만 등록한 것들.
+      # 도표만 있으면 글이 딱딱해서 네이버 체류시간이 안 붙는다.
+      - name: 블로그 실사 사진 수집
+        continue-on-error: true
+        run: node scripts/fetch-blog-photos.mjs --client pslab
 
       # 유튜브 쇼츠 슬라이드 렌더 + 영상 합성 (ffmpeg, 다운로드용)
       - name: 쇼츠 슬라이드 렌더

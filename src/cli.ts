@@ -509,10 +509,17 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       const title = includesYoutube && it.ytTitle
         ? it.ytTitle
         : (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
-      const body = ensureBrandKeywords(
-        includesYoutube && it.ytDescription
-          ? it.ytDescription
-          : (it.captionBody ?? it.captionNote ?? it.topic),
+      // 본문 속 이미지 마커 ![](blog/<id>/fig-1.png) 는 저장소 기준 상대경로다.
+      // 외부 채널(구글 블로그 등)에 그대로 나가면 src 가 blogspot.com 기준으로 풀려
+      // 깨진 이미지가 된다. 여기서 Pages 절대 URL로 바꾼다 (http 로 시작하면 그대로 둔다).
+      const absolutizeImages = (s: string): string =>
+        s.replace(/!\[([^\]]*)\]\((?!https?:\/\/)([^)]+)\)/g, (_m, alt, p) => `![${alt}](${pages}/${p})`);
+      const body = absolutizeImages(
+        ensureBrandKeywords(
+          includesYoutube && it.ytDescription
+            ? it.ytDescription
+            : (it.captionBody ?? it.captionNote ?? it.topic),
+        ),
       );
       const media: PostContent['media'] = imgs.map((p) => ({
         kind: 'image' as const,

@@ -878,7 +878,7 @@ function manualHelper(it, chDef){
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “본문 전체 복사” → 네이버 글쓰기에 붙여넣기. ② 본문 속 [📷 이미지N] 자리마다 “이미지N”을 받아 그 위치에 삽입. ③ “대표이미지(가로)”를 받아 네이버 대표사진으로 지정(가로 16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+    : '① “제목만 복사” → 네이버 제목칸에 (본문 복사본에는 제목이 빠져 있습니다). ② “본문 전체 복사” → 글쓰기 창에 붙여넣기 — <b>소제목 크기·색이 그대로 따라옵니다</b>. ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다. ※ 서식이 깨지면 아래 <b>드래그용 본문</b>을 쓰세요.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -899,9 +899,21 @@ function manualHelper(it, chDef){
     videoBtn+ytBtns+
     (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>')+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
-    dls+'</div>'+ytPack+'</div>';
+    (isNaver?'<button class="btn" id="dragbtn-'+esc(it.id)+'" onclick="selectDrag(\\''+esc(it.id)+'\\',this.id)">🖱 드래그용 본문 선택</button>':'')+
+    dls+'</div>'+ytPack+dragPanel(it,isNaver)+'</div>';
+}
+// 드래그 복사 대안 — 네이버에 들어갈 최종 서식 그대로 그려 둔다.
+// 복사 버튼(ClipboardItem)이 막힌 브라우저·앱에서도 이 영역을 드래그해 Ctrl+C 하면
+// 인라인 스타일이 통째로 따라가므로 결과가 버튼 복사와 동일하다.
+function dragPanel(it,isNaver){
+  if(!isNaver) return '';
+  return '<div style="margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">'+
+    '<div class="muted" style="font-size:11px;margin-bottom:6px">🖱 드래그용 본문 — 네이버에 들어갈 실제 서식입니다. 이 영역만 드래그해 Ctrl+C 해도 됩니다.</div>'+
+    '<div id="nvdrag-'+esc(it.id)+'" style="max-height:420px;overflow:auto;background:#ffffff;border:1px solid #e4e8f0;border-radius:10px;padding:20px 18px">'+
+    naverBodyHtml(it)+'</div></div>';
 }
 // 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
+// 제목(# 줄)은 뺀다 — 네이버 제목칸에 따로 넣으므로 본문에 또 들어가면 중복이다.
 function plainPostText(it){
   let n=0;
   return String(it.captionBody||'').split('\\n').map(line=>{
@@ -909,15 +921,70 @@ function plainPostText(it){
     const img=t.match(/^!\\[([^\\]]*)\\]\\(([^)]+)\\)$/);
     if(img){ n++; return '\\n[📷 이미지'+n+' 삽입]\\n'; }
     if(t.startsWith('## ')) return '\\n■ '+t.slice(3);
-    if(t.startsWith('# ')) return t.slice(2);
+    if(t.startsWith('# ')) return '';
     if(t==='>'||t.startsWith('> ')) return t.replace(/^>\\s?/,'');
     return line.replace(/\\*\\*([^*]+)\\*\\*/g,'$1');
   }).join('\\n').replace(/\\n{3,}/g,'\\n\\n').trim();
 }
+/* ── 네이버 스마트에디터 붙여넣기용 서식 HTML ──────────────────────────────
+   문제: 평문만 복사하면 붙여넣은 글이 커서 위치의 서식을 물려받고, 대시보드 화면을
+   드래그해 복사하면 대시보드 CSS(회색 13px)가 딸려 들어가 색·크기가 뒤죽박죽이 된다.
+   해결: 모든 요소에 color/font-size/font-family/line-height 를 **인라인으로 못 박는다**.
+   상속될 여지를 남기지 않으면 붙여넣기 경로가 무엇이든 결과가 같다.
+   맥락을 나누는 소제목은 크기(25px)·굵기·상단 구분선으로 본문과 확실히 구분한다. */
+var NV_FONT="'나눔고딕',NanumGothic,'맑은 고딕','Malgun Gothic',AppleSDGothicNeo-Regular,sans-serif";
+function nvP(inner){ return '<p style="margin:0 0 20px;padding:0;font-family:'+NV_FONT+';font-size:17px;line-height:1.85;color:#1f1f1f;letter-spacing:-0.01em">'+inner+'</p>'; }
+function nvInline(x){
+  return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<strong style="font-weight:700;color:#1657c8">$1</strong>');
+}
+function naverBodyHtml(it){
+  let n=0;
+  const out=String(it.captionBody||'').split('\\n').map(line=>{
+    const t=line.trim();
+    const img=t.match(/^!\\[([^\\]]*)\\]\\(([^)]+)\\)$/);
+    if(img){ n++;
+      return '<p style="margin:26px 0;padding:16px 12px;border:2px dashed #b9c6da;border-radius:10px;background:#f4f7fc;'+
+        'font-family:'+NV_FONT+';font-size:16px;line-height:1.6;color:#3b5b8c;text-align:center">📷 이미지'+n+' 자리 — 이 줄을 지우고 이미지'+n+'을 삽입하세요</p>';
+    }
+    if(t.startsWith('## ')) return '<p style="margin:44px 0 18px;padding:18px 0 0;border-top:3px solid #1657c8;'+
+      'font-family:'+NV_FONT+';font-size:25px;line-height:1.45;font-weight:800;color:#111111;letter-spacing:-0.02em">'+nvInline(t.slice(3))+'</p>';
+    if(t.startsWith('# ')) return '';
+    if(t==='>'||t.startsWith('> ')) return '<p style="margin:0 0 30px;padding:18px 20px;background:#f2f6fd;border-left:5px solid #1657c8;border-radius:4px;'+
+      'font-family:'+NV_FONT+';font-size:17px;line-height:1.8;color:#22314a;font-weight:600">'+nvInline(t.replace(/^>\\s?/,''))+'</p>';
+    if(t==='---') return '<p style="margin:34px 0;padding:0;border-top:1px solid #dfe4ec;height:0;font-size:0;line-height:0">&nbsp;</p>';
+    if(t.indexOf('#')===0&&t.indexOf(' #')>0) return '<p style="margin:26px 0 0;padding:0;font-family:'+NV_FONT+';font-size:15px;line-height:1.8;color:#7b8598">'+esc(t)+'</p>';
+    if(t==='') return '';
+    return nvP(nvInline(line));
+  }).filter(Boolean).join('');
+  // 바깥 래퍼도 색·크기를 못 박는다 (에디터가 래퍼 스타일만 살리는 경우 대비)
+  return '<div style="font-family:'+NV_FONT+';font-size:17px;line-height:1.85;color:#1f1f1f;background:#ffffff">'+out+'</div>';
+}
 function flash(id,msg){ const b=document.getElementById(id); if(b){const o=b.textContent;b.textContent=msg;setTimeout(()=>b.textContent=o,1500);} }
 function copyPost(id){
   const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
-  navigator.clipboard.writeText(plainPostText(it)).then(()=>flash('copybtn-'+id,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 본문을 길게 눌러 직접 복사하세요.'));
+  const plain=plainPostText(it);
+  const isNaver=(it.channels||[]).indexOf('naver-blog')>=0||String(id).indexOf('naver')===0;
+  // 서식 채널은 text/html 과 text/plain 을 **함께** 넣는다. 에디터는 html 을,
+  // 메모장 등은 plain 을 받는다. ClipboardItem 미지원 브라우저면 평문으로 떨어진다.
+  if(isNaver&&window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    const html=naverBodyHtml(it);
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html':new Blob([html],{type:'text/html'}),
+      'text/plain':new Blob([plain],{type:'text/plain'})
+    })]).then(()=>flash('copybtn-'+id,'✅ 서식까지 복사됨!'))
+      .catch(()=>navigator.clipboard.writeText(plain).then(()=>flash('copybtn-'+id,'✅ 평문으로 복사됨'))
+      .catch(()=>alert('복사 실패 — 아래 “드래그용 본문”을 드래그해 Ctrl+C 하세요.')));
+    return;
+  }
+  navigator.clipboard.writeText(plain).then(()=>flash('copybtn-'+id,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 본문을 길게 눌러 직접 복사하세요.'));
+}
+// 드래그 복사 대안 — 패널 전체를 선택 상태로 만들어 준다(Ctrl+C 만 누르면 됨).
+function selectDrag(id,btnId){
+  const el=document.getElementById('nvdrag-'+id); if(!el) return;
+  const r=document.createRange(); r.selectNodeContents(el);
+  const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  try{ document.execCommand('copy'); flash(btnId,'✅ 선택+복사됨!'); }
+  catch(e){ flash(btnId,'👆 이제 Ctrl+C'); }
 }
 function copyTitle(id){
   const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
