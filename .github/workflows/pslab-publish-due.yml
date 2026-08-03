@@ -1,0 +1,135 @@
+name: pslab publish (예약 발행 · 매시간)
+
+# 예정 시각이 지난 승인 항목을 발행만 한다 — 렌더·성과수집 없음.
+#
+# 왜 따로 만들었나 (2026-08-03):
+#   GitHub 의 schedule 은 best-effort 라 이 저장소에서 **매일 1.7~2.7시간씩 밀렸다**.
+#     08-02 19:44·20:02 / 08-01 19:44·20:00 / 07-31 20:32·20:39 (모두 18:00 예정)
+#   pslab-cron 은 카드·블로그·쇼츠 렌더까지 같이 해서 무겁고, 그래서 하루 몇 번밖에 못 돈다.
+#   창이 드물면 지연이 그대로 노출된다.
+#
+#   그래서 "발행"만 떼어 **매시간** 돌린다. 지연이 얼마든 최대 1시간 + 스케줄러 지연으로 묶인다.
+#   중복 발행 걱정은 없다 — 발행 원장(published-ledger.json)이 이미 내보낸 항목을 걸러낸다
+#   (ADR-0017). 원장이 없었다면 시간당 실행은 위험했을 것이다.
+#
+# 무거운 일(렌더·성과수집·대시보드 전체 갱신)은 pslab-cron 이 계속 담당한다.
+# 여기서는 발행이 실제로 일어났을 때만 대시보드를 다시 그린다(불필요한 Pages 배포 방지).
+on:
+  schedule:
+    - cron: '5 * * * *'      # 매시 5분 — 정시 몰림을 피해 5분 뒤에 요청
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# pslab-cron 과 같은 그룹을 쓴다 — 같은 브랜치에 동시에 push 해 충돌하는 걸 막는다.
+concurrency:
+  group: pslab-autopilot
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Seoul
+      PSLAB_LOG_LEVEL: info
+      # 발행 전 검수 게이트 — 열린 [수정요청·채널] 이슈가 있으면 해당 콘텐츠를 보류
+      PSLAB_REPO: ${{ github.repository }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # pslab-cron 과 같은 스위치를 공유한다 (Variables 에 true 를 넣으면 양쪽 다 홀드)
+      PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'false' }}
+      # --- Instagram ---
+      PSLAB_INSTAGRAM_ACCESS_TOKEN: ${{ secrets.PSLAB_INSTAGRAM_ACCESS_TOKEN }}
+      PSLAB_INSTAGRAM_IG_USER_ID: ${{ secrets.PSLAB_INSTAGRAM_IG_USER_ID }}
+      # --- Threads ---
+      PSLAB_THREADS_ACCESS_TOKEN: ${{ secrets.PSLAB_THREADS_ACCESS_TOKEN }}
+      PSLAB_THREADS_THREADS_USER_ID: ${{ secrets.PSLAB_THREADS_THREADS_USER_ID }}
+      # --- 네이버 블로그 (수동 채널 — status=manual 표시용) ---
+      PSLAB_NAVER_BLOG_CLIENT_ID: ${{ secrets.PSLAB_NAVER_BLOG_CLIENT_ID }}
+      PSLAB_NAVER_BLOG_CLIENT_SECRET: ${{ secrets.PSLAB_NAVER_BLOG_CLIENT_SECRET }}
+      PSLAB_NAVER_BLOG_ACCESS_TOKEN: ${{ secrets.PSLAB_NAVER_BLOG_ACCESS_TOKEN }}
+      PSLAB_NAVER_BLOG_BLOG_ID: ${{ secrets.PSLAB_NAVER_BLOG_BLOG_ID }}
+      # --- 구글 블로그 ---
+      PSLAB_BLOGGER_CLIENT_ID: ${{ secrets.PSLAB_BLOGGER_CLIENT_ID }}
+      PSLAB_BLOGGER_CLIENT_SECRET: ${{ secrets.PSLAB_BLOGGER_CLIENT_SECRET }}
+      PSLAB_BLOGGER_REFRESH_TOKEN: ${{ secrets.PSLAB_BLOGGER_REFRESH_TOKEN }}
+      PSLAB_BLOGGER_BLOG_ID: ${{ secrets.PSLAB_BLOGGER_BLOG_ID }}
+      # --- YouTube ---
+      PSLAB_YOUTUBE_CLIENT_ID: ${{ secrets.PSLAB_YOUTUBE_CLIENT_ID }}
+      PSLAB_YOUTUBE_CLIENT_SECRET: ${{ secrets.PSLAB_YOUTUBE_CLIENT_SECRET }}
+      PSLAB_YOUTUBE_REFRESH_TOKEN: ${{ secrets.PSLAB_YOUTUBE_REFRESH_TOKEN }}
+      PSLAB_YOUTUBE_CHANNEL_ID: ${{ secrets.PSLAB_YOUTUBE_CHANNEL_ID }}
+      # --- 푸시 알림 ---
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 의존성 설치 + 빌드
+        run: |
+          npm ci
+          npm run build
+
+      - name: 예약 발행 (publish-plan --due)
+        timeout-minutes: 8
+        run: node dist/cli.js publish-plan --client pslab --due
+
+      # 발행이 실제로 일어났는지로 이후 단계를 가른다.
+      # 매시간 도는데 매번 대시보드를 다시 그려 커밋하면 Pages 배포가 하루 24번 돈다.
+      - name: 변경 여부 판정
+        id: changed
+        run: |
+          if git diff --quiet -- data/; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "발행 없음 — 이후 단계 생략"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "발행 발생 — 대시보드 갱신 진행"
+          fi
+
+      - name: 대시보드 갱신
+        if: steps.changed.outputs.changed == 'true'
+        run: node dist/cli.js dashboard --client pslab --out docs/index.html
+
+      # 커밋 메시지에 [skip ci] 금지 — docs/ 변경이 Pages 배포를 트리거한다.
+      # pslab-cron 이 같은 브랜치에 동시에 push 할 수 있어 rebase 후 재시도.
+      - name: 발행 상태·대시보드 커밋
+        if: steps.changed.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          git config user.name "pslab-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -f data/ docs/index.html 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "변경 없음"; exit 0
+          fi
+          git commit -m "chore(pslab): 예약 발행"
+          for i in 1 2 3 4 5; do
+            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push 성공"; exit 0; }
+            echo "push 재시도 $i (동시 push 충돌)"; sleep 4
+          done
+          echo "push 실패 — Pages 배포는 진행"
+
+      - name: Pages 설정
+        if: steps.changed.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+      - name: Pages 아티팩트 업로드 (docs/)
+        if: steps.changed.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - name: Pages 배포
+        id: deploy
+        if: steps.changed.outputs.changed == 'true'
+        uses: actions/deploy-pages@v4
