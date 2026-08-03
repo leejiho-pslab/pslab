@@ -2,15 +2,21 @@ name: pslab autopilot
 
 # 무인 선순환 루프: 토큰점검 → 예약 자동발행 → 성과수집·학습 → 대시보드
 #  1) check-tokens     : 토큰 만료 임박 시 대시보드에 경고
-#  2) publish-plan --due: 예정시각(매일 18:00 KST) 지난 항목 자동 발행 (DRY_RUN=false일 때만 실제)
+#  2) publish-plan --due: 예정시각 지난 항목 자동 발행 (DRY_RUN=false일 때만 실제)
 #  3) collect-insights : 발행물 성과 수집 + 디자인/소재 자체 학습 갱신
 #  4) dashboard        : 결과를 대시보드(GitHub Pages)에 반영
-# 매일 한국시간 18:00 에 자동발행 (GitHub cron은 UTC 기준 → KST-9)
-#  18:00 발행 + 18:30 보정(누락 대비·대시보드 갱신). publish-plan은 멱등이라 중복발행 없음.
+#
+# 발행 시각이 채널마다 달라 크론 창을 그에 맞춰 연다 (GitHub cron 은 UTC 기준 → KST-9).
+#   블로그 11:00 · 인스타/유튜브 18:00 · 스레드 19:00 (KST)
+# 창이 18:00 하나뿐이던 동안 11:00 블로그가 8.8시간 밀렸고(blogger-08-02 실측),
+# 19:00 스레드는 그날 창을 이미 지나쳐 다음 날 18:00 까지 밀릴 수 있었다.
+# publish-plan 은 멱등(발행 원장)이라 창이 늘어도 중복 발행되지 않는다.
 on:
   schedule:
-    - cron: '0 9 * * *'    # 09:00 UTC = 18:00 KST — 매일 자동발행
-    - cron: '30 9 * * *'   # 09:30 UTC = 18:30 KST — 누락 시 보정·대시보드 갱신
+    - cron: '0 2 * * *'    # 02:00 UTC = 11:00 KST — 블로그(네이버·구글) 발행 창
+    - cron: '0 9 * * *'    # 09:00 UTC = 18:00 KST — 인스타·유튜브 발행 창
+    - cron: '0 10 * * *'   # 10:00 UTC = 19:00 KST — 스레드 발행 창
+    - cron: '30 10 * * *'  # 10:30 UTC = 19:30 KST — 누락 보정·대시보드 갱신
   workflow_dispatch: {}     # 저장소에서 수동 실행 버튼
 
 permissions:
@@ -103,6 +109,8 @@ jobs:
 
       # 2) 예약 자동발행 — 예정시각이 지난 승인 기획안을 자동 발행
       #    (PSLAB_DRY_RUN=true면 시뮬레이션만. 실제 발행은 Variables에서 false로)
+      #    멱등: 발행 원장(published-ledger.json)이 이미 내보낸 항목을 걸러내므로
+      #    크론 창이 하루 4번으로 늘어도 중복 발행되지 않는다 (ADR-0017).
       - name: 예약 자동발행 (publish-plan --due)
         id: publish
         continue-on-error: true
