@@ -1,0 +1,25 @@
+{
+ "_readme": "실사 풀블리드 카드 시스템 토큰 — render-vittz-cards.mjs가 읽는다. 색·스크림·타이포를 코드 수정 없이 조정.",
+ "card": {
+  "ink": "#FFFFFF",
+  "muted": "rgba(255,255,255,.78)",
+  "accent": "#F2B75F",
+  "scrimCover": "linear-gradient(112deg, rgba(20,14,8,.78) 0%, rgba(20,14,8,.42) 46%, rgba(20,14,8,.08) 78%)",
+  "scrimText": "linear-gradient(112deg, rgba(18,13,8,.86) 0%, rgba(18,13,8,.55) 55%, rgba(18,13,8,.22) 100%)",
+  "scrimBottom": "linear-gradient(180deg, rgba(16,11,6,0) 34%, rgba(16,11,6,.55) 58%, rgba(16,11,6,.92) 100%)",
+  "chipBg": "rgba(255,255,255,.14)",
+  "chipBorder": "rgba(255,255,255,.34)",
+  "labelBg": "rgba(255,255,255,.92)",
+  "labelInk": "#221A10",
+  "fallbackBg": "linear-gradient(160deg,#F6EFE3 0%,#EAD9BC 100%)",
+  "fallbackInk": "#2A241B",
+  "headline": 92,
+  "title": 76,
+  "body": 40,
+  "price": 72,
+  "radius": 28
+ },
+ "reels": {
+  "subtitle": "하단 중앙 1줄 구어체 자막 + 상단 좌측 제품명 라벨 칩 (haysol 문법)"
+ }
+}

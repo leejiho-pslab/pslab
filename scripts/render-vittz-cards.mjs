@@ -1,16 +1,20 @@
 #!/usr/bin/env node
 /**
- * 비츠(VITTZ) 전용 카드 렌더러 — "전구빛" 디자인 시스템
+ * 비츠(VITTZ) 전용 카드 렌더러 — "실사 풀블리드 · 웜 라이트" 디자인 시스템 v2
  *
- * 사전 조사(research/05·08)에서 정의한 브랜드 감도를 그대로 구현한다:
- *  - "저녁 시간대 전구빛이 켜진 실제 집" — 빛이 주인공. 사진 없이 CSS/SVG로 빛을 그린다.
- *  - 무드 2종: dusk(저녁 전구빛 공간 — 감성/시의성) · paper(웜 페이퍼 — 제품/정보)
- *  - 한글 시리즈 라벨 + 상단 VITTZ 로고타입 + 하단 @핸들 + 캐러셀 진행 도트
- *  - 팔레트: 웜화이트 #FAF6EF / 딥차콜 #26221D / 앰버 #E8A13D / 전구빛 글로우
+ * 레퍼런스 학습(reference-links 30건 + 드라이브 지침·릴스 12편)에서 정의한 언어를 구현한다
+ * (2026-08-03 운영자 지시로 v1 '전구빛'(다크+SVG 드로잉) 시스템 전면 교체):
+ *  - 공간·제품 실사가 카드 전체 배경(풀블리드 1080×1350) — 사진이 주인공
+ *  - 어두운 그라데이션 스크림 위 좌측 정렬 화이트 헤드라인 + 앰버 강조
+ *  - 좌상단 브랜드 워드마크 + 얇은 구분선 + 작은 영문 소라벨(장식 최소)
+ *  - 제품 장: 실사 크게 + 하단 오버레이에 제품명·가격·구매 동선 집약
+ *  - 색·스크림·타이포 값은 data/clients/<id>/design-tokens.json 이 단일 출처
  *
  * 슬라이드 스키마(plan.json items[].slides[]):
- *   { scene: 'cover|pendant|fan|window|bulbs|split|spec|cta', label, title, body, big? }
- * 아이템: { mood: 'dusk'|'paper', series: '비츠 · 여름 시선' 같은 한글 라벨 }
+ *   { scene: 'cover|point|product|spec|split|cta', label, title, body, big?, en?,
+ *     productKey?  — 제품 정보(이름·가격)와 실사 출처,
+ *     bgKey?       — 배경 실사로 쓸 제품 키(생략 시 productKey → 첫 제품 순) }
+ *   실사가 없으면(개발 환경) 웜 페이퍼 그라데이션 폴백 — CI에서 자동으로 실사가 채워진다.
  *
  * 사용: node scripts/render-vittz-cards.mjs --client vittz
  */
@@ -41,21 +45,26 @@ function fontFaces() {
   }).join('\n');
 }
 
-// ── 무드 팔레트 (research/05 감도 정의) ──────────────────────────────
-const MOODS = {
-  // 저녁, 전구가 켜진 방 — 깊은 웜 브라운 위 앰버 빛 웅덩이
-  dusk: {
-    bg: '#191209', ink: '#F7F0E1', muted: '#C9B896', accent: '#E8A13D',
-    glow: '240,180,92', line: 'rgba(232,161,61,.28)', chip: 'rgba(232,161,61,.14)',
-  },
-  // 웜 페이퍼 — 밝은 정보 무드, 차콜 잉크 + 앰버 포인트
-  paper: {
-    bg: '#FAF6EF', ink: '#2A241B', muted: '#93826A', accent: '#B26E0F',
-    glow: '232,161,61', line: 'rgba(178,110,15,.25)', chip: 'rgba(232,161,61,.16)',
-  },
-};
-
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// ── 디자인 토큰 (단일 출처: design-tokens.json → card) ───────────────
+const TOKEN_DEFAULTS = {
+  ink: '#FFFFFF', muted: 'rgba(255,255,255,.78)', accent: '#F2B75F',
+  scrimCover: 'linear-gradient(112deg, rgba(20,14,8,.78) 0%, rgba(20,14,8,.42) 46%, rgba(20,14,8,.08) 78%)',
+  scrimText: 'linear-gradient(112deg, rgba(18,13,8,.86) 0%, rgba(18,13,8,.55) 55%, rgba(18,13,8,.22) 100%)',
+  scrimBottom: 'linear-gradient(180deg, rgba(16,11,6,0) 34%, rgba(16,11,6,.55) 58%, rgba(16,11,6,.92) 100%)',
+  chipBg: 'rgba(255,255,255,.14)', chipBorder: 'rgba(255,255,255,.34)',
+  labelBg: 'rgba(255,255,255,.92)', labelInk: '#221A10',
+  fallbackBg: 'linear-gradient(160deg,#F6EFE3 0%,#EAD9BC 100%)', fallbackInk: '#2A241B',
+  headline: 92, title: 76, body: 40, price: 72, radius: 28,
+};
+function loadTokens() {
+  try {
+    const t = JSON.parse(readFileSync(join(ROOT, 'data/clients', clientId, 'design-tokens.json'), 'utf8'));
+    return { ...TOKEN_DEFAULTS, ...(t.card || {}) };
+  } catch { return { ...TOKEN_DEFAULTS }; }
+}
+const T = loadTokens();
 
 // ── 제품 카탈로그 (지침⑥: 콘텐츠 50% 이상 제품 이미지 → 구매 연결) ──
 // data/clients/<id>/product-images.json + docs/products/<id>/<key>.jpg(CI 다운로드)
@@ -68,217 +77,166 @@ function loadProducts() {
   } catch { return {}; }
 }
 const PRODUCTS = loadProducts();
+const PRODUCT_KEYS = Object.keys(PRODUCTS);
 function productPhoto(key) {
+  if (!key) return null;
   const f = join(ROOT, 'docs/products', clientId, `${key}.jpg`);
   if (!existsSync(f)) return null;
   try { return `data:image/jpeg;base64,${readFileSync(f).toString('base64')}`; } catch { return null; }
 }
 const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const br = (s) => esc(s).replace(/\n/g, '<br>');
-// *강조* → 전구빛 하이라이트
+// *강조* → 앰버 하이라이트
 const hl = (s) => br(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
-// ── 빛 드로잉 (SVG) — 사진 없이 조명과 빛을 그린다 ──────────────────
-function svgPendant(m, big) {
-  const w = big ? 560 : 420, glow = m.glow;
-  return `<svg viewBox="0 0 200 260" width="${w}" style="display:block">
-    <defs>
-      <radialGradient id="bulbG" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="rgba(${glow},.95)"/><stop offset="45%" stop-color="rgba(${glow},.55)"/><stop offset="100%" stop-color="rgba(${glow},0)"/>
-      </radialGradient>
-      <linearGradient id="coneG" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(${glow},.34)"/><stop offset="100%" stop-color="rgba(${glow},0)"/>
-      </linearGradient>
-    </defs>
-    <line x1="100" y1="0" x2="100" y2="58" stroke="${m.muted}" stroke-width="2.4"/>
-    <path d="M64 96 A36 36 0 0 1 136 96 L128 104 L72 104 Z" fill="${m.bg === '#191209' ? '#2E2416' : '#3A2F1F'}" stroke="${m.muted}" stroke-width="2.4"/>
-    <circle cx="100" cy="120" r="52" fill="url(#bulbG)"/>
-    <circle cx="100" cy="114" r="11" fill="rgba(${glow},.98)"/>
-    <polygon points="58,116 142,116 178,252 22,252" fill="url(#coneG)"/>
-  </svg>`;
-}
-function svgFan(m) {
-  const g = m.glow;
-  return `<svg viewBox="0 0 260 200" width="620" style="display:block">
-    <defs><radialGradient id="fanG" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="rgba(${g},.9)"/><stop offset="55%" stop-color="rgba(${g},.35)"/><stop offset="100%" stop-color="rgba(${g},0)"/>
-    </radialGradient></defs>
-    <line x1="130" y1="0" x2="130" y2="34" stroke="${m.muted}" stroke-width="3"/>
-    <g stroke="${m.muted}" stroke-width="3" fill="${m.bg === '#191209' ? '#2E2416' : '#EADFC9'}">
-      <ellipse cx="52" cy="62" rx="52" ry="13" transform="rotate(-16 52 62)"/>
-      <ellipse cx="208" cy="62" rx="52" ry="13" transform="rotate(16 208 62)"/>
-      <ellipse cx="88" cy="86" rx="50" ry="12" transform="rotate(24 88 86)"/>
-      <ellipse cx="172" cy="86" rx="50" ry="12" transform="rotate(-24 172 86)"/>
-    </g>
-    <circle cx="130" cy="66" r="20" fill="${m.bg === '#191209' ? '#3A2C17' : '#E3D5B8'}" stroke="${m.muted}" stroke-width="3"/>
-    <circle cx="130" cy="96" r="46" fill="url(#fanG)"/>
-    <circle cx="130" cy="84" r="12" fill="rgba(${g},.95)"/>
-    <path d="M28 30 Q40 22 52 30" stroke="rgba(${g},.5)" stroke-width="3" fill="none"/>
-    <path d="M208 30 Q220 22 232 30" stroke="rgba(${g},.5)" stroke-width="3" fill="none"/>
-  </svg>`;
-}
-function svgBulbs(m) {
-  const g = m.glow;
-  const bulb = (cx, color, r) =>
-    `<circle cx="${cx}" cy="70" r="34" fill="${color}" opacity="${r}"/>` +
-    `<circle cx="${cx}" cy="70" r="15" fill="${color}"/>` +
-    `<line x1="${cx}" y1="0" x2="${cx}" y2="34" stroke="${m.muted}" stroke-width="2.4"/>`;
-  return `<svg viewBox="0 0 320 130" width="640" style="display:block">
-    ${bulb(60, 'rgba(214,226,255,.85)', 0.22)}
-    ${bulb(160, 'rgba(255,244,214,.9)', 0.26)}
-    ${bulb(260, `rgba(${g},.95)`, 0.34)}
-  </svg>`;
+// 배경 실사 선택 — slide.bgKey → slide.productKey → 첫 제품. 없으면 null(폴백 배경).
+function bgPhoto(s) {
+  return productPhoto(s.bgKey) || productPhoto(s.productKey) || productPhoto(PRODUCT_KEYS[0]);
 }
 
-// ── 공통 프레임 ─────────────────────────────────────────────────────
-function frame(m, seriesLabel, inner, pageNo, pageTotal, handle) {
-  const dots = Array.from({ length: pageTotal }, (_, i) =>
-    `<span class="dot${i + 1 === pageNo ? ' on' : ''}"></span>`).join('');
-  return `<div class="card">
-    <div class="top"><div class="logo">VITTZ</div><div class="series">${esc(seriesLabel)}</div></div>
-    ${inner}
-    <div class="foot"><div class="handle">${esc(handle)}</div><div class="dots">${dots}</div></div>
-  </div>`;
-}
+// 단계 라벨 칩 — haysol 릴스의 제품명 라벨 문법 (밝은 칩 + 진한 잉크)
+const labelChip = (t) => (t ? `<div class="klabel"><span>${esc(t)}</span></div>` : '');
 
-// 제품 사진 패널 — 사진이 있으면 실사, 없으면(개발 환경) 감도 유지 실루엣 + 글로우
-function productPanel(m, p, size) {
-  const photo = p ? productPhoto(p.key) : null;
-  const h = size === 'big' ? 500 : 260;
-  if (photo) {
-    return `<div class="pph" style="height:${h}px"><img src="${photo}" alt=""/></div>`;
-  }
-  const art = size === 'big' ? svgPendant(m, true) : svgPendant(m);
-  return `<div class="pph ph" style="height:${h}px">${art}</div>`;
-}
-// 제품 미니 태그 — point/spec/cta 하단에 제품·가격·구매 동선 고정 노출
-function productTag(m, key) {
+// 제품 미니 태그 — 텍스트 장 하단에 제품·가격·구매 동선 고정 노출
+function productTag(key) {
   const p = PRODUCTS[key];
   if (!p) return '';
   const photo = productPhoto(key);
-  const thumb = photo ? `<img class="ptthumb" src="${photo}" alt=""/>` : `<span class="ptdot"></span>`;
+  const thumb = photo ? `<img class="ptthumb" src="${photo}" alt=""/>` : '';
   return `<div class="ptag">${thumb}<div class="ptxt"><div class="ptname">${esc(p.name)}</div><div class="ptprice">${won(p.price)} · 프로필 링크에서 구매</div></div></div>`;
 }
 
-function sceneHTML(item, s, m, idx) {
-  const art = { pendant: svgPendant(m), fan: svgFan(m), bulbs: svgBulbs(m) }[s.scene] || '';
+function sceneHTML(item, s, idx) {
   if (s.scene === 'cover' || idx === 0) {
-    // 커버 — 큰 빛 + 질문 헤드라인 + 인터랙션 칩
-    const coverArt = { fan: svgFan(m), pendant: svgPendant(m, true), bulbs: svgBulbs(m) }[s.art || 'pendant'] || svgPendant(m, true);
-    return `<div class="mid cover">
-      <div class="art">${coverArt}</div>
-      <div class="headline">${hl(s.title)}</div>
+    // 표지 — 실사 풀블리드 + 좌측 큰 헤드라인 + 얇은 구분선/영문 소라벨 + 하단 칩 (레퍼런스 시안 구조)
+    return { scrim: T.scrimCover, inner: `<div class="mid cover">
+      <div class="headline">${hl(s.title || item.headline || item.topic)}</div>
+      <div class="subline"><span class="rule"></span><span class="en">${esc(s.en || 'VITTZ LIGHTING')}</span></div>
       ${s.body ? `<div class="chip">${br(s.body)}</div>` : ''}
-    </div>`;
+    </div>` };
   }
   if (s.scene === 'product') {
-    // 제품 카드 — 실사(또는 실루엣) + 이름 + 가격 히어로 + 구매 동선
+    // 제품 장 — 제품 실사 풀블리드 + 하단 오버레이(단계 라벨·제품명·가격·설명·구매)
     const p = PRODUCTS[s.productKey] || {};
-    return `<div class="mid">
-      <div class="klabel">${esc(s.label || '비츠 제품')}</div>
-      ${productPanel(m, p, 'big')}
+    return { scrim: T.scrimBottom, inner: `<div class="mid pbot">
+      ${labelChip(s.label || '비츠 제품')}
       <div class="pname">${esc(p.name || s.title || '')}</div>
-      <div class="pprice">${p.price ? won(p.price) : ''}</div>
-      ${s.body ? `<div class="body" style="margin-top:20px;font-size:36px">${br(s.body)}</div>` : ''}
+      ${p.price ? `<div class="pprice">${won(p.price)}</div>` : ''}
+      ${s.body ? `<div class="body pbody">${br(s.body)}</div>` : ''}
       <div class="buy">프로필 링크에서 바로 구매 →</div>
-    </div>`;
-  }
-  if (s.scene === 'split') {
-    return `<div class="mid">
-      <div class="split">
-        <div class="half before"><div class="halfLab">${esc(s.beforeLabel || '지금')}</div><div class="halfTxt">${br(s.before || '')}</div></div>
-        <div class="half after"><div class="halfLab">${esc(s.afterLabel || '바꾼 뒤')}</div><div class="halfTxt">${br(s.after || '')}</div></div>
-      </div>
-      <div class="title" style="margin-top:64px">${hl(s.title)}</div>
-      <div class="body">${br(s.body)}</div>
-    </div>`;
+    </div>` };
   }
   if (s.scene === 'spec') {
-    return `<div class="mid">
-      <div class="klabel">${esc(s.label || '')}</div>
-      <div class="big">${hl(s.big || '')}</div>
-      <div class="title">${hl(s.title)}</div>
-      <div class="body">${br(s.body)}</div>
-      ${s.productKey ? `<div style="margin-top:56px">${productTag(m, s.productKey)}</div>` : (art ? `<div class="artS">${art}</div>` : '')}
-    </div>`;
+    // 숫자 강조 장 — 진한 스크림 위 큰 숫자 + 제목 + 본문 (+ 제품 태그)
+    return { scrim: T.scrimText, inner: `<div class="mid">
+      ${labelChip(s.label)}
+      ${s.big ? `<div class="big">${hl(s.big)}</div>` : ''}
+      <div class="title">${hl(s.title || '')}</div>
+      ${s.body ? `<div class="body">${br(s.body)}</div>` : ''}
+      ${s.productKey ? productTag(s.productKey) : ''}
+    </div>` };
+  }
+  if (s.scene === 'split') {
+    // 비교 장 — 반투명 패널 2단 (지금 / 바꾼 뒤)
+    return { scrim: T.scrimText, inner: `<div class="mid">
+      ${labelChip(s.label)}
+      ${s.title ? `<div class="title" style="margin-bottom:44px">${hl(s.title)}</div>` : ''}
+      <div class="split">
+        <div class="half"><div class="halfLab">${esc(s.beforeLabel || '지금')}</div><div class="halfTxt">${br(s.before || '')}</div></div>
+        <div class="half after"><div class="halfLab">${esc(s.afterLabel || '바꾼 뒤')}</div><div class="halfTxt">${br(s.after || '')}</div></div>
+      </div>
+      ${s.body ? `<div class="body">${br(s.body)}</div>` : ''}
+    </div>` };
   }
   if (s.scene === 'cta') {
-    const p = s.productKey ? PRODUCTS[s.productKey] : null;
-    return `<div class="mid cta">
-      ${p ? productPanel(m, p, 'small') : `<div class="artS">${svgPendant(m)}</div>`}
-      <div class="title" style="text-align:center;margin-top:44px">${hl(s.title)}</div>
-      <div class="body" style="text-align:center;margin-left:auto;margin-right:auto">${br(s.body)}</div>
-      ${p ? `<div class="buy" style="margin-top:40px">${esc(p.name)} · ${won(p.price)} — 프로필 링크에서 구매 →</div>` : ''}
+    // 마지막 장 — 중앙 CTA (드라이브 지침: 마지막 장 중앙 CTA)
+    return { scrim: T.scrimText, inner: `<div class="mid cta">
+      <div class="title">${hl(s.title || '')}</div>
+      ${s.body ? `<div class="body" style="text-align:center">${br(s.body)}</div>` : ''}
+      ${s.productKey ? productTag(s.productKey) : ''}
       <div class="ctaline">비츠 딜리버리 · 배달과 설치를 한 번에</div>
-    </div>`;
+    </div>` };
   }
-  // point (기본): 한글 라벨 + 제목 + 본문 + (제품 태그 또는 보조 아트)
-  return `<div class="mid">
-    <div class="klabel">${esc(s.label || '')}</div>
-    <div class="title">${hl(s.title)}</div>
-    <div class="body">${br(s.body)}</div>
-    ${s.productKey ? `<div style="margin-top:56px">${productTag(m, s.productKey)}</div>` : (art ? `<div class="artS">${art}</div>` : '')}
+  // point 및 기타(구 pendant/fan/window/bulbs 호환) — 텍스트 장
+  return { scrim: T.scrimText, inner: `<div class="mid">
+    ${labelChip(s.label)}
+    <div class="title">${hl(s.title || '')}</div>
+    ${s.body ? `<div class="body">${br(s.body)}</div>` : ''}
+    ${s.productKey ? productTag(s.productKey) : ''}
+  </div>` };
+}
+
+// ── 공통 프레임 — 실사 배경 + 스크림 + 워드마크/시리즈/핸들/도트 ──
+function frame(item, s, scrim, inner, pageNo, pageTotal, handle) {
+  const photo = bgPhoto(s);
+  const bgLayer = photo
+    ? `<img class="bg" src="${photo}" alt=""/><div class="scrim" style="background:${scrim}"></div>`
+    : `<div class="bg fb"></div>`;
+  const dots = Array.from({ length: pageTotal }, (_, i) =>
+    `<span class="dot${i + 1 === pageNo ? ' on' : ''}"></span>`).join('');
+  return `<div class="card${photo ? '' : ' nofoto'}">
+    ${bgLayer}
+    <div class="layer">
+      <div class="top"><div class="logo">VITTZ</div><div class="series">${esc(item.series || '비츠')}</div></div>
+      ${inner}
+      <div class="foot"><div class="handle">${esc(handle)}</div><div class="dots">${dots}</div></div>
+    </div>
   </div>`;
 }
 
-function pageHTML(item, s, m, idx, total, handle, faces) {
-  // 배경 — dusk: 방 안 저녁 빛(코너 글로우 + 바닥 빛 웅덩이) / paper: 종이 위 옅은 앰버 김
-  const bg = m === MOODS.dusk
-    ? `background:${m.bg};background-image:` +
-      `radial-gradient(60% 42% at 78% 6%, rgba(${m.glow},.20) 0%, transparent 60%),` +
-      `radial-gradient(75% 30% at 50% 108%, rgba(${m.glow},.14) 0%, transparent 65%)`
-    : `background:${m.bg};background-image:` +
-      `radial-gradient(55% 38% at 88% -6%, rgba(${m.glow},.18) 0%, transparent 62%),` +
-      `radial-gradient(50% 30% at -8% 106%, rgba(${m.glow},.12) 0%, transparent 60%)`;
+function pageHTML(item, s, idx, total, handle, faces) {
+  const { scrim, inner } = sceneHTML(item, s, idx);
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:1080px;height:1350px}
-body{font-family:'Pretendard';color:${m.ink}}
-.card{width:1080px;height:1350px;${bg};padding:88px 92px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+body{font-family:'Pretendard';color:${T.ink}}
+.card{width:1080px;height:1350px;position:relative;overflow:hidden}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bg.fb{background:${T.fallbackBg}}
+.card.nofoto{color:${T.fallbackInk}}
+.card.nofoto .handle,.card.nofoto .series,.card.nofoto .body{color:rgba(42,36,27,.66)}
+.scrim{position:absolute;inset:0}
+.layer{position:absolute;inset:0;padding:84px 88px;display:flex;flex-direction:column}
 .top{display:flex;justify-content:space-between;align-items:baseline}
-.logo{font-weight:800;font-size:34px;letter-spacing:.34em;color:${m.accent}}
-.series{font-weight:600;font-size:27px;letter-spacing:.18em;color:${m.muted}}
-.mid{flex:1;display:flex;flex-direction:column;justify-content:center}
-.cover{align-items:flex-start}
-.cover .art{align-self:center;margin-bottom:8px}
-.headline{font-weight:800;font-size:92px;line-height:1.22;letter-spacing:-.028em;text-wrap:balance}
-.headline em{font-style:normal;color:${m.accent};position:relative}
-.headline em::after{content:'';position:absolute;left:-2%;right:-2%;bottom:4px;height:20px;background:rgba(${m.glow},.22);z-index:-1;border-radius:6px}
-.chip{margin-top:52px;display:inline-block;background:${m.chip};border:1.5px solid ${m.line};border-radius:999px;padding:22px 38px;font-size:35px;font-weight:600;color:${m.ink};line-height:1.45}
-.klabel{font-weight:700;font-size:30px;letter-spacing:.22em;color:${m.accent};margin-bottom:34px}
-.title{font-weight:800;font-size:76px;line-height:1.26;letter-spacing:-.024em;text-wrap:balance}
-.title em{font-style:normal;color:${m.accent}}
-.body{font-weight:500;font-size:40px;line-height:1.66;color:${m.muted};margin-top:40px;max-width:96%}
-.big{font-weight:800;font-size:150px;letter-spacing:-.03em;color:${m.accent};line-height:1;margin-bottom:26px}
-.big em{font-style:normal;font-size:64px;letter-spacing:0;color:${m.muted};font-weight:700}
-.artS{margin-top:56px;opacity:.98}
-.cta{align-items:center;text-align:center}
-.ctaline{margin-top:56px;border-top:1.5px solid ${m.line};padding-top:34px;font-size:32px;letter-spacing:.06em;color:${m.accent};font-weight:700;width:100%;text-align:center}
-.pph{border-radius:28px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:${m === MOODS.dusk ? 'rgba(250,246,239,.96)' : '#FFFFFF'};border:1.5px solid ${m.line};box-shadow:0 22px 70px rgba(${m.glow},.20)}
-.pph img{width:100%;height:100%;object-fit:contain;padding:26px}
-.pph.ph{background:transparent;box-shadow:none;border-style:dashed}
-.pname{font-weight:800;font-size:44px;letter-spacing:-.02em;margin-top:36px;text-wrap:balance}
-.pprice{font-weight:800;font-size:72px;letter-spacing:-.03em;color:${m.accent};margin-top:8px}
-.buy{margin-top:26px;display:inline-block;background:${m.chip};border:1.5px solid ${m.line};border-radius:999px;padding:15px 30px;font-size:29px;font-weight:700;color:${m.ink}}
-.ptag{display:flex;align-items:center;gap:24px;background:${m.chip};border:1.5px solid ${m.line};border-radius:22px;padding:22px 28px}
-.ptthumb{width:120px;height:120px;border-radius:16px;object-fit:contain;background:#FFFFFF;flex:none}
-.ptdot{width:20px;height:20px;border-radius:50%;background:${m.accent};flex:none;box-shadow:0 0 24px rgba(${m.glow},.8)}
-.ptname{font-weight:700;font-size:31px;line-height:1.35}
-.ptprice{font-weight:600;font-size:28px;color:${m.accent};margin-top:6px}
-.split{display:flex;gap:0;border-radius:26px;overflow:hidden;border:1.5px solid ${m.line}}
-.half{flex:1;padding:56px 44px;min-height:420px;display:flex;flex-direction:column;gap:22px}
-.before{background:#12151C;color:#9AA3B5}
-.after{background:linear-gradient(180deg,#2A2013 0%,#3A2B15 100%);color:#F7F0E1;position:relative}
-.after::before{content:'';position:absolute;inset:0;background:radial-gradient(70% 55% at 50% 18%, rgba(${MOODS.dusk.glow},.35) 0%, transparent 65%)}
-.halfLab{font-weight:700;font-size:28px;letter-spacing:.2em;opacity:.85;position:relative}
-.halfTxt{font-weight:600;font-size:37px;line-height:1.55;position:relative}
+.logo{font-weight:800;font-size:33px;letter-spacing:.4em;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.series{font-weight:600;font-size:26px;letter-spacing:.16em;color:${T.muted}}
+.mid{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:44px}
+.cover{justify-content:center;padding-bottom:0}
+.headline{font-weight:800;font-size:${T.headline}px;line-height:1.24;letter-spacing:-.028em;text-wrap:balance;text-shadow:0 4px 26px rgba(0,0,0,.42)}
+.headline em,.title em,.big em{font-style:normal;color:${T.accent}}
+.subline{display:flex;align-items:center;gap:26px;margin-top:44px}
+.rule{display:block;width:96px;height:2px;background:rgba(255,255,255,.75)}
+.en{font-weight:600;font-size:27px;letter-spacing:.34em;color:${T.muted}}
+.chip{margin-top:58px;align-self:flex-start;background:${T.chipBg};border:1.5px solid ${T.chipBorder};border-radius:999px;padding:21px 36px;font-size:34px;font-weight:600;line-height:1.45;backdrop-filter:blur(6px)}
+.klabel{margin-bottom:32px}
+.klabel span{display:inline-block;background:${T.labelBg};color:${T.labelInk};font-weight:700;font-size:28px;letter-spacing:.14em;padding:14px 26px;border-radius:12px}
+.title{font-weight:800;font-size:${T.title}px;line-height:1.28;letter-spacing:-.024em;text-wrap:balance;text-shadow:0 4px 22px rgba(0,0,0,.4)}
+.body{font-weight:500;font-size:${T.body}px;line-height:1.64;color:${T.muted};margin-top:36px;max-width:94%}
+.big{font-weight:800;font-size:150px;letter-spacing:-.03em;color:${T.accent};line-height:1;margin-bottom:24px;text-shadow:0 6px 30px rgba(0,0,0,.35)}
+.pbot{justify-content:flex-end}
+.pname{font-weight:800;font-size:56px;letter-spacing:-.02em;text-wrap:balance;text-shadow:0 3px 18px rgba(0,0,0,.45)}
+.pprice{font-weight:800;font-size:${T.price}px;letter-spacing:-.03em;color:${T.accent};margin-top:10px}
+.pbody{margin-top:26px}
+.buy{margin-top:30px;align-self:flex-start;background:${T.chipBg};border:1.5px solid ${T.chipBorder};border-radius:999px;padding:16px 32px;font-size:29px;font-weight:700;backdrop-filter:blur(6px)}
+.ptag{margin-top:48px;display:flex;align-items:center;gap:24px;background:rgba(0,0,0,.34);border:1.5px solid ${T.chipBorder};border-radius:22px;padding:20px 26px;backdrop-filter:blur(8px);align-self:flex-start}
+.ptthumb{width:116px;height:116px;border-radius:16px;object-fit:cover;background:#FFF;flex:none}
+.ptname{font-weight:700;font-size:30px;line-height:1.35}
+.ptprice{font-weight:600;font-size:27px;color:${T.accent};margin-top:6px}
+.split{display:flex;gap:22px}
+.half{flex:1;border-radius:${T.radius}px;padding:50px 42px;min-height:400px;display:flex;flex-direction:column;gap:20px;background:rgba(10,8,5,.55);border:1.5px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}
+.half.after{background:rgba(58,40,16,.62);border-color:${T.chipBorder}}
+.halfLab{font-weight:700;font-size:27px;letter-spacing:.2em;color:${T.muted}}
+.halfTxt{font-weight:600;font-size:36px;line-height:1.55}
+.cta{align-items:center;text-align:center;justify-content:center;padding-bottom:0}
+.cta .ptag{align-self:center}
+.ctaline{margin-top:54px;border-top:1.5px solid rgba(255,255,255,.4);padding-top:32px;font-size:31px;letter-spacing:.06em;color:${T.accent};font-weight:700;width:100%;text-align:center}
 .foot{display:flex;justify-content:space-between;align-items:center}
-.handle{font-weight:700;font-size:30px;color:${m.muted}}
+.handle{font-weight:700;font-size:29px;color:${T.muted};text-shadow:0 2px 12px rgba(0,0,0,.4)}
 .dots{display:flex;gap:12px}
-.dot{width:14px;height:14px;border-radius:50%;background:${m.line}}
-.dot.on{background:${m.accent}}
-</style></head><body>${frame(m, item.series || '비츠', sceneHTML(item, s, m, idx), idx + 1, total, item.handle)}</body></html>`;
+.dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.35)}
+.dot.on{background:${T.accent}}
+</style></head><body>${frame(item, s, scrim, inner, idx + 1, total, handle)}</body></html>`;
 }
 
 // ── 실행 ───────────────────────────────────────────────────────────
@@ -296,13 +254,11 @@ const tmp = join(outDir, '_tmp.html');
 let n = 0;
 for (const item of plan.items) {
   if (!Array.isArray(item.slides) || !item.slides.length) continue;
-  const m = MOODS[item.mood] || MOODS.paper;
-  item.handle = handle;
   const total = item.slides.length;
   const files = [];
   item.slides.forEach((s, idx) => {
     const file = `${item.id}-${idx + 1}.png`;
-    writeFileSync(tmp, pageHTML(item, s, m, idx, total, handle, faces));
+    writeFileSync(tmp, pageHTML(item, s, idx, total, handle, faces));
     execFileSync(chromium, [
       '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
       '--force-device-scale-factor=1', '--window-size=1080,1350',
@@ -311,10 +267,9 @@ for (const item of plan.items) {
     files.push(`cards/${clientId}/${file}`);
     n++;
   });
-  delete item.handle;
   item.slideImages = files;
   item.cardImage = files[0];
 }
 try { rmSync(tmp); } catch { /* ignore */ }
 writeFileSync(planPath, JSON.stringify(plan, null, 2), 'utf8');
-console.log(`비츠 전구빛 카드 ${n}장 렌더 완료 → docs/cards/${clientId}/`);
+console.log(`비츠 실사 풀블리드 카드 ${n}장 렌더 완료 → docs/cards/${clientId}/`);
