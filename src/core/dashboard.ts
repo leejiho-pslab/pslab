@@ -856,7 +856,11 @@ function openDetail(id){
     (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
     reelsVideo+
     perf+
-    '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>'+
+    // 네이버는 본문 미리보기 자체를 **최종 서식 그대로** 그린다. 따로 미리보기와 드래그
+    // 영역을 두면 어느 쪽을 끌어야 하는지 헷갈리고, 잘못 끌면 대시보드 서식이 딸려간다.
+    (chDef.key==='naver-blog'
+      ? naverDragBox(it)
+      : '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>')+
     reelsBox+
     manualHelper(it,chDef)+
     '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
@@ -878,7 +882,7 @@ function manualHelper(it, chDef){
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “제목만 복사” → 네이버 제목칸에 (본문 복사본에는 제목이 빠져 있습니다). ② “본문 전체 복사” → 글쓰기 창에 붙여넣기 — <b>소제목 크기·색이 그대로 따라옵니다</b>. ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다. ※ 서식이 깨지면 아래 <b>드래그용 본문</b>을 쓰세요.';
+    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -899,18 +903,7 @@ function manualHelper(it, chDef){
     videoBtn+ytBtns+
     (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>')+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
-    (isNaver?'<button class="btn" id="dragbtn-'+esc(it.id)+'" onclick="selectDrag(\\''+esc(it.id)+'\\',this.id)">🖱 드래그용 본문 선택</button>':'')+
-    dls+'</div>'+ytPack+dragPanel(it,isNaver)+'</div>';
-}
-// 드래그 복사 대안 — 네이버에 들어갈 최종 서식 그대로 그려 둔다.
-// 복사 버튼(ClipboardItem)이 막힌 브라우저·앱에서도 이 영역을 드래그해 Ctrl+C 하면
-// 인라인 스타일이 통째로 따라가므로 결과가 버튼 복사와 동일하다.
-function dragPanel(it,isNaver){
-  if(!isNaver) return '';
-  return '<div style="margin-top:14px;border-top:1px dashed #cbd5e1;padding-top:10px">'+
-    '<div class="muted" style="font-size:11px;margin-bottom:6px">🖱 드래그용 본문 — 네이버에 들어갈 실제 서식입니다. 이 영역만 드래그해 Ctrl+C 해도 됩니다.</div>'+
-    '<div id="nvdrag-'+esc(it.id)+'" style="max-height:420px;overflow:auto;background:#ffffff;border:1px solid #e4e8f0;border-radius:10px;padding:20px 18px">'+
-    naverBodyHtml(it)+'</div></div>';
+    dls+'</div>'+ytPack+'</div>';
 }
 // 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
 // 제목(# 줄)은 뺀다 — 네이버 제목칸에 따로 넣으므로 본문에 또 들어가면 중복이다.
@@ -931,33 +924,62 @@ function plainPostText(it){
    드래그해 복사하면 대시보드 CSS(회색 13px)가 딸려 들어가 색·크기가 뒤죽박죽이 된다.
    해결: 모든 요소에 color/font-size/font-family/line-height 를 **인라인으로 못 박는다**.
    상속될 여지를 남기지 않으면 붙여넣기 경로가 무엇이든 결과가 같다.
-   맥락을 나누는 소제목은 크기(25px)·굵기·상단 구분선으로 본문과 확실히 구분한다. */
+
+   ⚠️ **드래그 복사가 주 경로다.** 버튼 복사(ClipboardItem)는 브라우저·앱에 따라 막히지만
+   드래그는 어디서나 된다. 그래서 이 HTML 은 "붙여넣기용 데이터"이자 동시에 **화면에 그려
+   운영자가 직접 끌 대상**이다. 둘을 같은 함수로 만들어야 보이는 것과 붙는 것이 어긋나지 않는다.
+
+   맥락 구분은 크게 준다 — 소제목 29px/900, 본문 18px, 소제목 앞 여백 64px.
+   본문에서 눈으로 훑을 때도, 네이버에 붙였을 때도 목차 경계가 바로 보여야 한다. */
 var NV_FONT="'나눔고딕',NanumGothic,'맑은 고딕','Malgun Gothic',AppleSDGothicNeo-Regular,sans-serif";
-function nvP(inner){ return '<p style="margin:0 0 20px;padding:0;font-family:'+NV_FONT+';font-size:17px;line-height:1.85;color:#1f1f1f;letter-spacing:-0.01em">'+inner+'</p>'; }
+function nvP(inner){ return '<p style="margin:0 0 22px;padding:0;font-family:'+NV_FONT+';font-size:18px;line-height:1.9;color:#1f1f1f;letter-spacing:-0.01em">'+inner+'</p>'; }
 function nvInline(x){
   return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<strong style="font-weight:700;color:#1657c8">$1</strong>');
 }
-function naverBodyHtml(it){
+/* forScreen: 화면에 그릴 때만 이미지 자리에 실제 사진을 **배경으로** 깐다.
+   배경 이미지는 선택 영역에 포함되지 않아 붙여넣기에는 안 따라간다 —
+   운영자는 어떤 사진이 어디 들어가는지 보면서 끌 수 있고, 네이버에는 자리 표시 문구만 간다.
+   (네이버는 외부 이미지를 붙여넣기로 안 받으므로 <img> 를 넣어봐야 사라진다.) */
+function naverBodyHtml(it,forScreen){
   let n=0;
   const out=String(it.captionBody||'').split('\\n').map(line=>{
     const t=line.trim();
     const img=t.match(/^!\\[([^\\]]*)\\]\\(([^)]+)\\)$/);
     if(img){ n++;
-      return '<p style="margin:26px 0;padding:16px 12px;border:2px dashed #b9c6da;border-radius:10px;background:#f4f7fc;'+
-        'font-family:'+NV_FONT+';font-size:16px;line-height:1.6;color:#3b5b8c;text-align:center">📷 이미지'+n+' 자리 — 이 줄을 지우고 이미지'+n+'을 삽입하세요</p>';
+      const bg=forScreen
+        ? 'background-image:url('+esc(imgv(img[2]))+');background-size:cover;background-position:center;min-height:190px;'
+        : '';
+      return '<p style="margin:30px 0;padding:16px 12px;border:2px dashed #b9c6da;border-radius:10px;background-color:#f4f7fc;'+bg+
+        'font-family:'+NV_FONT+';font-size:16px;line-height:1.6;color:#3b5b8c;text-align:center;'+
+        'display:flex;align-items:flex-end;justify-content:center">'+
+        '<span style="background:rgba(255,255,255,.92);padding:6px 12px;border-radius:20px;font-weight:700">'+
+        '📷 이미지'+n+' 자리 — 이 줄을 지우고 이미지'+n+'을 삽입하세요</span></p>';
     }
-    if(t.startsWith('## ')) return '<p style="margin:44px 0 18px;padding:18px 0 0;border-top:3px solid #1657c8;'+
-      'font-family:'+NV_FONT+';font-size:25px;line-height:1.45;font-weight:800;color:#111111;letter-spacing:-0.02em">'+nvInline(t.slice(3))+'</p>';
+    // 소제목: 앞 여백을 크게 벌려 앞 단락과 확실히 끊고, 크기·굵기로 한 번 더 구분한다.
+    if(t.startsWith('## ')) return '<p style="margin:64px 0 22px;padding:20px 0 0;border-top:3px solid #1657c8;'+
+      'font-family:'+NV_FONT+';font-size:29px;line-height:1.4;font-weight:900;color:#0f0f0f;letter-spacing:-0.03em">'+nvInline(t.slice(3))+'</p>';
     if(t.startsWith('# ')) return '';
-    if(t==='>'||t.startsWith('> ')) return '<p style="margin:0 0 30px;padding:18px 20px;background:#f2f6fd;border-left:5px solid #1657c8;border-radius:4px;'+
-      'font-family:'+NV_FONT+';font-size:17px;line-height:1.8;color:#22314a;font-weight:600">'+nvInline(t.replace(/^>\\s?/,''))+'</p>';
-    if(t==='---') return '<p style="margin:34px 0;padding:0;border-top:1px solid #dfe4ec;height:0;font-size:0;line-height:0">&nbsp;</p>';
-    if(t.indexOf('#')===0&&t.indexOf(' #')>0) return '<p style="margin:26px 0 0;padding:0;font-family:'+NV_FONT+';font-size:15px;line-height:1.8;color:#7b8598">'+esc(t)+'</p>';
+    if(t==='>'||t.startsWith('> ')) return '<p style="margin:0 0 36px;padding:20px 22px;background:#f2f6fd;border-left:6px solid #1657c8;border-radius:4px;'+
+      'font-family:'+NV_FONT+';font-size:18px;line-height:1.8;color:#22314a;font-weight:600">'+nvInline(t.replace(/^>\\s?/,''))+'</p>';
+    if(t==='---') return '<p style="margin:40px 0;padding:0;border-top:1px solid #dfe4ec;height:0;font-size:0;line-height:0">&nbsp;</p>';
+    if(t.indexOf('#')===0&&t.indexOf(' #')>0) return '<p style="margin:32px 0 0;padding:0;font-family:'+NV_FONT+';font-size:15px;line-height:1.8;color:#7b8598">'+esc(t)+'</p>';
     if(t==='') return '';
     return nvP(nvInline(line));
   }).filter(Boolean).join('');
   // 바깥 래퍼도 색·크기를 못 박는다 (에디터가 래퍼 스타일만 살리는 경우 대비)
-  return '<div style="font-family:'+NV_FONT+';font-size:17px;line-height:1.85;color:#1f1f1f;background:#ffffff">'+out+'</div>';
+  return '<div style="font-family:'+NV_FONT+';font-size:18px;line-height:1.9;color:#1f1f1f;background:#ffffff">'+out+'</div>';
+}
+/* 네이버 본문 = 드래그 대상. 미리보기와 드래그 영역을 따로 두지 않는다 —
+   따로 두면 어느 쪽을 끌어야 하는지 헷갈리고, 잘못 끌면 대시보드 서식이 딸려간다. */
+function naverDragBox(it){
+  return '<div class="capbox" style="border-color:#b9c6da;background:#fbfcfe">'+
+    '<div class="caphd">📝 블로그 본문 — 이 영역을 드래그해 복사하세요</div>'+
+    '<div class="muted" style="font-size:12px;margin:-2px 0 10px">'+
+    '아래 글이 <b>네이버에 들어갈 실제 서식</b>입니다. 드래그해 Ctrl+C 하면 소제목 크기·색이 그대로 따라옵니다. '+
+    '(사진은 배경으로만 보여주는 것이라 붙여넣기에는 안 따라갑니다 — 자리 표시 문구만 갑니다.)</div>'+
+    '<div style="margin-bottom:10px"><button class="btn fb" id="dragbtn-'+esc(it.id)+'" onclick="selectDrag(\\''+esc(it.id)+'\\',this.id)">🖱 전체 선택 (드래그 대신)</button></div>'+
+    '<div id="nvdrag-'+esc(it.id)+'" style="background:#ffffff;border:1px solid #e4e8f0;border-radius:10px;padding:26px 24px">'+
+    naverBodyHtml(it,true)+'</div></div>';
 }
 function flash(id,msg){ const b=document.getElementById(id); if(b){const o=b.textContent;b.textContent=msg;setTimeout(()=>b.textContent=o,1500);} }
 function copyPost(id){
@@ -967,7 +989,7 @@ function copyPost(id){
   // 서식 채널은 text/html 과 text/plain 을 **함께** 넣는다. 에디터는 html 을,
   // 메모장 등은 plain 을 받는다. ClipboardItem 미지원 브라우저면 평문으로 떨어진다.
   if(isNaver&&window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
-    const html=naverBodyHtml(it);
+    const html=naverBodyHtml(it,false);
     navigator.clipboard.write([new ClipboardItem({
       'text/html':new Blob([html],{type:'text/html'}),
       'text/plain':new Blob([plain],{type:'text/plain'})
