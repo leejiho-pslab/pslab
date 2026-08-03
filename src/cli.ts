@@ -29,6 +29,12 @@ import { StatusBoard } from './core/board.js';
 import { renderDashboard } from './core/dashboard.js';
 import { DesignStore } from './core/design.js';
 import { PlanStore, MANUAL_CHANNELS, isManualOnly } from './core/plan.js';
+import {
+  loadLedger,
+  saveLedger,
+  alreadyPublished,
+  recordPublish,
+} from './core/publish-ledger.js';
 import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
@@ -387,8 +393,33 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
 
   for (const client of clients) {
     const plan = store.load(client.id);
+    // 발행 원장 — plan.json 상태가 되돌아가도 중복 발행을 막는 최후 방어선.
+    // (2026-07-31 중복 발행 사고: status 가 published→planned 로 되돌아가 재발행됨)
+    const ledger = loadLedger(dataDir, client.id);
+
+    // 자가 복구: 원장에 있는데 plan 이 미발행으로 되돌아가 있으면 상태를 되돌려 놓는다.
+    // 이걸 안 하면 대시보드가 "발행 대기"로 잘못 보이고, 사람이 수동 발행해 또 중복이 난다.
+    let healed = 0;
+    for (const it of plan.items) {
+      if (!alreadyPublished(ledger, it.id) || it.status === 'published') continue;
+      const e = ledger[it.id];
+      it.status = 'published';
+      it.publishedAt = it.publishedAt ?? e.firstPublishedAt;
+      it.published = it.published?.length
+        ? it.published
+        : e.refs.map((r) => ({ platform: r.platform as PlatformId, remoteId: r.remoteId, url: r.url }));
+      healed++;
+    }
+    if (healed > 0) {
+      console.warn(
+        `  ⚠️ ${client.name}: 원장에는 발행 기록이 있는데 plan 이 미발행이던 항목 ${healed}건 → 상태 복구 (중복 발행 방지)`,
+      );
+    }
+
     const targets = plan.items.filter((it) => {
       if (it.status === 'published') return false;
+      // ★ 원장에 있으면 무조건 제외 — status 를 신뢰하지 않는다
+      if (alreadyPublished(ledger, it.id)) return false;
       if (id) return it.id === id;
       // --due: 예정시각이 지난 항목 (이미 수동발행 처리된 건 제외)
       if (it.status === 'manual') return false;
@@ -396,6 +427,10 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
     });
     if (targets.length === 0) {
       console.log(`  ${client.name}: 발행할 항목 없음`);
+      // 발행할 게 없어도 자가 복구분은 저장해야 한다.
+      // 여기서 그냥 continue 하면 복구가 메모리에만 남고 사라져, 대시보드는 계속
+      // "발행 대기"로 보이고 사람이 수동 발행해 또 중복이 난다.
+      if (healed > 0) store.save(client.id, plan);
       continue;
     }
     for (const it of targets) {
@@ -523,6 +558,15 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
           remoteId: r.remoteId!,
           url: r.url,
         }));
+        // 원장에 즉시 기록하고 즉시 저장한다 — 이 뒤 단계에서 프로세스가 죽어도
+        // "이미 내보냈다"는 사실은 남아야 한다. plan.json 저장은 루프 끝에서 한 번뿐이라
+        // 거기에만 기대면 중간에 죽었을 때 다음 사이클이 다시 발행한다.
+        recordPublish(
+          ledger,
+          it.id,
+          okResults.map((r) => ({ platform: r.platform, remoteId: r.remoteId!, url: r.url })),
+        );
+        saveLedger(dataDir, client.id, ledger);
         // 발행 후 푸시 알림 (텔레그램) — 설정 없으면 자동 생략
         const chs = okResults.map((r) => r.platform).join(', ');
         const link = okResults[0].url ? `\n🔗 ${okResults[0].url}` : '';
@@ -533,6 +577,7 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       }
     }
     store.save(client.id, plan);
+    saveLedger(dataDir, client.id, ledger);
   }
 }
 

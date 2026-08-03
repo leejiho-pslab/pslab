@@ -1237,14 +1237,6 @@
       "videoFile": "shorts/reels-07-31/reels-07-31.mp4",
       "videoSeconds": 13.1,
       "publishedUrl": "https://www.instagram.com/reel/DbdKmO_FW4p/",
-      "publishedAt": "2026-07-31T11:33:24.085Z",
-      "published": [
-        {
-          "platform": "instagram",
-          "remoteId": "18138464887571330",
-          "url": "https://www.instagram.com/reel/DbdKmO_FW4p/"
-        }
-      ],
       "metrics": {
         "views": 0,
         "likes": 0,
@@ -1254,7 +1246,15 @@
       },
       "metricsAt": "2026-07-31T11:33:50.076Z",
       "insightComment": "조회 0·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-08-02T11:03:26.228Z"
+      "insightAt": "2026-08-02T11:03:26.228Z",
+      "publishedAt": "2026-07-31T11:33:24.085Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "18138464887571330",
+          "url": "https://www.instagram.com/reel/DbdKmO_FW4p/"
+        }
+      ]
     },
     {
       "id": "youtube-07-27",
@@ -1425,14 +1425,6 @@
       "videoFile": "shorts/reels-07-31/reels-07-31.mp4",
       "videoSeconds": 13.1,
       "publishedUrl": "https://youtu.be/_eYHud4wvcY",
-      "publishedAt": "2026-07-31T11:33:27.079Z",
-      "published": [
-        {
-          "platform": "youtube",
-          "remoteId": "_eYHud4wvcY",
-          "url": "https://youtu.be/_eYHud4wvcY"
-        }
-      ],
       "metrics": {
         "views": 273,
         "likes": 0,
@@ -1442,7 +1434,15 @@
       },
       "metricsAt": "2026-08-02T11:03:22.838Z",
       "insightComment": "조회 273·좋아요 0. 노출 대비 반응을 키우려면 첫 3초 후킹을 강화하세요.",
-      "insightAt": "2026-08-02T11:03:26.634Z"
+      "insightAt": "2026-08-02T11:03:26.634Z",
+      "publishedAt": "2026-07-31T11:33:27.079Z",
+      "published": [
+        {
+          "platform": "youtube",
+          "remoteId": "_eYHud4wvcY",
+          "url": "https://youtu.be/_eYHud4wvcY"
+        }
+      ]
     },
     {
       "id": "threads-07-31",

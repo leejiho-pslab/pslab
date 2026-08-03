@@ -13,6 +13,11 @@
 
 ## 데이터
 - `data/`와 `/clients/*.json`은 gitignore — 새 파일은 `git add -f` 필요.
+- **⚠️ `data/`를 커밋하기 전에 반드시 `git fetch` + 병합할 것.** CI가 발행 결과를 이 폴더에
+  계속 쓴다. 오래된 체크아웃을 그대로 커밋하면 CI가 기록한 `status: published`가 `planned`로
+  되돌아가고, 다음 크론이 **같은 콘텐츠를 다시 발행**한다(2026-07-31 인스타·유튜브 중복 사고).
+- 발행 중복 방지는 `published-ledger.json`(append-only)이 담당 — `plan.json` 상태가 되돌아가도
+  재발행을 막고 상태를 자동 복구한다. 의도적 재발행은 원장에서 키를 지운 뒤 실행 (ADR-0016).
 - 유튜브 성과는 실측만(플러그인이 Data API v3 statistics 조회). 가짜 지표 금지.
 - 디자인: AI 학습 메모(`design.json notes`)와 운영자 지시(`humanNotes`)는 분리 — humanNotes는 사람 경로([디자인피드백] 이슈)로만 수정.
 - 카드 색·레이아웃은 `data/clients/<id>/design-tokens.json` 우선.
