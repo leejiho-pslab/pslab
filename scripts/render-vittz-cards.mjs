@@ -78,11 +78,16 @@ function loadProducts() {
 }
 const PRODUCTS = loadProducts();
 const PRODUCT_KEYS = Object.keys(PRODUCTS);
-function productPhoto(key) {
+function productPhoto(key, idx = 0) {
   if (!key) return null;
-  const f = join(ROOT, 'docs/products', clientId, `${key}.jpg`);
+  const f = join(ROOT, 'docs/products', clientId, idx === 0 ? `${key}.jpg` : `${key}-${idx + 1}.jpg`);
   if (!existsSync(f)) return null;
   try { return `data:image/jpeg;base64,${readFileSync(f).toString('base64')}`; } catch { return null; }
+}
+function cutCount(key) {
+  let n = 0;
+  while (existsSync(join(ROOT, 'docs/products', clientId, n === 0 ? `${key}.jpg` : `${key}-${n + 1}.jpg`))) n++;
+  return n;
 }
 const won = (n) => `${Number(n).toLocaleString('ko-KR')}원`;
 const br = (s) => esc(s).replace(/\n/g, '<br>');
@@ -90,8 +95,19 @@ const br = (s) => esc(s).replace(/\n/g, '<br>');
 const hl = (s) => br(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
 
 // 배경 실사 선택 — slide.bgKey → slide.productKey → 첫 제품. 없으면 null(폴백 배경).
-function bgPhoto(s) {
-  return productPhoto(s.bgKey) || productPhoto(s.productKey) || productPhoto(PRODUCT_KEYS[0]);
+// 아이템 단위 컷 로테이션: 같은 제품이 여러 장에 나와도 장마다 다른 컷을 쓴다 (운영자 지침).
+// slide.imgIndex 로 특정 컷 고정 가능.
+function makeCutPicker() {
+  const used = {};
+  return (s) => {
+    const key = [s.bgKey, s.productKey, PRODUCT_KEYS[0]].find((k) => k && cutCount(k) > 0);
+    if (!key) return null;
+    const total = cutCount(key);
+    let idx;
+    if (Number.isInteger(s.imgIndex)) idx = ((s.imgIndex % total) + total) % total;
+    else { idx = (used[key] ?? 0) % total; used[key] = (used[key] ?? 0) + 1; }
+    return productPhoto(key, idx);
+  };
 }
 
 // 단계 라벨 칩 — haysol 릴스의 제품명 라벨 문법 (밝은 칩 + 진한 잉크)
@@ -116,14 +132,14 @@ function sceneHTML(item, s, idx) {
     </div>` };
   }
   if (s.scene === 'product') {
-    // 제품 장 — 제품 실사 풀블리드 + 하단 오버레이(단계 라벨·제품명·가격·설명·구매)
+    // 제품 장 — 제품 실사 풀블리드 + 하단 오버레이. 가격은 이름 옆에 작게(운영자 지침: 가격 톤다운),
+    // 구매 동선은 잔잔한 한 줄로.
     const p = PRODUCTS[s.productKey] || {};
     return { scrim: T.scrimBottom, inner: `<div class="mid pbot">
       ${labelChip(s.label || '비츠 제품')}
-      <div class="pname">${esc(p.name || s.title || '')}</div>
-      ${p.price ? `<div class="pprice">${won(p.price)}</div>` : ''}
+      <div class="pname">${esc(p.name || s.title || '')}${p.price ? `<span class="pprice-s">${won(p.price)}</span>` : ''}</div>
       ${s.body ? `<div class="body pbody">${br(s.body)}</div>` : ''}
-      <div class="buy">프로필 링크에서 바로 구매 →</div>
+      <div class="buyline">프로필 링크에서 실물 보기 →</div>
     </div>` };
   }
   if (s.scene === 'spec') {
@@ -148,13 +164,14 @@ function sceneHTML(item, s, idx) {
       ${s.body ? `<div class="body">${br(s.body)}</div>` : ''}
     </div>` };
   }
-  if (s.scene === 'cta') {
-    // 마지막 장 — 중앙 CTA (드라이브 지침: 마지막 장 중앙 CTA)
-    return { scrim: T.scrimText, inner: `<div class="mid cta">
-      <div class="title">${hl(s.title || '')}</div>
-      ${s.body ? `<div class="body" style="text-align:center">${br(s.body)}</div>` : ''}
-      ${s.productKey ? productTag(s.productKey) : ''}
-      <div class="ctaline">비츠 딜리버리 · 배달과 설치를 한 번에</div>
+  if (s.scene === 'cta' || s.scene === 'brand') {
+    // 마지막 장 — 배경 사진 없이 로고만 깔끔하게 (운영자 지침③). 핵심 메시지 + 로고 중심.
+    return { noPhoto: true, scrim: 'none', inner: `<div class="mid brand">
+      <div class="brandlogo">VITTZ</div>
+      <div class="brandline"></div>
+      <div class="brandtitle">${hl(s.title || '')}</div>
+      ${s.body ? `<div class="brandbody">${br(s.body)}</div>` : ''}
+      <div class="brandfoot">비츠 딜리버리 · 배달과 설치를 한 번에</div>
     </div>` };
   }
   // point 및 기타(구 pendant/fan/window/bulbs 호환) — 텍스트 장
@@ -166,26 +183,26 @@ function sceneHTML(item, s, idx) {
   </div>` };
 }
 
-// ── 공통 프레임 — 실사 배경 + 스크림 + 워드마크/시리즈/핸들/도트 ──
-function frame(item, s, scrim, inner, pageNo, pageTotal, handle) {
-  const photo = bgPhoto(s);
-  const bgLayer = photo
-    ? `<img class="bg" src="${photo}" alt=""/><div class="scrim" style="background:${scrim}"></div>`
-    : `<div class="bg fb"></div>`;
-  const dots = Array.from({ length: pageTotal }, (_, i) =>
-    `<span class="dot${i + 1 === pageNo ? ' on' : ''}"></span>`).join('');
-  return `<div class="card${photo ? '' : ' nofoto'}">
+// ── 공통 프레임 — 실사 배경 + 스크림 + 좌상단 워드마크만 (운영자 지침⑤: 로고 외 프레임 요소 제거) ──
+function frame(item, s, scrim, inner, noPhoto, pickCut, pos) {
+  const photo = noPhoto ? null : pickCut(s);
+  const bgLayer = noPhoto
+    ? `<div class="bg brandbg"></div>`
+    : photo
+      ? `<img class="bg" src="${photo}" alt=""/><div class="scrim" style="background:${scrim}"></div>`
+      : `<div class="bg fb"></div>`;
+  return `<div class="card${photo || noPhoto ? '' : ' nofoto'}">
     ${bgLayer}
     <div class="layer">
-      <div class="top"><div class="logo">VITTZ</div><div class="series">${esc(item.series || '비츠')}</div></div>
-      ${inner}
-      <div class="foot"><div class="handle">${esc(handle)}</div><div class="dots">${dots}</div></div>
+      ${noPhoto ? '' : `<div class="top"><div class="logo">VITTZ</div></div>`}
+      <div class="midwrap"${pos ? ` style="justify-content:${pos}"` : ''}>${inner}</div>
     </div>
   </div>`;
 }
 
-function pageHTML(item, s, idx, total, handle, faces) {
-  const { scrim, inner } = sceneHTML(item, s, idx);
+function pageHTML(item, s, idx, total, handle, faces, pickCut) {
+  const { scrim, inner, noPhoto } = sceneHTML(item, s, idx);
+  const pos = { top: 'flex-start', center: 'center', bottom: 'flex-end' }[s.textPos] || null;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -201,7 +218,9 @@ body{font-family:'Pretendard';color:${T.ink}}
 .top{display:flex;justify-content:space-between;align-items:baseline}
 .logo{font-weight:800;font-size:33px;letter-spacing:.4em;text-shadow:0 2px 14px rgba(0,0,0,.35)}
 .series{font-weight:600;font-size:26px;letter-spacing:.16em;color:${T.muted}}
+.midwrap{display:contents}
 .mid{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:44px}
+${pos ? `.mid{justify-content:${pos} !important}` : ''}
 .cover{justify-content:center;padding-bottom:0}
 .headline{font-weight:800;font-size:${T.headline}px;line-height:1.24;letter-spacing:-.028em;text-wrap:balance;text-shadow:0 4px 26px rgba(0,0,0,.42)}
 .headline em,.title em,.big em{font-style:normal;color:${T.accent}}
@@ -218,6 +237,16 @@ body{font-family:'Pretendard';color:${T.ink}}
 .pname{font-weight:800;font-size:56px;letter-spacing:-.02em;text-wrap:balance;text-shadow:0 3px 18px rgba(0,0,0,.45)}
 .pprice{font-weight:800;font-size:${T.price}px;letter-spacing:-.03em;color:${T.accent};margin-top:10px}
 .pbody{margin-top:26px}
+.pprice-s{font-weight:600;font-size:30px;color:${T.muted};margin-left:22px;letter-spacing:0}
+.buyline{margin-top:30px;font-size:28px;font-weight:600;color:${T.muted};letter-spacing:.02em}
+.brandbg{background:#FBF8F2}
+.brand{align-items:center;text-align:center;justify-content:center !important;color:#2A241B}
+.brandlogo{font-weight:800;font-size:96px;letter-spacing:.42em;color:#2A241B;text-indent:.42em}
+.brandline{width:120px;height:3px;background:#E8A13D;margin:44px 0 52px}
+.brandtitle{font-weight:800;font-size:64px;line-height:1.34;letter-spacing:-.02em;color:#2A241B;text-wrap:balance}
+.brandtitle em{font-style:normal;color:#B26E0F}
+.brandbody{font-weight:500;font-size:36px;line-height:1.66;color:#93826A;margin-top:34px;max-width:88%}
+.brandfoot{margin-top:64px;font-size:27px;font-weight:600;letter-spacing:.08em;color:#B9A88C}
 .buy{margin-top:30px;align-self:flex-start;background:${T.chipBg};border:1.5px solid ${T.chipBorder};border-radius:999px;padding:16px 32px;font-size:29px;font-weight:700;backdrop-filter:blur(6px)}
 .ptag{margin-top:48px;display:flex;align-items:center;gap:24px;background:rgba(0,0,0,.34);border:1.5px solid ${T.chipBorder};border-radius:22px;padding:20px 26px;backdrop-filter:blur(8px);align-self:flex-start}
 .ptthumb{width:116px;height:116px;border-radius:16px;object-fit:cover;background:#FFF;flex:none}
@@ -236,7 +265,7 @@ body{font-family:'Pretendard';color:${T.ink}}
 .dots{display:flex;gap:12px}
 .dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.35)}
 .dot.on{background:${T.accent}}
-</style></head><body>${frame(item, s, scrim, inner, idx + 1, total, handle)}</body></html>`;
+</style></head><body>${frame(item, s, scrim, inner, noPhoto, pickCut, pos)}</body></html>`;
 }
 
 // ── 실행 ───────────────────────────────────────────────────────────
@@ -256,9 +285,10 @@ for (const item of plan.items) {
   if (!Array.isArray(item.slides) || !item.slides.length) continue;
   const total = item.slides.length;
   const files = [];
+  const pickCut = makeCutPicker();
   item.slides.forEach((s, idx) => {
     const file = `${item.id}-${idx + 1}.png`;
-    writeFileSync(tmp, pageHTML(item, s, idx, total, handle, faces));
+    writeFileSync(tmp, pageHTML(item, s, idx, total, handle, faces, pickCut));
     execFileSync(chromium, [
       '--headless', '--no-sandbox', '--disable-gpu', '--hide-scrollbars',
       '--force-device-scale-factor=1', '--window-size=1080,1350',

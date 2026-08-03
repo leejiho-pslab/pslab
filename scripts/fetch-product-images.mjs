@@ -48,27 +48,33 @@ console.log(`허용 도메인: ${ALLOW.join(', ')}`);
 
 let ok = 0, skip = 0, fail = 0;
 for (const p of spec.products || []) {
-  const out = join(outDir, `${p.key}.jpg`);
-  if (!force && existsSync(out)) { skip++; continue; }
-  if (!allowed(p.image)) {
-    console.log(`  ⛔ ${p.key} — 허용 도메인 밖(${p.image.slice(0, 60)}…) → 차단`);
-    fail++;
-    continue;
-  }
-  try {
-    const res = await fetch(p.image, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; pslab-sns)' },
-      signal: AbortSignal.timeout(20_000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.length < 1000) throw new Error('응답이 이미지가 아님');
-    writeFileSync(out, buf);
-    console.log(`  ✓ ${p.key} (${Math.round(buf.length / 1024)}KB) — ${p.name}`);
-    ok++;
-  } catch (err) {
-    console.log(`  ✗ ${p.key} — ${err.message} (개발 환경이면 정상, CI에서 채워짐)`);
-    fail++;
+  // 다중 컷 지원 — images[](여러 컷) 또는 image(단일). 파일명: <key>.jpg, <key>-2.jpg, <key>-3.jpg…
+  // (운영자 지침: 한 콘텐츠에서 같은 제품 이미지를 반복 사용하지 않는다 — 장마다 다른 컷)
+  const urls = Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : []);
+  for (let i = 0; i < urls.length; i++) {
+    const url = urls[i];
+    const out = join(outDir, i === 0 ? `${p.key}.jpg` : `${p.key}-${i + 1}.jpg`);
+    if (!force && existsSync(out)) { skip++; continue; }
+    if (!allowed(url)) {
+      console.log(`  ⛔ ${p.key}#${i + 1} — 허용 도메인 밖(${String(url).slice(0, 60)}…) → 차단`);
+      fail++;
+      continue;
+    }
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; pslab-sns)' },
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.length < 1000) throw new Error('응답이 이미지가 아님');
+      writeFileSync(out, buf);
+      console.log(`  ✓ ${p.key}#${i + 1} (${Math.round(buf.length / 1024)}KB) — ${p.name}`);
+      ok++;
+    } catch (err) {
+      console.log(`  ✗ ${p.key}#${i + 1} — ${err.message} (개발 환경이면 정상, CI에서 채워짐)`);
+      fail++;
+    }
   }
 }
 console.log(`제품 이미지: ${ok}개 다운로드 · ${skip}개 보유 · ${fail}개 실패 → docs/products/${clientId}/`);

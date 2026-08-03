@@ -5,33 +5,65 @@
       "key": "delun180",
       "name": "LED 델룬 거실등 180W",
       "price": 95000,
-      "image": "https://www.vittz.co.kr/shopimages/vittz/063001000566.jpg",
       "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100006932",
+      "images": [
+        "https://www.vittz.co.kr/shopimages/vittz/063001000566.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3629_thumbnail_02.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3629_thumbnail_03.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3629_thumbnail_04.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3629_thumbnail_05.jpg"
+      ],
       "note": "삼성 정품 LED 모듈·플리커프리 — 거실 베이스 조명"
     },
     {
       "key": "jelrobi",
       "name": "COB 젤로비 레일조명 10W/20W/30W",
       "price": 13000,
-      "image": "https://www.vittz.co.kr/shopimages/vittz/063009000043.jpg",
       "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=2081318",
+      "images": [
+        "https://www.vittz.co.kr/shopimages/vittz/063009000043.jpg",
+        "https://vittz.hgodo.com/image/v1-4106_03.jpg"
+      ],
       "note": "플리커프리 COB 스팟 — 포인트 조명(빛의 방향)"
     },
     {
       "key": "seraphim",
       "name": "세라핌 1등 인테리어 식탁등",
       "price": 75000,
-      "image": "https://www.vittz.co.kr/shopimages/vittz/063007001394.jpg",
       "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100003357",
+      "images": [
+        "https://www.vittz.co.kr/shopimages/vittz/063007001394.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-1735_thumbnail_02.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-1735_thumbnail_03.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-1735_thumbnail_04.jpg"
+      ],
       "note": "컬러 글라스 펜던트 — 무드 조명(색과 온도)"
     },
     {
       "key": "blade",
       "name": "LED 블레이드 BLDC 천장 실링팬 조명",
       "price": 155000,
-      "image": "https://www.vittz.co.kr/shopimages/vittz/063002000137.jpg",
       "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100006949",
+      "images": [
+        "https://www.vittz.co.kr/shopimages/vittz/063002000137.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3639_thumbnail_02.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3639_thumbnail_03.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3639_thumbnail_04.jpg"
+      ],
       "note": "3색온도·역풍 모드 — 조명+공기순환 결합형"
+    },
+    {
+      "key": "bang60",
+      "name": "LED 델룬 방등 60W",
+      "price": 19900,
+      "url": "https://vittz.co.kr/shop/shopdetail.html?branduid=1100006929",
+      "images": [
+        "https://www.vittz.co.kr/shopimages/vittz/063004000633.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3626_thumbnail_02.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3626_thumbnail_03.jpg",
+        "https://vittz.hgodo.com/image/thumbnail/v2-3626_thumbnail_04.jpg"
+      ],
+      "note": "삼성 정품 LED 모듈·플리커프리 — 방등 표준"
     }
   ]
 }
