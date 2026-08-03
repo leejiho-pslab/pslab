@@ -190,7 +190,11 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg docs/products docs/references 2>/dev/null || true
+          # 경로별 개별 add — 없는 경로 하나가 전체 스테이징을 조용히 무산시키는 사고 방지
+          # (git add는 pathspec 하나만 없어도 전부 실패한다. 2>/dev/null || true가 이를 숨겼음)
+          for p in data docs/index.html docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg docs/products docs/references; do
+            if [ -e "$p" ]; then git add -f "$p"; fi
+          done
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi
