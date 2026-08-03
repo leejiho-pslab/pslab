@@ -32,9 +32,14 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Seoul
+      # 발행 전 검수 게이트 — publish-plan --due 가 열려 있는 [수정요청·채널] 이슈를 조회
+      PSLAB_REPO: ${{ github.repository }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # ▶ 자동발행 재개 (2026-07-27 운영자 요청) — 예정 시각이 지난 승인 항목을 실제 발행.
       # 다시 멈추려면 저장소 Variables 에 PSLAB_DRY_RUN=true 를 추가하면 된다
       # (코드 수정 없이 홀드 가능. 변수가 없으면 실제 발행).
+      # ※ vittz 계열 브랜치에는 07-10 홀드('true' 고정)가 남아 있으나 그건 그쪽 시점 설정이다.
+      #   pslab 은 07-27 에 운영자가 발행을 재개했으므로 이 표현식을 유지한다.
       PSLAB_DRY_RUN: ${{ vars.PSLAB_DRY_RUN || 'false' }}
       PSLAB_LOG_LEVEL: info
       # --- AI 글 생성 ---

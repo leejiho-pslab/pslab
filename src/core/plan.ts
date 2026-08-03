@@ -74,9 +74,9 @@ export interface PlanItem {
   insightComment?: string;
   /** 인사이트 코멘트 생성 시각 (ISO) */
   insightAt?: string;
-  /** 유튜브 쇼츠·인스타 릴스: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
+  /** 유튜브 쇼츠: 자동 합성된 영상 파일 경로 (대시보드 상대 경로) */
   videoFile?: string;
-  /** 인스타 릴스: 영상 대본([HOOK]/[본론]/[CTA]) — captionBody(발행 캡션)와 분리 */
+  /** 릴스/쇼츠 대본 (영상 자막 구성 — 모달 상세에서 노출) */
   reelsScript?: string;
   /** 다른 항목의 영상을 그대로 재사용 (같은 콘텐츠를 릴스·쇼츠 양쪽에 발행할 때) */
   videoFrom?: string;
@@ -92,6 +92,8 @@ export interface PlanItem {
   ytDescription?: string;
   /** 유튜브 업로드용 태그(키워드) */
   ytTags?: string[];
+  /** 발행 보류(미처리 수정요청) 알림을 이미 보낸 시각 — 사이클마다 중복 푸시 방지 */
+  holdNotifiedAt?: string;
 }
 
 /** 한 채널에 실제 발행된 결과 (성과 수집에 필요한 식별자) */

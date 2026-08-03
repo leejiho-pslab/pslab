@@ -88,6 +88,28 @@ export interface KeywordStats {
   items: KeywordStat[];
 }
 
+/**
+ * 레퍼런스 링크 인박스 — reference-links.json
+ * 운영자가 대시보드에서 채널별 벤치마크 링크를 등록(`[레퍼런스·<채널>]` 이슈)하면
+ * pending으로 적재되고, Claude 세션이 기획·제작 게이트에서 직접 열람·학습한 뒤
+ * learned로 바꾸며 학습 요약을 남긴다. CI는 링크를 열람하지 않는다(적재만).
+ */
+export interface ReferenceLink {
+  url: string;
+  channel: string;
+  /** 운영자가 링크와 함께 남긴 메모(벤치마크 의도) */
+  note?: string;
+  status: 'pending' | 'learned' | 'failed';
+  addedAt: string;
+  learnedAt?: string;
+  /** 학습 요약 — 무엇을 배웠고 어디에 반영했는지 (Claude 세션이 기록) */
+  summary?: string;
+}
+export interface ReferenceLinks {
+  updatedAt?: string;
+  links: ReferenceLink[];
+}
+
 export const BRAND_FIELDS: Record<string, keyof BrandBrief> = {
   분석: 'analysis',
   방향성: 'direction',
@@ -176,6 +198,38 @@ export class GuidanceStore {
   loadKeywordStats(clientId: string): KeywordStats | undefined {
     const s = this.read<KeywordStats>(this.file(clientId, 'keyword-stats.json'));
     return s && Array.isArray(s.items) && s.items.length ? s : undefined;
+  }
+
+  /** reference-links.json — 레퍼런스 링크 인박스 (대시보드 등록 → 세션 학습) */
+  loadReferenceLinks(clientId: string): ReferenceLinks | undefined {
+    const r = this.read<ReferenceLinks>(this.file(clientId, 'reference-links.json'));
+    return r && Array.isArray(r.links) && r.links.length ? r : undefined;
+  }
+
+  /** 레퍼런스 링크 등록 — 채널+URL 기준 중복 제거(같은 링크를 다른 채널 레퍼런스로 재등록 가능) */
+  addReferenceLinks(
+    clientId: string,
+    channel: string,
+    entries: Array<{ url: string; note?: string }>,
+  ): { added: number; total: number } {
+    const doc = this.read<ReferenceLinks>(this.file(clientId, 'reference-links.json')) ?? { links: [] };
+    const seen = new Set(doc.links.map((l) => `${l.channel}|${l.url}`));
+    let added = 0;
+    for (const e of entries) {
+      if (!e.url || seen.has(`${channel}|${e.url}`)) continue;
+      seen.add(`${channel}|${e.url}`);
+      doc.links.push({
+        url: e.url,
+        channel,
+        note: e.note || undefined,
+        status: 'pending',
+        addedAt: new Date().toISOString(),
+      });
+      added++;
+    }
+    doc.updatedAt = new Date().toISOString();
+    this.write(this.file(clientId, 'reference-links.json'), doc);
+    return { added, total: doc.links.length };
   }
 
   /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */

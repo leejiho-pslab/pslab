@@ -283,6 +283,7 @@ function buildClientData(
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
     weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
+    referenceLinks: guidanceStore?.loadReferenceLinks(client.id) ?? null,
   };
 }
 
@@ -317,6 +318,23 @@ export function renderDashboard(
     ),
   };
   const json = JSON.stringify(data).replace(/</g, '\\u003c');
+
+  // 업체 감도 팔레트(clients/<id>.json theme) — 있으면 기본 라이트 테마 위에 오버라이드
+  const th = clients.find((c) => c.theme)?.theme;
+  const themeCss = th
+    ? `
+/* ── 업체 브랜드 테마 오버라이드 ── */
+:root{--brand:${th.accent ?? '#2b6fff'}}
+body{background:${th.bg ?? '#ffffff'}}
+header,.tabs{background:${th.bg ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
+.panel,.card,.kpi{background:${th.panel ?? '#ffffff'};border-color:${th.border ?? '#e4e8f0'}}
+a{color:${th.accentInk ?? '#1d6ae5'}}
+.tab.on{border-bottom-color:${th.accent ?? '#2b6fff'}}
+.cbtn.on{background:${th.accent ?? '#2b6fff'};border-color:${th.accent ?? '#2b6fff'}}
+.kpi .v.accent{color:${th.accentInk ?? '#d97706'}}
+.btn.fb{background:${th.panel ?? '#f6effc'};border-color:${th.accent ?? '#d9c2ee'};color:${th.accentInk ?? '#7a35b8'}}
+`
+    : '';
 
   return `<!doctype html>
 <html lang="ko">
@@ -425,7 +443,7 @@ footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
 .reqta{width:100%;border:1px solid #dfe4ec;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#14171d;background:#fff;resize:vertical}
 .reqta:focus{outline:2px solid #2b6fff33;border-color:#2b6fff}
 @media(max-width:720px){.carou .slide img{height:60vh}}
-</style>
+${themeCss}</style>
 </head>
 <body>
 <header>
@@ -502,32 +520,105 @@ function setCustom(){
 }
 // ── 수정요청 (깃허브 이슈 연동: [수정요청·채널키] 제목 규약) ──
 let ISSUES=null; // null=로딩중, []=없음/실패
+let REF_ISSUES=[]; // [레퍼런스·채널] 이슈에서 즉시 파싱한 링크 (커밋 전에도 대시보드에 바로 표시)
+let G_ISSUES=[]; // 지침 이슈(브랜드노트·디자인피드백·가이드) — 지침 탭 실시간 '접수됨' 표시용
 const REQ_RE=/^\\[수정요청·([a-z-]+)\\]\\s*(.*)$/;
-function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key); }
+const REF_RE=/^\\[레퍼런스·([a-z-]+)\\]/;
+const GUID_RE=/^\\[(브랜드노트·(분석|방향성|감도)|디자인피드백|가이드·([a-z-]+))\\]/;
+// 아직 데이터에 반영 안 됐을 수 있는 지침 이슈: 열려 있거나, 이 대시보드 생성 이후 등록된 것
+function guidPending(kind, id){
+  return G_ISSUES.filter(g=>g.kind===kind&&(kind!=='brand'||g.field===id)&&(kind!=='guide'||g.chKey===id)&&
+    (g.state!=='closed'||String(g.created_at||'')>String(DATA.generatedAt||'')));
+}
+function pendBox(list){
+  return list.map(p=>'<div class="capbox" style="border:1px solid #f0d9a8;background:#fffaf0;margin-bottom:8px;border-radius:10px;padding:10px 12px">'+
+    '<div class="muted" style="font-size:11.5px;margin-bottom:4px">🕓 '+(p.state==='closed'?'반영 완료 — 잠시 후 본문에 표시됩니다':'접수됨 — 시스템 반영 처리중')+' · <a href="'+esc(p.html_url)+'" target="_blank">이슈↗</a></div>'+
+    '<div class="mcap" style="font-size:13px;white-space:pre-wrap">'+esc(p.body.slice(0,400))+(p.body.length>400?'…':'')+'</div></div>').join('');
+}
+function myIssue(x){ return !x.clientId||x.clientId===DATA.clients[ci].id; } // 업체 스코프 (없으면 전 업체)
+function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key&&myIssue(x)); }
+// 발행 게이트 — 이 콘텐츠에 걸린 미처리(열림) 수정요청. 특정 id 지정 요청은 그 콘텐츠만,
+// '채널 공통' 요청은 그 채널의 발행 전 콘텐츠 전체를 보류시킨다 (publish-plan --due와 동일 규칙).
+function openHolds(it){
+  return (ISSUES||[]).filter(x=>x.state!=='closed'&&myIssue(x)&&(x.planId?x.planId===it.id:(it.channels||[]).includes(x.chKey)));
+}
 function loadIssues(){
   fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
     .then(r=>r.ok?r.json():[])
     .then(arr=>{
-      ISSUES=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request).map(x=>{
+      const list=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request);
+      ISSUES=list.map(x=>{
         const m=REQ_RE.exec(x.title||''); if(!m) return null;
-        return { chKey:m[1], titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
+        // 본문 '대상 콘텐츠: … (id: xxx)' → 특정 콘텐츠 수정요청. id 없으면 채널 공통.
+        // '업체: xxx' → 여러 업체가 한 저장소를 쓸 때의 업체 스코프 (없으면 전 업체 적용 — 과거 이슈 호환)
+        const idm=/\\(id:\\s*([\\w.-]+)\\)/.exec(String(x.body||''));
+        const cm=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
+        return { chKey:m[1], planId:idm?idm[1]:null, clientId:cm?cm[1]:null, titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
       }).filter(Boolean);
+      // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시
+      REF_ISSUES=[];
+      for(const x of list){
+        const m=REF_RE.exec(x.title||''); if(!m) continue;
+        for(const line of String(x.body||'').split('\\n')){
+          const t=line.replace(/^[-*·•\\s]+/,'').trim();
+          const um=t.match(/^(https?:\\/\\/\\S+)\\s*(?:[—–-]\\s*)?(.*)$/);
+          if(um) REF_ISSUES.push({channel:m[1], url:um[1], note:(um[2]||'').trim(), issueUrl:x.html_url, at:x.created_at});
+        }
+      }
+      // 지침 이슈(브랜드노트·디자인피드백·가이드)도 즉시 수집 — 지침 탭에 실시간 표시
+      G_ISSUES=[];
+      for(const x of list){
+        const g=GUID_RE.exec(x.title||''); if(!g) continue;
+        G_ISSUES.push({kind:g[1].indexOf('브랜드노트')===0?'brand':(g[1]==='디자인피드백'?'design':'guide'),
+          field:g[2]||null, chKey:g[3]||null, body:String(x.body||''), state:x.state,
+          html_url:x.html_url, created_at:x.created_at});
+      }
       renderTabs(); renderView();
     })
     .catch(()=>{ ISSUES=[]; });
 }
+// 커밋된 링크 + 아직 반영 전인 이슈 링크(접수됨)를 채널 기준으로 병합
+function refLinksFor(client, key){
+  const saved=(((client.referenceLinks||{}).links)||[]).filter(l=>!key||l.channel===key);
+  const have=new Set(saved.map(l=>l.channel+'|'+l.url.replace(/\\/+$/,'')));
+  const incoming=REF_ISSUES.filter(r=>(!key||r.channel===key)&&!have.has(r.channel+'|'+r.url.replace(/\\/+$/,'')))
+    .map(r=>({url:r.url, channel:r.channel, note:r.note||undefined, status:'received', addedAt:r.at, issueUrl:r.issueUrl}));
+  return saved.concat(incoming);
+}
 function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
-function requestsPanel(key, chLabel){
+// 수정요청의 대상 표시 — 특정 콘텐츠(id)면 그 헤드라인, 아니면 채널 공통
+function reqTarget(client,x){
+  if(!x.planId) return '채널 공통';
+  const p=(client.planCards||[]).find(t=>t.id===x.planId);
+  return esc(p?plainHead(p).slice(0,22):x.planId);
+}
+// 수정 항목 분류 — 이슈 제목 [항목] 태그 + 본문 '수정 항목:' 줄로 들어간다
+const REQ_TYPES=['텍스트(문구·카피)','이미지(사진·카드)','영상(릴스·쇼츠)','디자인(색·레이아웃)','해시태그·키워드','발행 일정','기타'];
+function requestsPanel(client, key, chLabel){
   const list=channelIssues(key);
   const open=list.filter(x=>x.state!=='closed').length;
-  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>';
+  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>'+
+    '<div class="muted" style="margin:0 0 10px">🚦 <b>발행 전 검수 게이트</b> — 접수된 수정요청이 <b>처리완료</b>되기 전에는 대상 콘텐츠의 자동 발행이 보류됩니다. 수정사항이 반영되고 요청이 처리완료로 바뀌면 다음 사이클에 자동 발행됩니다. (대상을 지정하지 않은 "채널 공통" 요청은 이 채널의 발행 대기 콘텐츠 전체를 보류)</div>';
   if(list.length){
-    h+='<table><tr><th style="width:92px">상태</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
-      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
+    h+='<table><tr><th style="width:92px">상태</th><th style="width:150px">대상</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
+      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td class="muted" style="font-size:12px">'+reqTarget(client,x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
   } else if(ISSUES!==null){
     h+='<div class="empty" style="padding:8px">아직 등록된 수정요청이 없습니다. 아래에 바로 작성해 보세요.</div>';
   }
-  h+='<div style="margin-top:12px"><textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
+  // 대상 콘텐츠 선택 — 이 채널의 기획 콘텐츠(발행일순). 어떤 날짜 콘텐츠의 수정인지 특정한다
+  const plans=(client.planCards||[]).filter(p=>(p.channels||[]).includes(key));
+  const planOpt=plans.map(p=>{
+    const d=String(p.scheduledFor||'').slice(5,10).replace('-','/');
+    const st=p.status==='published'?' · 발행됨':'';
+    return '<option value="'+esc(p.id)+'">'+esc((d?d+' · ':'')+plainHead(p).slice(0,34)+st)+'</option>';
+  }).join('');
+  h+='<div style="margin-top:12px">'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">📅 대상 콘텐츠 '+
+    '<select id="reqplan-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px"><option value="">채널 공통 (특정 콘텐츠 아님)</option>'+planOpt+'</select></label>'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">🏷 수정 항목 '+
+    '<select id="reqtype-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px">'+REQ_TYPES.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select></label></div>'+
+    '<textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
     '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn fb" onclick="submitReq(\\''+esc(key)+'\\',\\''+esc(chLabel)+'\\')">✏️ 수정요청 등록</button>'+
     '<span class="muted">등록을 누르면 깃허브 창이 열립니다 — 초록색 “Submit new issue” 버튼만 누르면 접수 완료. 처리 상태는 이 게시판에 자동 표시됩니다.</span></div></div></div>';
   return h;
@@ -556,6 +647,7 @@ function guideView(client){
   for(const bf of BRAND_FIELDS){
     const cur=bb[bf.f];
     h+='<div style="margin:14px 0 4px;font-weight:700;font-size:13.5px">'+bf.label+'</div>'+
+       pendBox(guidPending('brand',bf.k))+
        (cur?'<div class="capbox" style="margin-bottom:8px"><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(cur)+'</div></div>'
            :'<div class="muted" style="margin-bottom:8px">아직 등록된 내용이 없습니다.</div>')+
        '<textarea id="bb-'+bf.f+'" class="reqta" rows="3" placeholder="'+esc(bf.ph)+'"></textarea>'+
@@ -571,6 +663,7 @@ function guideView(client){
   const hn=(client.designStyle||{}).humanNotes||[];
   h+='<div class="panel" style="border-color:#e3cdf0;background:#fdfaff"><h3>🎨 디자인 피드백</h3>'+
      '<div class="muted" style="margin:4px 0 10px">카드·릴스의 색감, 레이아웃, 톤에 대한 지시를 적어주세요. 여기 등록된 지시는 AI가 스스로 쌓는 학습 메모보다 <b>항상 우선</b> 반영되고, AI가 지우거나 덮어쓰지 못합니다. 한 줄에 하나씩 적으면 각각 별도 지시로 저장됩니다.</div>';
+  h+=pendBox(guidPending('design'));
   if(hn.length){
     h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">현재 등록된 지시 ('+hn.length+')</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+hn.map(n=>'· '+esc(n)).join('\\n')+'</div></div>';
   } else {
@@ -578,12 +671,25 @@ function guideView(client){
   }
   h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
      '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[디자인피드백] '+esc(client.name)+'\\',\\'\\',\\'design-fb\\')">🎨 디자인 지시 등록</button></div></div>';
+  // 🔗 레퍼런스 링크 학습 현황 — 전 채널 요약 (등록은 각 채널 탭에서)
+  const rls=refLinksFor(client, null);
+  h+='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크 학습 현황</h3><span class="muted">'+
+     (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
+     '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
+  if(rls.length){
+    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      rls.slice(-15).reverse().map(l=>{const cd=DATA.channels.find(x=>x.key===l.channel)||{label:l.channel,icon:''};
+        return '<tr><td>'+cd.icon+' '+esc(cd.label)+'</td><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>';}).join('')+'</table>';
+  }
+  h+='</div>';
   // 채널별 가이드
   h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
   const guides=client.channelGuides||{};
   for(const chDef of DATA.channels){
     const g=guides[chDef.key];
     h+='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>'+chDef.icon+' '+esc(chDef.label)+'</h3>'+(g&&g.updatedAt?'<span class="muted">갱신 '+ftime(g.updatedAt)+'</span>':'<span class="muted">미설정</span>')+'</div>';
+    h+=pendBox(guidPending('guide',chDef.key));
     if(g&&(g.topics||[]).length){ h+='<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>'; }
     if(g&&g.guide){ h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">핵심 가이드</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(g.guide)+'</div></div>'; }
     h+='<textarea id="cg-'+chDef.key+'" class="reqta" rows="4" placeholder="첫 줄에 \\'주제: 소재1, 소재2, 소재3\\' 형식으로 우선 소재를, 그 아래에 이 채널의 규칙·톤·금지사항 등 핵심 가이드를 적어주세요."></textarea>'+
@@ -591,24 +697,76 @@ function guideView(client){
   }
   return h;
 }
-function channelGuidePanel(client, key){
-  const g=(client.channelGuides||{})[key];
-  if(!g||(!g.guide&&!(g.topics||[]).length)) return '';
-  // 심플 요약만 (docs/06-대시보드): 소재 태그 + 가이드 첫 2줄 미리보기, 전문은 지침 탭
-  const preview=(g.guide||'').split('\\n').slice(0,2).join('\\n');
-  const more=(g.guide||'').split('\\n').length>2;
-  return '<div class="panel" style="border-color:#c4d6f4;background:#f8fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🧭 이 채널의 콘텐츠 가이드</h3><button class="btn" onclick="setCh(\\'guide\\')">지침 탭에서 전체 보기 →</button></div>'+
-    ((g.topics||[]).length?'<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>':'')+
-    (preview?'<div class="mcap" style="font-size:13px;white-space:pre-wrap;color:#3a4254">'+esc(preview)+(more?' <span class="muted">… (전체는 지침 탭)</span>':'')+'</div>':'')+
-    '<div class="muted" style="margin-top:8px">이 가이드는 콘텐츠 생성 시 프롬프트와 소재 선정에 자동 반영됩니다.</div></div>';
+// 📊 콘텐츠 리포트 — 채널 발행 콘텐츠의 KPI·추세 + 콘텐츠별 실측 성과 표 (기간 반영)
+function contentReportPanel(client, c, chLabel){
+  const pubF=c.published.filter(p=>inPeriod(p.time));
+  const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>it.status!=='published');
+  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
+    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
+  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
+  let h='<div class="panel" style="border-color:#c8e0d0;background:#f8fcf9"><div class="sect-h" style="margin:0 0 10px"><h3>📊 콘텐츠 리포트 · '+esc(chLabel)+'</h3><span class="muted">'+periodLabel()+' · 실측 집계</span></div>';
+  h+='<div class="kpis">'+
+    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
+    kpi(waiting.length,'발행 대기')+
+    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
+    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
+    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
+  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
+  if(seriesF.length>1){h+='<div style="margin-top:10px"><div class="muted" style="font-size:12px;margin-bottom:4px">반응도 추세 (참여율 %)</div>'+sparkline(seriesF.slice(-12))+'</div>';}
+  // 콘텐츠별 성과 — 기획 발행분(성과+인사이트) + 사이클 발행분
+  const rows=planPubF.slice().sort((a,b)=>String(b.publishedAt||'').localeCompare(String(a.publishedAt||''))).map(it=>{const m=it.metrics||{};
+    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt||it.scheduledFor)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
+      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
+      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
+      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
+  }).concat(pubF.map(p=>'<tr><td><b>'+esc(p.topic)+'</b><div class="muted">'+ftime(p.time)+'</div></td>'+
+    '<td>'+(p.views||0)+'</td><td>'+(p.likes||0)+'</td><td><span class="muted">—</span></td><td>'+pct(p.engagementRate||0)+'</td><td></td></tr>'));
+  h+= rows.length
+    ? '<table style="margin-top:10px"><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows.join('')+'</table>'
+    : '<div class="empty" style="padding:10px;margin-top:8px">아직 발행된 콘텐츠가 없습니다 — 첫 발행부터 콘텐츠별 조회·좋아요·댓글·참여율이 여기에 쌓입니다. (성과는 실측만 표시)</div>';
+  h+='</div>';
+  return h;
+}
+// 🔗 레퍼런스 링크 — 채널별 벤치마크 링크 등록(인박스). 등록=적재, 학습은 다음 기획 세션에서.
+function refBadge(st){
+  return st==='learned'?'<span class="badge b-ok">학습완료</span>'
+       : st==='failed'?'<span class="badge b-hold">열람실패</span>'
+       : st==='received'?'<span class="badge b-plan">접수됨</span>'
+       : '<span class="badge b-wait">학습대기</span>';
+}
+function refShort(u){ return esc(String(u).replace(/^https?:\\/\\/(www\\.)?/,'').slice(0,52)); }
+function referencePanel(client, key){
+  const all=refLinksFor(client, key);
+  const pend=all.filter(l=>l.status==='pending'||l.status==='received').length;
+  let h='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크</h3><span class="muted">'+
+    (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
+    '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
+  if(all.length){
+    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+      all.slice(-8).reverse().map(l=>'<tr><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>').join('')+'</table>';
+  }
+  h+='<textarea id="rl-'+key+'" class="reqta" rows="2" placeholder="https://... (한 줄에 하나씩)"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[레퍼런스·'+key+'] '+esc(client.name)+'\\',\\'\\',\\'rl-'+key+'\\')">🔗 레퍼런스 등록</button></div></div>';
+  return h;
 }
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
   const txt=(ta&&ta.value.trim())||'';
   if(!txt){ alert('요청 내용을 먼저 적어주세요.'); return; }
+  const planSel=document.getElementById('reqplan-'+key);
+  const typeSel=document.getElementById('reqtype-'+key);
+  const planId=planSel?planSel.value:'';
+  const planLabel=planSel&&planSel.selectedIndex>=0?planSel.options[planSel.selectedIndex].text:'';
+  const rtype=typeSel?typeSel.value:'기타';
   const first=txt.split('\\n')[0].slice(0,42);
-  const title='[수정요청·'+key+'] '+first;
-  const body='채널: '+chLabel+'\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
+  const title='[수정요청·'+key+'] ['+rtype.split('(')[0]+'] '+first;
+  const body='업체: '+DATA.clients[ci].id+
+    '\\n채널: '+chLabel+
+    '\\n대상 콘텐츠: '+(planId?planLabel+' (id: '+planId+')':'채널 공통')+
+    '\\n수정 항목: '+rtype+
+    '\\n\\n[요청 내용]\\n'+txt+'\\n\\n— 대시보드 수정요청 게시판에서 작성됨';
   window.open(issue(title,body),'_blank');
   if(ta) ta.value='';
 }
@@ -649,7 +807,11 @@ function planCard(client, chLabel, it){
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
   const pub=it.status==='published';
   const manual=it.status==='manual';
-  const stBadge=pub?'<span class="badge b-ok">발행됨</span>':manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
+  // 발행 게이트 — 미처리 수정요청이 걸려 있으면 자동 발행이 보류됨을 카드에 표시
+  const held=!pub&&openHolds(it).length>0;
+  const stBadge=pub?'<span class="badge b-ok">발행됨</span>'
+    :held?'<span class="badge b-hold">⛔ 발행 보류 · 수정 반영 대기</span>'
+    :manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
   const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
   const m=it.metrics;
   const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
@@ -664,8 +826,15 @@ function planCard(client, chLabel, it){
 function openDetail(id){
   const c=DATA.clients[ci];
   const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
-  const t='['+c.name+'] 콘텐츠 수정요청: '+plainHead(it);
-  const b='이 콘텐츠 수정/방향 요청을 남겨주세요.\\n\\n- 헤드라인: '+plainHead(it)+'\\n- 예정: '+ftime(it.scheduledFor)+'\\n- 디자인: '+(it.variant||'')+'\\n\\n[수정 요청]\\n';
+  // 게이트 규약으로 등록 — [수정요청·채널] 제목 + 본문 (id: …) → 처리완료 전까지 이 콘텐츠 발행 보류
+  const dKey=(it.channels||[])[0]||'instagram';
+  const t='[수정요청·'+dKey+'] [콘텐츠] '+plainHead(it).slice(0,42);
+  const b='업체: '+c.id+
+    '\\n채널: '+dKey+
+    '\\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
+    '\\n수정 항목: 콘텐츠 상세'+
+    '\\n예정: '+ftime(it.scheduledFor)+' · 디자인: '+(it.variant||'')+
+    '\\n\\n[요청 내용]\\n\\n— 대시보드 콘텐츠 상세에서 작성됨';
   const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
   const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
   const isCarousel=imgs.length>1;
@@ -782,11 +951,11 @@ function channelDetail(client, c){
   const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
   let h='';
   // ① 수정요청 게시판 — 채널 최상단 (작성 + 처리 현황)
-  h+=requestsPanel(c.key, chLabel);
+  h+=requestsPanel(client, c.key, chLabel);
   // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
   h+=periodBar();
-  // ③ 이 채널의 콘텐츠 가이드(운영자 지침) — 생성에 자동 반영됨
-  h+=channelGuidePanel(client, c.key);
+  // ③ 콘텐츠 리포트 — 발행 콘텐츠 실측 데이터 (가이드는 지침 탭 전용으로 이동)
+  h+=contentReportPanel(client, c, chLabel);
   // 기획안 패널
   const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
   const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\\n\\n[현재 기획안]\\n- 키워드: '+client.keywords.join(', ')+'\\n- 브랜드 말투: '+client.brandTone+'\\n- 발행시간: '+client.schedule.join(', ')+'\\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\\n\\n[수정 요청]\\n';
@@ -797,33 +966,22 @@ function channelDetail(client, c){
   if(!c.active){
     h+='<div class="panel"><div class="empty">이 채널은 아직 <b>연결되지 않았습니다</b>. 설정표(targets)에 '+chLabel+'을 추가하고 키를 연결하면 자동 발행이 시작됩니다.</div></div>';
   }
-  // 선택 기간으로 필터한 히스토리·데이터
+  // 선택 기간으로 필터한 히스토리 (KPI·성과표는 ③ 콘텐츠 리포트 패널이 단일 출처)
   const pubF=c.published.filter(p=>inPeriod(p.time));
   const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
   const waiting=c.pending.filter(it=>it.status!=='published');
-  // KPI (기간 반영) — 사이클 발행분(pubF) + 기획 발행분(planPubF) 합산
-  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
-    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
-  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
-  h+='<div class="kpis">'+
-    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
-    kpi(waiting.length,'발행 대기')+
-    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
-    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
-    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
-  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
-  if(seriesF.length>1){h+='<div class="panel"><h3>반응도 추세 (참여율 %) · '+periodLabel()+'</h3>'+sparkline(seriesF.slice(-12))+'</div>';}
-  // 발행 콘텐츠 데이터(성과 + 인사이트 코멘트) — 기간 반영
-  h+=pubDataRows(planPubF);
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
-  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+')</h2></div>';
+  const heldN=waiting.filter(it=>openHolds(it).length>0).length;
+  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+(heldN?' · ⛔ 보류 '+heldN:'')+')</h2></div>';
   h+= waiting.length? '<div class="cards">'+waiting.map(it=>planCard(client,chLabel,it)).join('')+'</div>' : '<div class="empty">예정된 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>';
   // 발행됨 — 기간 반영 히스토리 (기획 발행분 + 사이클 발행분)
   h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 · '+periodLabel()+' ('+(planPubF.length+pubF.length)+')</h2></div>';
   const pubCards=planPubF.map(it=>planCard(client,chLabel,it)).concat(pubF.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
   h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
+  // ④ 레퍼런스 링크 인박스 — 채널 탭 최하단 (등록하면 다음 기획 세션에서 AI가 열람·학습)
+  h+=referencePanel(client, c.key);
   return h;
 }
 function blogSection(client){
@@ -894,20 +1052,6 @@ function weeklyPanel(client){
     (chRows?'<table style="margin:8px 0"><tr><th>채널</th><th>발행</th><th>평균 참여율</th><th>조회</th><th>좋아요</th></tr>'+chRows+'</table>':'')+
     (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#15803d;font-size:13px">'+recs+'</ul>':'')+
     '</div>';
-}
-function pubDataRows(items){
-  // 발행된 콘텐츠의 채널별 성과 데이터 + 인사이트 코멘트
-  const pub=items.filter(it=>it.status==='published'&&it.metrics);
-  if(!pub.length) return '';
-  pub.sort((a,b)=>(b.publishedAt||'').localeCompare(a.publishedAt||''));
-  const rows=pub.map(it=>{const m=it.metrics||{};
-    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
-      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
-      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
-      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
-  }).join('');
-  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📊 발행 콘텐츠 데이터</h3><span class="muted">'+pub.length+'건 · 성과+인사이트</span></div>'+
-    '<table><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows+'</table></div>';
 }
 function setupPanel(){
   const s=DATA.setup||{};

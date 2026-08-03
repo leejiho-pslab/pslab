@@ -22,13 +22,17 @@
 - 디자인: AI 학습 메모(`design.json notes`)와 운영자 지시(`humanNotes`)는 분리 — humanNotes는 사람 경로([디자인피드백] 이슈)로만 수정.
 - 카드 색·레이아웃은 `data/clients/<id>/design-tokens.json` 우선.
 
-## 디자인 레퍼런스 (구글 드라이브)
-- 소장님이 `※alway on / 1. pslab / 1. 레퍼런스 모음/` 아래 채널별로 레퍼런스를 올린다.
-  폴더 ID는 `data/clients/pslab/design-reference.json`에 기록됨.
+## 레퍼런스·지침 (구글 드라이브) — 기획·제작 전 필수 참조
+- 소장님이 드라이브 `※alway on/<n>. <업체>/1. 레퍼런스 모음/` 아래 **채널별 레퍼런스와 지침**을
+  올린다(이 세션은 `1. pslab`). 폴더 ID는 `data/clients/pslab/design-reference.json`에 기록됨.
+- 🚦 **콘텐츠 기획·제작 전 반드시 해당 채널 폴더를 열람**하고 새 파일을 반영한 뒤 시작한다
+  (스킬 §0 변수 #11 · docs/02 "운영자 레퍼런스·지침 학습"이 단일 출처).
 - **작업 순서**: Drive 열람(세션에서만 가능) → `design-reference.json`에 채널별 디자인 언어 기록 →
+  지침 문서는 `channel-guides.json`/`brand-brief.json`/`design.json` `humanNotes`로 반영 →
   렌더에 물리는 값은 `design-tokens.json`(카드 `variants` / 릴스 `reels`)으로 반영 →
   힉스필드 장면 프롬프트에 문장으로 주입.
 - 폴더가 비어 있으면 **추측해서 채우지 말고** 대기 상태 유지 + 업로드 요청.
+- 드라이브가 재편성되어 기록된 folderId가 404면 루트(`※alway on`)부터 재검색해 ID를 갱신한다.
 
 ## ⚠️ 이미지 렌더는 CI에서만 (로컬 렌더 금지)
 - 이 세션의 크로미움(141, new headless)은 `--window-size`에 창 크롬 ~85px를 포함해

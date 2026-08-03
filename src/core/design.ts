@@ -33,13 +33,9 @@ export interface DesignStyle {
   motifs: string[];
   /** 지양할 것 */
   avoid: string[];
-  /** 누적 학습 메모 (AI 회의 피드백 — 자동 누적, 오래된 것부터 밀려남) */
+  /** 누적 학습 메모 (회의 피드백) */
   notes: string[];
-  /**
-   * 운영자(사람) 디자인 지시 — AI 메모와 분리해 보관한다.
-   * AI notes와 섞으면 지표 오염(가짜 성과 등)으로 생긴 메모에 사람 의견이
-   * 밀려나므로, 사람 지시는 evolve()가 건드리지 않고 프롬프트에서 최우선 반영.
-   */
+  /** 운영자 직접 지시 ([디자인피드백] 이슈 경로) — AI 학습 메모와 분리, 항상 최우선·AI 수정 금지 */
   humanNotes?: string[];
   /** 연속 하락 횟수 (탐색 트리거용) */
   declineStreak: number;
@@ -71,7 +67,6 @@ export function defaultDesignStyle(): DesignStyle {
       '워터마크·로고·깨진 글자',
     ],
     notes: [],
-    humanNotes: [],
     declineStreak: 0,
     updatedAt: new Date().toISOString(),
   };
@@ -105,10 +100,6 @@ export class DesignStudio {
       thumbnailHint,
       '텍스트를 넣는다면 한국어로 짧고 크게, 가독성 최우선.',
       `피해야 할 것: ${s.avoid.join(', ')}.`,
-      // 사람 지시가 AI 학습 메모보다 우선 — 충돌하면 사람 지시를 따른다.
-      (s.humanNotes?.length ?? 0) > 0
-        ? `운영자 지시(최우선 반영): ${s.humanNotes!.slice(-5).join(' / ')}.`
-        : '',
       s.notes.length > 0 ? `반영할 학습: ${s.notes.slice(-3).join(' / ')}.` : '',
       '고해상도, 브랜드 그래픽 디자이너 퀄리티의 깔끔한 벡터형 비주얼.',
     ]
@@ -133,8 +124,6 @@ export class DesignStudio {
       motifs: [...style.motifs],
       avoid: [...style.avoid],
       notes: [...style.notes],
-      // 사람 지시는 자가 진화가 절대 건드리지 않는다 (추가·삭제는 사람 경로로만)
-      humanNotes: [...(style.humanNotes ?? [])],
     };
 
     // 회의 디자인 피드백 누적 (중복 제거, 최근 10개 유지)
@@ -195,20 +184,5 @@ export class DesignStore {
     const file = this.fileFor(clientId);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, JSON.stringify(style, null, 2), 'utf8');
-  }
-
-  /**
-   * 운영자 디자인 지시를 추가한다 (대시보드 [디자인피드백] 이슈 → guidance-sync 경로).
-   * 중복은 건너뛰고 최근 20개까지 유지. 버전은 올리지 않는다 — 사람 지시는
-   * 스타일 "진화"가 아니라 진화의 기준선이므로.
-   */
-  appendHumanNotes(clientId: string, notes: string[]): DesignStyle {
-    const style = this.load(clientId);
-    const existing = style.humanNotes ?? [];
-    const fresh = notes.map((n) => n.trim()).filter((n) => n && !existing.includes(n));
-    style.humanNotes = [...existing, ...fresh].slice(-20);
-    style.updatedAt = new Date().toISOString();
-    this.save(clientId, style);
-    return style;
   }
 }

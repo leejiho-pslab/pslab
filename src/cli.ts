@@ -35,6 +35,11 @@ import {
   alreadyPublished,
   recordPublish,
 } from './core/publish-ledger.js';
+import {
+  fetchOpenRevisionRequests,
+  holdsForItem,
+  shouldNotifyHold,
+} from './core/revision-gate.js';
 import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
 import { checkTokens, TokenHealthStore } from './core/token-health.js';
@@ -391,6 +396,19 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
   const notifier = createNotifier();
   const now = Date.now();
 
+  // 🚦 발행 전 검수 게이트 — 열려 있는 [수정요청·채널] 이슈를 조회해, 수정사항이
+  // 반영(이슈 닫힘)되기 전에는 대상 콘텐츠를 발행하지 않는다. --id 수동 발행은
+  // 운영자의 명시적 지시이므로 게이트를 거치지 않는다.
+  let gate: Awaited<ReturnType<typeof fetchOpenRevisionRequests>> = null;
+  if (due) {
+    gate = await fetchOpenRevisionRequests(repo, process.env.GITHUB_TOKEN);
+    if (gate === null) {
+      console.log('  ⚠️ 수정요청 게이트: 이슈 조회 실패 — 이번 사이클은 게이트 없이 진행');
+    } else if (gate.length > 0) {
+      console.log(`  🚦 수정요청 게이트: 미처리 ${gate.length}건 — 대상 콘텐츠는 발행 보류`);
+    }
+  }
+
   for (const client of clients) {
     const plan = store.load(client.id);
     // 발행 원장 — plan.json 상태가 되돌아가도 중복 발행을 막는 최후 방어선.
@@ -434,6 +452,24 @@ async function cmdPublishPlan(app: App, args: Args): Promise<void> {
       continue;
     }
     for (const it of targets) {
+      // 미처리 수정요청이 걸린 콘텐츠는 보류 — 반영 완료(이슈 닫힘) 후 다음 사이클에 발행
+      const holds = gate ? holdsForItem(client.id, it, gate) : [];
+      if (holds.length > 0) {
+        const holdTitle = (it.headline ?? it.topic).replace(/<br>/g, ' ').replace(/\*/g, '');
+        console.log(
+          `\n⛔ 발행 보류: [${it.id}] ${holdTitle} — 미처리 수정요청 ${holds.length}건 (${holds.map((h) => '#' + h.number).join(', ')})`,
+        );
+        if (!dryRun && shouldNotifyHold(it.holdNotifiedAt, now)) {
+          // 보류 푸시는 항목당 1회 + 72시간마다 재알림 (매 사이클 스팸도, 조용히 잊히는 보류도 방지)
+          await notifier.send(
+            `⏸ <b>발행 보류</b> [${it.id}]\n${escHtml(holdTitle)}\n미처리 수정요청 ${holds.length}건 — 수정 반영 후 이슈가 처리완료(닫힘)되면 자동 발행됩니다.\n${holds.map((h) => h.url).join('\n')}`,
+          );
+          it.holdNotifiedAt = new Date().toISOString();
+        }
+        continue;
+      }
+      // 보류가 풀렸으면 알림 플래그 리셋 (이후 새 수정요청이 오면 다시 1회 알림)
+      if (!dryRun && it.holdNotifiedAt) delete it.holdNotifiedAt;
       // 수동 채널(네이버블로그·유튜브)만으로 된 항목은 자동 발행하지 않고
       // "수동 발행 대기"로 표시한다 (대시보드에서 복사해 직접 게시).
       if (isManualOnly(it.channels)) {
