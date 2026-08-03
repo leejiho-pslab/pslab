@@ -31,8 +31,11 @@ export default function App() {
     Promise.all([api.metricsConfig(), api.dates()])
       .then(([cfg, ds]) => {
         setConfig(cfg);
-        setDates(ds.dates);
-        setDate(ds.dates[ds.dates.length - 1] ?? "");
+        // 최신일이 먼저 오도록 내림차순 정렬. 서버가 오름차순으로 주더라도
+        // 여기서 다시 정렬해 두면 목록 순서와 기본 선택이 항상 최신 기준이 된다.
+        const desc = [...ds.dates].sort((a, b) => b.localeCompare(a));
+        setDates(desc);
+        setDate(desc[0] ?? "");
       })
       .catch((e) => setError(String(e)));
   }, []);
