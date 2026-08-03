@@ -1,7 +1,7 @@
 [
   {
     "weekOf": "2026-07-27",
-    "generatedAt": "2026-08-03T06:45:46.562Z",
+    "generatedAt": "2026-08-03T10:51:18.592Z",
     "range": {
       "from": "2026-07-26T15:00:00.000Z",
       "to": "2026-08-02T15:00:00.000Z"
@@ -31,7 +31,7 @@
         "label": "유튜브",
         "posts": 3,
         "avgEngagement": 0,
-        "totalViews": 733,
+        "totalViews": 734,
         "totalLikes": 0,
         "totalComments": 0
       },
