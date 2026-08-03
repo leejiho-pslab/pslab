@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-02T11:03:23.043Z",
+  "generatedAt": "2026-08-03T02:45:13.048Z",
   "sampleSize": 25,
   "variants": [
     {
@@ -37,7 +37,7 @@
       "posts": 6,
       "avgEngagement": 0.042431192660550454,
       "avgLikes": 0.3333333333333333,
-      "avgViews": 184
+      "avgViews": 184.16666666666666
     },
     {
       "key": "threads",
@@ -74,7 +74,7 @@
       "posts": 10,
       "avgEngagement": 0.10476190476190476,
       "avgLikes": 0.2,
-      "avgViews": 62
+      "avgViews": 62.1
     },
     {
       "key": "11:00",
