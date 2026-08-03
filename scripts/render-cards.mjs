@@ -273,6 +273,17 @@ html,body{width:1080px;height:1350px}
 const bodyHTML = (s) =>
   String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
 
+/**
+ * 캐러셀 슬라이드 제목 — 줄바꿈(\n)과 강조(*...*)를 헤드라인과 같은 규칙으로 처리한다.
+ * esc() 만 쓰면 기획안에 적은 `*강조*` 별표가 카드에 그대로 찍히고 줄바꿈도 사라진다
+ * (2026-08-03 운영자 확인 — car-08-05 카드에 "1일차 *브랜드 분석*" 이 그대로 노출).
+ */
+const slideTitleHTML = (s) =>
+  String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
 // 캐러셀 내용 슬라이드 (커버 다음 장들) — 큰 라벨 + 제목 + 본문, 변형 팔레트 사용
 function contentSlideHTML(item, slide, n, total, faces) {
   const v = VARIANTS[item.variant] || VARIANTS.A;
@@ -293,6 +304,7 @@ html,body{width:1080px;height:1350px}
 .rule{height:2px;background:${rule};margin:36px 0 0}
 .label{font-weight:800;font-size:120px;line-height:1;color:${v.accent};margin-top:70px;letter-spacing:-.02em}
 .title{font-weight:800;font-size:78px;line-height:1.2;letter-spacing:-.02em;margin-top:24px}
+.title em{font-style:normal;color:${v.accent}}
 .body{font-weight:500;font-size:42px;line-height:1.62;color:${v.fg};opacity:.9;margin-top:36px;max-width:96%}
 .foot{display:flex;align-items:flex-end;margin-top:auto;padding-top:50px}
 .brand{font-weight:700;font-size:32px;letter-spacing:.02em}
@@ -302,7 +314,7 @@ html,body{width:1080px;height:1350px}
   <div class="top"><div class="kicker">${esc(item.kicker)}</div><div class="page">${n} / ${total}</div></div>
   <div class="rule"></div>
   ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
-  ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
+  ${slide.title ? `<div class="title">${slideTitleHTML(slide.title)}</div>` : ''}
   ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
   <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div></div>
 </div></body></html>`;
