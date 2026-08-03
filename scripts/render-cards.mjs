@@ -217,7 +217,7 @@ function cardHTML(item, no, faces) {
       <div class="gtext"><div class="headline">${headlineHTML(item.headline)}</div><div class="sub">${esc(item.sub)}</div></div>
       <div class="gfig">${motifSVG(item.motif, v.accent, 380, 0.96)}</div>
     </div>
-    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div></div>`;
   } else if (v.layout === 'spotlight') {
     // C: 거대 호수 + 중앙 정렬 헤드라인 + 상단 작은 그래픽
     body = `
@@ -227,7 +227,7 @@ function cardHTML(item, no, faces) {
       <div class="headline" style="text-align:center">${headlineHTML(item.headline)}</div>
       <div class="sub" style="text-align:center;margin-left:auto;margin-right:auto">${esc(item.sub)}</div>
     </div>
-    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div></div>`;
   } else {
     // A: 에디토리얼 — 큰 그래픽 배경 워터마크 + 좌하단 헤드라인
     body = `
@@ -236,7 +236,7 @@ function cardHTML(item, no, faces) {
     <div class="rule"></div>
     <div class="headline" style="margin-top:auto">${headlineHTML(item.headline)}</div>
     <div class="sub">${esc(item.sub)}</div>
-    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>`;
+    <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div></div>`;
   }
   return `<!doctype html><html><head><meta charset="utf-8"><style>
 ${faces}
@@ -256,9 +256,9 @@ html,body{width:1080px;height:1350px}
 .headline em{font-style:normal;color:${v.accent};position:relative;white-space:nowrap}
 .headline em::after{content:'';position:absolute;left:0;right:0;bottom:6px;height:14px;background:${v.accent};opacity:.18;z-index:-1}
 .sub{font-weight:500;font-size:38px;line-height:1.5;color:${v.muted};margin-top:44px;max-width:86%;z-index:2}
-.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:60px;z-index:2}
+/* 하단은 브랜드 핸들만 — 요일/형태 라벨은 운영자 지시로 제거(2026-08-03) */
+.foot{display:flex;align-items:flex-end;margin-top:auto;padding-top:60px;z-index:2}
 .brand{font-weight:700;font-size:34px;letter-spacing:.02em}
-.tag{font-weight:500;font-size:26px;color:${v.muted}}
 .bgfig{position:absolute;top:300px;right:-40px;z-index:1}
 .abar{position:absolute;left:0;top:0;bottom:0;width:16px;background:${v.accent}}
 .gwrap{display:flex;align-items:center;gap:30px;margin-top:auto;z-index:2}
@@ -294,9 +294,8 @@ html,body{width:1080px;height:1350px}
 .label{font-weight:800;font-size:120px;line-height:1;color:${v.accent};margin-top:70px;letter-spacing:-.02em}
 .title{font-weight:800;font-size:78px;line-height:1.2;letter-spacing:-.02em;margin-top:24px}
 .body{font-weight:500;font-size:42px;line-height:1.62;color:${v.fg};opacity:.9;margin-top:36px;max-width:96%}
-.foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:50px}
+.foot{display:flex;align-items:flex-end;margin-top:auto;padding-top:50px}
 .brand{font-weight:700;font-size:32px;letter-spacing:.02em}
-.tag{font-weight:500;font-size:25px;color:${v.muted}}
 .bar{position:absolute;left:0;top:0;bottom:0;width:14px;background:${v.accent};opacity:.85}
 </style></head><body><div class="card">
   <div class="bar"></div>
@@ -305,7 +304,7 @@ html,body{width:1080px;height:1350px}
   ${slide.label ? `<div class="label">${esc(slide.label)}</div>` : ''}
   ${slide.title ? `<div class="title">${esc(slide.title)}</div>` : ''}
   ${slide.body ? `<div class="body">${bodyHTML(slide.body)}</div>` : ''}
-  <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div><div class="tag">${esc(item.dayLabel)}</div></div>
+  <div class="foot"><div class="brand">${esc(BRAND_LABEL)}</div></div>
 </div></body></html>`;
 }
 

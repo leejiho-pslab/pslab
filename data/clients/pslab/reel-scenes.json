@@ -71,36 +71,36 @@
         }
       ]
     },
-    "youtube-07-29": {
+    "reels-08-03": {
       "theme": "cinematic",
       "beats": [
         {
           "kicker": "ALWAYS ON",
-          "text": "오늘도 SNS,\n못 올리셨죠?",
-          "accent": "못 올리셨죠?",
-          "scene": "바쁜 꽃집 사장님, 엎어둔 폰",
-          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034212_e2cde09b-85de-4d01-9d67-fb4ffab8cd42.mp4"
+          "text": "SNS, 3개월을\n못 넘기셨죠?",
+          "accent": "3개월",
+          "scene": "달력을 보며 한숨 쉬는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260803_022213_f2870653-d05f-4dbe-809a-4c628cb233ac.mp4"
         },
         {
           "kicker": "",
-          "text": "괜찮습니다\n안 올려도 올라갑니다",
-          "accent": "안 올려도 올라갑니다",
-          "scene": "아무도 없는 카운터, 혼자 켜져 도는 폰",
-          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034443_4bd2487e-fbf4-4810-9091-d317cbd6a385.mp4"
+          "text": "의지 문제가\n아닙니다",
+          "accent": "아닙니다",
+          "scene": "늦은 밤 책상에 엎드린 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260803_022221_35b42cd7-ba78-4478-81ba-a3cf216f97b6.mp4"
         },
         {
           "kicker": "",
-          "text": "조사·제작·발행까지\n매일 자동으로",
-          "accent": "매일 자동으로",
-          "scene": "4단계를 흐르는 빛의 리본",
-          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034452_0055c17f-55df-477e-b723-542dbe5a270d.mp4"
+          "text": "본업 하면서 매일은\n구조상 불가능",
+          "accent": "구조상 불가능",
+          "scene": "피크타임 바쁜 매장",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260803_022228_25cd1418-df3b-4d69-a1b4-63644e2e209c.mp4"
         },
         {
           "kicker": "P.S.LAB",
-          "text": "프로필 링크에서\n소개서를 받아보세요",
-          "accent": "소개서",
-          "scene": "창가에서 커피 마시며 미소짓는 사장님",
-          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_035405_9ca60faf-dd8a-4923-a698-ed323804a311.mp4"
+          "text": "사람이 아니라\n시스템이 합니다",
+          "accent": "시스템이",
+          "scene": "새벽 스스로 켜지는 화면들",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260803_022243_cacb521d-a2d6-4eb3-bfd5-a390e930e62e.mp4"
         }
       ]
     },
@@ -200,6 +200,39 @@
           "accent": "셋째 달",
           "scene": "창밖이 밝아오는 사무실, 시간이 흐르는 느낌의 정적인 와이드",
           "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260801_011808_c4d88f8c-f105-4e64-a764-68e86cf3eb08.mp4"
+        }
+      ]
+    },
+    "youtube-07-29": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "ALWAYS ON",
+          "text": "오늘도 SNS,\n못 올리셨죠?",
+          "accent": "못 올리셨죠?",
+          "scene": "바쁜 꽃집 사장님, 엎어둔 폰",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034212_e2cde09b-85de-4d01-9d67-fb4ffab8cd42.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "괜찮습니다\n안 올려도 올라갑니다",
+          "accent": "안 올려도 올라갑니다",
+          "scene": "아무도 없는 카운터, 혼자 켜져 도는 폰",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034443_4bd2487e-fbf4-4810-9091-d317cbd6a385.mp4"
+        },
+        {
+          "kicker": "",
+          "text": "조사·제작·발행까지\n매일 자동으로",
+          "accent": "매일 자동으로",
+          "scene": "4단계를 흐르는 빛의 리본",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_034452_0055c17f-55df-477e-b723-542dbe5a270d.mp4"
+        },
+        {
+          "kicker": "P.S.LAB",
+          "text": "프로필 링크에서\n소개서를 받아보세요",
+          "accent": "소개서",
+          "scene": "창가에서 커피 마시며 미소짓는 사장님",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_035405_9ca60faf-dd8a-4923-a698-ed323804a311.mp4"
         }
       ]
     }
