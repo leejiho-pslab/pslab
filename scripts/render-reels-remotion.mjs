@@ -190,6 +190,29 @@ for (const it of skipped) {
   item.videoSeconds = +(it.props.durationInFrames / it.props.fps).toFixed(2);
 }
 
+// 유튜브 쇼츠는 **항상** 같은 날 인스타 릴스 영상을 재활용한다 (비용 절감 규칙).
+//
+// 왜 자동으로 묶나: 기획 단계에서 videoFrom 을 빠뜨리면 쇼츠 영상이 따로 합성되고,
+// 더 나쁘게는 쇼츠용 힉스필드 클립을 따로 뽑게 된다. 클립 1개가 7.5크레딧이라
+// 한 번 빠뜨릴 때마다 30크레딧(릴스 1편치)이 그냥 샌다. 사람이 매주 기억하는 대신
+// 여기서 같은 날짜의 릴스를 찾아 자동으로 연결한다.
+//
+// 같은 날 릴스가 없으면 건드리지 않는다 — 그건 의도적으로 독립 제작하는 쇼츠다.
+const dayOf = (s) => String(s ?? '').slice(0, 10);
+let autoLinked = 0;
+for (const it of plan.items) {
+  if (it.videoFrom) continue;
+  if ((it.channels ?? [])[0] !== 'youtube') continue;
+  const mate = plan.items.find(
+    (x) => x !== it && (x.channels ?? [])[0] === 'instagram' &&
+      dayOf(x.scheduledFor) === dayOf(it.scheduledFor) && x.videoFile,
+  );
+  if (!mate) continue;
+  it.videoFrom = mate.id;
+  autoLinked++;
+  console.log(`  ${it.id}: videoFrom 누락 → 같은 날 릴스(${mate.id}) 자동 연결 [클립 중복 생성 방지]`);
+}
+
 // 영상 재사용: videoFrom 이 가리키는 항목의 영상을 그대로 쓴다
 // (같은 콘텐츠를 인스타 릴스와 유튜브 쇼츠에 동시 발행할 때 중복 합성을 피한다)
 let linked = 0;
@@ -202,7 +225,7 @@ for (const it of plan.items) {
 }
 if (linked > 0) console.log(`  영상 재사용 연결: ${linked}건`);
 
-if (made > 0 || linked > 0 || skipped.length > 0) {
+if (made > 0 || linked > 0 || autoLinked > 0 || skipped.length > 0) {
   plan.updatedAt = new Date().toISOString();
   writeFileSync(planPath, JSON.stringify(plan, null, 2) + '\n');
 }

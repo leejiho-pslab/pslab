@@ -42,7 +42,7 @@ import {
 } from './core/revision-gate.js';
 import { GuidanceStore } from './core/guidance.js';
 import { LearningEngine, LearningStore } from './core/learning.js';
-import { checkTokens, TokenHealthStore } from './core/token-health.js';
+import { checkTokens, withGoogleCountdown, TokenHealthStore } from './core/token-health.js';
 import { loadCredentials } from './core/config.js';
 import { makeInsightComment } from './core/insight.js';
 import { createNotifier } from './core/notify.js';
@@ -693,7 +693,8 @@ async function cmdCheckTokens(args: Args): Promise<void> {
   const only = typeof args.client === 'string' ? args.client : 'pslab';
   const store = new TokenHealthStore(dataDir);
   const prev = store.load(only);
-  const health = await checkTokens();
+  // 구글 토큰은 "죽었나"만 봐선 늦다 — 살아있은 지 며칠인지 세어 만료 전에 경고한다.
+  const health = withGoogleCountdown(await checkTokens(), prev);
   store.save(only, health);
   console.log('\n🔑 토큰 상태 점검');
   for (const t of health.tokens) {

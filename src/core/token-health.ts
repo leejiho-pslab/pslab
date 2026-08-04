@@ -28,6 +28,10 @@ export interface TokenStatus {
   warn: boolean;
   /** 만료까지 남은 일수 (앱 자격이 있을 때만) */
   expiresInDays?: number;
+  /** 이 토큰이 "살아있음"으로 처음 확인된 시각 — 구글 7일 만료 카운트다운의 기준 */
+  okSince?: string;
+  /** okSince 이후 지난 일수 */
+  aliveDays?: number;
   detail?: string;
 }
 
@@ -37,6 +41,16 @@ export interface TokenHealth {
 }
 
 const WARN_DAYS = 7;
+
+/**
+ * 구글 OAuth 앱이 "테스트 중" 상태면 refresh token 이 **발급 7일 뒤 자동 폐기**된다.
+ * 죽고 나서 invalid_grant 를 잡아봐야 이미 발행이 한 번 실패한 뒤다 —
+ * 실제로 2026-07-27 에 유튜브가 그렇게 죽었고, 재발급 후 정확히 7일 뒤 또 만료 통지가 왔다.
+ * 그래서 "살아있은 지 며칠 됐는지"를 세어 만료 하루 전에 미리 경고한다.
+ * (근본 해결은 OAuth 동의 화면 게시 상태를 "프로덕션"으로 바꾸는 것 — 그러면 7일 만료가 없어진다.)
+ */
+const GOOGLE_TESTING_TTL_DAYS = 7;
+const GOOGLE_WARN_AT_DAYS = 6;
 
 /** 만료까지 남은 일수를 debug_token으로 조회 (실패 시 undefined). */
 async function expiresInDays(
@@ -213,6 +227,41 @@ export async function checkTokens(): Promise<TokenHealth> {
     checkedAt: new Date().toISOString(),
     tokens: checks.filter((c): c is TokenStatus => c !== undefined),
   };
+}
+
+/**
+ * 구글 토큰의 "살아있은 지 며칠" 카운트다운을 직전 점검 결과와 합쳐 채운다.
+ *
+ * 죽은 뒤에 알려주는 경고는 늦다. 토큰이 처음 살아난 시각(okSince)을 이어 들고 가면서
+ * 6일째부터 미리 경고한다. 토큰이 한 번 죽었다 살아나면 okSince 를 새로 잡는다(재발급 시점).
+ */
+export function withGoogleCountdown(
+  fresh: TokenHealth,
+  prev: TokenHealth | undefined,
+): TokenHealth {
+  const now = Date.parse(fresh.checkedAt);
+  const tokens = fresh.tokens.map((t) => {
+    if (t.platform !== 'youtube' && t.platform !== 'blogger') return t;
+    if (!t.ok) return t; // 이미 죽었으면 기존 detail(invalid_grant 안내)이 더 정확하다
+    const before = prev?.tokens.find((p) => p.platform === t.platform);
+    // 직전에도 살아 있었으면 그때의 okSince 를 이어받고, 아니면 지금이 재발급 시점이다.
+    const okSince = before?.ok && before.okSince ? before.okSince : fresh.checkedAt;
+    const aliveDays = Math.floor((now - Date.parse(okSince)) / 86_400_000);
+    if (aliveDays < GOOGLE_WARN_AT_DAYS) return { ...t, okSince, aliveDays };
+    const left = GOOGLE_TESTING_TTL_DAYS - aliveDays;
+    return {
+      ...t,
+      okSince,
+      aliveDays,
+      warn: true,
+      detail:
+        `⚠️ 발급 ${aliveDays}일째 — OAuth 앱이 "테스트 중"이면 7일에 폐기됩니다` +
+        `(${left <= 0 ? '오늘 만료 가능' : `약 ${left}일 남음`}). ` +
+        `근본 해결: 구글 클라우드 콘솔 → OAuth 동의 화면 → 게시 상태를 "프로덕션"으로 변경. ` +
+        `임시 조치: OAuth Playground 에서 refresh token 재발급 후 시크릿 교체.`,
+    };
+  });
+  return { ...fresh, tokens };
 }
 
 /** 클라이언트별 토큰 건강 상태 저장소. data/<clientId>/token-health.json */
