@@ -1,0 +1,31 @@
+name: dbrick strategy extract
+
+# 8~9월 전략 수립용 실데이터 일괄 추출 — DB 성과 + 지역시트 + 네이버 키워드도구.
+# 수동 실행 전용. 결과는 잡 로그의 ===SECTION:*=== JSON 으로 회수한다.
+on:
+  workflow_dispatch:
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Seoul
+    defaults:
+      run:
+        working-directory: dbrick-ads-status
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install deps
+        run: pip install -r requirements.txt
+      - name: Extract strategy data
+        env:
+          DATABASE_URL: ${{ secrets.DBRICK_DATABASE_URL }}
+          NAVER_SA_API_KEY: ${{ secrets.DBRICK_NAVER_SA_API_KEY }}
+          NAVER_SA_SECRET_KEY: ${{ secrets.DBRICK_NAVER_SA_SECRET_KEY }}
+          NAVER_SA_CUSTOMER_ID: ${{ secrets.DBRICK_NAVER_SA_CUSTOMER_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.DBRICK_GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        run: python scripts/strategy_extract.py
