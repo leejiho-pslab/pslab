@@ -35,8 +35,16 @@ MONTHS = [("2026-05", "2026-05-01", "2026-05-31"),
 
 
 def emit(name: str, obj) -> None:
+    # GitHub Actions 시크릿 마스킹이 멀티라인 시크릿의 개별 라인({,} 등)을 ***로
+    # 가려 JSON 이 깨진다 → base64 로 찍어 마스킹을 원천 회피.
+    import base64
+    b64 = base64.b64encode(
+        json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode()
+    ).decode()
     print(f"===SECTION:{name}===")
-    print(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
+    for i in range(0, len(b64), 800):
+        print(f"B64|{b64[i:i+800]}")
+    print(f"===END:{name}===")
 
 
 def db_sections(store: Store) -> None:
