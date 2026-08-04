@@ -170,6 +170,16 @@ def keywordstool_section() -> None:
 
 
 def main() -> int:
+    # STRATEGY_SEEDS="a,b,c;d,e" 지정 시 키워드도구만 해당 배치로 조회(빠른 재조회용)
+    seeds_env = os.environ.get("STRATEGY_SEEDS", "").strip()
+    if seeds_env:
+        global SEED_BATCHES
+        SEED_BATCHES = [[k.strip() for k in b.split(",") if k.strip()]
+                        for b in seeds_env.split(";") if b.strip()]
+        keywordstool_section()
+        print("===STRATEGY_EXTRACT_DONE===")
+        return 0
+
     cfg = load_config()
     store = Store(cfg.data_dir)
     try:
