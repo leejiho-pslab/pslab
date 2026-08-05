@@ -77,6 +77,19 @@
       }
     ]
   },
+  "car-08-05": {
+    "firstPublishedAt": "2026-08-05T10:45:27.006Z",
+    "channels": [
+      "instagram"
+    ],
+    "refs": [
+      {
+        "platform": "instagram",
+        "remoteId": "17959664349173844",
+        "url": "https://www.instagram.com/p/Dbp9Hbokb7L/"
+      }
+    ]
+  },
   "reels-07-27": {
     "firstPublishedAt": "2026-07-27T12:23:12.537Z",
     "channels": [
@@ -196,6 +209,19 @@
         "platform": "threads",
         "remoteId": "18062364338757334",
         "url": "https://www.threads.com/@_pslab/post/Dbk0LEbIKlF"
+      }
+    ]
+  },
+  "threads-08-05": {
+    "firstPublishedAt": "2026-08-05T10:45:42.441Z",
+    "channels": [
+      "threads"
+    ],
+    "refs": [
+      {
+        "platform": "threads",
+        "remoteId": "17942143509277764",
+        "url": "https://www.threads.com/@_pslab/post/Dbp9JgDoMv8"
       }
     ]
   },

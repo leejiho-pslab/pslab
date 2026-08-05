@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-04T04:55:51.096Z",
-  "sampleSize": 28,
+  "generatedAt": "2026-08-05T12:22:18.360Z",
+  "sampleSize": 30,
   "variants": [
     {
       "key": "B",
@@ -11,10 +11,10 @@
     },
     {
       "key": "A",
-      "posts": 4,
-      "avgEngagement": 0.34086255861567927,
-      "avgLikes": 1.75,
-      "avgViews": 51.75
+      "posts": 5,
+      "avgEngagement": 0.37265306122448977,
+      "avgLikes": 1.6,
+      "avgViews": 42.2
     },
     {
       "key": "C",
@@ -27,10 +27,10 @@
   "channels": [
     {
       "key": "instagram",
-      "posts": 10,
-      "avgEngagement": 0.394678356779605,
-      "avgLikes": 1.3,
-      "avgViews": 22.1
+      "posts": 11,
+      "avgEngagement": 0.40423623995052566,
+      "avgLikes": 1.2727272727272727,
+      "avgViews": 20.454545454545453
     },
     {
       "key": "youtube",
@@ -41,10 +41,10 @@
     },
     {
       "key": "threads",
-      "posts": 6,
-      "avgEngagement": 0.019345238095238092,
-      "avgLikes": 0.5,
-      "avgViews": 33.833333333333336
+      "posts": 7,
+      "avgEngagement": 0.031011647083075654,
+      "avgLikes": 0.5714285714285714,
+      "avgViews": 31.714285714285715
     },
     {
       "key": "blogger",
@@ -64,17 +64,17 @@
     },
     {
       "key": "19:00",
-      "posts": 7,
-      "avgEngagement": 0.11189847484923766,
+      "posts": 9,
+      "avgEngagement": 0.1540309998643332,
       "avgLikes": 1,
-      "avgViews": 32.857142857142854
+      "avgViews": 28
     },
     {
       "key": "20:00",
       "posts": 10,
-      "avgEngagement": 0.10476190476190476,
+      "avgEngagement": 0.10454545454545454,
       "avgLikes": 0.2,
-      "avgViews": 62.2
+      "avgViews": 62.3
     },
     {
       "key": "11:00",
@@ -108,10 +108,10 @@
     },
     {
       "key": "rocket",
-      "posts": 1,
-      "avgEngagement": 0.6666666666666666,
-      "avgLikes": 2,
-      "avgViews": 3
+      "posts": 2,
+      "avgEngagement": 0.5833333333333333,
+      "avgLikes": 1.5,
+      "avgViews": 2.5
     },
     {
       "key": "lock",
@@ -130,9 +130,9 @@
     {
       "key": "growth",
       "posts": 1,
-      "avgEngagement": 0.009708737864077669,
+      "avgEngagement": 0.009523809523809525,
       "avgLikes": 1,
-      "avgViews": 103
+      "avgViews": 105
     }
   ],
   "bestVariant": "B",
