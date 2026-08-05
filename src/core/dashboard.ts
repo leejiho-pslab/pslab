@@ -937,7 +937,7 @@ var NV_FONT="'나눔고딕',NanumGothic,'맑은 고딕','Malgun Gothic',AppleSDG
    그래서 문단을 마침표 기준으로 쪼개 각 문장을 제 줄에 올린다. */
 function nvSentences(line){
   // 마침표·물음표·느낌표 뒤에서 끊되, 숫자 소수점(16.5)·말줄임(…)은 건드리지 않는다.
-  return String(line).split(/(?<=[.?!])\s+(?=[^\s])/).filter(x=>x.trim());
+  return String(line).split(/(?<=[.?!])\\s+(?=[^\\s])/).filter(x=>x.trim());
 }
 function nvP(inner){ return '<p style="margin:0 0 14px;padding:0;font-family:'+NV_FONT+';font-size:18px;line-height:1.85;color:#1f1f1f;letter-spacing:-0.01em;text-align:center">'+inner+'</p>'; }
 function nvInline(x){
