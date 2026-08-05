@@ -75,7 +75,31 @@
       "status": "pending",
       "addedAt": "2026-08-05T13:20:55.000Z",
       "note": "이슈 #64 에서 복구 (CI 충돌로 유실됨)"
+    },
+    {
+      "url": "https://www.threads.com/@speak_kr",
+      "channel": "threads",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:49:41.760Z"
+    },
+    {
+      "url": "https://www.threads.com/@29cm.official",
+      "channel": "threads",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:49:41.760Z"
+    },
+    {
+      "url": "https://www.threads.com/@wconceptkorea",
+      "channel": "threads",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:49:41.760Z"
+    },
+    {
+      "url": "https://www.threads.com/@class101_official",
+      "channel": "threads",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:49:41.760Z"
     }
   ],
-  "updatedAt": "2026-08-05T13:45:57.616711Z"
+  "updatedAt": "2026-08-05T13:49:41.760Z"
 }
