@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-05T04:57:36.121Z",
-  "sampleSize": 28,
+  "generatedAt": "2026-08-05T11:26:20.453Z",
+  "sampleSize": 30,
   "variants": [
     {
       "key": "B",
@@ -11,10 +11,10 @@
     },
     {
       "key": "A",
-      "posts": 4,
-      "avgEngagement": 0.3408163265306122,
-      "avgLikes": 1.75,
-      "avgViews": 52.25
+      "posts": 5,
+      "avgEngagement": 0.4726530612244898,
+      "avgLikes": 1.6,
+      "avgViews": 42
     },
     {
       "key": "C",
@@ -27,10 +27,10 @@
   "channels": [
     {
       "key": "instagram",
-      "posts": 10,
-      "avgEngagement": 0.39465986394557817,
-      "avgLikes": 1.3,
-      "avgViews": 22.3
+      "posts": 11,
+      "avgEngagement": 0.4496907854050711,
+      "avgLikes": 1.2727272727272727,
+      "avgViews": 20.363636363636363
     },
     {
       "key": "youtube",
@@ -41,10 +41,10 @@
     },
     {
       "key": "threads",
-      "posts": 6,
-      "avgEngagement": 0.02728174603174603,
-      "avgLikes": 0.5,
-      "avgViews": 33.833333333333336
+      "posts": 7,
+      "avgEngagement": 0.033279220779220776,
+      "avgLikes": 0.5714285714285714,
+      "avgViews": 31.142857142857142
     },
     {
       "key": "blogger",
@@ -64,17 +64,17 @@
     },
     {
       "key": "19:00",
-      "posts": 7,
-      "avgEngagement": 0.11867477760334902,
+      "posts": 9,
+      "avgEngagement": 0.21135022385022384,
       "avgLikes": 1,
-      "avgViews": 33.142857142857146
+      "avgViews": 27.444444444444443
     },
     {
       "key": "20:00",
       "posts": 10,
-      "avgEngagement": 0.10476190476190476,
+      "avgEngagement": 0.10454545454545454,
       "avgLikes": 0.2,
-      "avgViews": 62.2
+      "avgViews": 62.3
     },
     {
       "key": "11:00",
@@ -93,6 +93,13 @@
   ],
   "motifs": [
     {
+      "key": "rocket",
+      "posts": 2,
+      "avgEngagement": 0.8333333333333333,
+      "avgLikes": 1.5,
+      "avgViews": 2
+    },
+    {
       "key": "compass",
       "posts": 1,
       "avgEngagement": 0.6666666666666666,
@@ -105,13 +112,6 @@
       "avgEngagement": 0.6666666666666666,
       "avgLikes": 1,
       "avgViews": 2
-    },
-    {
-      "key": "rocket",
-      "posts": 1,
-      "avgEngagement": 0.6666666666666666,
-      "avgLikes": 2,
-      "avgViews": 3
     },
     {
       "key": "lock",
@@ -140,6 +140,6 @@
   "hints": [
     "디자인 B안이 인스타 평균 참여율 56.3%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
     "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
-    "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
+    "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
