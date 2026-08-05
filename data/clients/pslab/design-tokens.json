@@ -1,13 +1,7 @@
 {
-  "_readme": "카드 렌더러(scripts/render-cards.mjs)의 디자인 토큰. 이 파일만 고치면 코드 수정 없이 색·레이아웃이 바뀝니다. layout은 editorial|graphic|spotlight 중 하나. 키를 지우면 그 키는 코드 기본값을 씁니다.",
-  "variants": {
-    "A": { "name": "잉크·에디토리얼", "bg": "#0e1726", "fg": "#f4f1ea", "muted": "#9aa6bd", "accent": "#ff8a3d", "layout": "editorial" },
-    "B": { "name": "잉크·그래픽", "bg": "#0b1a1c", "fg": "#eef3f1", "muted": "#8fb0ab", "accent": "#36d6c4", "layout": "graphic" },
-    "C": { "name": "잉크·스포트라이트", "bg": "#14121d", "fg": "#f3eff6", "muted": "#a99fc0", "accent": "#ffc24a", "layout": "spotlight" }
-  },
-  "reels": {
-    "_readme": "릴스/쇼츠 자막 테마(scripts/build-reels.mjs). 현재는 코드 기본값과 동일 — 레퍼런스 학습 후 이 값을 갱신하면 영상 자막 톤이 바뀝니다.",
-    "cinematic": { "accent": "#ff8a3d", "kicker": "#ffb37a" },
-    "premium": { "accent": "#ffc24a", "kicker": "#ffd98a" }
-  }
+  "_readme": "⛔ 2026-08-04 파기. 기존 variants(A/B/C)·reels 테마는 레퍼런스가 아니라 임의로 정한 색이었다. 레퍼런스 학습 전까지 비워 두고, 렌더러는 코드 기본값으로 동작한다. 채널 레퍼런스가 '학습완료'가 되면 그 결론을 여기에 옮겨 적을 것 — 그 전에는 추측해서 채우지 말 것.",
+  "_status": "레퍼런스 학습 대기",
+  "_retiredAt": "2026-08-05T13:03:46.626214Z",
+  "variants": {},
+  "reels": {}
 }

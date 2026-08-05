@@ -63,7 +63,12 @@ if (existsSync(tokensPath)) {
   try { reelTokens = readJson(tokensPath).reels ?? null; }
   catch (e) { console.warn(`design-tokens.json 파싱 실패 — 기본 테마 사용 (${e.message})`); }
 }
-if (reelTokens) console.log(`릴스 디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
+// 빈 객체를 "적용됨"으로 찍으면 안 된다 — 가이드가 없는데 있는 줄 알게 된다.
+if (reelTokens && Object.keys(reelTokens).length > 0) {
+  console.log(`릴스 디자인 토큰 적용: data/clients/${clientId}/design-tokens.json`);
+} else {
+  console.log('릴스 디자인 토큰 없음 → 코드 기본값 (레퍼런스 학습 대기)');
+}
 const themes = mergeTheme(reelTokens);
 
 // 워터마크는 클라이언트 설정의 인스타 계정에서 가져온다 (렌더러 하드코딩 금지)

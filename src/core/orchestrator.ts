@@ -16,6 +16,7 @@ import { Council, type Direction } from './council.js';
 import type { ClientConfig, ClientStore } from './client.js';
 import type { AlertHub } from './alerts.js';
 import type { DesignStudio, DesignStore, DesignStyle } from './design.js';
+import { loadDesignReference, referenceReady } from './design.js';
 import type { PlanStore } from './plan.js';
 import { generatePlan } from './plan.js';
 import { GuidanceStore, brandNotesText } from './guidance.js';
@@ -130,11 +131,23 @@ export class Orchestrator {
     let imagePrompt = `${pick.topic} 대표 이미지, ${client.brandTone}`;
     if (this.deps.design) {
       designStyle = this.deps.design.store.load(client.id);
+      // 레퍼런스 우선 업체는 사람이 올린 레퍼런스 언어를 프롬프트 맨 앞에 넣는다.
+      const ref =
+        client.designPolicy === 'reference-first'
+          ? loadDesignReference(this.deps.design.store.baseDir, client.id, 'instagram')
+          : undefined;
+      if (client.designPolicy === 'reference-first' && !referenceReady(ref)) {
+        // 추측해서 채우지 않는다 — 레퍼런스가 없다는 사실을 로그에 남기고 기본값으로 간다.
+        log.warn(
+          `${client.id}: 레퍼런스 미학습(instagram) — 디자인 기준이 없습니다. 드라이브에 레퍼런스를 올려주세요.`,
+        );
+      }
       imagePrompt = this.deps.design.studio.buildPrompt({
         topic: pick.topic,
         format: pick.suggestedFormat,
         brandTone: client.brandTone,
         style: designStyle,
+        reference: ref,
       });
     }
     const content = await this.deps.content.generate({
@@ -261,9 +274,14 @@ export class Orchestrator {
         designNotes: direction.designNotes,
         engagement: report.totals.avgEngagementRate,
         prevEngagement: history.at(-1)?.avgEngagementRate,
+        policy: client.designPolicy,
       });
       this.deps.design.store.save(client.id, evolved);
-      log.info(`디자인 스타일 v${evolved.version} 저장`);
+      log.info(
+        client.designPolicy === 'reference-first'
+          ? `디자인 관찰 메모 저장 (레퍼런스 우선 — 스타일 자동 변경 없음)`
+          : `디자인 스타일 v${evolved.version} 저장`,
+      );
     }
     log.info(
       `■ 사이클 완료 — ${client.name}: 주제="${pick.topic}", 발행=${published}, 참여율=${(report.totals.avgEngagementRate * 100).toFixed(1)}%`,

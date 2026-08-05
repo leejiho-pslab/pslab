@@ -78,6 +78,52 @@ export interface BuildPromptInput {
   format: string;
   brandTone: string;
   style: DesignStyle;
+  /** 레퍼런스에서 학습한 채널 디자인 언어 — reference-first 업체에서 **최우선** 적용 */
+  reference?: ReferenceLanguage;
+}
+
+/**
+ * 레퍼런스에서 학습한 디자인 언어 (design-reference.json 의 `channels.<key>`).
+ * 사람이 직접 고른 레퍼런스를 보고 채운 것이라 **자체 학습보다 우선**한다.
+ */
+export interface ReferenceLanguage {
+  status: string;
+  language?: Record<string, unknown>;
+  notes?: string[];
+}
+
+/**
+ * 레퍼런스를 실제로 쓸 수 있는 상태인가.
+ * 상태가 '학습완료'라도 language 가 전부 비어 있으면 쓸 게 없다 — 그건 미학습으로 본다.
+ */
+export function referenceReady(ref?: ReferenceLanguage): boolean {
+  if (!ref || ref.status !== '학습완료') return false;
+  return Object.values(ref.language ?? {}).some(
+    (v) => v != null && (!Array.isArray(v) || v.length > 0),
+  );
+}
+
+/**
+ * design-reference.json 에서 채널별 레퍼런스 언어를 읽는다.
+ * 파일이 없거나 깨져도 예외를 던지지 않는다 — "레퍼런스가 없다"는 것도 유효한 상태이고,
+ * 그 경우 호출부가 추측 대신 대기를 택해야 한다.
+ */
+export function loadDesignReference(
+  baseDir: string,
+  clientId: string,
+  channel: string,
+): ReferenceLanguage | undefined {
+  const file = join(baseDir, clientId, 'design-reference.json');
+  if (!existsSync(file)) return undefined;
+  try {
+    const raw = JSON.parse(readFileSync(file, 'utf8')) as {
+      channels?: Record<string, ReferenceLanguage>;
+    };
+    return raw.channels?.[channel];
+  } catch (err) {
+    log.warn(`design-reference.json 파싱 실패 — 레퍼런스 없이 진행 (${String(err)})`);
+    return undefined;
+  }
 }
 
 export class DesignStudio {
@@ -90,7 +136,24 @@ export class DesignStudio {
     const thumbnailHint = input.format.includes('영상')
       ? '영상 썸네일처럼 첫 3초에 시선을 잡는 강한 후킹 비주얼.'
       : '피드에서 멈추게 만드는 한 장의 임팩트 비주얼.';
+
+    // 레퍼런스가 있으면 **맨 앞에** 놓는다. 뒤에 붙이면 모델이 앞의 일반 지시를 기준으로
+    // 잡고 레퍼런스를 장식으로 취급한다. 순서가 곧 우선순위다.
+    const ref = input.reference;
+    const refBlock = referenceReady(ref)
+      ? [
+          '【최우선 — 레퍼런스 디자인 언어】 아래는 담당자가 직접 고른 레퍼런스에서 뽑은 규칙이다.',
+          '아래와 충돌하는 지시는 무시하고 아래를 따른다.',
+          ...Object.entries(ref!.language ?? {})
+            .filter(([, v]) => v != null && (!Array.isArray(v) || v.length > 0))
+            .map(([k, v]) => `· ${k}: ${Array.isArray(v) ? v.join(', ') : String(v)}`),
+          ...(ref!.notes ?? []).slice(0, 4).map((n) => `· 관찰: ${n}`),
+          '',
+        ]
+      : [];
+
     return [
+      ...refBlock,
       `주제: "${input.topic}" 를 표현한 SNS 인스타그램용 정사각형(1:1) 그래픽.`,
       '형태: 인물 사진이 아니라 텍스트 중심의 에디토리얼/인포그래픽 카드. 추상 도형·아이콘·미니멀 일러스트로 개념을 시각화.',
       `브랜드 톤: ${input.brandTone}.`,
@@ -117,8 +180,22 @@ export class DesignStudio {
       designNotes: string[];
       engagement: number;
       prevEngagement?: number;
+      /** 'reference-first' 면 자체 학습이 스타일을 바꾸지 못한다 (메모만 쌓는다) */
+      policy?: 'learning-first' | 'reference-first';
     },
   ): DesignStyle {
+    // reference-first: 레퍼런스가 기준이므로 자체 학습이 구도·색을 흔들면 안 된다.
+    // 관찰 메모는 남긴다 — 다음에 레퍼런스를 갱신할 때 사람이 참고할 재료다.
+    if (signals.policy === 'reference-first') {
+      const noted: DesignStyle = { ...style, notes: [...style.notes] };
+      for (const n of signals.designNotes) {
+        if (n && !noted.notes.includes(n)) noted.notes.push(n);
+      }
+      noted.notes = noted.notes.slice(-10);
+      noted.updatedAt = new Date().toISOString();
+      return noted; // version 도 올리지 않는다 — 진화한 게 아니라 메모만 쌓은 것이다
+    }
+
     const next: DesignStyle = {
       ...style,
       motifs: [...style.motifs],
@@ -162,7 +239,7 @@ export class DesignStudio {
  * data/<clientId>/design.json 에 단일 스타일을 보관한다.
  */
 export class DesignStore {
-  constructor(private readonly baseDir: string) {}
+  constructor(readonly baseDir: string) {}
 
   private fileFor(clientId: string): string {
     return join(this.baseDir, clientId, 'design.json');

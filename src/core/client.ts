@@ -50,6 +50,17 @@ export interface ClientConfig {
    * 자동 생성으로 덮어쓰지 않는다 (검수 우선 운영 시 큐레이션 보존).
    */
   manualPlan?: boolean;
+  /**
+   * 디자인 결정권을 누가 갖는가.
+   *
+   *  - `'learning-first'`(기본): 자체 학습(design.json)이 참여율을 보고 스스로 스타일을 진화시킨다.
+   *  - `'reference-first'`: **사람이 올린 레퍼런스가 1순위**다. 자체 학습은 레퍼런스를 덮지 못하고,
+   *    레퍼런스가 없는 채널은 추측해서 채우지 않고 **대기**한다(업로드 요청).
+   *
+   * 왜 나누나: 자체 학습은 "직전보다 조금 나은 것"으로만 움직여서, 레퍼런스가 가리키는
+   * 방향과 무관하게 표류한다. 레퍼런스를 기준으로 삼기로 한 업체는 그 표류를 막아야 한다.
+   */
+  designPolicy?: 'learning-first' | 'reference-first';
   /** 검수 스위치 초기값 */
   reviewMode: ReviewMode;
   /** 성적표 받을 곳 (이메일/메신저 식별자) */
@@ -101,6 +112,7 @@ export function normalizeClientConfig(c: Partial<ClientConfig>): ClientConfig {
     channelLinks: c.channelLinks ?? {},
     scheduleTimes: c.scheduleTimes ?? ['11:00', '19:00'],
     manualPlan: c.manualPlan ?? false,
+    designPolicy: c.designPolicy ?? 'learning-first',
     reviewMode: c.reviewMode!,
     reportTo: c.reportTo,
     themeColor: c.themeColor,

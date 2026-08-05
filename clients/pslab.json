@@ -77,6 +77,7 @@
     "11:00"
   ],
   "manualPlan": true,
+  "designPolicy": "reference-first",
   "reviewMode": "manual",
   "reportTo": "ljhnimwithit@gmail.com",
   "cadence": {
