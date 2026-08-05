@@ -1,7 +1,42 @@
 {
-  "_readme": "⛔ 2026-08-04 파기. 기존 variants(A/B/C)·reels 테마는 레퍼런스가 아니라 임의로 정한 색이었다. 레퍼런스 학습 전까지 비워 두고, 렌더러는 코드 기본값으로 동작한다. 채널 레퍼런스가 '학습완료'가 되면 그 결론을 여기에 옮겨 적을 것 — 그 전에는 추측해서 채우지 말 것.",
-  "_status": "레퍼런스 학습 대기",
-  "_retiredAt": "2026-08-05T13:03:46.626214Z",
-  "variants": {},
-  "reels": {}
+  "_readme": "카드 렌더러(render-cards.mjs)·릴스(reel-timeline.mjs)의 디자인 토큰. **모든 값은 design-reference.json 의 학습 결론에서 나왔다** — 임의로 바꾸지 말고 레퍼런스를 먼저 갱신할 것(designPolicy=reference-first, ADR-0018).",
+  "_source": "인스타 레퍼런스 학습 2026-08-05 (yeonsidesign 캐러셀 · trip_dive 릴스 · putput.letter 그리드)",
+  "_learnedAt": "2026-08-05T14:01:11.173239Z",
+  "variants": {
+    "A": {
+      "name": "레퍼런스·기본(검정)",
+      "bg": "#000000",
+      "fg": "#ffffff",
+      "muted": "#9b9b9b",
+      "accent": "#ffd233",
+      "layout": "editorial"
+    },
+    "B": {
+      "name": "레퍼런스·실사 오버레이",
+      "bg": "#0a0a0a",
+      "fg": "#ffffff",
+      "muted": "#b8b8b8",
+      "accent": "#ffd233",
+      "layout": "spotlight"
+    },
+    "C": {
+      "name": "레퍼런스·증거형(화면캡처)",
+      "bg": "#000000",
+      "fg": "#ffffff",
+      "muted": "#8f8f8f",
+      "accent": "#ffd233",
+      "layout": "graphic"
+    }
+  },
+  "reels": {
+    "_readme": "릴스/쇼츠 자막 테마. 레퍼런스(trip_dive)는 흰 굵은 고딕 + 핵심어만 노란 형광 박스다.",
+    "cinematic": {
+      "accent": "#ffd233",
+      "kicker": "#ffffff"
+    },
+    "premium": {
+      "accent": "#ffd233",
+      "kicker": "#ffffff"
+    }
+  }
 }
