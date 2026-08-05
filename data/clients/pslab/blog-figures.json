@@ -666,5 +666,265 @@
         ]
       }
     ]
+  },
+  {
+    "id": "naver-08-18",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "checklist",
+        "kicker": "Check",
+        "title": "계약 전 확인 5가지",
+        "items": [
+          "업체 자기 채널의 최근 발행",
+          "보고서에 들어가는 숫자",
+          "콘텐츠 소유권",
+          "담당자 교체 시 구조",
+          "월 발행 건수 명시"
+        ]
+      },
+      {
+        "type": "compare",
+        "kicker": "Report",
+        "title": "보고서 숫자, 무엇을 보나",
+        "left": {
+          "label": "겉지표",
+          "items": [
+            "팔로워 수",
+            "좋아요",
+            "도달"
+          ]
+        },
+        "right": {
+          "label": "전환지표",
+          "items": [
+            "저장",
+            "프로필 방문",
+            "문의 수"
+          ]
+        }
+      },
+      {
+        "type": "quote",
+        "kicker": "Point",
+        "text": "말이 아니라 구조를 보세요.",
+        "by": "16년차 대행사가 드리는 검증 기준"
+      },
+      {
+        "type": "compare",
+        "kicker": "Structure",
+        "title": "노하우는 어디에 쌓이나",
+        "left": {
+          "label": "사람 의존",
+          "items": [
+            "담당자 머릿속",
+            "퇴사하면 소멸",
+            "매번 처음부터"
+          ]
+        },
+        "right": {
+          "label": "시스템 축적",
+          "items": [
+            "기록으로 저장",
+            "교체돼도 유지",
+            "계속 좋아짐"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "naver-08-25",
+    "channel": "naver-blog",
+    "figures": [
+      {
+        "type": "steps",
+        "kicker": "Timeline",
+        "title": "시스템의 하루",
+        "items": [
+          "08:00 트렌드·키워드 수집",
+          "11:00 블로그 자동 발행",
+          "14:00 카드·영상 제작",
+          "18:00 인스타·유튜브 발행",
+          "19:00 스레드 발행",
+          "22:00 성과 수집·학습"
+        ]
+      },
+      {
+        "type": "quote",
+        "kicker": "Gate",
+        "text": "이상하면 버튼 하나로 발행이 멈춥니다.",
+        "by": "발행 전 검수 게이트"
+      },
+      {
+        "type": "stat",
+        "kicker": "Evening",
+        "title": "저녁 발행 러시",
+        "value": "18:00 · 19:00",
+        "label": "인스타·유튜브 → 스레드",
+        "sub": "예약이 아니라 시스템이 직접 올립니다."
+      },
+      {
+        "type": "steps",
+        "kicker": "Loop",
+        "title": "성과가 다음 기획이 되기까지",
+        "items": [
+          "조회·저장·문의 수집",
+          "반응 좋은 주제·디자인 분석",
+          "다음 기획에 반영",
+          "발행 후 다시 측정"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-08-20",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "compare",
+        "kicker": "Options",
+        "title": "운영 방식 4가지",
+        "left": {
+          "label": "사람이 실행",
+          "items": [
+            "종합 대행사 300~800만",
+            "프리랜서 50~150만"
+          ]
+        },
+        "right": {
+          "label": "도구·시스템",
+          "items": [
+            "셀프 툴 2~10만 + 내 시간",
+            "자동화 시스템 = 대행 1/3"
+          ]
+        }
+      },
+      {
+        "type": "bars",
+        "kicker": "Cost",
+        "title": "월 비용 구간 (만원)",
+        "items": [
+          {
+            "label": "대행사",
+            "value": 550
+          },
+          {
+            "label": "프리랜서",
+            "value": 100
+          },
+          {
+            "label": "자동화 시스템",
+            "value": 180
+          },
+          {
+            "label": "셀프 툴",
+            "value": 6
+          }
+        ]
+      },
+      {
+        "type": "compare",
+        "kicker": "Knowhow",
+        "title": "노하우 축적 위치",
+        "left": {
+          "label": "외부에 쌓임",
+          "items": [
+            "대행사",
+            "프리랜서",
+            "계약 종료 시 소멸"
+          ]
+        },
+        "right": {
+          "label": "내부에 쌓임",
+          "items": [
+            "셀프(시간 대가)",
+            "시스템(자동 기록)"
+          ]
+        }
+      },
+      {
+        "type": "checklist",
+        "kicker": "Choose",
+        "title": "선택 기준",
+        "items": [
+          "월 300만+ 예산 → 대행사",
+          "제작물 몇 개만 → 프리랜서",
+          "시간 많고 배우고 싶다 → 셀프",
+          "매일 발행 구조를 예산 안에 → 자동화"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "blogger-08-27",
+    "channel": "blogger",
+    "figures": [
+      {
+        "type": "stat",
+        "kicker": "Rule",
+        "title": "마케팅 예산 기준선",
+        "value": "매출의 5~10%",
+        "label": "월 매출 1,000만원 → 50~100만원",
+        "sub": "소상공인 일반 권장 구간"
+      },
+      {
+        "type": "bars",
+        "kicker": "30",
+        "title": "월 30만원 배분 (만원)",
+        "items": [
+          {
+            "label": "콘텐츠 발행",
+            "value": 20
+          },
+          {
+            "label": "리뷰·플레이스",
+            "value": 10
+          },
+          {
+            "label": "유료 광고",
+            "value": 0
+          }
+        ]
+      },
+      {
+        "type": "bars",
+        "kicker": "50",
+        "title": "월 50만원 배분 (만원)",
+        "items": [
+          {
+            "label": "콘텐츠 발행",
+            "value": 30
+          },
+          {
+            "label": "검증용 광고",
+            "value": 15
+          },
+          {
+            "label": "리뷰·플레이스",
+            "value": 5
+          }
+        ]
+      },
+      {
+        "type": "bars",
+        "kicker": "100",
+        "title": "월 100만원 배분 (만원)",
+        "items": [
+          {
+            "label": "콘텐츠+학습",
+            "value": 40
+          },
+          {
+            "label": "퍼포먼스 광고",
+            "value": 40
+          },
+          {
+            "label": "캠페인 적립",
+            "value": 20
+          }
+        ]
+      }
+    ]
   }
 ]
