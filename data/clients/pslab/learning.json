@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-05T11:26:20.453Z",
+  "generatedAt": "2026-08-05T12:03:17.087Z",
   "sampleSize": 30,
   "variants": [
     {
@@ -12,9 +12,9 @@
     {
       "key": "A",
       "posts": 5,
-      "avgEngagement": 0.4726530612244898,
+      "avgEngagement": 0.37265306122448977,
       "avgLikes": 1.6,
-      "avgViews": 42
+      "avgViews": 42.2
     },
     {
       "key": "C",
@@ -28,9 +28,9 @@
     {
       "key": "instagram",
       "posts": 11,
-      "avgEngagement": 0.4496907854050711,
+      "avgEngagement": 0.40423623995052566,
       "avgLikes": 1.2727272727272727,
-      "avgViews": 20.363636363636363
+      "avgViews": 20.454545454545453
     },
     {
       "key": "youtube",
@@ -42,9 +42,9 @@
     {
       "key": "threads",
       "posts": 7,
-      "avgEngagement": 0.033279220779220776,
+      "avgEngagement": 0.031011647083075654,
       "avgLikes": 0.5714285714285714,
-      "avgViews": 31.142857142857142
+      "avgViews": 31.714285714285715
     },
     {
       "key": "blogger",
@@ -65,9 +65,9 @@
     {
       "key": "19:00",
       "posts": 9,
-      "avgEngagement": 0.21135022385022384,
+      "avgEngagement": 0.1540309998643332,
       "avgLikes": 1,
-      "avgViews": 27.444444444444443
+      "avgViews": 28
     },
     {
       "key": "20:00",
@@ -93,13 +93,6 @@
   ],
   "motifs": [
     {
-      "key": "rocket",
-      "posts": 2,
-      "avgEngagement": 0.8333333333333333,
-      "avgLikes": 1.5,
-      "avgViews": 2
-    },
-    {
       "key": "compass",
       "posts": 1,
       "avgEngagement": 0.6666666666666666,
@@ -112,6 +105,13 @@
       "avgEngagement": 0.6666666666666666,
       "avgLikes": 1,
       "avgViews": 2
+    },
+    {
+      "key": "rocket",
+      "posts": 2,
+      "avgEngagement": 0.5833333333333333,
+      "avgLikes": 1.5,
+      "avgViews": 2.5
     },
     {
       "key": "lock",
@@ -140,6 +140,6 @@
   "hints": [
     "디자인 B안이 인스타 평균 참여율 56.3%로 가장 좋음 → 비슷한 톤·구성을 더 자주.",
     "21:00 발행이 반응이 가장 좋음 → 핵심 콘텐츠는 이 시간대에.",
-    "'rocket' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
+    "'compass' 계열 주제 그래픽이 잘 먹힘 → 비슷한 소재를 우선 기획."
   ]
 }
