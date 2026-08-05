@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-04T12:24:12.507Z",
+  "generatedAt": "2026-08-05T04:57:36.121Z",
   "sampleSize": 28,
   "variants": [
     {
@@ -42,7 +42,7 @@
     {
       "key": "threads",
       "posts": 6,
-      "avgEngagement": 0.019345238095238092,
+      "avgEngagement": 0.02728174603174603,
       "avgLikes": 0.5,
       "avgViews": 33.833333333333336
     },
@@ -65,7 +65,7 @@
     {
       "key": "19:00",
       "posts": 7,
-      "avgEngagement": 0.11187205651491364,
+      "avgEngagement": 0.11867477760334902,
       "avgLikes": 1,
       "avgViews": 33.142857142857146
     },
