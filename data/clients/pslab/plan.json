@@ -1760,7 +1760,7 @@
       ],
       "scheduledFor": "2026-08-05T09:00:00.000Z",
       "score": 90,
-      "status": "planned",
+      "status": "published",
       "kicker": "ALWAYS ON",
       "headline": "도입하면<br>*2주 안에* 이렇게 됩니다",
       "sub": "상담부터 첫 자동 발행까지, 실제 순서.",
@@ -1831,7 +1831,16 @@
         "cards/pslab/car-08-05-9.png",
         "cards/pslab/car-08-05-10.png"
       ],
-      "cardImage": "cards/pslab/car-08-05-1.png"
+      "cardImage": "cards/pslab/car-08-05-1.png",
+      "publishedUrl": "https://www.instagram.com/p/Dbp9Hbokb7L/",
+      "publishedAt": "2026-08-05T10:45:27.006Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "17959664349173844",
+          "url": "https://www.instagram.com/p/Dbp9Hbokb7L/"
+        }
+      ]
     },
     {
       "id": "threads-08-05",
@@ -1842,7 +1851,7 @@
       ],
       "scheduledFor": "2026-08-05T10:00:00.000Z",
       "score": 83,
-      "status": "planned",
+      "status": "published",
       "kicker": "Threads",
       "headline": "사장님이 하실 일은<br>*딱 하나*",
       "sub": "7일 세팅 중 검수 한 번.",
@@ -1857,7 +1866,16 @@
       "slideImages": [
         "cards/pslab/threads-08-05-1.png"
       ],
-      "cardImage": "cards/pslab/threads-08-05-1.png"
+      "cardImage": "cards/pslab/threads-08-05-1.png",
+      "publishedUrl": "https://www.threads.com/@_pslab/post/Dbp9JgDoMv8",
+      "publishedAt": "2026-08-05T10:45:42.441Z",
+      "published": [
+        {
+          "platform": "threads",
+          "remoteId": "17942143509277764",
+          "url": "https://www.threads.com/@_pslab/post/Dbp9JgDoMv8"
+        }
+      ]
     },
     {
       "id": "blogger-08-06",
