@@ -932,7 +932,14 @@ function plainPostText(it){
    맥락 구분은 크게 준다 — 소제목 29px/900, 본문 18px, 소제목 앞 여백 64px.
    본문에서 눈으로 훑을 때도, 네이버에 붙였을 때도 목차 경계가 바로 보여야 한다. */
 var NV_FONT="'나눔고딕',NanumGothic,'맑은 고딕','Malgun Gothic',AppleSDGothicNeo-Regular,sans-serif";
-function nvP(inner){ return '<p style="margin:0 0 22px;padding:0;font-family:'+NV_FONT+';font-size:18px;line-height:1.9;color:#1f1f1f;letter-spacing:-0.01em">'+inner+'</p>'; }
+/* 레퍼런스(sively_s2)는 본문을 **중앙 정렬**하고 **한 문장 = 한 줄**로 끊는다.
+   모바일에서 읽기 리듬이 생기고, 네이버 본문 폭에서 줄이 어색하게 넘어가지 않는다.
+   그래서 문단을 마침표 기준으로 쪼개 각 문장을 제 줄에 올린다. */
+function nvSentences(line){
+  // 마침표·물음표·느낌표 뒤에서 끊되, 숫자 소수점(16.5)·말줄임(…)은 건드리지 않는다.
+  return String(line).split(/(?<=[.?!])\s+(?=[^\s])/).filter(x=>x.trim());
+}
+function nvP(inner){ return '<p style="margin:0 0 14px;padding:0;font-family:'+NV_FONT+';font-size:18px;line-height:1.85;color:#1f1f1f;letter-spacing:-0.01em;text-align:center">'+inner+'</p>'; }
 function nvInline(x){
   return esc(x).replace(/\\*\\*([^*]+)\\*\\*/g,'<strong style="font-weight:700;color:#1657c8">$1</strong>');
 }
@@ -964,7 +971,7 @@ function naverBodyHtml(it,forScreen){
     if(t==='---') return '<p style="margin:40px 0;padding:0;border-top:1px solid #dfe4ec;height:0;font-size:0;line-height:0">&nbsp;</p>';
     if(t.indexOf('#')===0&&t.indexOf(' #')>0) return '<p style="margin:32px 0 0;padding:0;font-family:'+NV_FONT+';font-size:15px;line-height:1.8;color:#7b8598">'+esc(t)+'</p>';
     if(t==='') return '';
-    return nvP(nvInline(line));
+    return nvSentences(line).map(x=>nvP(nvInline(x))).join('');
   }).filter(Boolean).join('');
   // 바깥 래퍼도 색·크기를 못 박는다 (에디터가 래퍼 스타일만 살리는 경우 대비)
   return '<div style="font-family:'+NV_FONT+';font-size:18px;line-height:1.9;color:#1f1f1f;background:#ffffff">'+out+'</div>';

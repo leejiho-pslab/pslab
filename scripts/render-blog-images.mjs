@@ -43,9 +43,15 @@ function fontFaces() {
 }
 
 // 채널별 테마 (서로 다른 비주얼)
+// 레퍼런스 학습(2026-08-05)으로 두 채널의 방향이 **뒤바뀌어 있던 것**을 바로잡았다.
+//   네이버 레퍼런스(요비·인쇄는처음이라)는 딥 컬러 배경 + 흰 텍스트로 꾸미고,
+//   구글 레퍼런스(수작소)는 흰 배경 + 검정으로 비운다.
+// 기존 설정은 정확히 반대였다(naver=밝은 페이퍼톤 / blogger=다크 잉크톤).
 const THEMES = {
-  naver: { bg: '#f7f4ee', panel: '#ffffff', fg: '#1c2533', muted: '#6a7689', accent: '#1f6feb', accent2: '#0aa37a', line: '#e6e0d6', accentCover: '#5aa0ff' },
-  blogger: { bg: '#101826', panel: '#16202f', fg: '#f1f5fb', muted: '#90a0b8', accent: '#ff8a3d', accent2: '#36d6c4', line: '#26303f', accentCover: '#ff9d52' },
+  // 네이버: 딥그린~네이비 배경에 흰 글씨. 강조는 브랜드 옐로 한 곳만.
+  naver: { bg: '#12261f', panel: '#183026', fg: '#f4f7f5', muted: '#9db3a8', accent: '#ffd233', accent2: '#7fd6a8', line: '#244134', accentCover: '#ffd233' },
+  // 구글: 흰 배경 + 검정. 장식 없이 비운다.
+  blogger: { bg: '#ffffff', panel: '#ffffff', fg: '#111111', muted: '#7b7b7b', accent: '#111111', accent2: '#555555', line: '#e6e6e6', accentCover: '#111111' },
 };
 
 const esc = (s) => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

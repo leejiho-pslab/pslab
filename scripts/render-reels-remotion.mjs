@@ -45,6 +45,18 @@ const force = has('force');
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 
+/** 릴스 컴포지션 소스의 지문 — 이 파일들이 바뀌면 전 편을 다시 뽑아야 한다. */
+function compositionFingerprint() {
+  const files = ['src/Reel/Scene.tsx', 'src/Reel/index.tsx'];
+  const h = createHash('sha1');
+  for (const f of files) {
+    const p = join(VIDEO, f);
+    if (existsSync(p)) h.update(readFileSync(p));
+  }
+  return h.digest('hex');
+}
+
+
 // ── 입력 확인 ──────────────────────────────────────────────────────────────
 const specPath = join(ROOT, 'data/clients', clientId, 'reel-scenes.json');
 if (!existsSync(specPath)) { console.log('reel-scenes.json 없음 → 건너뜀'); process.exit(0); }
@@ -139,7 +151,14 @@ for (const [itemId, cfg] of Object.entries(spec.reels || {})) {
   // 잡 타임아웃을 넘긴다(실제로 2026-08-01 런이 25분 한도에 걸려 대시보드 커밋까지 통째로
   // 건너뛰었다). 타임라인이 그대로고 결과물이 있으면 건너뛴다.
   const stampPath = join(ROOT, 'docs/shorts', itemId, '.remotion-stamp');
-  const stamp = createHash('sha1').update(JSON.stringify(timeline)).digest('hex');
+  // 지문에 **컴포지션 소스**도 섞는다.
+  // 타임라인만 해시하면 Scene.tsx(자막 위치·강조 스타일)를 바꿔도 지문이 그대로라
+  // 전 편이 "변경 없음"으로 건너뛴다 — 디자인을 고쳤는데 영상은 옛날 것인 상태가 된다.
+  // 2026-08-05 레퍼런스 반영으로 자막을 좌측 상단 스택으로 옮기면서 실제로 물릴 뻔했다.
+  const stamp = createHash('sha1')
+    .update(JSON.stringify(timeline))
+    .update(compositionFingerprint())
+    .digest('hex');
   if (!force && existsSync(out) && existsSync(stampPath) && readFileSync(stampPath, 'utf8').trim() === stamp) {
     console.log(`  · ${itemId}: 변경 없음 → 건너뜀 (--force 로 재렌더)`);
     skipped.push({ itemId, out, props: timeline });
