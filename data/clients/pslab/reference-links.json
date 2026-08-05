@@ -47,7 +47,35 @@
       "channel": "instagram",
       "status": "pending",
       "addedAt": "2026-08-05T13:21:02.624Z"
+    },
+    {
+      "url": "https://sujakso138.tistory.com/",
+      "channel": "blogger",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:20:55.000Z",
+      "note": "이슈 #64 에서 복구 (CI 충돌로 유실됨)"
+    },
+    {
+      "url": "https://blog.naver.com/sively_s2/224155728096",
+      "channel": "naver-blog",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:20:55.000Z",
+      "note": "이슈 #64 에서 복구 (CI 충돌로 유실됨)"
+    },
+    {
+      "url": "https://blog.naver.com/tidy-brand",
+      "channel": "naver-blog",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:20:55.000Z",
+      "note": "이슈 #64 에서 복구 (CI 충돌로 유실됨)"
+    },
+    {
+      "url": "https://blog.naver.com/gichool100",
+      "channel": "naver-blog",
+      "status": "pending",
+      "addedAt": "2026-08-05T13:20:55.000Z",
+      "note": "이슈 #64 에서 복구 (CI 충돌로 유실됨)"
     }
   ],
-  "updatedAt": "2026-08-05T13:21:02.624Z"
+  "updatedAt": "2026-08-05T13:45:57.616711Z"
 }

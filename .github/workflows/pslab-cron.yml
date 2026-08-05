@@ -202,13 +202,28 @@ jobs:
           fi
           git commit -m "chore(pslab): 발행·성과·대시보드 갱신"
           for i in 1 2 3 4 5; do
-            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push 성공"; exit 0; }
+            if git pull --rebase origin ${{ github.ref_name }}; then
+              git push && { echo "push 성공"; exit 0; }
+            else
+              git rebase --abort || true   # 충돌 표시를 작업트리에 남기지 않는다
+            fi
             echo "push 재시도 $i (동시 push 충돌)"; sleep 4
           done
           echo "push 실패 — 그래도 Pages 배포는 진행"
 
       # GitHub Pages 라이브 배포 — pslab이 docs/를 단독 배포(다른 프로젝트와 분리)
       # (Settings → Pages → Source 를 "GitHub Actions"로 설정해야 동작)
+      # 마지막 방어선 — 충돌 표시가 남은 파일은 절대 배포하지 않는다.
+      # 깨진 대시보드를 올리는 것보다 이전 버전이 그대로 있는 편이 낫다.
+      # (2026-08-05 guidance-sync 가 충돌 트리를 배포해 대시보드 전체가 SyntaxError 였다)
+      - name: 배포 전 충돌 표시 검사
+        run: |
+          if grep -rlE '^(<<<<<<< |>>>>>>> |=======$)' docs --include='*.html' --include='*.json'; then
+            echo "::error::위 파일에 병합 충돌 표시가 남아 있습니다 — Pages 배포를 중단합니다."
+            exit 1
+          fi
+          echo "충돌 표시 없음 — 배포 진행"
+
       - name: Pages 설정
         uses: actions/configure-pages@v5
       - name: Pages 아티팩트 업로드 (docs/)

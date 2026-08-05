@@ -89,10 +89,25 @@ jobs:
           git config user.email actions@users.noreply.github.com
           git add -f data/clients docs/index.html docs/vittz/index.html docs/dongsung/index.html
           git commit -m "chore(guidance): 운영자 지침 반영 — ${ISSUE_TITLE}" || { echo "변경 없음"; exit 0; }
+          # ⚠️ 충돌한 작업트리를 절대 그대로 두지 않는다.
+          #   rebase 가 충돌하면 docs/index.html 에 <<<<<<< 표시가 남는데, 예전 루프는
+          #   그 상태로 다음 재시도를 돌고 마지막 sleep 의 종료코드 0 때문에 **단계가 성공**으로
+          #   끝났다. 그 뒤 이슈 닫기와 Pages 배포가 실행돼, 충돌 표시가 박힌 대시보드가
+          #   배포되고(화면 전체가 SyntaxError) 등록된 레퍼런스는 push 실패로 사라졌다.
+          #   → 충돌하면 rebase 를 되돌려 트리를 깨끗이 만들고, 끝내 실패하면 **작업을 실패시킨다**.
+          pushed=false
           for i in 1 2 3 4 5; do
-            git pull --rebase origin ${{ github.ref_name }} && git push && { echo push ok; exit 0; }
-            echo retry $i; sleep 4
+            if git pull --rebase origin ${{ github.ref_name }}; then
+              if git push; then pushed=true; break; fi
+            else
+              git rebase --abort || true
+            fi
+            echo "retry $i (동시 push 충돌)"; sleep $((i * 3))
           done
+          if [ "$pushed" != true ]; then
+            echo "::error::push 실패 — 지침이 저장소에 반영되지 않았습니다. 이슈를 닫지 않고 배포도 건너뜁니다."
+            exit 1
+          fi
       - name: 이슈 닫기 (반영 완료 코멘트)
         if: steps.apply.outputs.synced == 'true'
         env:
@@ -104,6 +119,17 @@ jobs:
           curl -sS -X PATCH -H "Authorization: Bearer $GH_TOKEN" "$api" \
             -d '{"state":"closed","state_reason":"completed"}' >/dev/null
           echo "issue #${ISSUE_NUMBER} closed"
+      # 마지막 방어선 — 어떤 경로로든 충돌 표시가 남았다면 배포하지 않는다.
+      # 깨진 대시보드를 올리는 것보다 이전 버전이 그대로 있는 편이 낫다.
+      - name: 배포 전 충돌 표시 검사
+        if: steps.apply.outputs.synced == 'true'
+        run: |
+          if grep -rlE '^(<<<<<<< |>>>>>>> |=======$)' docs --include='*.html' --include='*.json'; then
+            echo "::error::위 파일에 병합 충돌 표시가 남아 있습니다 — Pages 배포를 중단합니다."
+            exit 1
+          fi
+          echo "충돌 표시 없음 — 배포 진행"
+
       - name: Pages 설정
         if: steps.apply.outputs.synced == 'true'
         uses: actions/configure-pages@v5
