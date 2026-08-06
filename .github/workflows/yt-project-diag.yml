@@ -1,0 +1,30 @@
+name: yt project diag (일회용)
+
+# 유튜브 OAuth 클라이언트가 어느 구글 클라우드 프로젝트 소속인지 찾는 일회용 진단.
+# 클라이언트 ID 는 "<프로젝트번호>-<해시>.apps.googleusercontent.com" 형태라
+# 앞의 숫자만 찍으면 프로젝트를 특정할 수 있다. 숫자만 출력하므로 시크릿 마스킹과 무관하고
+# 비밀도 아니다(프로젝트 번호는 공개 식별자). 확인 후 이 파일은 삭제한다.
+on:
+  workflow_dispatch: {}
+
+permissions: {}
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      YT_ID: ${{ secrets.PSLAB_YOUTUBE_CLIENT_ID }}
+      BG_ID: ${{ secrets.PSLAB_BLOGGER_CLIENT_ID }}
+    steps:
+      - name: 프로젝트 번호 추출
+        run: |
+          yt="${YT_ID%%-*}"
+          bg="${BG_ID%%-*}"
+          echo "YouTube 클라이언트의 프로젝트 번호: ${yt}"
+          echo "Blogger 클라이언트의 프로젝트 번호: ${bg}"
+          if [ "$yt" = "$bg" ]; then
+            echo "→ 유튜브와 블로거가 같은 프로젝트를 씁니다."
+          else
+            echo "→ 유튜브와 블로거가 서로 다른 프로젝트입니다."
+          fi
