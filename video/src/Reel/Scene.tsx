@@ -126,21 +126,19 @@ const Word: React.FC<{ token: Token; accent: string; delaySec: number }> = ({
         whiteSpace: "pre",
         opacity: enter,
         transform: `translateY(${y}px)`,
-        color: token.accent ? accent : "#fff",
+        // 레퍼런스(trip_dive)는 강조어를 **채운 형광 박스 + 검정 글씨**로 쓴다.
+        // 예전처럼 글자만 물들이고 흐린 밑줄을 깔면 영상 위에서 거의 안 보인다.
+        color: token.accent ? "#111" : "#fff",
         position: "relative",
+        padding: token.accent ? "0 14px" : undefined,
       }}
     >
       {token.accent ? (
         <span
           style={{
             position: "absolute",
-            left: -4,
-            right: -4,
-            bottom: 6,
-            height: 16,
-            borderRadius: 8,
+            inset: 0,
             background: accent,
-            opacity: 0.22,
             zIndex: -1,
             transform: `scaleX(${wipe})`,
             transformOrigin: "left center",
@@ -288,7 +286,19 @@ export const Scene: React.FC<Props> = ({ scene, theme, brand, total }) => {
       ) : null}
 
       {/* 본문 자막 — 줄마다, 그리고 줄 안에서 단어마다 시차를 두고 올라온다 */}
-      <div style={{ position: "absolute", left: 84, right: 84, bottom: 520 }}>
+      {/* 자막은 **좌측 상단 스택**이다 (레퍼런스 trip_dive).
+          하단 중앙에 깔면 인물·피사체와 겹치고, 피드에서 먼저 읽히지 않는다.
+          right 를 넉넉히 비워 우측에 피사체가 들어올 자리를 남긴다. */}
+      <div style={{ position: "absolute", left: 84, right: 300, top: 430 }}>
+        <div
+          style={{
+            width: 96,
+            height: 6,
+            background: "rgba(255,255,255,.9)",
+            marginBottom: 34,
+            borderRadius: 3,
+          }}
+        />
         {scene.lines.map((segments, i) => (
           <Line
             key={i}

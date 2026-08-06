@@ -235,6 +235,192 @@
           "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3EsYKei5ji5vSBZVwsAwggxd0R9/hf_20260727_035405_9ca60faf-dd8a-4923-a698-ed323804a311.mp4"
         }
       ]
+    },
+    "reels-08-17": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "HOOK",
+          "text": "마케팅 직원,\n뽑을까 고민되세요?",
+          "accent": "고민되세요?",
+          "clip": "",
+          "clipPrompt": "Late evening Korean small office, a business owner at a desk reviewing a stack of printed resumes under warm lamp light, thoughtful expression, cinematic 9:16, no text no letters no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "COST",
+          "text": "월급 250에\n끝나지 않습니다",
+          "accent": "끝나지 않습니다",
+          "clip": "",
+          "clipPrompt": "Close-up of hands using a desk calculator beside neat piles of documents on a wooden desk, warm office light, shallow depth of field, 9:16, no text no numbers visible no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "RISK",
+          "text": "노하우는 사람과\n함께 나갑니다",
+          "accent": "함께 나갑니다",
+          "clip": "",
+          "clipPrompt": "An empty office desk with a chair pushed back and a cardboard box being carried away, soft daylight, melancholic mood, 9:16, no text no letters no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "CTA",
+          "text": "시스템은\n퇴사하지 않습니다",
+          "accent": "퇴사하지 않습니다",
+          "clip": "",
+          "clipPrompt": "Modern minimal office at dusk with a single monitor glowing softly on a clean desk, automated calm atmosphere, cinematic, 9:16, no visible screen content no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        }
+      ]
+    },
+    "reels-08-21": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "HOOK",
+          "text": "팔로워는 느는데\n매출은 그대로죠?",
+          "accent": "그대로죠?",
+          "clip": "",
+          "clipPrompt": "A shop owner looking at a smartphone with a slight frown inside a small quiet Korean retail store, daylight, 9:16 vertical, no text no visible screen content no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "TRUTH",
+          "text": "팔로워는\n박수입니다",
+          "accent": "박수입니다",
+          "clip": "",
+          "clipPrompt": "An audience clapping hands in warm stage light, close-up on hands, celebratory but fleeting mood, 9:16, no faces prominent, no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "SHIFT",
+          "text": "매출은 저장과\n문의에서 나옵니다",
+          "accent": "저장과 문의",
+          "clip": "",
+          "clipPrompt": "A customer at a cafe counter completing a card payment, hands and terminal close-up, warm inviting light, 9:16, no text no brand logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "CTA",
+          "text": "보는 숫자를\n바꿔야 합니다",
+          "accent": "바꿔야 합니다",
+          "clip": "",
+          "clipPrompt": "A clean desk with a notebook and a cup of coffee by a bright window in the morning, fresh start mood, 9:16, blank notebook pages, no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        }
+      ]
+    },
+    "reels-08-24": {
+      "theme": "premium",
+      "beats": [
+        {
+          "kicker": "HOOK",
+          "text": "저희 조회수,\n그대로 공개합니다",
+          "accent": "그대로 공개",
+          "clip": "",
+          "clipPrompt": "A person opening a laptop on a tidy desk in soft morning light, honest and calm atmosphere, 9:16 vertical, screen not visible to camera, no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "DATA",
+          "text": "릴스 105회\n쇼츠 393회",
+          "accent": "105회",
+          "clip": "",
+          "clipPrompt": "Macro shot of a small notebook and pen on a wooden table next to coffee, minimal and honest mood, warm tone, 9:16, blank pages no handwriting no text",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "PROOF",
+          "text": "4주째 하루도\n빠짐없이 자동 발행",
+          "accent": "하루도 빠짐없이",
+          "clip": "",
+          "clipPrompt": "Time-lapse style city window view from an office at night with lights, steady and continuous feeling, 9:16, no signage no readable text",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "CTA",
+          "text": "다음 달에\n다시 공개하겠습니다",
+          "accent": "다시 공개",
+          "clip": "",
+          "clipPrompt": "A calendar-free clean wall and a desk plant in bright daylight, forward-looking calm mood, 9:16, no text no letters no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        }
+      ]
+    },
+    "reels-08-28": {
+      "theme": "cinematic",
+      "beats": [
+        {
+          "kicker": "HOOK",
+          "text": "SNS, 막내 직원\n시키고 계시죠?",
+          "accent": "막내 직원",
+          "clip": "",
+          "clipPrompt": "A young employee in an apron at a cafe counter looking at a phone between serving tasks, busy background, candid documentary style, 9:16, no visible screen content no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "TRUTH",
+          "text": "올리는 건\n누구나 합니다",
+          "accent": "누구나",
+          "clip": "",
+          "clipPrompt": "Hands quickly tapping a smartphone, casual close-up, neutral light, 9:16 vertical, screen glow only without readable content, no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "SHIFT",
+          "text": "뭘, 왜, 언제는\n전략입니다",
+          "accent": "전략",
+          "clip": "",
+          "clipPrompt": "A strategy discussion scene: two people at a whiteboard-free table moving wooden blocks like a plan, focused mood, warm office light, 9:16, no text no letters",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "CTA",
+          "text": "전략은 시스템에\n맡기세요",
+          "accent": "시스템에",
+          "clip": "",
+          "clipPrompt": "Minimal modern workspace with a softly glowing monitor at dusk, calm automated feeling, 9:16, no visible screen content no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        }
+      ]
+    },
+    "reels-08-31": {
+      "theme": "premium",
+      "beats": [
+        {
+          "kicker": "HOOK",
+          "text": "광고 끄면\n매출도 꺼지시죠?",
+          "accent": "꺼지시죠?",
+          "clip": "",
+          "clipPrompt": "A neon-free shop sign light being switched off at closing time, dimming warm interior, metaphor of ads turning off, 9:16, no readable text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "BURN",
+          "text": "광고비는 쓰는 순간\n사라집니다",
+          "accent": "사라집니다",
+          "clip": "",
+          "clipPrompt": "Banknotes-free abstract: sand slipping through fingers in warm backlight, loss metaphor, cinematic macro, 9:16, no text no logos",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "ASSET",
+          "text": "콘텐츠는 쌓여서\n계속 일합니다",
+          "accent": "쌓여서",
+          "clip": "",
+          "clipPrompt": "A growing neat stack of hardcover books on a wooden desk in soft daylight, accumulation metaphor, 9:16, blank spines no text no letters",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        },
+        {
+          "kicker": "CTA",
+          "text": "3년 뒤 남는 쪽에\n거세요",
+          "accent": "남는 쪽",
+          "clip": "",
+          "clipPrompt": "A sunrise over a city seen from a calm office window, long-term hopeful mood, cinematic 9:16, no signage no readable text",
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+        }
+      ]
     }
-  }
+  },
+  "updatedAt": "2026-08-05T14:40:15.858829Z"
 }
