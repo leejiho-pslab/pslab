@@ -1906,7 +1906,7 @@
       ],
       "scheduledFor": "2026-08-06T02:00:00.000Z",
       "score": 89,
-      "status": "planned",
+      "status": "published",
       "kicker": "Asset",
       "headline": "광고비는 사라지고 콘텐츠는 남는다 — AI 검색 시대의 계산법",
       "sub": "1년에 콘텐츠 700개가 쌓이면 무엇이 달라지는지, 검색과 생성형 AI 관점에서 정리했습니다.",
@@ -1931,7 +1931,16 @@
       "slideImages": [
         "cards/pslab/blogger-08-06-1.png"
       ],
-      "cardImage": "cards/pslab/blogger-08-06-1.png"
+      "cardImage": "cards/pslab/blogger-08-06-1.png",
+      "publishedUrl": "https://pslab2026.blogspot.com/2026/08/ai.html",
+      "publishedAt": "2026-08-06T03:28:36.239Z",
+      "published": [
+        {
+          "platform": "blogger",
+          "remoteId": "2969349383308409021",
+          "url": "https://pslab2026.blogspot.com/2026/08/ai.html"
+        }
+      ]
     },
     {
       "id": "reels-08-07",
