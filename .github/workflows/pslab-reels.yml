@@ -61,10 +61,12 @@ jobs:
           path: video/node_modules
           key: remotion-${{ runner.os }}-${{ hashFiles('video/package-lock.json') }}
 
+      # 45분: --force 전편 재렌더(7편 × ~4분 + npm ci)가 30분을 넘겨 타임아웃으로 죽고
+      # 폴백(구 디자인)이 덮어쓰는 사고가 났다(2026-08-06 run 31061475042).
       - name: 릴스 합성 — Remotion (기본 엔진)
         id: reels_remotion
         continue-on-error: true
-        timeout-minutes: 30
+        timeout-minutes: 45
         run: |
           npm ci --prefix video --no-audit --no-fund
           node scripts/render-reels-remotion.mjs --client pslab \
