@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-06T04:58:05.464Z",
+  "generatedAt": "2026-08-06T11:29:06.035Z",
   "sampleSize": 31,
   "variants": [
     {
@@ -44,7 +44,7 @@
       "posts": 7,
       "avgEngagement": 0.02987786023500309,
       "avgLikes": 0.5714285714285714,
-      "avgViews": 32.142857142857146
+      "avgViews": 32.285714285714285
     },
     {
       "key": "blogger",
@@ -74,7 +74,7 @@
       "posts": 10,
       "avgEngagement": 0.10454545454545454,
       "avgLikes": 0.2,
-      "avgViews": 62.3
+      "avgViews": 62.4
     },
     {
       "key": "11:00",
