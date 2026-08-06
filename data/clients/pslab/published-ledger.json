@@ -64,6 +64,19 @@
       }
     ]
   },
+  "blogger-08-06": {
+    "firstPublishedAt": "2026-08-06T03:28:36.239Z",
+    "channels": [
+      "blogger"
+    ],
+    "refs": [
+      {
+        "platform": "blogger",
+        "remoteId": "2969349383308409021",
+        "url": "https://pslab2026.blogspot.com/2026/08/ai.html"
+      }
+    ]
+  },
   "car-07-29": {
     "firstPublishedAt": "2026-07-29T11:42:20.787Z",
     "channels": [
