@@ -85,8 +85,15 @@ jobs:
 
       # docs/ 변경은 Pages 자동 배포를 트리거한다 — 커밋 메시지에 [skip ci] 금지.
       # 같은 브랜치에 cron 이 동시 push 할 수 있어 rebase 후 재시도.
+      #
+      # ⚠️ 렌더 30분어치가 여기서 유실될 수 있다 — 2026-08-05 실제 사고.
+      #   렌더 도중 다른 커밋이 plan.json 을 바꾸면 rebase 가 충돌하는데, 예전 루프는
+      #   충돌 난 트리를 그대로 두고 재시도해 5회 전부 "unmerged files" 로 실패했고,
+      #   continue-on-error 때문에 런은 success 로 끝나 아무도 몰랐다.
+      #   → 충돌 시 rebase --abort 후 plan.json 은 원격본을 받고, 렌더 산출물의
+      #     videoFile 연결은 브리지 스크립트를 다시 돌려 원격 plan 위에 재적용한다.
+      #     (mp4·스탬프는 충돌할 상대가 없다 — plan.json 만 합치면 된다)
       - name: 영상·기획 커밋
-        continue-on-error: true
         run: |
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
@@ -96,8 +103,33 @@ jobs:
           fi
           git commit -m "chore(pslab): 릴스 영상 합성"
           for i in 1 2 3 4 5; do
-            git pull --rebase origin ${{ github.ref_name }} && git push && { echo "push 성공"; exit 0; }
-            echo "push 재시도 $i (동시 push 충돌)"; sleep 4
+            if git pull --rebase origin ${{ github.ref_name }}; then
+              git push && { echo "push 성공"; exit 0; }
+            else
+              git rebase --abort || true
+              # plan.json 충돌 해소: 원격 최신을 기준으로 받고, 렌더 결과 연결만 다시 얹는다.
+              git fetch origin ${{ github.ref_name }}
+              git reset --soft origin/${{ github.ref_name }}
+              git checkout origin/${{ github.ref_name }} -- data/clients/pslab/plan.json
+              node scripts/render-reels-remotion.mjs --client pslab --stage-only >/dev/null 2>&1 || true
+              node -e "
+                const {readFileSync,writeFileSync,existsSync}=require('fs');
+                const p='data/clients/pslab/plan.json';
+                const plan=JSON.parse(readFileSync(p,'utf8'));
+                for(const it of plan.items){
+                  const f='docs/shorts/'+it.id+'/'+it.id+'.mp4';
+                  if(existsSync(f)) it.videoFile='shorts/'+it.id+'/'+it.id+'.mp4';
+                  if(it.videoFrom){
+                    const src=plan.items.find(x=>x.id===it.videoFrom);
+                    if(src&&src.videoFile){ it.videoFile=src.videoFile; if(src.videoSeconds) it.videoSeconds=src.videoSeconds; }
+                  }
+                }
+                writeFileSync(p,JSON.stringify(plan,null,2)+'\n');
+              "
+              git add -f data/ docs/shorts 2>/dev/null || true
+              git diff --cached --quiet || git commit -m "chore(pslab): 릴스 영상 합성"
+            fi
+            echo "push 재시도 $i (동시 push 충돌)"; sleep $((i * 3))
           done
-          echo "push 실패"
+          echo "::error::push 실패 — 렌더 산출물이 저장소에 반영되지 않았습니다"
           exit 1
