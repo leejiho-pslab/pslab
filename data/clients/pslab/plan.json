@@ -1961,7 +1961,7 @@
       ],
       "scheduledFor": "2026-08-07T09:00:00.000Z",
       "score": 91,
-      "status": "planned",
+      "status": "published",
       "kicker": "ALWAYS ON",
       "headline": "16년 동안<br>*250개 넘는* 브랜드",
       "sub": "최근 5년만 세어도 49개입니다.",
@@ -1979,7 +1979,16 @@
       ],
       "cardImage": "cards/pslab/reels-08-07-1.png",
       "videoFile": "shorts/reels-08-07/reels-08-07.mp4",
-      "videoSeconds": 13.1
+      "videoSeconds": 13.1,
+      "publishedUrl": "https://www.instagram.com/reel/Dbu8FP5AjI1/",
+      "publishedAt": "2026-08-07T09:12:55.640Z",
+      "published": [
+        {
+          "platform": "instagram",
+          "remoteId": "18101203241187459",
+          "url": "https://www.instagram.com/reel/Dbu8FP5AjI1/"
+        }
+      ]
     },
     {
       "id": "youtube-08-07",
