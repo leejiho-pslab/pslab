@@ -52,7 +52,7 @@ jobs:
           fi
           echo "revision request #${ISSUE_NUMBER} noted"
   sync:
-    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·') || startsWith(github.event.issue.title, '[디자인피드백]') || startsWith(github.event.issue.title, '[레퍼런스·') || startsWith(github.event.issue.title, '[발행완료·')
+    if: startsWith(github.event.issue.title, '[브랜드노트·') || startsWith(github.event.issue.title, '[가이드·') || startsWith(github.event.issue.title, '[디자인피드백]') || startsWith(github.event.issue.title, '[레퍼런스·') || startsWith(github.event.issue.title, '[레퍼런스삭제·') || startsWith(github.event.issue.title, '[발행완료·')
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment:
@@ -118,6 +118,8 @@ jobs:
             --data @- <<JSON >/dev/null
           {"body":"$( if [[ "$ISSUE_TITLE" == "[레퍼런스·"* ]]; then
             echo '📥 레퍼런스 링크가 접수되었습니다.\n\n- 아직 **학습 전**입니다 — 링크 저장까지만 자동으로 처리됐습니다.\n- Claude 세션이 링크를 직접 열람·학습한 뒤 디자인·기획 기준에 반영합니다(보통 다음 기획 세션).\n- 학습 결과는 대시보드 지침 탭의 **학습 현황**에서 확인할 수 있습니다.'
+          elif [[ "$ISSUE_TITLE" == "[레퍼런스삭제·"* ]]; then
+            echo '🗑 레퍼런스가 삭제되었습니다.\n\n- 이후 디자인·기획 학습에서 이 링크를 참고하지 않습니다.\n- 이 링크에서 학습한 내용이 있었다면 다음 기획 세션에서 해당 채널 기준을 재정리합니다.\n- 같은 링크를 다시 등록하면 학습 대기로 복구됩니다.'
           elif [[ "$ISSUE_TITLE" == "[발행완료·"* ]]; then
             echo '✅ 발행 완료로 기록되었습니다.\n\n- 이 콘텐츠는 대시보드의 **발행된 콘텐츠** 섹션으로 이동했습니다.\n- 발행 주소를 남기셨다면 카드의 **열기 ↗** 링크로 연결됩니다.\n- 발행 원장에도 기록되어 중복 발행이 방지됩니다.'
           else

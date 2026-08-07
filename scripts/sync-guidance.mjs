@@ -6,6 +6,7 @@
  *   [가이드·<채널key>] <업체명>            → data/clients/<id>/channel-guides.json
  *   [디자인피드백] <업체명>                → data/clients/<id>/design.json humanNotes
  *   [레퍼런스·<채널key>] <업체명>          → data/clients/<id>/reference-links.json (pending 적재)
+ *   [레퍼런스삭제·<채널key>] <업체명>      → reference-links.json status=removed (학습 제외)
  *   [발행완료·<채널key>] <제목>            → plan.json status=published + published-ledger.json
  *                                            (수동 채널 전용 — 운영자가 대시보드 버튼으로 신고)
  *
@@ -30,6 +31,7 @@ const brand = title.match(/^\[브랜드노트·(분석|방향성|감도)\]/);
 const guide = title.match(/^\[가이드·([a-z-]+)\]/);
 const design = title.startsWith('[디자인피드백]');
 const ref = title.match(/^\[레퍼런스·([a-z-]+)\]/);
+const delref = title.match(/^\[레퍼런스삭제·([a-z-]+)\]/);
 const done = title.match(/^\[발행완료·([a-z-]+)\]/);
 
 if (done) {
@@ -65,6 +67,20 @@ if (done) {
   ]);
   saveLedger('./data/clients', clientId, ledger);
   console.log(`발행 완료 기록: ${itemId} (${ch})${url ? ' · ' + url : ''} — 발행된 콘텐츠로 이동`);
+} else if (delref) {
+  // 레퍼런스 삭제 — 운영자가 대시보드 🗑 버튼으로 접수. removed 로 표시해 이력은 남기되
+  // 이후 학습·기획에서는 참고하지 않는다. 같은 링크를 다시 등록하면 pending 으로 부활한다.
+  const ch = delref[1];
+  if (!CHANNELS.includes(ch)) { console.log(`알 수 없는 채널: ${ch}`); process.exit(0); }
+  const urls = body
+    .split('\n')
+    .map((l) => l.replace(/^[-*·•\s]+/, '').trim())
+    .filter((l) => /^https?:\/\//i.test(l))
+    .map((l) => l.split(/\s/)[0]);
+  if (!urls.length) { console.log('본문에 링크가 없어 건너뜀'); process.exit(0); }
+  const r = store.removeReferenceLinks(clientId, ch, urls);
+  if (!r.removed) { console.log(`삭제 대상 없음: ${ch} — 이미 삭제됐거나 등록된 적 없는 링크`); process.exit(0); }
+  console.log(`레퍼런스 삭제: ${ch} — ${r.removed}건 (이후 학습·기획에서 제외)`);
 } else if (ref) {
   // 한 줄 = 링크 1개. "URL 메모" / "URL — 메모" 형태의 메모를 함께 저장.
   // 학습(열람)은 CI가 아니라 Claude 세션의 기획·제작 게이트에서 일어난다 — 여기서는 적재만.

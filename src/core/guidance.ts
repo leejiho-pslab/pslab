@@ -99,9 +99,11 @@ export interface ReferenceLink {
   channel: string;
   /** 운영자가 링크와 함께 남긴 메모(벤치마크 의도) */
   note?: string;
-  status: 'pending' | 'learned' | 'failed';
+  /** removed = 운영자가 대시보드에서 삭제 — 이후 학습·기획에서 참고하지 않는다 (이력은 보존) */
+  status: 'pending' | 'learned' | 'failed' | 'removed';
   addedAt: string;
   learnedAt?: string;
+  removedAt?: string;
   /** 학습 요약 — 무엇을 배웠고 어디에 반영했는지 (Claude 세션이 기록) */
   summary?: string;
 }
@@ -206,30 +208,69 @@ export class GuidanceStore {
     return r && Array.isArray(r.links) && r.links.length ? r : undefined;
   }
 
-  /** 레퍼런스 링크 등록 — 채널+URL 기준 중복 제거(같은 링크를 다른 채널 레퍼런스로 재등록 가능) */
+  /** 레퍼런스 링크 등록 — 채널+URL 기준 중복 제거(같은 링크를 다른 채널 레퍼런스로 재등록 가능).
+   *  삭제(removed)됐던 링크를 다시 등록하면 pending 으로 되살린다 — 삭제가 영구 차단이 되면
+   *  실수로 지운 링크를 복구할 방법이 없어진다. */
   addReferenceLinks(
     clientId: string,
     channel: string,
     entries: Array<{ url: string; note?: string }>,
   ): { added: number; total: number } {
     const doc = this.read<ReferenceLinks>(this.file(clientId, 'reference-links.json')) ?? { links: [] };
-    const seen = new Set(doc.links.map((l) => `${l.channel}|${l.url}`));
+    const byKey = new Map(doc.links.map((l) => [`${l.channel}|${l.url}`, l]));
     let added = 0;
     for (const e of entries) {
-      if (!e.url || seen.has(`${channel}|${e.url}`)) continue;
-      seen.add(`${channel}|${e.url}`);
-      doc.links.push({
+      if (!e.url) continue;
+      const prev = byKey.get(`${channel}|${e.url}`);
+      if (prev) {
+        if (prev.status === 'removed') {
+          prev.status = 'pending';
+          prev.addedAt = new Date().toISOString();
+          delete prev.removedAt;
+          if (e.note) prev.note = e.note;
+          added++;
+        }
+        continue;
+      }
+      const link: ReferenceLink = {
         url: e.url,
         channel,
         note: e.note || undefined,
         status: 'pending',
         addedAt: new Date().toISOString(),
-      });
+      };
+      doc.links.push(link);
+      byKey.set(`${channel}|${e.url}`, link);
       added++;
     }
     doc.updatedAt = new Date().toISOString();
     this.write(this.file(clientId, 'reference-links.json'), doc);
     return { added, total: doc.links.length };
+  }
+
+  /** 레퍼런스 링크 삭제 — status=removed 로 표시(이력 보존). 이후 학습·기획에서 제외된다.
+   *  URL 은 끝 슬래시 차이를 무시하고 매칭한다(대시보드·이슈 경로마다 표기가 흔들리므로). */
+  removeReferenceLinks(
+    clientId: string,
+    channel: string,
+    urls: string[],
+  ): { removed: number } {
+    const doc = this.read<ReferenceLinks>(this.file(clientId, 'reference-links.json')) ?? { links: [] };
+    const norm = (u: string): string => u.replace(/\/+$/, '');
+    const targets = new Set(urls.map(norm));
+    let removed = 0;
+    for (const l of doc.links) {
+      if (l.channel === channel && l.status !== 'removed' && targets.has(norm(l.url))) {
+        l.status = 'removed';
+        l.removedAt = new Date().toISOString();
+        removed++;
+      }
+    }
+    if (removed) {
+      doc.updatedAt = new Date().toISOString();
+      this.write(this.file(clientId, 'reference-links.json'), doc);
+    }
+    return { removed };
   }
 
   /** research-brief.json — 있으면 대시보드에 '리서치' 탭이 생긴다 */

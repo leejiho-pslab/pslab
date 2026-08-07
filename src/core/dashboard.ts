@@ -522,9 +522,23 @@ function setCustom(){
 let ISSUES=null; // null=로딩중, []=없음/실패
 let REF_ISSUES=[]; // [레퍼런스·채널] 이슈에서 즉시 파싱한 링크 (커밋 전에도 대시보드에 바로 표시)
 let G_ISSUES=[]; // 지침 이슈(브랜드노트·디자인피드백·가이드) — 지침 탭 실시간 '접수됨' 표시용
+let DONE_IDS=new Set(); // [발행완료·] 이슈에서 파싱한 plan id — 데이터 반영 전에도 발행됨으로 표시
+let DELREF=new Set(); // [레퍼런스삭제·] 이슈에서 파싱한 채널|URL — 반영 전에도 목록에서 제외
 const REQ_RE=/^\\[수정요청·([a-z-]+)\\]\\s*(.*)$/;
 const REF_RE=/^\\[레퍼런스·([a-z-]+)\\]/;
+const DELREF_RE=/^\\[레퍼런스삭제·([a-z-]+)\\]/;
+const DONE_RE=/^\\[발행완료·([a-z-]+)\\]/;
 const GUID_RE=/^\\[(브랜드노트·(분석|방향성|감도)|디자인피드백|가이드·([a-z-]+))\\]/;
+// ── 낙관 반영(실시간 UI) — 이슈가 CI 로 처리되기 전에도 화면이 먼저 움직인다 ──
+// 버튼을 누른 브라우저는 localStorage 로 즉시, 다른 브라우저는 이슈 직독(loadIssues)으로 몇 초 내 반영.
+// 데이터(plan.json)가 따라잡으면 localStorage 항목은 자동 청소된다 — 상태의 최종 출처는 항상 데이터다.
+function lsSet(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||'[]')); }catch(e){ return new Set(); } }
+function lsAdd(k,v){ try{ const s=lsSet(k); s.add(v); localStorage.setItem(k,JSON.stringify(Array.from(s))); }catch(e){} }
+function lsDel(k,v){ try{ const s=lsSet(k); if(s.delete(v)) localStorage.setItem(k,JSON.stringify(Array.from(s))); }catch(e){} }
+const refKey=(ch,u)=>ch+'|'+String(u).replace(/\\/+$/,'');
+// 발행 완료로 봐야 하는가 — 데이터 확정(published) 또는 신고 접수(이슈·로컬)
+function isDoneLive(it){ return it.status==='published'||DONE_IDS.has(it.id)||lsSet('psDone').has(it.id); }
+function refDeleted(ch,u){ const k=refKey(ch,u); return DELREF.has(k)||lsSet('psRefDel').has(k); }
 // 아직 데이터에 반영 안 됐을 수 있는 지침 이슈: 열려 있거나, 이 대시보드 생성 이후 등록된 것
 function guidPending(kind, id){
   return G_ISSUES.filter(g=>g.kind===kind&&(kind!=='brand'||g.field===id)&&(kind!=='guide'||g.chKey===id)&&
@@ -573,15 +587,36 @@ function loadIssues(){
           field:g[2]||null, chKey:g[3]||null, body:String(x.body||''), state:x.state,
           html_url:x.html_url, created_at:x.created_at});
       }
+      // 발행완료·레퍼런스삭제 이슈 직독 — 커밋·배포를 기다리지 않고 화면이 먼저 움직인다
+      DONE_IDS=new Set(); DELREF=new Set();
+      const myId=(DATA.clients[ci]||{}).id;
+      for(const x of list){
+        if(DONE_RE.test(x.title||'')){
+          const im=/\\(id:\\s*([\\w.-]+)\\)/.exec(String(x.body||''));
+          const cm=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
+          if(im&&(!cm||cm[1]===myId)) DONE_IDS.add(im[1]);
+        }
+        const dm=DELREF_RE.exec(x.title||'');
+        if(dm){
+          for(const line of String(x.body||'').split('\\n')){
+            const um=line.trim().match(/^(https?:\\/\\/\\S+)/);
+            if(um) DELREF.add(refKey(dm[1],um[1]));
+          }
+        }
+      }
+      // 데이터가 따라잡은 항목은 로컬 낙관 표시를 청소 — localStorage 가 낡은 진실이 되지 않게
+      for(const p of ((DATA.clients[ci]||{}).planCards||[])) if(p.status==='published') lsDel('psDone',p.id);
       renderTabs(); renderView();
     })
     .catch(()=>{ ISSUES=[]; });
 }
-// 커밋된 링크 + 아직 반영 전인 이슈 링크(접수됨)를 채널 기준으로 병합
+// 커밋된 링크 + 아직 반영 전인 이슈 링크(접수됨)를 채널 기준으로 병합.
+// 삭제된 링크(removed 상태 또는 삭제 이슈·로컬 접수)는 목록에서 완전히 제외한다.
 function refLinksFor(client, key){
-  const saved=(((client.referenceLinks||{}).links)||[]).filter(l=>!key||l.channel===key);
-  const have=new Set(saved.map(l=>l.channel+'|'+l.url.replace(/\\/+$/,'')));
-  const incoming=REF_ISSUES.filter(r=>(!key||r.channel===key)&&!have.has(r.channel+'|'+r.url.replace(/\\/+$/,'')))
+  const saved=(((client.referenceLinks||{}).links)||[])
+    .filter(l=>(!key||l.channel===key)&&l.status!=='removed'&&!refDeleted(l.channel,l.url));
+  const have=new Set(saved.map(l=>refKey(l.channel,l.url)));
+  const incoming=REF_ISSUES.filter(r=>(!key||r.channel===key)&&!have.has(refKey(r.channel,r.url))&&!refDeleted(r.channel,r.url))
     .map(r=>({url:r.url, channel:r.channel, note:r.note||undefined, status:'received', addedAt:r.at, issueUrl:r.issueUrl}));
   return saved.concat(incoming);
 }
@@ -677,10 +712,11 @@ function guideView(client){
      (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
      '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
   if(rls.length){
-    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th><th style="width:44px"></th></tr>'+
       rls.slice(-15).reverse().map(l=>{const cd=DATA.channels.find(x=>x.key===l.channel)||{label:l.channel,icon:''};
         return '<tr><td>'+cd.icon+' '+esc(cd.label)+'</td><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
-          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>';}).join('')+'</table>';
+          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td>'+
+          '<td><button class="btn" style="padding:4px 8px;font-size:12px" title="이 레퍼런스 삭제 — 이후 학습에서 제외" onclick="delRef(\\''+esc(l.channel)+'\\',\\''+esc(l.url)+'\\')">🗑</button></td></tr>';}).join('')+'</table>';
   }
   h+='</div>';
   // 채널별 가이드
@@ -700,8 +736,9 @@ function guideView(client){
 // 📊 콘텐츠 리포트 — 채널 발행 콘텐츠의 KPI·추세 + 콘텐츠별 실측 성과 표 (기간 반영)
 function contentReportPanel(client, c, chLabel){
   const pubF=c.published.filter(p=>inPeriod(p.time));
-  const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
-  const waiting=c.pending.filter(it=>it.status!=='published');
+  // isDoneLive — 발행완료 신고(이슈·로컬)만 접수돼도 발행됨으로 분류 (데이터 반영 전 실시간 이동)
+  const planPubF=c.pending.filter(it=>isDoneLive(it)&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>!isDoneLive(it));
   const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
     .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
   const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
@@ -743,13 +780,30 @@ function referencePanel(client, key){
     (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
     '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
   if(all.length){
-    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th></tr>'+
+    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th><th style="width:44px"></th></tr>'+
       all.slice(-8).reverse().map(l=>'<tr><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
-        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td></tr>').join('')+'</table>';
+        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td>'+
+        '<td><button class="btn" style="padding:4px 8px;font-size:12px" title="이 레퍼런스 삭제 — 이후 학습에서 제외" onclick="delRef(\\''+esc(l.channel)+'\\',\\''+esc(l.url)+'\\')">🗑</button></td></tr>').join('')+'</table>';
   }
   h+='<textarea id="rl-'+key+'" class="reqta" rows="2" placeholder="https://... (한 줄에 하나씩)"></textarea>'+
      '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\\'[레퍼런스·'+key+'] '+esc(client.name)+'\\',\\'\\',\\'rl-'+key+'\\')">🔗 레퍼런스 등록</button></div></div>';
   return h;
+}
+// 레퍼런스 삭제 — [레퍼런스삭제·채널] 이슈로 접수하면 CI 가 removed 처리해 학습에서 제외한다.
+// 화면에서는 즉시 사라진다(로컬 낙관 반영) — 다른 브라우저도 이슈 직독으로 몇 초 내 동기화.
+function delRef(ch,url){
+  if(!confirm('이 레퍼런스를 삭제할까요?\\n\\n삭제하면 이후 디자인·기획 학습에서 이 링크를 참고하지 않습니다.\\n(등록 창이 열리면 초록색 Submit new issue 버튼만 누르면 됩니다)')) return;
+  const c=DATA.clients[ci];
+  const t='[레퍼런스삭제·'+ch+'] '+c.name;
+  const b='업체: '+c.id+
+    '\\n채널: '+ch+
+    '\\n삭제 링크:'+
+    '\\n'+url+
+    '\\n\\n아래 초록색 Submit new issue 버튼만 누르면 삭제가 접수됩니다.'+
+    '\\n— 대시보드 레퍼런스 패널에서 작성됨';
+  lsAdd('psRefDel',refKey(ch,url));
+  window.open(issue(t,b),'_blank');
+  renderView();
 }
 function submitReq(key, chLabel){
   const ta=document.getElementById('reqtext-'+key);
@@ -807,9 +861,12 @@ function planCard(client, chLabel, it){
   const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
   const pub=it.status==='published';
   const manual=it.status==='manual';
+  // 발행 완료 신고가 접수됐지만 데이터 반영 전 — 화면은 먼저 발행됨으로 취급한다(낙관 반영)
+  const liveDone=!pub&&isDoneLive(it);
   // 발행 게이트 — 미처리 수정요청이 걸려 있으면 자동 발행이 보류됨을 카드에 표시
-  const held=!pub&&openHolds(it).length>0;
+  const held=!pub&&!liveDone&&openHolds(it).length>0;
   const stBadge=pub?'<span class="badge b-ok">발행됨</span>'
+    :liveDone?'<span class="badge b-ok">발행됨 · 반영중</span>'
     :held?'<span class="badge b-hold">⛔ 발행 보류 · 수정 반영 대기</span>'
     :manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
   const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
@@ -817,8 +874,8 @@ function planCard(client, chLabel, it){
   const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
   // 수동 채널(네이버)은 시스템이 발행 성공을 알 수 없다 — 운영자가 카드에서 직접 신고한다.
   // [발행완료·naver-blog] 이슈 → guidance-sync 가 plan·원장에 기록 → "발행된 콘텐츠"로 이동.
-  const doneBtn=(manual&&(it.channels||[])[0]==='naver-blog')
-    ?'<div style="margin-top:8px"><button class="btn fb" style="width:100%;background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="event.stopPropagation();donePublish(\\''+esc(it.id)+'\\')">✅ 발행 완료 등록</button></div>':'';
+  const doneBtn=(manual&&!liveDone&&(it.channels||[])[0]==='naver-blog')
+    ?'<div style="margin-top:8px"><button class="btn fb" style="width:100%;background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="event.stopPropagation();donePublish(\\''+esc(it.id)+'\\')">✅ 블로그 발행완료</button></div>':'';
   return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+
     '<div class="thumbwrap">'+img+carBadge+'</div>'+
     '<div class="cbody"><div class="ctop"><strong>'+head+'</strong>'+stBadge+'</div>'+
@@ -834,16 +891,19 @@ function donePublish(id){
   const c=DATA.clients[ci];
   const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
   const ch=(it.channels||[])[0]||'naver-blog';
-  if(!confirm('네이버 블로그에 이 글을 올리셨나요?\\n\\n확인을 누르면 발행 완료 등록 창(깃허브 이슈)이 열립니다.\\n등록하면 잠시 후 이 카드가 "발행된 콘텐츠"로 이동합니다.')) return;
+  if(!confirm('네이버 블로그에 이 글을 올리셨나요?\\n\\n확인을 누르면 발행완료 등록 창(깃허브 이슈)이 열립니다.\\n이 카드는 바로 "발행된 콘텐츠"로 내려갑니다.')) return;
   const t='[발행완료·'+ch+'] '+plainHead(it).slice(0,42);
   const b='업체: '+c.id+
     '\\n채널: '+ch+
     '\\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
     '\\n발행 주소: (선택) 발행한 글 URL 을 이 줄 끝에 붙여넣어 주세요'+
     '\\n\\n아래 초록색 Submit new issue 버튼만 누르면 등록됩니다.'+
-    '\\n잠시 후 자동 반영되어 이 콘텐츠가 발행된 콘텐츠 섹션으로 이동합니다.'+
-    '\\n— 대시보드 발행 완료 버튼에서 작성됨';
+    '\\n— 대시보드 블로그 발행완료 버튼에서 작성됨';
+  // 낙관 반영 — 이슈 처리(CI)를 기다리지 않고 이 브라우저에서는 즉시 발행됨으로 이동
+  lsAdd('psDone',it.id);
   window.open(issue(t,b),'_blank');
+  closeModal();
+  renderView();
 }
 function openDetail(id){
   const c=DATA.clients[ci];
@@ -904,7 +964,7 @@ function manualHelper(it, chDef){
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ⑤ 업로드를 마쳤으면 <b>“✅ 발행 완료”</b>를 눌러 등록하세요 — 이 콘텐츠가 “발행된 콘텐츠”로 이동합니다. ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ⑤ 업로드를 마쳤으면 <b>“✅ 블로그 발행완료”</b>를 눌러 등록하세요 — 이 카드가 바로 “발행된 콘텐츠”로 내려갑니다. ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -926,7 +986,7 @@ function manualHelper(it, chDef){
     (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>')+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
     dls+
-    (isNaver&&it.status!=='published'?'<button class="btn fb" style="background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="donePublish(\\''+esc(it.id)+'\\')">✅ 발행 완료</button>':'')+
+    (isNaver&&!isDoneLive(it)?'<button class="btn fb" style="background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="donePublish(\\''+esc(it.id)+'\\')">✅ 블로그 발행완료</button>':'')+
     '</div>'+ytPack+'</div>';
 }
 // 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
@@ -1088,8 +1148,9 @@ function channelDetail(client, c){
   }
   // 선택 기간으로 필터한 히스토리 (KPI·성과표는 ③ 콘텐츠 리포트 패널이 단일 출처)
   const pubF=c.published.filter(p=>inPeriod(p.time));
-  const planPubF=c.pending.filter(it=>it.status==='published'&&inPeriod(it.publishedAt||it.scheduledFor));
-  const waiting=c.pending.filter(it=>it.status!=='published');
+  // isDoneLive — 발행완료 신고(이슈·로컬)만 접수돼도 발행됨으로 분류 (데이터 반영 전 실시간 이동)
+  const planPubF=c.pending.filter(it=>isDoneLive(it)&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>!isDoneLive(it));
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
   // 발행 대기 (발행 전 콘텐츠만)
@@ -1254,7 +1315,7 @@ function overview(client){
       return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td><td>'+reqCell+'</td></tr>';}).join('')+'</table></div>';
   // 발행 전 콘텐츠 기획안 — 메인에는 발행 전(예정·수동대기)만 보여준다
   const plan=client.planCards||[];
-  const pre=plan.filter(p=>p.status!=='published');
+  const pre=plan.filter(p=>!isDoneLive(p));
   const fbTitle='['+client.name+'] 기획안 전체 피드백';
   const fbBody='이번 달 기획안에 대한 의견/수정사항을 적어주세요.\\n\\n';
   const mon=new Date(DATA.generatedAt).getMonth()+1;
