@@ -52,7 +52,7 @@ jobs:
             -d refresh_token="$RTOKEN" -d grant_type=refresh_token \
             | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(JSON.parse(s).access_token||""))')
           if [ -z "$AT" ]; then echo "access token 없음"; exit 1; fi
-# scope 가 youtube.upload 뿐이면 channels.list 는 403 이 정상이다.
+          # scope 가 youtube.upload 뿐이면 channels.list 는 403 이 정상이다.
           # (업로드 전용 scope — 조회 권한이 없다. 발행 코드는 업로드만 하므로 문제 없음)
           curl -s -H "Authorization: Bearer $AT" \
             "https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true" \
