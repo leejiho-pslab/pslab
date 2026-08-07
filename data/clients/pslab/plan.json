@@ -2000,7 +2000,7 @@
       ],
       "scheduledFor": "2026-08-07T09:00:00.000Z",
       "score": 88,
-      "status": "planned",
+      "status": "published",
       "kicker": "Shorts",
       "headline": "16년 동안<br>*250개 넘는* 브랜드",
       "sub": "최근 5년만 세어도 49개입니다.",
@@ -2033,7 +2033,16 @@
       ],
       "cardImage": "cards/pslab/youtube-08-07-1.png",
       "videoFile": "shorts/reels-08-07/reels-08-07.mp4",
-      "videoSeconds": 13.1
+      "videoSeconds": 13.1,
+      "publishedUrl": "https://youtu.be/mWJytlGtWTU",
+      "publishedAt": "2026-08-07T10:16:13.465Z",
+      "published": [
+        {
+          "platform": "youtube",
+          "remoteId": "mWJytlGtWTU",
+          "url": "https://youtu.be/mWJytlGtWTU"
+        }
+      ]
     },
     {
       "id": "threads-08-07",
@@ -2044,7 +2053,7 @@
       ],
       "scheduledFor": "2026-08-07T10:00:00.000Z",
       "score": 85,
-      "status": "planned",
+      "status": "published",
       "kicker": "Threads",
       "headline": "업종을 *안 가린다는* 말",
       "sub": "250개를 세어 보고 하는 말입니다.",
@@ -2059,7 +2068,16 @@
       "slideImages": [
         "cards/pslab/threads-08-07-1.png"
       ],
-      "cardImage": "cards/pslab/threads-08-07-1.png"
+      "cardImage": "cards/pslab/threads-08-07-1.png",
+      "publishedUrl": "https://www.threads.com/@_pslab/post/DbvDY2klnBc",
+      "publishedAt": "2026-08-07T10:16:24.873Z",
+      "published": [
+        {
+          "platform": "threads",
+          "remoteId": "18112945756757552",
+          "url": "https://www.threads.com/@_pslab/post/DbvDY2klnBc"
+        }
+      ]
     },
     {
       "id": "reels-08-10",

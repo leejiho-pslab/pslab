@@ -263,6 +263,19 @@
       }
     ]
   },
+  "threads-08-07": {
+    "firstPublishedAt": "2026-08-07T10:16:24.873Z",
+    "channels": [
+      "threads"
+    ],
+    "refs": [
+      {
+        "platform": "threads",
+        "remoteId": "18112945756757552",
+        "url": "https://www.threads.com/@_pslab/post/DbvDY2klnBc"
+      }
+    ]
+  },
   "w1-fri": {
     "firstPublishedAt": "2026-07-01T12:03:17.068Z",
     "channels": [
@@ -434,6 +447,19 @@
         "platform": "youtube",
         "remoteId": "tbBxYknlSVU",
         "url": "https://youtu.be/tbBxYknlSVU"
+      }
+    ]
+  },
+  "youtube-08-07": {
+    "firstPublishedAt": "2026-08-07T10:16:13.465Z",
+    "channels": [
+      "youtube"
+    ],
+    "refs": [
+      {
+        "platform": "youtube",
+        "remoteId": "mWJytlGtWTU",
+        "url": "https://youtu.be/mWJytlGtWTU"
       }
     ]
   }
