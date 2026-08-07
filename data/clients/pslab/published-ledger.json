@@ -103,6 +103,18 @@
       }
     ]
   },
+  "naver-08-01": {
+    "firstPublishedAt": "2026-08-07T10:09:25.463Z",
+    "channels": [
+      "naver-blog"
+    ],
+    "refs": [
+      {
+        "platform": "naver-blog",
+        "remoteId": "manual-issue-67"
+      }
+    ]
+  },
   "reels-07-27": {
     "firstPublishedAt": "2026-07-27T12:23:12.537Z",
     "channels": [

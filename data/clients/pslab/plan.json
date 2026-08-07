@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-07T04:28:36.245Z",
+  "updatedAt": "2026-08-07T10:09:25.461Z",
   "items": [
     {
       "id": "w1-mon",
@@ -1498,7 +1498,7 @@
       ],
       "scheduledFor": "2026-08-01T02:00:00.000Z",
       "score": 90,
-      "status": "manual",
+      "status": "published",
       "kicker": "Cost",
       "headline": "SNS 대행 비용, 직원 채용, 자동화 시스템 — 1년 기준으로 비교했습니다",
       "sub": "월 얼마가 아니라 1년에 콘텐츠 몇 개가 남는지로 비교해야 합니다. 세 방식의 비용과 산출물을 숫자 그대로 정리했습니다.",
@@ -1513,7 +1513,8 @@
       "slideImages": [
         "cards/pslab/naver-08-01-1.png"
       ],
-      "cardImage": "cards/pslab/naver-08-01-1.png"
+      "cardImage": "cards/pslab/naver-08-01-1.png",
+      "publishedAt": "2026-08-07T10:09:25.460Z"
     },
     {
       "id": "blogger-08-02",
