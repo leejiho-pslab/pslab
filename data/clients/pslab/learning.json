@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-08-07T04:20:41.477Z",
-  "sampleSize": 31,
+  "generatedAt": "2026-08-07T10:58:35.135Z",
+  "sampleSize": 33,
   "variants": [
     {
       "key": "B",
@@ -11,10 +11,10 @@
     },
     {
       "key": "A",
-      "posts": 5,
-      "avgEngagement": 0.37265306122448977,
-      "avgLikes": 1.6,
-      "avgViews": 42.2
+      "posts": 6,
+      "avgEngagement": 0.3136888717751251,
+      "avgLikes": 1.5,
+      "avgViews": 44
     },
     {
       "key": "C",
@@ -27,10 +27,10 @@
   "channels": [
     {
       "key": "instagram",
-      "posts": 11,
-      "avgEngagement": 0.40423623995052566,
-      "avgLikes": 1.2727272727272727,
-      "avgViews": 20.454545454545453
+      "posts": 12,
+      "avgEngagement": 0.3721222136653404,
+      "avgLikes": 1.25,
+      "avgViews": 23.166666666666668
     },
     {
       "key": "youtube",
@@ -41,10 +41,10 @@
     },
     {
       "key": "threads",
-      "posts": 7,
-      "avgEngagement": 0.02987786023500309,
-      "avgLikes": 0.5714285714285714,
-      "avgViews": 32.285714285714285
+      "posts": 8,
+      "avgEngagement": 0.026143127705627704,
+      "avgLikes": 0.5,
+      "avgViews": 28.25
     },
     {
       "key": "blogger",
@@ -64,10 +64,10 @@
     },
     {
       "key": "19:00",
-      "posts": 9,
-      "avgEngagement": 0.15314916564916564,
-      "avgLikes": 1,
-      "avgViews": 28.333333333333332
+      "posts": 10,
+      "avgEngagement": 0.13783424908424907,
+      "avgLikes": 0.9,
+      "avgViews": 25.5
     },
     {
       "key": "20:00",
@@ -75,6 +75,13 @@
       "avgEngagement": 0.10454545454545454,
       "avgLikes": 0.2,
       "avgViews": 62.4
+    },
+    {
+      "key": "18:00",
+      "posts": 1,
+      "avgEngagement": 0.018867924528301886,
+      "avgLikes": 1,
+      "avgViews": 53
     },
     {
       "key": "11:00",
@@ -122,10 +129,10 @@
     },
     {
       "key": "lock",
-      "posts": 3,
-      "avgEngagement": 0.3401360544217687,
-      "avgLikes": 1.6666666666666667,
-      "avgViews": 34.666666666666664
+      "posts": 4,
+      "avgEngagement": 0.259819021948402,
+      "avgLikes": 1.5,
+      "avgViews": 39.25
     },
     {
       "key": "chart",
