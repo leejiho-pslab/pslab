@@ -815,13 +815,35 @@ function planCard(client, chLabel, it){
   const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
   const m=it.metrics;
   const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
+  // 수동 채널(네이버)은 시스템이 발행 성공을 알 수 없다 — 운영자가 카드에서 직접 신고한다.
+  // [발행완료·naver-blog] 이슈 → guidance-sync 가 plan·원장에 기록 → "발행된 콘텐츠"로 이동.
+  const doneBtn=(manual&&(it.channels||[])[0]==='naver-blog')
+    ?'<div style="margin-top:8px"><button class="btn fb" style="width:100%;background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="event.stopPropagation();donePublish(\\''+esc(it.id)+'\\')">✅ 발행 완료 등록</button></div>':'';
   return '<div class="card clk" onclick="openDetail(\\''+esc(it.id)+'\\')">'+
     '<div class="thumbwrap">'+img+carBadge+'</div>'+
     '<div class="cbody"><div class="ctop"><strong>'+head+'</strong>'+stBadge+'</div>'+
     '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
     (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
     metLine+
-    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+right+'</div></div></div>';
+    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+right+'</div>'+doneBtn+'</div></div>';
+}
+// 발행 완료 신고 — 수동 채널(네이버) 전용. 깃허브 이슈([발행완료·채널] + id 규약)를 열어
+// guidance-sync 가 plan 상태·발행 원장에 기록하게 한다. 백엔드 없이 도는 유일한 쓰기 경로가
+// 이슈이므로 수정요청·레퍼런스와 같은 패턴을 쓴다.
+function donePublish(id){
+  const c=DATA.clients[ci];
+  const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
+  const ch=(it.channels||[])[0]||'naver-blog';
+  if(!confirm('네이버 블로그에 이 글을 올리셨나요?\\n\\n확인을 누르면 발행 완료 등록 창(깃허브 이슈)이 열립니다.\\n등록하면 잠시 후 이 카드가 "발행된 콘텐츠"로 이동합니다.')) return;
+  const t='[발행완료·'+ch+'] '+plainHead(it).slice(0,42);
+  const b='업체: '+c.id+
+    '\\n채널: '+ch+
+    '\\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
+    '\\n발행 주소: (선택) 발행한 글 URL 을 이 줄 끝에 붙여넣어 주세요'+
+    '\\n\\n아래 초록색 Submit new issue 버튼만 누르면 등록됩니다.'+
+    '\\n잠시 후 자동 반영되어 이 콘텐츠가 발행된 콘텐츠 섹션으로 이동합니다.'+
+    '\\n— 대시보드 발행 완료 버튼에서 작성됨';
+  window.open(issue(t,b),'_blank');
 }
 function openDetail(id){
   const c=DATA.clients[ci];
@@ -882,7 +904,7 @@ function manualHelper(it, chDef){
   const hasVideo=isYt&&it.videoFile;
   const guide=isYt
     ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
-    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ⑤ 업로드를 마쳤으면 <b>“✅ 발행 완료”</b>를 눌러 등록하세요 — 이 콘텐츠가 “발행된 콘텐츠”로 이동합니다. ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
   const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
   // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
   const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
@@ -903,7 +925,9 @@ function manualHelper(it, chDef){
     videoBtn+ytBtns+
     (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\\''+esc(it.id)+'\\')">📋 본문 전체 복사</button>')+
     (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\\''+esc(it.id)+'\\')">🏷 제목만 복사</button>':'')+
-    dls+'</div>'+ytPack+'</div>';
+    dls+
+    (isNaver&&it.status!=='published'?'<button class="btn fb" style="background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="donePublish(\\''+esc(it.id)+'\\')">✅ 발행 완료</button>':'')+
+    '</div>'+ytPack+'</div>';
 }
 // 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
 // 제목(# 줄)은 뺀다 — 네이버 제목칸에 따로 넣으므로 본문에 또 들어가면 중복이다.

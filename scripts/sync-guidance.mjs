@@ -6,16 +6,22 @@
  *   [가이드·<채널key>] <업체명>            → data/clients/<id>/channel-guides.json
  *   [디자인피드백] <업체명>                → data/clients/<id>/design.json humanNotes
  *   [레퍼런스·<채널key>] <업체명>          → data/clients/<id>/reference-links.json (pending 적재)
+ *   [발행완료·<채널key>] <제목>            → plan.json status=published + published-ledger.json
+ *                                            (수동 채널 전용 — 운영자가 대시보드 버튼으로 신고)
  *
  * guidance-sync.yml(issues: opened/edited)에서 실행. 반영 후 이슈는 워크플로가 닫는다.
  * 사용: ISSUE_TITLE/ISSUE_BODY 환경변수 필요. PSLAB_CLIENT(기본 pslab).
  */
 import { GuidanceStore, parseGuideBody, BRAND_FIELDS } from '../dist/core/guidance.js';
 import { DesignStore } from '../dist/core/design.js';
+import { PlanStore } from '../dist/core/plan.js';
+import { loadLedger, saveLedger, recordPublish } from '../dist/core/publish-ledger.js';
 
 const title = process.env.ISSUE_TITLE ?? '';
 const body = process.env.ISSUE_BODY ?? '';
-const clientId = process.env.PSLAB_CLIENT ?? 'pslab';
+// 본문 `업체:` 줄이 있으면 그 업체로 스코프 (공유 저장소 — 수정요청 게이트와 같은 규약)
+const bodyClient = (body.match(/^업체:\s*(\S+)/m) || [])[1];
+const clientId = bodyClient || process.env.PSLAB_CLIENT || 'pslab';
 const store = new GuidanceStore('./data/clients');
 
 const CHANNELS = ['instagram', 'threads', 'naver-blog', 'blogger', 'youtube', 'linkedin'];
@@ -24,8 +30,42 @@ const brand = title.match(/^\[브랜드노트·(분석|방향성|감도)\]/);
 const guide = title.match(/^\[가이드·([a-z-]+)\]/);
 const design = title.startsWith('[디자인피드백]');
 const ref = title.match(/^\[레퍼런스·([a-z-]+)\]/);
+const done = title.match(/^\[발행완료·([a-z-]+)\]/);
 
-if (ref) {
+if (done) {
+  // 수동 채널(네이버 블로그)은 시스템이 발행 성공을 감지할 수 없다 — 운영자가 대시보드의
+  // "발행 완료" 버튼으로 신고하면 여기서 plan 상태를 published 로 바꾸고 원장에도 남긴다.
+  // 원장 기록이 중요하다: plan.json 이 어떤 이유로 되돌아가도 "이미 발행됨"은 지워지지 않는다(ADR-0017).
+  const ch = done[1];
+  if (!CHANNELS.includes(ch)) { console.log(`알 수 없는 채널: ${ch}`); process.exit(0); }
+  const idm = body.match(/\(id:\s*([A-Za-z0-9_-]+)\)/);
+  if (!idm) { console.log('본문에 (id: …) 가 없어 건너뜀 — 대상 콘텐츠를 특정할 수 없습니다'); process.exit(0); }
+  const itemId = idm[1];
+  // 발행 주소 — "발행 주소:" 줄의 URL 우선, 없으면 본문 어디든 네이버 블로그 링크
+  let url;
+  const um = body.match(/발행\s*주소\s*[:：]([^\n]*)/);
+  if (um) url = (um[1].match(/https?:\/\/\S+/) || [])[0];
+  if (!url) url = (body.match(/https?:\/\/blog\.naver\.com\/\S+/) || [])[0];
+  const planStore = new PlanStore('./data/clients');
+  const plan = planStore.load(clientId);
+  const item = (plan.items || []).find((i) => i.id === itemId);
+  if (!item) { console.log(`plan 에 없는 id: ${itemId} — 건너뜀 (이슈는 열린 채 남습니다)`); process.exit(0); }
+  if (item.status === 'published') {
+    console.log(`이미 발행됨: ${itemId} — 상태는 그대로, 원장·주소만 보강`);
+  } else {
+    item.status = 'published';
+    item.publishedAt = new Date().toISOString();
+  }
+  if (url) item.publishedUrl = url;
+  plan.updatedAt = new Date().toISOString();
+  planStore.save(clientId, plan);
+  const ledger = loadLedger('./data/clients', clientId);
+  recordPublish(ledger, itemId, [
+    { platform: ch, remoteId: `manual-issue-${process.env.ISSUE_NUMBER || 'n/a'}`, url },
+  ]);
+  saveLedger('./data/clients', clientId, ledger);
+  console.log(`발행 완료 기록: ${itemId} (${ch})${url ? ' · ' + url : ''} — 발행된 콘텐츠로 이동`);
+} else if (ref) {
   // 한 줄 = 링크 1개. "URL 메모" / "URL — 메모" 형태의 메모를 함께 저장.
   // 학습(열람)은 CI가 아니라 Claude 세션의 기획·제작 게이트에서 일어난다 — 여기서는 적재만.
   const ch = ref[1];
