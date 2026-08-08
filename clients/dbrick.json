@@ -73,7 +73,7 @@
     "relatedFilter": "(인테리어|리모델링|올수리|아파트|평대?$|주방|욕실|화장실|거실|현관|베란다|확장|단열|결로|방수|도배|마루|타일|샷시|새시|중문|붙박이|견적|시공|분당|판교|성남|수지|수원|용인|광명)"
   },
   "weekPlan": {
-    "schedule": ["naver-blog", "instagram", null, "instagram", "naver-blog", null, null],
+    "schedule": ["naver-blog", "youtube", "instagram", "naver-blog", "instagram", null, null],
     "templates": {
       "naver-blog": [
         "{kw} 사례로 보는 설계 포인트 — 구조·동선까지 한 번에",
@@ -84,6 +84,11 @@
         "{kw}, 공간이 아니라 일상이 달라집니다",
         "{kw} Before & After — 구조가 바뀌면 생기는 일",
         "{kw}에서 놓치기 쉬운 한 끗, 디테일에서 갈립니다"
+      ],
+      "youtube": [
+        "{kw} 30초 공간 투어 — 완공 직후 그대로",
+        "{kw} 시공 과정, 보이지 않는 기본기까지",
+        "{kw} Before/After 한 컷 변화"
       ]
     }
   },

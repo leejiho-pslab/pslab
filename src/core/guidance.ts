@@ -279,6 +279,12 @@ export class GuidanceStore {
     return r && Array.isArray(r.sections) && r.sections.length ? r : undefined;
   }
 
+  /** ops-plan.json — 있으면 대시보드에 '운영플랜' 탭이 생긴다 (research-brief 와 같은 섹션 스키마) */
+  loadOpsPlan(clientId: string): ResearchBrief | undefined {
+    const r = this.read<ResearchBrief>(this.file(clientId, 'ops-plan.json'));
+    return r && Array.isArray(r.sections) && r.sections.length ? r : undefined;
+  }
+
   loadGuides(clientId: string): ChannelGuides {
     return this.read<ChannelGuides>(this.file(clientId, 'channel-guides.json')) ?? {};
   }
