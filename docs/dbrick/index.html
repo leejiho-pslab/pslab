@@ -1,0 +1,1093 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta http-equiv="refresh" content="300"/>
+<title>ALWAYS ON 콘텐츠 관제실</title>
+<style>
+:root{color-scheme:light;--brand:#2b6fff}*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:#ffffff;color:#14171d}
+a{color:#1d6ae5}
+header{padding:16px 22px;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:0;z-index:5}
+.brand{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+.sub{color:#6a7284;font-size:12px;margin-top:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.clients{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.cbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px}
+.cbtn.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding:12px 22px 0;border-bottom:1px solid #e4e8f0;background:#ffffff;position:sticky;top:58px;z-index:4}
+.tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a7284;padding:8px 12px;cursor:pointer;font-size:14px}
+.tab.on{color:#14171d;border-bottom-color:var(--brand);font-weight:600}
+.tab .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-left:5px;vertical-align:middle}
+.dot.live{background:#22c55e}.dot.off{background:#c6ccd8}
+.treq{font-size:10px;border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700}
+.treq.open{background:#fdf3e0;color:#b45309}
+.treq.done{background:#e4f7ea;color:#15803d}
+main{padding:18px 22px;max-width:1180px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:#f7f9fc;border:1px solid #e4e8f0;border-radius:12px;padding:12px 14px}
+.kpi .v{font-size:22px;font-weight:700}.kpi .l{color:#6a7284;font-size:12px;margin-top:2px}
+.kpi .v.accent{color:#d97706}
+.panel{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.panel h3{margin:0 0 10px;font-size:15px}
+.sect-h{display:flex;justify-content:space-between;align-items:center;margin:18px 0 10px}
+.sect-h h2{font-size:16px;margin:0}
+.btn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:6px 11px;border-radius:8px;font-size:12px;text-decoration:none;cursor:pointer}
+.btn.fb{background:#f6effc;border-color:#d9c2ee;color:#7a35b8}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.card{background:#ffffff;border:1px solid #e4e8f0;border-radius:12px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 1px 2px rgba(20,24,40,.04)}
+.thumb{width:100%;aspect-ratio:1/1;object-fit:cover;background:#eef1f6;display:block}
+.thumb.noimg{display:flex;align-items:center;justify-content:center;color:#9aa2b2;font-size:13px}
+.cbody{padding:10px 12px;flex:1;display:flex;flex-direction:column;gap:6px}
+.ctop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.ctop strong{font-size:13px}
+.muted{color:#6a7284;font-size:11px}
+.cap{color:#4a5264;font-size:12px;line-height:1.4;max-height:3.6em;overflow:hidden}
+.met{display:flex;gap:10px;font-size:11px;color:#5a6274;margin-top:auto}
+.badge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.b-ok{background:#e4f7ea;color:#15803d}.b-wait{background:#fdf3e0;color:#b45309}.b-plan{background:#e7effc;color:#2b5fd0}.b-hold{background:#fdeaea;color:#dc2626}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e9edf3}
+th{color:#6a7284;font-weight:600;font-size:12px}
+.grade{display:inline-flex;align-items:center;justify-content:center;min-width:108px;padding:10px 16px;border-radius:12px;font-weight:800;font-size:18px}
+.bar{height:7px;border-radius:4px;background:#e9edf3;overflow:hidden}.bar>i{display:block;height:100%;background:#2b6fff}
+.plan-pill{font-size:11px;color:#5a6274}
+.spark{display:block}
+.empty{color:#8a92a4;padding:18px;text-align:center;font-size:13px}
+.tag{display:inline-block;background:#f2f4f8;border:1px solid #e0e5ee;border-radius:6px;padding:2px 7px;font-size:11px;color:#5a6274;margin:2px 2px 0 0}
+.rbarrow{display:flex;align-items:center;gap:8px;margin:5px 0}
+.rbarrow .rl{width:150px;font-size:12px;color:#3a4254;flex:none;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbarrow .rtrack{flex:1;background:#eef1f6;border-radius:6px;height:18px;overflow:hidden}
+.rbarrow .rfill{height:100%;border-radius:6px;background:#2b6fff;min-width:2px}
+.rbarrow .rv{font-size:11.5px;color:#6a7284;width:120px;flex:none}
+.rtl{border-left:2px solid #dfe5ef;margin:6px 0 4px 6px;padding-left:14px}
+.rtl .ri{position:relative;margin-bottom:10px;font-size:13px;line-height:1.55}
+.rtl .ri:before{content:'';position:absolute;left:-19.5px;top:4px;width:9px;height:9px;border-radius:50%;background:#2b6fff}
+.rtl .rd{color:#6a7284;font-size:11.5px}
+.rlink{display:inline-block;background:#f2f6ff;border:1px solid #c9d8f0;border-radius:8px;padding:6px 10px;margin:3px 4px 3px 0;font-size:12.5px;text-decoration:none;color:#1c4fd6}
+.rlink:hover{background:#e6eeff}
+footer{text-align:center;color:#9aa2b2;font-size:11px;padding:22px}
+.card.clk{cursor:pointer;transition:transform .12s,border-color .12s,box-shadow .12s}
+.card.clk:hover{transform:translateY(-3px);border-color:#b9c4d8;box-shadow:0 6px 16px rgba(20,24,40,.10)}
+.b-var{font-weight:600}.v-A{background:#fdf0e4;color:#c2570f}.v-B{background:#e2f6f4;color:#0f766e}.v-C{background:#fdf6e0;color:#a16207}
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.55);display:none;align-items:flex-start;justify-content:center;z-index:50;padding:32px 16px;overflow:auto}
+.modal.on{display:flex}
+.mwrap{position:relative;background:#ffffff;border:1px solid #e4e8f0;border-radius:16px;max-width:920px;width:100%;padding:22px}
+.mx{position:absolute;top:14px;right:14px;background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:15px}
+#mbody h2{font-size:23px}
+#mbody .kick{color:#c2570f;font-weight:600;font-size:12px;letter-spacing:.12em;text-transform:uppercase}
+.carou{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;padding:4px 2px 12px;-webkit-overflow-scrolling:touch}
+.carou .slide{position:relative;flex:0 0 auto;scroll-snap-align:center}
+.carou .slide img{height:520px;width:auto;border-radius:14px;display:block;background:#eef1f6;border:1px solid #e4e8f0}
+.carou .snum{position:absolute;top:10px;right:10px;background:rgba(8,10,14,.7);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px}
+.carou::-webkit-scrollbar{height:8px}.carou::-webkit-scrollbar-thumb{background:#cdd4e0;border-radius:8px}
+.capbox{background:#f7f9fc;border:1px solid #e4e8f0;border-radius:12px;padding:14px 16px}
+.caphd{color:#6a7284;font-size:12px;font-weight:600;margin-bottom:8px}
+.mcap{white-space:normal;line-height:1.75;font-size:15px;color:#2a3040}
+.chgrp{margin:10px 0 18px}
+.chgrp-h{font-size:14px;font-weight:700;margin:14px 0 8px;padding-bottom:6px;border-bottom:1px solid #e9edf3}
+.md-h1{font-size:19px;margin:10px 0 8px;font-weight:800}.md-h{font-size:15px;color:#b45309;margin:14px 0 4px;font-weight:700}
+.md-tag{color:#1d6ae5;font-weight:600;font-size:13px;margin:10px 0 2px}.md-sp{height:10px}
+.md-quote{background:#fdf6ec;border-left:3px solid #d97706;padding:8px 12px;color:#14171d;font-size:14px}
+.md-quote+.md-quote{padding-top:0}
+.md-tags{color:#1d6ae5;font-size:13px;margin-top:12px}
+.md-img{display:block;width:100%;border-radius:10px;margin:12px 0;border:1px solid #e4e8f0}
+.mcap b{color:#000}
+.thumbwrap{position:relative}
+.b-car{position:absolute;top:8px;right:8px;background:rgba(8,10,14,.74);color:#fff;border:1px solid rgba(255,255,255,.25)}
+.pbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pbar-t{font-weight:700;font-size:13px;margin-right:4px}
+.pbtn{background:#f2f4f8;border:1px solid #dfe4ec;color:#3a4254;padding:5px 11px;border-radius:20px;cursor:pointer;font-size:12px}
+.pbtn.on{background:#14171d;border-color:#14171d;color:#fff}
+.pbar-c{font-size:12px;color:#6a7284;display:inline-flex;align-items:center;gap:5px;margin-left:6px}
+.pbar input[type=date]{border:1px solid #dfe4ec;border-radius:7px;padding:4px 6px;font-size:12px;color:#3a4254;background:#fff}
+.reqta{width:100%;border:1px solid #dfe4ec;border-radius:10px;padding:10px 12px;font-size:13px;font-family:inherit;color:#14171d;background:#fff;resize:vertical}
+.reqta:focus{outline:2px solid #2b6fff33;border-color:#2b6fff}
+@media(max-width:720px){.carou .slide img{height:60vh}}
+
+/* ── 업체 브랜드 테마 오버라이드 ── */
+:root{--brand:#B4653A}
+body{background:#FAF8F4}
+header,.tabs{background:#FAF8F4;border-color:#EAE1D6}
+.panel,.card,.kpi{background:#FFFFFF;border-color:#EAE1D6}
+a{color:#7E4023}
+.tab.on{border-bottom-color:#B4653A}
+.cbtn.on{background:#B4653A;border-color:#B4653A}
+.kpi .v.accent{color:#7E4023}
+.btn.fb{background:#FFFFFF;border-color:#B4653A;color:#7E4023}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🛰️ <span id="dashtitle">ALWAYS ON 콘텐츠 관제실</span></div>
+  <div class="sub" id="dashsub">채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침</div>
+  <div class="clients" id="clients"></div>
+</header>
+<div class="tabs" id="tabs"></div>
+<main id="view"></main>
+<footer>pslab autopilot · 자동 생성 · <span id="gen"></span></footer>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()">
+  <div class="mwrap"><button class="mx" onclick="closeModal()">✕</button><div id="mbody"></div></div>
+</div>
+<script>
+/* 안전장치: 아래 메인 스크립트가 (구형 브라우저 파싱오류 등으로) 깨져도
+   빈 화면 대신 오류 내용과 새로고침 버튼을 보여준다. */
+window.onerror = function (m) {
+  try {
+    var v = document.getElementById('view');
+    if (v && !(v.innerHTML && v.innerHTML.replace(/\s/g, ''))) {
+      v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#b91c1c">'
+        + '화면을 그리는 중 문제가 생겼어요.<br>'
+        + '<span style="color:#6a7284;font-size:13px">' + String(m) + '</span><br><br>'
+        + '<button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button>'
+        + '</div>';
+    }
+  } catch (e) {}
+  return false;
+};
+</script>
+<script>
+const DATA = {"generatedAt":"2026-08-08T03:36:46.944Z","repo":"leejiho-pslab/pslab","channels":[{"key":"instagram","label":"인스타그램","icon":"📸"},{"key":"threads","label":"스레드","icon":"🧵"},{"key":"naver-blog","label":"네이버 블로그","icon":"📝"},{"key":"blogger","label":"구글 블로그","icon":"🅱️"},{"key":"youtube","label":"유튜브","icon":"▶️"}],"setup":{"realPublish":false,"telegram":false,"anthropic":false,"instagram":false,"threads":false,"blogger":false},"clients":[{"id":"dbrick","name":"디브릭 (DBrick)","industry":"프리미엄 1:1 맞춤형 주거 인테리어 디자인·리모델링 (아파트 전체 리모델링 20~50평대·상가, 분당/판교 기반 수도권)","themeColor":null,"brandTone":"'디자인을 넘어, 더 나은 공간을 만드는 디브릭' — 정중하고 차분한 존댓말. 공간 철학 서사(공간은 삶을 담는 그릇, 생활의 흐름과 구조를 설계)로 열고, 자재·공정·평형·기간은 구체적으로. 과장·경쟁사 비방 없이 신뢰감 있게","keywords":["분당인테리어","판교인테리어","성남인테리어","아파트리모델링","아파트인테리어","구축아파트리모델링","아파트올수리","30평대인테리어","40평대인테리어","주방인테리어","욕실인테리어","거실인테리어","인테리어견적","프리미엄인테리어"],"competitors":["apartmentary","todayhouse","한샘리하우스","LX지인인테리어"],"bannedWords":["업계 최저가","100% 보장","무조건","평생 AS","업계 유일"],"schedule":["18:00"],"reviewMode":"manual","designVersion":1,"designStyle":{"palette":"웜 아이보리(#FAF8F4) 배경 + 딥브라운(#2B241E) 텍스트 + 테라코타 브릭(#B4653A) 포인트 — 벽돌(Brick)의 따뜻함과 프리미엄 정돈감","mood":"완공 직후 오후 햇살이 드는 실제 시공 현장 — 웜 뉴트럴, 정돈된 프리미엄, 과장 없는 신뢰감","composition":"상단 시리즈 라벨(지역·아파트·평형) → 굵은 헤드라인(2줄 이내) → 실제 시공 공간 비주얼 → 하단 로고+핸들 고정","notes":["인테리어 브랜드는 '실제 시공 사진'이 곧 신뢰 — 카드의 주인공은 항상 공간 비주얼, 텍스트는 30% 이하.","공식 사이트(dbrick.co.kr, imweb)는 데이터센터 IP를 차단하므로 이미지 소싱은 네이버 블로그·오늘의집 게시물 경유로 확인할 것.","지역·아파트명·평형(예: 분당 정든신화 49py)을 시리즈 라벨로 고정하면 검색·신뢰 모두에 유리."],"humanNotes":[]},"heldCount":0,"totalCycles":0,"totalPublished":0,"planUpdatedAt":"2026-08-08T03:40:00.000Z","planCards":[],"channels":[{"key":"instagram","label":"인스타그램","icon":"📸","active":true,"published":[],"pending":[],"stats":{"publishedCount":0,"pendingCount":0,"avgEngagement":0,"trend":"n/a","totalViews":0,"totalLikes":0},"series":[]},{"key":"threads","label":"스레드","icon":"🧵","active":false,"published":[],"pending":[],"stats":{"publishedCount":0,"pendingCount":0,"avgEngagement":0,"trend":"n/a","totalViews":0,"totalLikes":0},"series":[]},{"key":"naver-blog","label":"네이버 블로그","icon":"📝","active":true,"published":[],"pending":[],"stats":{"publishedCount":0,"pendingCount":0,"avgEngagement":0,"trend":"n/a","totalViews":0,"totalLikes":0},"series":[]},{"key":"blogger","label":"구글 블로그","icon":"🅱️","active":false,"published":[],"pending":[],"stats":{"publishedCount":0,"pendingCount":0,"avgEngagement":0,"trend":"n/a","totalViews":0,"totalLikes":0},"series":[]},{"key":"youtube","label":"유튜브","icon":"▶️","active":true,"published":[],"pending":[],"stats":{"publishedCount":0,"pendingCount":0,"avgEngagement":0,"trend":"n/a","totalViews":0,"totalLikes":0},"series":[]}],"channelLinks":[{"key":"instagram","label":"인스타그램","icon":"📸","url":"https://www.instagram.com/dbrick_official","sub":"@dbrick_official"},{"key":"threads","label":"스레드","icon":"🧵","url":"https://www.threads.net/","sub":"관리 열기"},{"key":"naver-blog","label":"네이버 블로그","icon":"📝","url":"https://blog.naver.com/dbrick_official","sub":"@dbrick_official"},{"key":"blogger","label":"구글 블로그","icon":"🅱️","url":"https://www.blogger.com/","sub":"관리 열기"},{"key":"youtube","label":"유튜브","icon":"▶️","url":"https://www.youtube.com/@dbbrick_official","sub":"@dbbrick_official"}],"blog":{"measured":false,"grade":"측정 전","score":0,"posts":[],"keywords":[{"kw":"분당인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"판교인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"성남인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"아파트리모델링","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"아파트인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"구축아파트리모델링","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"아파트올수리","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"30평대인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"40평대인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"주방인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"욕실인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"거실인테리어","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"인테리어견적","pc":null,"mobile":null,"total":null,"competition":null},{"kw":"프리미엄인테리어","pc":null,"mobile":null,"total":null,"competition":null}],"kwSource":null},"learning":null,"tokenHealth":null,"weeklyReport":null,"brandBrief":{"analysis":"디브릭(DBrick, 주식회사 디브릭·구 플레어디자인)은 분당·판교 기반 프리미엄 1:1 맞춤형 주거 인테리어 리모델링 전문 브랜드. 슬로건 'Build Beyond — 디자인을 넘어, 더 나은 공간을 만들다'. 철학은 '따뜻한 집'(단열 설계·결로/방수 처리·구조 보완 — 계절과 상관없이 쾌적한 온도를 유지하는 집). 20~50평대 아파트 전체 리모델링이 주력이고 상가 인테리어도 수행. 포트폴리오 지역: 분당(정자·운중·정든신화), 판교(원마을·산운마을), 수원(영통·매탄), 용인(수지·처인·광교), 광명(센트럴자이), 남양주(덕소), 송파, 청담. 쇼룸/본사: 성남시 분당구 운중로166번길 4-3 1층(대표 김웅위, 월~토 10-18시, 031-709-0709). 채널 현황: 네이버 블로그(dbrick_official — 시공사례 롱폼 활발, 주력)·오늘의집 전문가(프로젝트·리뷰 다수, 콘텐츠 문법 확립)·인스타그램(@dbrick_official)·유튜브(@dbbrick_official, 구독 123·영상 12개, 성장 초기·상호 변경 정리 중). 광고는 같은 저장소의 dbrick-ads 시스템으로 Meta·네이버SA 성과 수집이 이미 매일 돌고 있음(자사몰 없음, 전환=상담 신청).","direction":"①네이버 블로그의 '지역+아파트명+평형' 시공사례 롱폼은 이미 검증된 주력 — 발행 리듬을 유지·강화해 검색 유입을 지킨다. ②오늘의집·블로그에 축적된 시공사례 서사를 인스타 Before/After 캐러셀·릴스로 재가공해 채널 간 재활용한다(광고 소재와도 시너지). ③9~10월 가을 이사철·리모델링 성수기 직전(8월)에 발행 체계를 세워 시즌 검색 수요를 선점한다. ④유튜브는 상호 변경 정리와 함께 시공 과정·공간 투어 쇼츠로 재시동한다. ⑤모든 콘텐츠에 무료 상담·운중동 쇼룸 방문 동선을 상시 노출한다(전환=상담 신청). ⑥겨울(단열·결로)·장마(방수) 등 '따뜻한 집' 철학과 계절 이슈를 정렬한다.","sensibility":"인사말 '디자인을 넘어, 더 나은 공간을 만드는 디브릭입니다'로 여는 정중하고 차분한 존댓말. 공간 철학 서사가 톤의 중심 — '공간은 삶을 담는 그릇', '꾸미는 것이 아니라 생활의 흐름과 구조를 설계한다', '욕실은 하루를 시작하고 마무리하는 리셋 공간' 같은 관점 제시 후 구조·동선·자재로 구체화. 시공 디테일(자재명·공정·평형·기간)은 구체적 사실로, 비용은 확정 표현 대신 사례 기준으로. 비주얼은 실제 시공 사진 중심의 웜 뉴트럴 프리미엄 무드 — 과채도·스톡사진 느낌 금지. 효능 과장·경쟁사 비방·확정되지 않은 AS/보증 표현 금지.","updatedAt":"2026-08-08T12:40:00+09:00","log":[{"at":"2026-08-08T12:40:00+09:00","field":"analysis","excerpt":"웹 리서치 기반 초기 시드(공식 사이트 dbrick.co.kr는 데이터센터 IP 차단으로 네이버 검색·블로그·오늘의집·유튜브 메타데이터로 학습) — 감도조율 단계에서 담당자 확인 후 갱신 예정"}]},"channelGuides":{},"research":null,"weekPlan":null,"referenceLinks":null}]};
+const REPO = DATA.repo;
+let ci = 0, ch = 'all';
+// ── 운영 기간 선택 (전역 상태) ──
+let period = { key:'all', from:null, to:null };
+function periodRange(){
+  if(period.key==='all') return null;
+  const now=new Date(); let from,to;
+  if(period.key==='7d'){ to=now; from=new Date(now.getTime()-6*864e5); }
+  else if(period.key==='14d'){ to=now; from=new Date(now.getTime()-13*864e5); }
+  else if(period.key==='30d'){ to=now; from=new Date(now.getTime()-29*864e5); }
+  else if(period.key==='month'){ from=new Date(now.getFullYear(),now.getMonth(),1); to=now; }
+  else if(period.key==='prev'){ from=new Date(now.getFullYear(),now.getMonth()-1,1); to=new Date(now.getFullYear(),now.getMonth(),0); }
+  else if(period.key==='custom'){
+    if(!period.from&&!period.to) return null;
+    from=period.from?new Date(period.from):new Date(0);
+    to=period.to?new Date(period.to):now;
+  } else return null;
+  const f=new Date(from); f.setHours(0,0,0,0);
+  const t=new Date(to); t.setHours(23,59,59,999);
+  return [f.getTime(), t.getTime()];
+}
+function inPeriod(s){ const r=periodRange(); if(!r) return true; if(!s) return false; const t=new Date(s).getTime(); return t>=r[0]&&t<=r[1]; }
+function periodLabel(){
+  const names={all:'전체 기간','7d':'최근 7일','14d':'최근 14일','30d':'최근 30일',month:'이번 달',prev:'지난 달',custom:'직접 선택'};
+  const r=periodRange();
+  const d=x=>new Date(x).toISOString().slice(0,10);
+  return names[period.key]+(r?' ('+d(r[0])+' ~ '+d(r[1])+')':'');
+}
+function periodBar(){
+  const b=(k,l)=>'<button class="pbtn'+(period.key===k?' on':'')+'" onclick="setPeriod(\''+k+'\')">'+l+'</button>';
+  return '<div class="panel pbar"><span class="pbar-t">📆 운영 기간</span>'+
+    b('all','전체')+b('7d','최근 7일')+b('14d','최근 14일')+b('30d','최근 30일')+b('month','이번 달')+b('prev','지난 달')+
+    '<span class="pbar-c">직접 선택 <input type="date" id="pfrom" value="'+(period.from||'')+'" onchange="setCustom()"/> ~ <input type="date" id="pto" value="'+(period.to||'')+'" onchange="setCustom()"/></span>'+
+    '<span class="muted" style="margin-left:auto">'+periodLabel()+'</span></div>';
+}
+function setPeriod(k){ period.key=k; renderView(); }
+function setCustom(){
+  period.key='custom';
+  period.from=(document.getElementById('pfrom')||{}).value||null;
+  period.to=(document.getElementById('pto')||{}).value||null;
+  renderView();
+}
+// ── 수정요청 (깃허브 이슈 연동: [수정요청·채널키] 제목 규약) ──
+let ISSUES=null; // null=로딩중, []=없음/실패
+let REF_ISSUES=[]; // [레퍼런스·채널] 이슈에서 즉시 파싱한 링크 (커밋 전에도 대시보드에 바로 표시)
+let G_ISSUES=[]; // 지침 이슈(브랜드노트·디자인피드백·가이드) — 지침 탭 실시간 '접수됨' 표시용
+let DONE_IDS=new Set(); // [발행완료·] 이슈에서 파싱한 plan id — 데이터 반영 전에도 발행됨으로 표시
+let DELREF=new Set(); // [레퍼런스삭제·] 이슈에서 파싱한 채널|URL — 반영 전에도 목록에서 제외
+const REQ_RE=/^\[수정요청·([a-z-]+)\]\s*(.*)$/;
+const REF_RE=/^\[레퍼런스·([a-z-]+)\]/;
+const DELREF_RE=/^\[레퍼런스삭제·([a-z-]+)\]/;
+const DONE_RE=/^\[발행완료·([a-z-]+)\]/;
+const GUID_RE=/^\[(브랜드노트·(분석|방향성|감도)|디자인피드백|가이드·([a-z-]+))\]/;
+// ── 낙관 반영(실시간 UI) — 이슈가 CI 로 처리되기 전에도 화면이 먼저 움직인다 ──
+// 버튼을 누른 브라우저는 localStorage 로 즉시, 다른 브라우저는 이슈 직독(loadIssues)으로 몇 초 내 반영.
+// 데이터(plan.json)가 따라잡으면 localStorage 항목은 자동 청소된다 — 상태의 최종 출처는 항상 데이터다.
+function lsSet(k){ try{ return new Set(JSON.parse(localStorage.getItem(k)||'[]')); }catch(e){ return new Set(); } }
+function lsAdd(k,v){ try{ const s=lsSet(k); s.add(v); localStorage.setItem(k,JSON.stringify(Array.from(s))); }catch(e){} }
+function lsDel(k,v){ try{ const s=lsSet(k); if(s.delete(v)) localStorage.setItem(k,JSON.stringify(Array.from(s))); }catch(e){} }
+const refKey=(ch,u)=>ch+'|'+String(u).replace(/\/+$/,'');
+// 발행 완료로 봐야 하는가 — 데이터 확정(published) 또는 신고 접수(이슈·로컬)
+function isDoneLive(it){ return it.status==='published'||DONE_IDS.has(it.id)||lsSet('psDone').has(it.id); }
+function refDeleted(ch,u){ const k=refKey(ch,u); return DELREF.has(k)||lsSet('psRefDel').has(k); }
+// 아직 데이터에 반영 안 됐을 수 있는 지침 이슈: 열려 있거나, 이 대시보드 생성 이후 등록된 것
+function guidPending(kind, id){
+  return G_ISSUES.filter(g=>g.kind===kind&&(kind!=='brand'||g.field===id)&&(kind!=='guide'||g.chKey===id)&&
+    (g.state!=='closed'||String(g.created_at||'')>String(DATA.generatedAt||'')));
+}
+function pendBox(list){
+  return list.map(p=>'<div class="capbox" style="border:1px solid #f0d9a8;background:#fffaf0;margin-bottom:8px;border-radius:10px;padding:10px 12px">'+
+    '<div class="muted" style="font-size:11.5px;margin-bottom:4px">🕓 '+(p.state==='closed'?'반영 완료 — 잠시 후 본문에 표시됩니다':'접수됨 — 시스템 반영 처리중')+' · <a href="'+esc(p.html_url)+'" target="_blank">이슈↗</a></div>'+
+    '<div class="mcap" style="font-size:13px;white-space:pre-wrap">'+esc(p.body.slice(0,400))+(p.body.length>400?'…':'')+'</div></div>').join('');
+}
+function myIssue(x){ return !x.clientId||x.clientId===DATA.clients[ci].id; } // 업체 스코프 (없으면 전 업체)
+function channelIssues(key){ return (ISSUES||[]).filter(x=>x.chKey===key&&myIssue(x)); }
+// 발행 게이트 — 이 콘텐츠에 걸린 미처리(열림) 수정요청. 특정 id 지정 요청은 그 콘텐츠만,
+// '채널 공통' 요청은 그 채널의 발행 전 콘텐츠 전체를 보류시킨다 (publish-plan --due와 동일 규칙).
+function openHolds(it){
+  return (ISSUES||[]).filter(x=>x.state!=='closed'&&myIssue(x)&&(x.planId?x.planId===it.id:(it.channels||[]).includes(x.chKey)));
+}
+function loadIssues(){
+  fetch('https://api.github.com/repos/'+REPO+'/issues?state=all&per_page=100&sort=created&direction=desc')
+    .then(r=>r.ok?r.json():[])
+    .then(arr=>{
+      const list=(Array.isArray(arr)?arr:[]).filter(x=>!x.pull_request);
+      ISSUES=list.map(x=>{
+        const m=REQ_RE.exec(x.title||''); if(!m) return null;
+        // 본문 '대상 콘텐츠: … (id: xxx)' → 특정 콘텐츠 수정요청. id 없으면 채널 공통.
+        // '업체: xxx' → 여러 업체가 한 저장소를 쓸 때의 업체 스코프 (없으면 전 업체 적용 — 과거 이슈 호환)
+        const idm=/\(id:\s*([\w.-]+)\)/.exec(String(x.body||''));
+        const cm=/업체:\s*([\w-]+)/.exec(String(x.body||''));
+        return { chKey:m[1], planId:idm?idm[1]:null, clientId:cm?cm[1]:null, titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
+      }).filter(Boolean);
+      // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시
+      REF_ISSUES=[];
+      for(const x of list){
+        const m=REF_RE.exec(x.title||''); if(!m) continue;
+        for(const line of String(x.body||'').split('\n')){
+          const t=line.replace(/^[-*·•\s]+/,'').trim();
+          const um=t.match(/^(https?:\/\/\S+)\s*(?:[—–-]\s*)?(.*)$/);
+          if(um) REF_ISSUES.push({channel:m[1], url:um[1], note:(um[2]||'').trim(), issueUrl:x.html_url, at:x.created_at});
+        }
+      }
+      // 지침 이슈(브랜드노트·디자인피드백·가이드)도 즉시 수집 — 지침 탭에 실시간 표시
+      G_ISSUES=[];
+      for(const x of list){
+        const g=GUID_RE.exec(x.title||''); if(!g) continue;
+        G_ISSUES.push({kind:g[1].indexOf('브랜드노트')===0?'brand':(g[1]==='디자인피드백'?'design':'guide'),
+          field:g[2]||null, chKey:g[3]||null, body:String(x.body||''), state:x.state,
+          html_url:x.html_url, created_at:x.created_at});
+      }
+      // 발행완료·레퍼런스삭제 이슈 직독 — 커밋·배포를 기다리지 않고 화면이 먼저 움직인다
+      DONE_IDS=new Set(); DELREF=new Set();
+      const myId=(DATA.clients[ci]||{}).id;
+      for(const x of list){
+        if(DONE_RE.test(x.title||'')){
+          const im=/\(id:\s*([\w.-]+)\)/.exec(String(x.body||''));
+          const cm=/업체:\s*([\w-]+)/.exec(String(x.body||''));
+          if(im&&(!cm||cm[1]===myId)) DONE_IDS.add(im[1]);
+        }
+        const dm=DELREF_RE.exec(x.title||'');
+        if(dm){
+          for(const line of String(x.body||'').split('\n')){
+            const um=line.trim().match(/^(https?:\/\/\S+)/);
+            if(um) DELREF.add(refKey(dm[1],um[1]));
+          }
+        }
+      }
+      // 데이터가 따라잡은 항목은 로컬 낙관 표시를 청소 — localStorage 가 낡은 진실이 되지 않게
+      for(const p of ((DATA.clients[ci]||{}).planCards||[])) if(p.status==='published') lsDel('psDone',p.id);
+      renderTabs(); renderView();
+    })
+    .catch(()=>{ ISSUES=[]; });
+}
+// 커밋된 링크 + 아직 반영 전인 이슈 링크(접수됨)를 채널 기준으로 병합.
+// 삭제된 링크(removed 상태 또는 삭제 이슈·로컬 접수)는 목록에서 완전히 제외한다.
+function refLinksFor(client, key){
+  const saved=(((client.referenceLinks||{}).links)||[])
+    .filter(l=>(!key||l.channel===key)&&l.status!=='removed'&&!refDeleted(l.channel,l.url));
+  const have=new Set(saved.map(l=>refKey(l.channel,l.url)));
+  const incoming=REF_ISSUES.filter(r=>(!key||r.channel===key)&&!have.has(refKey(r.channel,r.url))&&!refDeleted(r.channel,r.url))
+    .map(r=>({url:r.url, channel:r.channel, note:r.note||undefined, status:'received', addedAt:r.at, issueUrl:r.issueUrl}));
+  return saved.concat(incoming);
+}
+function reqStatus(x){ return x.state==='closed' ? '<span class="badge b-ok">✅ 처리완료</span>' : '<span class="badge b-wait">🛠 처리중</span>'; }
+// 수정요청의 대상 표시 — 특정 콘텐츠(id)면 그 헤드라인, 아니면 채널 공통
+function reqTarget(client,x){
+  if(!x.planId) return '채널 공통';
+  const p=(client.planCards||[]).find(t=>t.id===x.planId);
+  return esc(p?plainHead(p).slice(0,22):x.planId);
+}
+// 수정 항목 분류 — 이슈 제목 [항목] 태그 + 본문 '수정 항목:' 줄로 들어간다
+const REQ_TYPES=['텍스트(문구·카피)','이미지(사진·카드)','영상(릴스·쇼츠)','디자인(색·레이아웃)','해시태그·키워드','발행 일정','기타'];
+function requestsPanel(client, key, chLabel){
+  const list=channelIssues(key);
+  const open=list.filter(x=>x.state!=='closed').length;
+  let h='<div class="panel" style="border-color:#d9c2ee;background:#fcfaff"><div class="sect-h" style="margin:0 0 10px"><h3>✏️ 수정요청 게시판 · '+esc(chLabel)+'</h3><span class="muted">'+(ISSUES===null?'불러오는 중…':('🛠 처리중 '+open+'건 · 총 '+list.length+'건'))+'</span></div>'+
+    '<div class="muted" style="margin:0 0 10px">🚦 <b>발행 전 검수 게이트</b> — 접수된 수정요청이 <b>처리완료</b>되기 전에는 대상 콘텐츠의 자동 발행이 보류됩니다. 수정사항이 반영되고 요청이 처리완료로 바뀌면 다음 사이클에 자동 발행됩니다. (대상을 지정하지 않은 "채널 공통" 요청은 이 채널의 발행 대기 콘텐츠 전체를 보류)</div>';
+  if(list.length){
+    h+='<table><tr><th style="width:92px">상태</th><th style="width:150px">대상</th><th>요청 내용</th><th style="width:100px">등록일</th><th style="width:52px"></th></tr>'+
+      list.map(x=>'<tr><td>'+reqStatus(x)+'</td><td class="muted" style="font-size:12px">'+reqTarget(client,x)+'</td><td>'+esc(x.titleClean)+'</td><td class="muted">'+String(x.created_at||'').slice(0,10)+'</td><td><a href="'+esc(x.html_url)+'" target="_blank">보기↗</a></td></tr>').join('')+'</table>';
+  } else if(ISSUES!==null){
+    h+='<div class="empty" style="padding:8px">아직 등록된 수정요청이 없습니다. 아래에 바로 작성해 보세요.</div>';
+  }
+  // 대상 콘텐츠 선택 — 이 채널의 기획 콘텐츠(발행일순). 어떤 날짜 콘텐츠의 수정인지 특정한다
+  const plans=(client.planCards||[]).filter(p=>(p.channels||[]).includes(key));
+  const planOpt=plans.map(p=>{
+    const d=String(p.scheduledFor||'').slice(5,10).replace('-','/');
+    const st=p.status==='published'?' · 발행됨':'';
+    return '<option value="'+esc(p.id)+'">'+esc((d?d+' · ':'')+plainHead(p).slice(0,34)+st)+'</option>';
+  }).join('');
+  h+='<div style="margin-top:12px">'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">📅 대상 콘텐츠 '+
+    '<select id="reqplan-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px"><option value="">채널 공통 (특정 콘텐츠 아님)</option>'+planOpt+'</select></label>'+
+    '<label class="muted" style="display:flex;align-items:center;gap:6px;font-size:12.5px">🏷 수정 항목 '+
+    '<select id="reqtype-'+esc(key)+'" class="reqta" style="width:auto;padding:6px 8px;font-size:12.5px">'+REQ_TYPES.map(t=>'<option>'+esc(t)+'</option>').join('')+'</select></label></div>'+
+    '<textarea id="reqtext-'+esc(key)+'" class="reqta" rows="3" placeholder="수정하고 싶은 내용을 적어주세요. 예) 3번 카드 문구를 더 짧게 / 커버 이미지 톤을 밝게 / 해시태그에 #청담맛집 추가"></textarea>'+
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button class="btn fb" onclick="submitReq(\''+esc(key)+'\',\''+esc(chLabel)+'\')">✏️ 수정요청 등록</button>'+
+    '<span class="muted">등록을 누르면 깃허브 창이 열립니다 — 초록색 “Submit new issue” 버튼만 누르면 접수 완료. 처리 상태는 이 게시판에 자동 표시됩니다.</span></div></div></div>';
+  return h;
+}
+// ── 지침(브랜드 노트 + 채널 가이드) — AI 상시 학습 입력 창구 ──
+const BRAND_FIELDS=[
+  {k:'분석', f:'analysis', label:'🔍 브랜드 분석', ph:'우리 브랜드는 어떤 브랜드인지, 강점·차별점·고객이 우리를 찾는 이유를 적어주세요.'},
+  {k:'방향성', f:'direction', label:'🧭 방향성 의견', ph:'앞으로 콘텐츠가 가야 할 방향, 밀고 싶은 메시지, 하지 말아야 할 것을 적어주세요.'},
+  {k:'감도', f:'sensibility', label:'🎨 콘텐츠 감도', ph:'원하는 톤·비주얼 무드를 적어주세요. 예) 과장 없이 차분하게, 사진은 웜톤, 이모지 최소화'}
+];
+function guideNote(){
+  return '<div class="muted" style="margin:2px 0 14px">여기 적은 내용은 자동으로 반영됩니다 — 등록 → 깃허브 창에서 제출 → 몇 분 내 시스템에 저장되어 <b>다음 콘텐츠 생성부터 프롬프트·소재 선정에 적용</b>됩니다. (이슈가 자동으로 닫히면 반영 완료)</div>';
+}
+function submitGuidance(title, bodyPrefix, taId){
+  const ta=document.getElementById(taId);
+  const txt=(ta&&ta.value.trim())||'';
+  if(!txt){ alert('내용을 먼저 적어주세요.'); return; }
+  window.open(issue(title, bodyPrefix+txt), '_blank');
+  if(ta) ta.value='';
+}
+function guideView(client){
+  let h='<div class="sect-h"><h2>🧭 지침 — AI가 상시 학습하는 브랜드 노트·채널 가이드</h2></div>'+guideNote();
+  // 브랜드 노트 3종
+  h+='<div class="panel" style="border-color:#c9d8f0;background:#f8fbff"><h3>🏷 브랜드 노트</h3>';
+  const bb=client.brandBrief||{};
+  for(const bf of BRAND_FIELDS){
+    const cur=bb[bf.f];
+    h+='<div style="margin:14px 0 4px;font-weight:700;font-size:13.5px">'+bf.label+'</div>'+
+       pendBox(guidPending('brand',bf.k))+
+       (cur?'<div class="capbox" style="margin-bottom:8px"><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(cur)+'</div></div>'
+           :'<div class="muted" style="margin-bottom:8px">아직 등록된 내용이 없습니다.</div>')+
+       '<textarea id="bb-'+bf.f+'" class="reqta" rows="3" placeholder="'+esc(bf.ph)+'"></textarea>'+
+       '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\'[브랜드노트·'+bf.k+'] '+esc(client.name)+'\',\'\',\'bb-'+bf.f+'\')">✏️ '+bf.k+' 업데이트</button></div>';
+  }
+  if(bb.updatedAt){ h+='<div class="muted" style="margin-top:10px">마지막 갱신: '+ftime(bb.updatedAt)+'</div>'; }
+  if(bb.log&&bb.log.length){
+    h+='<div class="muted" style="margin-top:8px">최근 이력</div><table style="margin-top:4px"><tr><th style="width:130px">일시</th><th style="width:70px">항목</th><th>내용</th></tr>'+
+      bb.log.slice(0,5).map(l=>'<tr><td class="muted">'+ftime(l.at)+'</td><td>'+esc(l.field)+'</td><td class="muted">'+esc(l.excerpt)+'…</td></tr>').join('')+'</table>';
+  }
+  h+='</div>';
+  // 디자인 피드백 — 사람 지시는 AI 학습 메모와 분리 보관되며 항상 최우선 반영
+  const hn=(client.designStyle||{}).humanNotes||[];
+  h+='<div class="panel" style="border-color:#e3cdf0;background:#fdfaff"><h3>🎨 디자인 피드백</h3>'+
+     '<div class="muted" style="margin:4px 0 10px">카드·릴스의 색감, 레이아웃, 톤에 대한 지시를 적어주세요. 여기 등록된 지시는 AI가 스스로 쌓는 학습 메모보다 <b>항상 우선</b> 반영되고, AI가 지우거나 덮어쓰지 못합니다. 한 줄에 하나씩 적으면 각각 별도 지시로 저장됩니다.</div>';
+  h+=pendBox(guidPending('design'));
+  if(hn.length){
+    h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">현재 등록된 지시 ('+hn.length+')</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+hn.map(n=>'· '+esc(n)).join('\n')+'</div></div>';
+  } else {
+    h+='<div class="muted" style="margin-bottom:8px">아직 등록된 디자인 지시가 없습니다.</div>';
+  }
+  h+='<textarea id="design-fb" class="reqta" rows="3" placeholder="예) 오렌지 액센트를 더 절제되게 / 첫 장 헤드라인을 더 크게 / 배경 사진은 인물보다 공간 위주로"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\'[디자인피드백] '+esc(client.name)+'\',\'\',\'design-fb\')">🎨 디자인 지시 등록</button></div></div>';
+  // 🔗 레퍼런스 링크 학습 현황 — 전 채널 요약 (등록은 각 채널 탭에서)
+  const rls=refLinksFor(client, null);
+  h+='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크 학습 현황</h3><span class="muted">'+
+     (rls.length?('등록 '+rls.length+'건 · 학습대기 '+rls.filter(l=>l.status==='pending').length+'건'):'각 채널 탭에서 벤치마크 링크를 등록하세요')+'</span></div>'+
+     '<div class="muted" style="margin:0 0 8px">채널 탭의 <b>🔗 레퍼런스 링크</b> 패널에서 링크를 등록하면, 다음 기획 전에 AI가 직접 열람·학습해 디자인·기획에 반영하고 이곳에 결과를 남깁니다.</div>';
+  if(rls.length){
+    h+='<table><tr><th style="width:110px">채널</th><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th><th style="width:44px"></th></tr>'+
+      rls.slice(-15).reverse().map(l=>{const cd=DATA.channels.find(x=>x.key===l.channel)||{label:l.channel,icon:''};
+        return '<tr><td>'+cd.icon+' '+esc(cd.label)+'</td><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+          '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td>'+
+          '<td><button class="btn" style="padding:4px 8px;font-size:12px" title="이 레퍼런스 삭제 — 이후 학습에서 제외" onclick="delRef(\''+esc(l.channel)+'\',\''+esc(l.url)+'\')">🗑</button></td></tr>';}).join('')+'</table>';
+  }
+  h+='</div>';
+  // 채널별 가이드
+  h+='<div class="sect-h"><h2>📚 채널별 콘텐츠 주제·핵심 가이드</h2></div>'+guideNote();
+  const guides=client.channelGuides||{};
+  for(const chDef of DATA.channels){
+    const g=guides[chDef.key];
+    h+='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>'+chDef.icon+' '+esc(chDef.label)+'</h3>'+(g&&g.updatedAt?'<span class="muted">갱신 '+ftime(g.updatedAt)+'</span>':'<span class="muted">미설정</span>')+'</div>';
+    h+=pendBox(guidPending('guide',chDef.key));
+    if(g&&(g.topics||[]).length){ h+='<div style="margin-bottom:6px">'+(g.topics||[]).map(t=>'<span class="tag" style="background:#e7effc;border-color:#c4d6f4;color:#2b5fd0">#'+esc(t)+'</span>').join('')+'</div>'; }
+    if(g&&g.guide){ h+='<div class="capbox" style="margin-bottom:8px"><div class="caphd">핵심 가이드</div><div class="mcap" style="font-size:13.5px;white-space:pre-wrap">'+esc(g.guide)+'</div></div>'; }
+    h+='<textarea id="cg-'+chDef.key+'" class="reqta" rows="4" placeholder="첫 줄에 \'주제: 소재1, 소재2, 소재3\' 형식으로 우선 소재를, 그 아래에 이 채널의 규칙·톤·금지사항 등 핵심 가이드를 적어주세요."></textarea>'+
+       '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\'[가이드·'+chDef.key+'] '+esc(client.name)+'\',\'\',\'cg-'+chDef.key+'\')">✏️ '+esc(chDef.label)+' 가이드 업데이트</button></div></div>';
+  }
+  return h;
+}
+// 📊 콘텐츠 리포트 — 채널 발행 콘텐츠의 KPI·추세 + 콘텐츠별 실측 성과 표 (기간 반영)
+function contentReportPanel(client, c, chLabel){
+  const pubF=c.published.filter(p=>inPeriod(p.time));
+  // isDoneLive — 발행완료 신고(이슈·로컬)만 접수돼도 발행됨으로 분류 (데이터 반영 전 실시간 이동)
+  const planPubF=c.pending.filter(it=>isDoneLive(it)&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>!isDoneLive(it));
+  const mAll=pubF.map(p=>({t:p.time,v:p.views,l:p.likes,e:p.engagementRate}))
+    .concat(planPubF.map(it=>{const m=it.metrics||{};return {t:it.publishedAt||it.scheduledFor,v:m.views||0,l:m.likes||0,e:m.engagementRate||0};}));
+  const avgF=mAll.length?mAll.reduce((a,x)=>a+x.e,0)/mAll.length:0;
+  let h='<div class="panel" style="border-color:#c8e0d0;background:#f8fcf9"><div class="sect-h" style="margin:0 0 10px"><h3>📊 콘텐츠 리포트 · '+esc(chLabel)+'</h3><span class="muted">'+periodLabel()+' · 실측 집계</span></div>';
+  h+='<div class="kpis">'+
+    kpi(mAll.length,'발행됨'+(period.key!=='all'?' (기간)':''))+
+    kpi(waiting.length,'발행 대기')+
+    kpi(pct(avgF)+' '+tIcon(c.stats.trend),'평균 참여율',true)+
+    kpi(mAll.reduce((a,x)=>a+x.v,0),'누적 조회')+
+    kpi(mAll.reduce((a,x)=>a+x.l,0),'누적 좋아요')+'</div>';
+  const seriesF=mAll.slice().sort((a,b)=>String(a.t||'').localeCompare(String(b.t||''))).map(x=>x.e*100);
+  if(seriesF.length>1){h+='<div style="margin-top:10px"><div class="muted" style="font-size:12px;margin-bottom:4px">반응도 추세 (참여율 %)</div>'+sparkline(seriesF.slice(-12))+'</div>';}
+  // 콘텐츠별 성과 — 기획 발행분(성과+인사이트) + 사이클 발행분
+  const rows=planPubF.slice().sort((a,b)=>String(b.publishedAt||'').localeCompare(String(a.publishedAt||''))).map(it=>{const m=it.metrics||{};
+    return '<tr><td><b>'+esc(plainHead(it))+'</b><div class="muted">'+ftime(it.publishedAt||it.scheduledFor)+(it.variant?' · '+esc(it.variant)+'안':'')+'</div>'+
+      (it.insightComment?'<div style="color:#15803d;font-size:12px;margin-top:4px">💬 '+esc(it.insightComment)+'</div>':'')+'</td>'+
+      '<td>'+(m.views||0)+'</td><td>'+(m.likes||0)+'</td><td>'+(m.comments||0)+'</td><td>'+pct(m.engagementRate||0)+'</td>'+
+      '<td>'+(it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank">열기↗</a>':'')+'</td></tr>';
+  }).concat(pubF.map(p=>'<tr><td><b>'+esc(p.topic)+'</b><div class="muted">'+ftime(p.time)+'</div></td>'+
+    '<td>'+(p.views||0)+'</td><td>'+(p.likes||0)+'</td><td><span class="muted">—</span></td><td>'+pct(p.engagementRate||0)+'</td><td></td></tr>'));
+  h+= rows.length
+    ? '<table style="margin-top:10px"><tr><th>콘텐츠 / 인사이트</th><th>조회</th><th>좋아요</th><th>댓글</th><th>참여율</th><th></th></tr>'+rows.join('')+'</table>'
+    : '<div class="empty" style="padding:10px;margin-top:8px">아직 발행된 콘텐츠가 없습니다 — 첫 발행부터 콘텐츠별 조회·좋아요·댓글·참여율이 여기에 쌓입니다. (성과는 실측만 표시)</div>';
+  h+='</div>';
+  return h;
+}
+// 🔗 레퍼런스 링크 — 채널별 벤치마크 링크 등록(인박스). 등록=적재, 학습은 다음 기획 세션에서.
+function refBadge(st){
+  return st==='learned'?'<span class="badge b-ok">학습완료</span>'
+       : st==='failed'?'<span class="badge b-hold">열람실패</span>'
+       : st==='received'?'<span class="badge b-plan">접수됨</span>'
+       : '<span class="badge b-wait">학습대기</span>';
+}
+function refShort(u){ return esc(String(u).replace(/^https?:\/\/(www\.)?/,'').slice(0,52)); }
+function referencePanel(client, key){
+  const all=refLinksFor(client, key);
+  const pend=all.filter(l=>l.status==='pending'||l.status==='received').length;
+  let h='<div class="panel" style="border-color:#f0e2c8;background:#fffdf7"><div class="sect-h" style="margin:0 0 8px"><h3>🔗 레퍼런스 링크</h3><span class="muted">'+
+    (all.length?('등록 '+all.length+'건 · 학습대기 '+pend+'건'):'벤치마크할 게시물 링크를 등록하세요')+'</span></div>'+
+    '<div class="muted" style="margin:0 0 8px">한 줄에 링크 1개. 링크 뒤에 한 칸 띄고 메모를 붙이면 그 의도까지 학습에 반영됩니다. 등록된 링크는 <b>다음 기획 전에 AI가 직접 열람·학습</b>해 디자인·기획에 반영하고, 학습 결과가 여기에 표시됩니다.</div>';
+  if(all.length){
+    h+='<table style="margin-bottom:8px"><tr><th>링크 / 메모</th><th style="width:86px">상태</th><th>학습 요약</th><th style="width:44px"></th></tr>'+
+      all.slice(-8).reverse().map(l=>'<tr><td><a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+refShort(l.url)+'↗</a>'+(l.note?'<div class="muted" style="font-size:11.5px">'+esc(l.note)+'</div>':'')+'</td>'+
+        '<td>'+refBadge(l.status)+'</td><td class="muted" style="font-size:12px">'+esc(l.summary||'')+'</td>'+
+        '<td><button class="btn" style="padding:4px 8px;font-size:12px" title="이 레퍼런스 삭제 — 이후 학습에서 제외" onclick="delRef(\''+esc(l.channel)+'\',\''+esc(l.url)+'\')">🗑</button></td></tr>').join('')+'</table>';
+  }
+  h+='<textarea id="rl-'+key+'" class="reqta" rows="2" placeholder="https://... (한 줄에 하나씩)"></textarea>'+
+     '<div style="margin-top:6px"><button class="btn fb" onclick="submitGuidance(\'[레퍼런스·'+key+'] '+esc(client.name)+'\',\'\',\'rl-'+key+'\')">🔗 레퍼런스 등록</button></div></div>';
+  return h;
+}
+// 레퍼런스 삭제 — [레퍼런스삭제·채널] 이슈로 접수하면 CI 가 removed 처리해 학습에서 제외한다.
+// 화면에서는 즉시 사라진다(로컬 낙관 반영) — 다른 브라우저도 이슈 직독으로 몇 초 내 동기화.
+function delRef(ch,url){
+  if(!confirm('이 레퍼런스를 삭제할까요?\n\n삭제하면 이후 디자인·기획 학습에서 이 링크를 참고하지 않습니다.\n(등록 창이 열리면 초록색 Submit new issue 버튼만 누르면 됩니다)')) return;
+  const c=DATA.clients[ci];
+  const t='[레퍼런스삭제·'+ch+'] '+c.name;
+  const b='업체: '+c.id+
+    '\n채널: '+ch+
+    '\n삭제 링크:'+
+    '\n'+url+
+    '\n\n아래 초록색 Submit new issue 버튼만 누르면 삭제가 접수됩니다.'+
+    '\n— 대시보드 레퍼런스 패널에서 작성됨';
+  lsAdd('psRefDel',refKey(ch,url));
+  window.open(issue(t,b),'_blank');
+  renderView();
+}
+function submitReq(key, chLabel){
+  const ta=document.getElementById('reqtext-'+key);
+  const txt=(ta&&ta.value.trim())||'';
+  if(!txt){ alert('요청 내용을 먼저 적어주세요.'); return; }
+  const planSel=document.getElementById('reqplan-'+key);
+  const typeSel=document.getElementById('reqtype-'+key);
+  const planId=planSel?planSel.value:'';
+  const planLabel=planSel&&planSel.selectedIndex>=0?planSel.options[planSel.selectedIndex].text:'';
+  const rtype=typeSel?typeSel.value:'기타';
+  const first=txt.split('\n')[0].slice(0,42);
+  const title='[수정요청·'+key+'] ['+rtype.split('(')[0]+'] '+first;
+  const body='업체: '+DATA.clients[ci].id+
+    '\n채널: '+chLabel+
+    '\n대상 콘텐츠: '+(planId?planLabel+' (id: '+planId+')':'채널 공통')+
+    '\n수정 항목: '+rtype+
+    '\n\n[요청 내용]\n'+txt+'\n\n— 대시보드 수정요청 게시판에서 작성됨';
+  window.open(issue(title,body),'_blank');
+  if(ta) ta.value='';
+}
+// 카드 이미지 캐시버스팅 — 기획안 갱신 시에만 새로 받게 버전 쿼리 부여
+const VER = (((DATA.clients[0]||{}).planUpdatedAt)||DATA.generatedAt||'').replace(/\D/g,'').slice(0,14);
+const imgv = s => !s ? s : (s + (s.indexOf('?')<0?'?':'&') + 'v=' + VER);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const ftime = s => !s?'-':String(s).replace('T',' ').slice(0,16);
+const pct = v => (v*100).toFixed(1)+'%';
+const tIcon = t => ({up:'📈',down:'📉','n/a':'·'}[t]||'·');
+function issue(title, body){
+  return 'https://github.com/'+REPO+'/issues/new?labels=feedback&title='+encodeURIComponent(title)+'&body='+encodeURIComponent(body);
+}
+function sparkline(arr){
+  if(!arr||arr.length<2) return '';
+  const w=160,h=34,mx=Math.max(...arr,1),mn=Math.min(...arr,0);
+  const dx=w/(arr.length-1);
+  const pts=arr.map((v,i)=>[i*dx,h-((v-mn)/(mx-mn||1))*(h-6)-3]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  return '<svg class="spark" width="'+w+'" height="'+h+'"><path d="'+d+'" fill="none" stroke="#2b6fff" stroke-width="2"/></svg>';
+}
+function publishedCard(p, badge){
+  const img=p.imageUrl?'<img class="thumb" src="'+esc(p.imageUrl)+'" loading="lazy" alt=""/>':'<div class="thumb noimg">이미지 없음</div>';
+  const link=p.url?'<a href="'+esc(p.url)+'" target="_blank">열기 ↗</a>':'';
+  return '<div class="card">'+img+'<div class="cbody"><div class="ctop"><strong>'+esc(p.topic)+'</strong>'+badge+'</div>'+
+    '<div class="muted">'+ftime(p.time)+'</div>'+
+    '<div class="cap">'+esc(p.caption||'')+'</div>'+
+    '<div class="met"><span>👁 '+p.views+'</span><span>❤ '+p.likes+'</span><span>💬 '+p.comments+'</span><span>'+pct(p.engagementRate)+'</span></div>'+
+    '<div>'+link+'</div></div></div>';
+}
+function plainHead(it){ return it.headline?it.headline.replace(/<br>/g,' ').replace(/\*/g,''):it.topic; }
+function vBadge(v){ return v?'<span class="badge b-var v-'+esc(v)+'">디자인 '+esc(v)+'</span>':''; }
+function slideCount(it){ return (it.slideImages&&it.slideImages.length)||1; }
+function planCard(client, chLabel, it){
+  const img=it.cardImage?'<img class="thumb" src="'+esc(imgv(it.cardImage))+'" loading="lazy" alt=""/>':'<div class="thumb noimg">카드 준비중</div>';
+  const head=esc(plainHead(it));
+  const n=slideCount(it);
+  const carBadge=n>1?'<span class="badge b-car">📑 '+n+'장</span>':'';
+  const pub=it.status==='published';
+  const manual=it.status==='manual';
+  // 발행 완료 신고가 접수됐지만 데이터 반영 전 — 화면은 먼저 발행됨으로 취급한다(낙관 반영)
+  const liveDone=!pub&&isDoneLive(it);
+  // 발행 게이트 — 미처리 수정요청이 걸려 있으면 자동 발행이 보류됨을 카드에 표시
+  const held=!pub&&!liveDone&&openHolds(it).length>0;
+  const stBadge=pub?'<span class="badge b-ok">발행됨</span>'
+    :liveDone?'<span class="badge b-ok">발행됨 · 반영중</span>'
+    :held?'<span class="badge b-hold">⛔ 발행 보류 · 수정 반영 대기</span>'
+    :manual?'<span class="badge b-wait">수동발행</span>':'<span class="badge b-plan">예정</span>';
+  const right=pub&&it.publishedUrl?'<a href="'+esc(it.publishedUrl)+'" target="_blank" onclick="event.stopPropagation()">열기 ↗</a>':'<span class="muted">클릭하면 전체보기 →</span>';
+  const m=it.metrics;
+  const metLine=(pub&&m)?'<div class="met" style="margin-top:0"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>'+pct(m.engagementRate||0)+'</span></div>':'';
+  // 수동 채널(네이버)은 시스템이 발행 성공을 알 수 없다 — 운영자가 카드에서 직접 신고한다.
+  // [발행완료·naver-blog] 이슈 → guidance-sync 가 plan·원장에 기록 → "발행된 콘텐츠"로 이동.
+  const doneBtn=(manual&&!liveDone&&(it.channels||[])[0]==='naver-blog')
+    ?'<div style="margin-top:8px"><button class="btn fb" style="width:100%;background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="event.stopPropagation();donePublish(\''+esc(it.id)+'\')">✅ 블로그 발행완료</button></div>':'';
+  return '<div class="card clk" onclick="openDetail(\''+esc(it.id)+'\')">'+
+    '<div class="thumbwrap">'+img+carBadge+'</div>'+
+    '<div class="cbody"><div class="ctop"><strong>'+head+'</strong>'+stBadge+'</div>'+
+    '<div class="muted">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+'</div>'+
+    (it.captionNote?'<div class="cap">'+esc(it.captionNote)+'</div>':'')+
+    metLine+
+    '<div class="met" style="justify-content:space-between;align-items:center">'+vBadge(it.variant)+right+'</div>'+doneBtn+'</div></div>';
+}
+// 발행 완료 신고 — 수동 채널(네이버) 전용. 깃허브 이슈([발행완료·채널] + id 규약)를 열어
+// guidance-sync 가 plan 상태·발행 원장에 기록하게 한다. 백엔드 없이 도는 유일한 쓰기 경로가
+// 이슈이므로 수정요청·레퍼런스와 같은 패턴을 쓴다.
+function donePublish(id){
+  const c=DATA.clients[ci];
+  const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
+  const ch=(it.channels||[])[0]||'naver-blog';
+  if(!confirm('네이버 블로그에 이 글을 올리셨나요?\n\n확인을 누르면 발행완료 등록 창(깃허브 이슈)이 열립니다.\n이 카드는 바로 "발행된 콘텐츠"로 내려갑니다.')) return;
+  const t='[발행완료·'+ch+'] '+plainHead(it).slice(0,42);
+  const b='업체: '+c.id+
+    '\n채널: '+ch+
+    '\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
+    '\n발행 주소: (선택) 발행한 글 URL 을 이 줄 끝에 붙여넣어 주세요'+
+    '\n\n아래 초록색 Submit new issue 버튼만 누르면 등록됩니다.'+
+    '\n— 대시보드 블로그 발행완료 버튼에서 작성됨';
+  // 낙관 반영 — 이슈 처리(CI)를 기다리지 않고 이 브라우저에서는 즉시 발행됨으로 이동
+  lsAdd('psDone',it.id);
+  window.open(issue(t,b),'_blank');
+  closeModal();
+  renderView();
+}
+function openDetail(id){
+  const c=DATA.clients[ci];
+  const it=(c.planCards||[]).find(x=>x.id===id); if(!it) return;
+  // 게이트 규약으로 등록 — [수정요청·채널] 제목 + 본문 (id: …) → 처리완료 전까지 이 콘텐츠 발행 보류
+  const dKey=(it.channels||[])[0]||'instagram';
+  const t='[수정요청·'+dKey+'] [콘텐츠] '+plainHead(it).slice(0,42);
+  const b='업체: '+c.id+
+    '\n채널: '+dKey+
+    '\n대상 콘텐츠: '+plainHead(it)+' (id: '+it.id+')'+
+    '\n수정 항목: 콘텐츠 상세'+
+    '\n예정: '+ftime(it.scheduledFor)+' · 디자인: '+(it.variant||'')+
+    '\n\n[요청 내용]\n\n— 대시보드 콘텐츠 상세에서 작성됨';
+  const imgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const chDef=DATA.channels.find(x=>x.key===((it.channels||[])[0]))||{icon:'📸',label:'인스타그램',key:'instagram'};
+  const isCarousel=imgs.length>1;
+  const capLabel=chDef.key==='naver-blog'?'📝 블로그 본문':chDef.key==='youtube'?'🎬 쇼츠 대본':chDef.key==='threads'?'🧵 스레드 타래':'📝 발행 캡션';
+  const slides=imgs.map((s,i)=>'<div class="slide"><img src="'+esc(imgv(s))+'" alt=""/><span class="snum">'+(i+1)+' / '+imgs.length+'</span></div>').join('');
+  const cap=fmtCaption(it.captionBody||it.captionNote||'');
+  const isReels=chDef.key==='instagram'&&it.reelsScript;
+  const reelsVideo=(chDef.key==='instagram'&&it.videoFile)?'<div style="margin:6px 0 14px"><video src="'+esc(it.videoFile)+'" controls playsinline style="max-height:430px;max-width:100%;border-radius:14px;border:1px solid #e4e8f0;background:#000"></video><div style="margin-top:8px"><a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 릴스 영상 다운로드</a></div></div>':'';
+  const reelsBox=isReels?'<div class="capbox" style="margin-top:12px"><div class="caphd">🎬 릴스 대본 (영상 자막 구성)</div><div class="mcap">'+fmtCaption(it.reelsScript)+'</div></div>':'';
+  const m=it.metrics;
+  const perf=(it.status==='published'&&m)?'<div class="capbox" style="margin-bottom:12px;border-color:#c9d8f0"><div class="caphd">📊 성과 데이터</div>'+
+    '<div class="met" style="font-size:13px"><span>👁 '+(m.views||0)+'</span><span>❤ '+(m.likes||0)+'</span><span>💬 '+(m.comments||0)+'</span><span>참여율 '+pct(m.engagementRate||0)+'</span></div>'+
+    (it.insightComment?'<div style="color:#15803d;font-size:14px;margin-top:8px;line-height:1.6">💬 '+esc(it.insightComment)+'</div>':'')+'</div>':'';
+  document.getElementById('mbody').innerHTML=
+    '<div class="kick">'+esc(it.kicker||'')+' · 디자인 '+esc(it.variant||'')+(isCarousel?' · 📑 캐러셀 '+imgs.length+'장':'')+(isReels?' · 🎬 릴스':'')+'</div>'+
+    '<h2 style="margin:2px 0 4px">'+esc(plainHead(it))+'</h2>'+
+    '<div class="muted" style="margin-bottom:14px">🗓 '+ftime(it.scheduledFor)+(it.dayLabel?' · '+esc(it.dayLabel):'')+' · '+chDef.icon+' '+esc(chDef.label)+' · <span class="badge b-plan">발행 대기</span></div>'+
+    '<div class="carou">'+slides+'</div>'+
+    (isCarousel?'<div class="muted" style="margin:6px 0 14px">← 좌우로 넘겨 보세요 ('+imgs.length+'장)</div>':'<div style="height:8px"></div>')+
+    reelsVideo+
+    perf+
+    // 네이버는 본문 미리보기 자체를 **최종 서식 그대로** 그린다. 따로 미리보기와 드래그
+    // 영역을 두면 어느 쪽을 끌어야 하는지 헷갈리고, 잘못 끌면 대시보드 서식이 딸려간다.
+    (chDef.key==='naver-blog'
+      ? naverDragBox(it)
+      : '<div class="capbox"><div class="caphd">'+capLabel+'</div><div class="mcap">'+cap+'</div></div>')+
+    reelsBox+
+    manualHelper(it,chDef)+
+    '<div style="margin-top:16px;display:flex;gap:8px"><a class="btn fb" href="'+issue(t,b)+'" target="_blank">✏️ 수정요청</a><button class="btn" onclick="closeModal()">닫기</button></div>';
+  document.getElementById('modal').classList.add('on');
+  const car=document.querySelector('.carou'); if(car) car.scrollLeft=0;
+}
+function closeModal(){ document.getElementById('modal').classList.remove('on'); }
+// 수동 채널(네이버 블로그·유튜브) 발행 도우미 — 본문 복사 + 이미지 다운로드
+function manualHelper(it, chDef){
+  if(chDef.key!=='naver-blog' && chDef.key!=='youtube') return '';
+  const isNaver=chDef.key==='naver-blog';
+  // 네이버: 본문에 실제로 들어가는 이미지(마커 [📷 이미지N]과 1:1)를 받게 한다. 유튜브: 커버 썸네일.
+  const bodyImgs=String(it.captionBody||'').split('\n').map(function(l){var m=l.trim().match(/^!\[[^\]]*\]\(([^)]+)\)$/);return m?m[1]:null;}).filter(Boolean);
+  const coverImgs=(it.slideImages&&it.slideImages.length)?it.slideImages:(it.cardImage?[it.cardImage]:[]);
+  const figImgs=(isNaver&&bodyImgs.length)?bodyImgs:coverImgs;
+  const dls=figImgs.map((s,i)=>'<a class="btn" href="'+esc(imgv(s))+'" download="'+esc(it.id+'-img'+(i+1)+'.png')+'">⬇ 이미지'+(i+1)+'</a>').join('')
+    +(isNaver?'<a class="btn" href="'+esc(imgv('blog/'+it.id+'/cover.png'))+'" download="'+esc(it.id+'-대표이미지.png')+'" style="background:#e7effc;border-color:#b4cdf0;color:#2b5aa0">⬇ 대표이미지(가로)</a>':'');
+  const isYt=chDef.key==='youtube';
+  const hasVideo=isYt&&it.videoFile;
+  const guide=isYt
+    ? '쇼츠 영상을 다운로드해 업로드하고, 아래 SEO 제목·설명·태그를 그대로 복사해 넣으세요. (음악은 업로드 시 유튜브 무료 음악으로 추가)'
+    : '① “제목만 복사” → 네이버 제목칸에 (본문에는 제목이 빠져 있습니다). ② <b>위 본문을 드래그해 Ctrl+C</b> → 글쓰기 창에 붙여넣기. 소제목 크기·색이 그대로 따라옵니다. (“전체 선택” 버튼을 쓰면 드래그 없이 Ctrl+C 만 눌러도 됩니다. 아래 “본문 전체 복사” 버튼도 같은 결과지만 브라우저에 따라 막힐 수 있어 드래그를 권합니다.) ③ 본문 속 “📷 이미지N 자리” 줄을 지우고 그 자리에 이미지N을 삽입. ④ “대표이미지(가로)”를 네이버 대표사진으로 지정(16:9라 잘림·글자겹침 없음). ⑤ 업로드를 마쳤으면 <b>“✅ 블로그 발행완료”</b>를 눌러 등록하세요 — 이 카드가 바로 “발행된 콘텐츠”로 내려갑니다. ※ 네이버는 외부 이미지가 붙여넣기로 안 따라와 직접 삽입해야 합니다.';
+  const videoBtn=hasVideo?'<a class="btn fb" href="'+esc(it.videoFile)+'" download="'+esc(it.id+'.mp4')+'" style="background:#fbeaf6;border-color:#e0b0d0;color:#a83a8a">🎬 쇼츠 영상 다운로드</a>':'';
+  // 유튜브: SEO 업로드 패키지 (제목/설명/태그) 미리보기 + 개별 복사
+  const ytPack=isYt&&(it.ytTitle||it.ytDescription)?(
+    '<div style="margin-top:10px;border-top:1px solid #e4e8f0;padding-top:10px">'+
+    (it.ytTitle?'<div class="muted" style="font-size:11px">제목</div><div class="mcap" style="font-size:13px;margin-bottom:8px">'+esc(it.ytTitle)+'</div>':'')+
+    (it.ytDescription?'<div class="muted" style="font-size:11px">설명(멘션)</div><div class="mcap" style="font-size:12px;white-space:pre-wrap;max-height:9em;overflow:auto;background:#f7f9fc;border:1px solid #e4e8f0;border-radius:8px;padding:8px;margin-bottom:8px">'+esc(it.ytDescription)+'</div>':'')+
+    (it.ytTags&&it.ytTags.length?'<div class="muted" style="font-size:11px">태그</div><div style="margin-bottom:4px">'+it.ytTags.map(function(t){return '<span class="tag">'+esc(t)+'</span>';}).join('')+'</div>':'')+
+    '</div>'):'';
+  const ytBtns=isYt?(
+    (it.ytTitle?'<button class="btn" id="yttitle-'+esc(it.id)+'" onclick="copyField(\''+esc(it.id)+'\',\'ytTitle\',this.id)">🏷 제목 복사</button>':'')+
+    (it.ytDescription?'<button class="btn fb" id="ytdesc-'+esc(it.id)+'" onclick="copyField(\''+esc(it.id)+'\',\'ytDescription\',this.id)">📝 설명(멘션) 복사</button>':'')+
+    (it.ytTags&&it.ytTags.length?'<button class="btn" id="yttags-'+esc(it.id)+'" onclick="copyTags(\''+esc(it.id)+'\',this.id)"># 태그 복사</button>':'')
+  ):'';
+  return '<div class="capbox" style="margin-top:12px;border-color:#d8e4bc;background:#f8fbee">'+
+    '<div class="caphd">📋 수동 발행 도우미 ('+esc(chDef.label)+')</div>'+
+    '<div class="muted" style="margin-bottom:10px">'+guide+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+    videoBtn+ytBtns+
+    (isYt?'<button class="btn" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\''+esc(it.id)+'\')">🎬 대본 복사</button>':'<button class="btn fb" id="copybtn-'+esc(it.id)+'" onclick="copyPost(\''+esc(it.id)+'\')">📋 본문 전체 복사</button>')+
+    (chDef.key==='naver-blog'?'<button class="btn" id="titlebtn-'+esc(it.id)+'" onclick="copyTitle(\''+esc(it.id)+'\')">🏷 제목만 복사</button>':'')+
+    dls+
+    (isNaver&&!isDoneLive(it)?'<button class="btn fb" style="background:#e4f7ea;border-color:#a7d9b5;color:#15803d" onclick="donePublish(\''+esc(it.id)+'\')">✅ 블로그 발행완료</button>':'')+
+    '</div>'+ytPack+'</div>';
+}
+// 네이버 붙여넣기용 평문(마크다운 기호 제거, 이미지 위치는 마커로)
+// 제목(# 줄)은 뺀다 — 네이버 제목칸에 따로 넣으므로 본문에 또 들어가면 중복이다.
+function plainPostText(it){
+  let n=0;
+  return String(it.captionBody||'').split('\n').map(line=>{
+    const t=line.trim();
+    const img=t.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if(img){ n++; return '\n[📷 이미지'+n+' 삽입]\n'; }
+    if(t.startsWith('## ')) return '\n■ '+t.slice(3);
+    if(t.startsWith('# ')) return '';
+    if(t==='>'||t.startsWith('> ')) return t.replace(/^>\s?/,'');
+    return line.replace(/\*\*([^*]+)\*\*/g,'$1');
+  }).join('\n').replace(/\n{3,}/g,'\n\n').trim();
+}
+/* ── 네이버 스마트에디터 붙여넣기용 서식 HTML ──────────────────────────────
+   문제: 평문만 복사하면 붙여넣은 글이 커서 위치의 서식을 물려받고, 대시보드 화면을
+   드래그해 복사하면 대시보드 CSS(회색 13px)가 딸려 들어가 색·크기가 뒤죽박죽이 된다.
+   해결: 모든 요소에 color/font-size/font-family/line-height 를 **인라인으로 못 박는다**.
+   상속될 여지를 남기지 않으면 붙여넣기 경로가 무엇이든 결과가 같다.
+
+   ⚠️ **드래그 복사가 주 경로다.** 버튼 복사(ClipboardItem)는 브라우저·앱에 따라 막히지만
+   드래그는 어디서나 된다. 그래서 이 HTML 은 "붙여넣기용 데이터"이자 동시에 **화면에 그려
+   운영자가 직접 끌 대상**이다. 둘을 같은 함수로 만들어야 보이는 것과 붙는 것이 어긋나지 않는다.
+
+   맥락 구분은 크게 준다 — 소제목 29px/900, 본문 18px, 소제목 앞 여백 64px.
+   본문에서 눈으로 훑을 때도, 네이버에 붙였을 때도 목차 경계가 바로 보여야 한다. */
+var NV_FONT="'나눔고딕',NanumGothic,'맑은 고딕','Malgun Gothic',AppleSDGothicNeo-Regular,sans-serif";
+/* 레퍼런스(sively_s2)는 본문을 **중앙 정렬**하고 **한 문장 = 한 줄**로 끊는다.
+   모바일에서 읽기 리듬이 생기고, 네이버 본문 폭에서 줄이 어색하게 넘어가지 않는다.
+   그래서 문단을 마침표 기준으로 쪼개 각 문장을 제 줄에 올린다. */
+function nvSentences(line){
+  // 마침표·물음표·느낌표 뒤에서 끊되, 숫자 소수점(16.5)·말줄임(…)은 건드리지 않는다.
+  return String(line).split(/(?<=[.?!])\s+(?=[^\s])/).filter(x=>x.trim());
+}
+function nvP(inner){ return '<p style="margin:0 0 14px;padding:0;font-family:'+NV_FONT+';font-size:18px;line-height:1.85;color:#1f1f1f;letter-spacing:-0.01em;text-align:center">'+inner+'</p>'; }
+function nvInline(x){
+  return esc(x).replace(/\*\*([^*]+)\*\*/g,'<strong style="font-weight:700;color:#1657c8">$1</strong>');
+}
+/* forScreen: 화면에 그릴 때만 이미지 자리에 실제 사진을 **배경으로** 깐다.
+   배경 이미지는 선택 영역에 포함되지 않아 붙여넣기에는 안 따라간다 —
+   운영자는 어떤 사진이 어디 들어가는지 보면서 끌 수 있고, 네이버에는 자리 표시 문구만 간다.
+   (네이버는 외부 이미지를 붙여넣기로 안 받으므로 <img> 를 넣어봐야 사라진다.) */
+function naverBodyHtml(it,forScreen){
+  let n=0;
+  const out=String(it.captionBody||'').split('\n').map(line=>{
+    const t=line.trim();
+    const img=t.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if(img){ n++;
+      const bg=forScreen
+        ? 'background-image:url('+esc(imgv(img[2]))+');background-size:cover;background-position:center;min-height:190px;'
+        : '';
+      return '<p style="margin:30px 0;padding:16px 12px;border:2px dashed #b9c6da;border-radius:10px;background-color:#f4f7fc;'+bg+
+        'font-family:'+NV_FONT+';font-size:16px;line-height:1.6;color:#3b5b8c;text-align:center;'+
+        'display:flex;align-items:flex-end;justify-content:center">'+
+        '<span style="background:rgba(255,255,255,.92);padding:6px 12px;border-radius:20px;font-weight:700">'+
+        '📷 이미지'+n+' 자리 — 이 줄을 지우고 이미지'+n+'을 삽입하세요</span></p>';
+    }
+    // 소제목: 앞 여백을 크게 벌려 앞 단락과 확실히 끊고, 크기·굵기로 한 번 더 구분한다.
+    if(t.startsWith('## ')) return '<p style="margin:64px 0 22px;padding:20px 0 0;border-top:3px solid #1657c8;'+
+      'font-family:'+NV_FONT+';font-size:29px;line-height:1.4;font-weight:900;color:#0f0f0f;letter-spacing:-0.03em">'+nvInline(t.slice(3))+'</p>';
+    if(t.startsWith('# ')) return '';
+    if(t==='>'||t.startsWith('> ')) return '<p style="margin:0 0 36px;padding:20px 22px;background:#f2f6fd;border-left:6px solid #1657c8;border-radius:4px;'+
+      'font-family:'+NV_FONT+';font-size:18px;line-height:1.8;color:#22314a;font-weight:600">'+nvInline(t.replace(/^>\s?/,''))+'</p>';
+    if(t==='---') return '<p style="margin:40px 0;padding:0;border-top:1px solid #dfe4ec;height:0;font-size:0;line-height:0">&nbsp;</p>';
+    if(t.indexOf('#')===0&&t.indexOf(' #')>0) return '<p style="margin:32px 0 0;padding:0;font-family:'+NV_FONT+';font-size:15px;line-height:1.8;color:#7b8598">'+esc(t)+'</p>';
+    if(t==='') return '';
+    return nvSentences(line).map(x=>nvP(nvInline(x))).join('');
+  }).filter(Boolean).join('');
+  // 바깥 래퍼도 색·크기를 못 박는다 (에디터가 래퍼 스타일만 살리는 경우 대비)
+  return '<div style="font-family:'+NV_FONT+';font-size:18px;line-height:1.9;color:#1f1f1f;background:#ffffff">'+out+'</div>';
+}
+/* 네이버 본문 = 드래그 대상. 미리보기와 드래그 영역을 따로 두지 않는다 —
+   따로 두면 어느 쪽을 끌어야 하는지 헷갈리고, 잘못 끌면 대시보드 서식이 딸려간다. */
+function naverDragBox(it){
+  return '<div class="capbox" style="border-color:#b9c6da;background:#fbfcfe">'+
+    '<div class="caphd">📝 블로그 본문 — 이 영역을 드래그해 복사하세요</div>'+
+    '<div class="muted" style="font-size:12px;margin:-2px 0 10px">'+
+    '아래 글이 <b>네이버에 들어갈 실제 서식</b>입니다. 드래그해 Ctrl+C 하면 소제목 크기·색이 그대로 따라옵니다. '+
+    '(사진은 배경으로만 보여주는 것이라 붙여넣기에는 안 따라갑니다 — 자리 표시 문구만 갑니다.)</div>'+
+    '<div style="margin-bottom:10px"><button class="btn fb" id="dragbtn-'+esc(it.id)+'" onclick="selectDrag(\''+esc(it.id)+'\',this.id)">🖱 전체 선택 (드래그 대신)</button></div>'+
+    '<div id="nvdrag-'+esc(it.id)+'" style="background:#ffffff;border:1px solid #e4e8f0;border-radius:10px;padding:26px 24px">'+
+    naverBodyHtml(it,true)+'</div></div>';
+}
+function flash(id,msg){ const b=document.getElementById(id); if(b){const o=b.textContent;b.textContent=msg;setTimeout(()=>b.textContent=o,1500);} }
+function copyPost(id){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
+  const plain=plainPostText(it);
+  const isNaver=(it.channels||[]).indexOf('naver-blog')>=0||String(id).indexOf('naver')===0;
+  // 서식 채널은 text/html 과 text/plain 을 **함께** 넣는다. 에디터는 html 을,
+  // 메모장 등은 plain 을 받는다. ClipboardItem 미지원 브라우저면 평문으로 떨어진다.
+  if(isNaver&&window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write){
+    const html=naverBodyHtml(it,false);
+    navigator.clipboard.write([new ClipboardItem({
+      'text/html':new Blob([html],{type:'text/html'}),
+      'text/plain':new Blob([plain],{type:'text/plain'})
+    })]).then(()=>flash('copybtn-'+id,'✅ 서식까지 복사됨!'))
+      .catch(()=>navigator.clipboard.writeText(plain).then(()=>flash('copybtn-'+id,'✅ 평문으로 복사됨'))
+      .catch(()=>alert('복사 실패 — 아래 “드래그용 본문”을 드래그해 Ctrl+C 하세요.')));
+    return;
+  }
+  navigator.clipboard.writeText(plain).then(()=>flash('copybtn-'+id,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 본문을 길게 눌러 직접 복사하세요.'));
+}
+// 드래그 복사 대안 — 패널 전체를 선택 상태로 만들어 준다(Ctrl+C 만 누르면 됨).
+function selectDrag(id,btnId){
+  const el=document.getElementById('nvdrag-'+id); if(!el) return;
+  const r=document.createRange(); r.selectNodeContents(el);
+  const s=window.getSelection(); s.removeAllRanges(); s.addRange(r);
+  try{ document.execCommand('copy'); flash(btnId,'✅ 선택+복사됨!'); }
+  catch(e){ flash(btnId,'👆 이제 Ctrl+C'); }
+}
+function copyTitle(id){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it) return;
+  navigator.clipboard.writeText(plainHead(it)).then(()=>flash('titlebtn-'+id,'✅ 복사됨!')).catch(()=>{});
+}
+function copyField(id,field,btnId){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it||!it[field]) return;
+  navigator.clipboard.writeText(it[field]).then(()=>flash(btnId,'✅ 복사됨!')).catch(()=>alert('복사 실패 — 직접 복사하세요.'));
+}
+function copyTags(id,btnId){
+  const it=(DATA.clients[ci].planCards||[]).find(x=>x.id===id); if(!it||!it.ytTags) return;
+  navigator.clipboard.writeText(it.ytTags.join(', ')).then(()=>flash(btnId,'✅ 복사됨!')).catch(()=>{});
+}
+// 블로그/대본 등 본문의 가벼운 마크다운(## 소제목, [HOOK] 등)을 보기 좋게
+function mdInline(x){ return esc(x).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>'); }
+function fmtCaption(s){
+  return String(s||'').split('\n').map(line=>{
+    const t=line.trim();
+    const img=t.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if(img) return '<img class="md-img" src="'+esc(img[2])+'" alt="'+esc(img[1])+'" loading="lazy"/>';
+    if(t.startsWith('## ')) return '<h4 class="md-h">'+mdInline(t.slice(3))+'</h4>';
+    if(t.startsWith('# ')) return '<h3 class="md-h1">'+mdInline(t.slice(2))+'</h3>';
+    if(t==='>'||t.startsWith('> ')) return '<div class="md-quote">'+mdInline(t.replace(/^>\s?/,''))+'</div>';
+    if(t.indexOf('🔖')===0) return '<div class="md-tags">'+esc(t)+'</div>';
+    if(/^\[.+\]$/.test(t)) return '<div class="md-tag">'+esc(t)+'</div>';
+    if(t==='---'||t==='') return '<div class="md-sp"></div>';
+    return '<div>'+mdInline(line)+'</div>';
+  }).join('');
+}
+function channelDetail(client, c){
+  const chLabel=(DATA.channels.find(x=>x.key===c.key)||{}).label||c.key;
+  let h='';
+  // ① 수정요청 게시판 — 채널 최상단 (작성 + 처리 현황)
+  h+=requestsPanel(client, c.key, chLabel);
+  // ② 운영 기간 선택 — 아래 데이터/히스토리에 모두 적용
+  h+=periodBar();
+  // ③ 콘텐츠 리포트 — 발행 콘텐츠 실측 데이터 (가이드는 지침 탭 전용으로 이동)
+  h+=contentReportPanel(client, c, chLabel);
+  // 기획안 패널
+  const planTitle='['+client.name+'/'+chLabel+'] 기획안 피드백';
+  const planBody='이 채널 기획안에 대한 피드백/수정사항을 적어주세요.\n\n[현재 기획안]\n- 키워드: '+client.keywords.join(', ')+'\n- 브랜드 말투: '+client.brandTone+'\n- 발행시간: '+client.schedule.join(', ')+'\n- 디자인 스타일: '+client.designStyle.mood+' / '+client.designStyle.palette+'\n\n[수정 요청]\n';
+  h+='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📋 기획안</h3><a class="btn fb" href="'+issue(planTitle,planBody)+'" target="_blank">✏️ 기획안 피드백</a></div>'+
+     '<div>'+client.keywords.map(k=>'<span class="tag">#'+esc(k)+'</span>').join('')+'</div>'+
+     '<div class="muted" style="margin-top:8px">말투: '+esc(client.brandTone)+' · 발행 '+client.schedule.join(', ')+' · 검수 '+esc(client.reviewMode)+' · 디자인 v'+client.designVersion+'</div>'+
+     '<div class="muted">디자인 스타일: '+esc(client.designStyle.mood)+' / '+esc(client.designStyle.palette)+' / '+esc(client.designStyle.composition)+'</div></div>';
+  if(!c.active){
+    h+='<div class="panel"><div class="empty">이 채널은 아직 <b>연결되지 않았습니다</b>. 설정표(targets)에 '+chLabel+'을 추가하고 키를 연결하면 자동 발행이 시작됩니다.</div></div>';
+  }
+  // 선택 기간으로 필터한 히스토리 (KPI·성과표는 ③ 콘텐츠 리포트 패널이 단일 출처)
+  const pubF=c.published.filter(p=>inPeriod(p.time));
+  // isDoneLive — 발행완료 신고(이슈·로컬)만 접수돼도 발행됨으로 분류 (데이터 반영 전 실시간 이동)
+  const planPubF=c.pending.filter(it=>isDoneLive(it)&&inPeriod(it.publishedAt||it.scheduledFor));
+  const waiting=c.pending.filter(it=>!isDoneLive(it));
+  // 네이버 블로그 → blogdex 스타일
+  if(c.key==='naver-blog'){ h+=blogSection(client); }
+  // 발행 대기 (발행 전 콘텐츠만)
+  const heldN=waiting.filter(it=>openHolds(it).length>0).length;
+  h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+(heldN?' · ⛔ 보류 '+heldN:'')+')</h2></div>';
+  h+= waiting.length? '<div class="cards">'+waiting.map(it=>planCard(client,chLabel,it)).join('')+'</div>' : '<div class="empty">예정된 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>';
+  // 발행됨 — 기간 반영 히스토리 (기획 발행분 + 사이클 발행분)
+  h+='<div class="sect-h"><h2>✅ 발행된 콘텐츠 · '+periodLabel()+' ('+(planPubF.length+pubF.length)+')</h2></div>';
+  const pubCards=planPubF.map(it=>planCard(client,chLabel,it)).concat(pubF.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
+  h+= pubCards.length? '<div class="cards">'+pubCards.join('')+'</div>' : '<div class="empty">이 기간에 발행된 콘텐츠가 없습니다.</div>';
+  // ④ 레퍼런스 링크 인박스 — 채널 탭 최하단 (등록하면 다음 기획 세션에서 AI가 열람·학습)
+  h+=referencePanel(client, c.key);
+  return h;
+}
+function blogSection(client){
+  const b=client.blog;
+  const color = b.score>=70?'#e4f7ea':b.score>=40?'#fdf3e0':'#eef1f6';
+  const fg = b.score>=70?'#15803d':b.score>=40?'#b45309':'#5a6274';
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>📊 블로그 지수 (blogdex 스타일)</h3><span class="muted">내부 추정 · 네이버 연동 시 실측 교체</span></div>';
+  h+='<div class="row"><div class="grade" style="background:'+color+';color:'+fg+'">'+esc(b.grade)+'</div>'+
+     '<div style="flex:1;min-width:160px"><div class="muted">종합 점수 '+b.score+'/100</div><div class="bar"><i style="width:'+b.score+'%"></i></div></div></div>';
+  // 포스팅 분석
+  if(b.posts.length){
+    h+='<table style="margin-top:12px"><tr><th>포스팅</th><th>전문성</th><th>연관성</th><th>품질</th></tr>'+
+      b.posts.slice(0,8).map(p=>'<tr><td>'+esc(p.topic)+'</td><td>'+p.expertise+'</td><td>'+p.relevance+'</td><td>'+p.quality+'</td></tr>').join('')+'</table>';
+  }
+  // 키워드 분석 — 네이버 광고주센터 키워드 도구 실측값만 표시 (허수 금지)
+  const src=b.kwSource;
+  h+='<div class="sect-h" style="margin:14px 0 6px"><h3 style="margin:0;font-size:14px">🔑 키워드 월간 검색수</h3><span class="muted">'+
+     (src?esc(src.source)+' 실측 · 기준 '+String(src.fetchedAt).slice(0,10):'광고주센터 키워드 도구 실측 데이터 연결 전 — 수치는 표시하지 않습니다')+'</span></div>';
+  h+='<table><tr><th>키워드</th><th>PC</th><th>모바일</th><th>합계</th><th>경쟁정도</th></tr>'+
+    b.keywords.map(k=>{
+      const n=v=>v==null?'<span class="muted">—</span>':Number(v).toLocaleString();
+      const wait=k.total==null&&!src;
+      return '<tr><td>#'+esc(k.kw)+'</td>'+
+        (wait?'<td colspan="4"><span class="badge b-wait">실측 대기</span> <span class="muted" style="font-size:11px">키워드 도구 CSV 임포트 후 표시</span></td>'
+             :'<td>'+n(k.pc)+'</td><td>'+n(k.mobile)+'</td><td><b>'+n(k.total)+'</b></td><td>'+(k.competition?esc(k.competition):'<span class="muted">—</span>')+'</td>')+'</tr>';
+    }).join('')+'</table>';
+  h+='</div>';
+  return h;
+}
+function tokenBanner(client){
+  const th=client.tokenHealth; if(!th||!th.tokens||!th.tokens.length) return '';
+  const bad=th.tokens.filter(t=>t.warn||!t.ok);
+  if(!bad.length) return '';
+  return '<div class="panel" style="border-color:#f0cfae;background:#fdf6ec">'+
+    '<h3>🔑 토큰 점검 경고</h3>'+
+    bad.map(t=>'<div class="muted" style="color:#b45309;font-size:13px;margin:2px 0">'+(t.ok?'🟡':'🔴')+' '+esc(t.label)+': '+esc(t.detail||'확인 필요')+'</div>').join('')+
+    '<div class="muted" style="margin-top:6px">토큰을 새로 발급해 GitHub 시크릿(PSLAB_*_ACCESS_TOKEN)을 갱신하세요. 마지막 점검: '+ftime(th.checkedAt)+'</div></div>';
+}
+function learningPanel(client){
+  const L=client.learning; if(!L) return '';
+  const gs=g=>'<tr><td>'+esc(g.key)+'</td><td>'+g.posts+'</td><td>'+pct(g.avgEngagement)+'</td><td>'+Math.round(g.avgLikes)+'</td></tr>';
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🧠 성과 인사이트 · 자체 학습</h3><span class="muted">표본 '+L.sampleSize+'건 · '+ftime(L.generatedAt)+'</span></div>';
+  if(L.sampleSize<1){
+    h+='<div class="empty">발행물 성과가 쌓이면 어떤 디자인·시간대·소재가 잘 먹히는지 여기서 자동 분석됩니다.</div></div>';
+    return h;
+  }
+  if(L.hints&&L.hints.length){
+    h+='<div style="margin-bottom:10px">'+L.hints.map(x=>'<div class="muted" style="color:#15803d;font-size:13px;margin:3px 0">💡 '+esc(x)+'</div>').join('')+'</div>';
+  }
+  if(L.variants&&L.variants.length){
+    h+='<div class="muted" style="margin:8px 0 4px">디자인 변형별 성과'+(L.bestVariant?' · 우세: <b style="color:#b45309">'+esc(L.bestVariant)+'안</b>':'')+'</div>'+
+      '<table><tr><th>디자인</th><th>발행</th><th>평균 참여율</th><th>평균 좋아요</th></tr>'+L.variants.map(gs).join('')+'</table>';
+  }
+  if(L.hours&&L.hours.length>1){
+    h+='<div class="muted" style="margin:12px 0 4px">시간대별 성과</div><table><tr><th>발행시각</th><th>발행</th><th>평균 참여율</th><th>평균 좋아요</th></tr>'+L.hours.map(gs).join('')+'</table>';
+  }
+  h+='<div class="muted" style="margin-top:10px">이 학습은 다음 기획 생성 때 디자인 선택·소재 방향에 자동 반영됩니다(자체 디벨롭).</div></div>';
+  return h;
+}
+function weeklyPanel(client){
+  const w=client.weeklyReport; if(!w) return '';
+  const chRows=(w.channels||[]).map(c=>'<tr><td>'+esc(c.label)+'</td><td>'+c.posts+'</td><td>'+pct(c.avgEngagement)+'</td><td>'+c.totalViews+'</td><td>'+c.totalLikes+'</td></tr>').join('');
+  const recs=(w.recommendations||[]).map(r=>'<li>'+esc(r)+'</li>').join('');
+  const top=w.top?'<div class="muted" style="margin:6px 0">🏆 최고 성과: <b>['+esc(w.top.label)+'] '+esc(w.top.title)+'</b> ('+pct(w.top.engagementRate)+')</div>':'';
+  return '<div class="panel" style="border-color:#c9d8f0;background:#f2f6fd">'+
+    '<div class="sect-h" style="margin:0 0 10px"><h3>📅 주간 종합 리포트</h3><span class="muted">'+esc(w.weekOf)+' 주 · 발행 '+w.postsCount+'건 · '+ftime(w.generatedAt)+'</span></div>'+
+    '<div class="mcap" style="font-size:14px;margin-bottom:8px">'+esc(w.summary)+'</div>'+top+
+    (chRows?'<table style="margin:8px 0"><tr><th>채널</th><th>발행</th><th>평균 참여율</th><th>조회</th><th>좋아요</th></tr>'+chRows+'</table>':'')+
+    (recs?'<div class="muted" style="margin:8px 0 4px">다음 주 방향</div><ul style="margin:0;padding-left:18px;color:#15803d;font-size:13px">'+recs+'</ul>':'')+
+    '</div>';
+}
+function setupPanel(){
+  const s=DATA.setup||{};
+  const settingsUrl='https://github.com/'+REPO+'/settings/secrets/actions';
+  const varsUrl='https://github.com/'+REPO+'/settings/variables/actions';
+  const row=(ok,name,todo,url)=>'<tr><td style="width:34px;font-size:16px">'+(ok?'✅':'⬜')+'</td><td><b>'+esc(name)+'</b>'+(ok?'':'<div class="muted" style="margin-top:2px">'+todo+(url?' · <a href="'+url+'" target="_blank">설정 열기 ↗</a>':'')+'</div>')+'</td></tr>';
+  const done=[s.instagram,s.threads,s.telegram,s.anthropic,s.realPublish].filter(Boolean).length;
+  return '<div class="panel" style="border-color:#2b6fff">'+
+    '<div class="sect-h" style="margin:0 0 8px"><h3>🚀 오픈 준비 체크리스트</h3><span class="muted">'+done+'/5 완료</span></div>'+
+    '<table>'+
+    row(s.instagram,'인스타그램 연결','발행 토큰 미설정 — PSLAB_INSTAGRAM_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.threads,'스레드 연결','발행 토큰 미설정 — PSLAB_THREADS_ACCESS_TOKEN 시크릿',settingsUrl)+
+    row(s.telegram,'텔레그램 푸시','@BotFather로 봇 생성 → TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID 시크릿',settingsUrl)+
+    row(s.blogger,'구글 블로그 자동발행','선택 — Blogger OAuth(클라이언트/리프레시 토큰/블로그ID) 시크릿',settingsUrl)+
+    row(s.anthropic,'AI 글·코멘트','ANTHROPIC_API_KEY 시크릿 (없으면 규칙기반으로 동작)',settingsUrl)+
+    row(s.realPublish,'실제 자동발행 ON','예약 발행을 켜려면 Variables에 PSLAB_DRY_RUN=false (지금은 안전 시뮬레이션)',varsUrl)+
+    '</table>'+
+    '<div class="muted" style="margin-top:8px"><b>구글 블로그</b>는 API로 자동발행됩니다. <b>네이버 블로그·유튜브</b>는 공식 자동발행 API가 없어 <b>수동(복붙)</b> 채널입니다.</div>'+
+    '</div>';
+}
+// 채널 바로가기 — 채널별 그라데이션 카드(클릭 시 관리로 이동)
+function chGrad(key){
+  return ({youtube:'linear-gradient(135deg,#fdecec,#fbdcdc)',instagram:'linear-gradient(135deg,#fceaf5,#f6d8ec)',threads:'linear-gradient(135deg,#ecf5f5,#dcecec)','naver-blog':'linear-gradient(135deg,#eafaf0,#d8f0e2)',blogger:'linear-gradient(135deg,#fdf3e6,#f8e6cc)'})[key]||'linear-gradient(135deg,#f4f6fa,#e9edf5)';
+}
+function chBorder(key){ return ({youtube:'#f0b8b8',instagram:'#eab8d8',threads:'#b8d8d8','naver-blog':'#a8dcbe',blogger:'#ecca9e'})[key]||'#dfe4ec'; }
+function channelLinksPanel(client){
+  const links=client.channelLinks||[];
+  if(!links.length) return '';
+  const cards=links.map(l=>
+    '<a href="'+esc(l.url)+'" target="_blank" rel="noopener" style="flex:1 1 200px;min-width:180px;text-decoration:none;border-radius:14px;padding:16px 18px;border:1px solid '+chBorder(l.key)+';background:'+chGrad(l.key)+';display:block">'+
+    '<div style="font-weight:800;font-size:18px;color:#14171d;margin-bottom:4px">'+l.icon+' '+esc(l.label)+'</div>'+
+    '<div style="font-size:13px;color:#4a5264;opacity:.9">'+esc(l.sub)+'</div></a>').join('');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 10px"><h3>🔗 채널 바로가기</h3><span class="muted">클릭하면 각 채널 관리로 이동</span></div>'+
+    '<div style="display:flex;gap:12px;flex-wrap:wrap">'+cards+'</div></div>';
+}
+// 📅 차주 콘텐츠 기획 (ADR-0006: 금 키워드 수집 → 토 기획 → week-plan.json, plan.json과 분리)
+function weekPlanPanel(client){
+  const wp=client.weekPlan;
+  let h='<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>📅 차주 콘텐츠 기획</h3><span class="muted">'+
+    (wp&&wp.baseDate?'기준일 '+esc(String(wp.baseDate).slice(0,10)):'키워드 실측 연동 후 매주 토요일 자동 생성')+'</span></div>';
+  if(!wp){
+    h+='<div class="empty" style="padding:10px">아직 차주 기획이 없습니다 — 네이버 검색광고 키워드 수집(금) → 차주 기획(토) 파이프라인은 계정 연결 단계에서 켜집니다.</div>';
+  } else {
+    h+='<table><tr><th style="width:90px">날짜</th><th style="width:130px">채널</th><th>제안 제목</th><th style="width:80px">시트</th></tr>'+
+      wp.items.map(it=>{
+        const cd=DATA.channels.find(x=>x.key===it.channel)||{icon:'',label:it.channel||''};
+        return '<tr><td class="muted">'+esc(it.date||'')+'</td><td>'+cd.icon+' '+esc(cd.label)+'</td><td>'+esc(it.title||'')+'</td><td><span class="tag">'+esc(it.sheet||'')+'</span></td></tr>';
+      }).join('')+'</table>'+
+      '<div class="muted" style="margin-top:8px">이 기획안은 감도·가짜글자 검수를 거친 뒤에만 실제 제작으로 넘어갑니다 (자동발행 큐와 분리).</div>';
+  }
+  return h+'</div>';
+}
+// 🔌 채널 연결 상황 — 압축 칩 (개요 최하단, docs/06-대시보드 레이아웃 원칙)
+function connChips(client){
+  const st=DATA.setup||{};
+  const on={'instagram':st.instagram,'threads':st.threads,'blogger':st.blogger,'youtube':st.youtube};
+  const chips=client.channels.map(c=>{
+    const lab=DATA.channels.find(x=>x.key===c.key)||{icon:'',label:c.key};
+    const mark=c.key==='naver-blog'?'✍️ 수동':(on[c.key]?'✅':'⬜');
+    return '<span class="tag" style="font-size:12px;padding:5px 10px">'+lab.icon+' '+esc(lab.label)+' '+mark+'</span>';
+  }).join(' ');
+  return '<div class="panel"><div class="sect-h" style="margin:0 0 8px"><h3>🔌 채널 연결 상황</h3><span class="muted">계정 연결은 온보딩 마지막 단계 — 상세 절차는 아래 체크리스트</span></div><div>'+chips+'</div></div>';
+}
+function overview(client){
+  let h=tokenBanner(client);
+  h+=channelLinksPanel(client);
+  h+=weekPlanPanel(client);
+  h+=weeklyPanel(client);
+  h+=periodBar();
+  h+='<div class="kpis">'+
+    kpi(client.totalCycles,'총 사이클')+
+    kpi(client.totalPublished,'총 발행')+
+    kpi(client.heldCount,'승인 대기',client.heldCount>0)+
+    kpi('v'+client.designVersion,'디자인 진화')+'</div>';
+  h+=learningPanel(client);
+  h+='<div class="panel"><h3>채널별 요약</h3><table><tr><th>채널</th><th>상태</th><th>발행</th><th>대기</th><th>평균 참여율</th><th>수정요청</th></tr>'+
+    client.channels.map(c=>{const lab=(DATA.channels.find(x=>x.key===c.key)||{});
+      const iss=channelIssues(c.key); const openN=iss.filter(x=>x.state!=='closed').length;
+      const reqCell=iss.length?(openN?'<span class="badge b-wait">🛠 처리중 '+openN+'</span>':'<span class="badge b-ok">✅ 완료 '+iss.length+'</span>'):'<span class="muted">-</span>';
+      return '<tr><td>'+lab.icon+' '+lab.label+'</td><td>'+(c.active?'<span class="badge b-ok">연결</span>':'<span class="badge b-hold">미연결</span>')+'</td><td>'+c.stats.publishedCount+'</td><td>'+c.stats.pendingCount+'</td><td>'+pct(c.stats.avgEngagement)+' '+tIcon(c.stats.trend)+'</td><td>'+reqCell+'</td></tr>';}).join('')+'</table></div>';
+  // 발행 전 콘텐츠 기획안 — 메인에는 발행 전(예정·수동대기)만 보여준다
+  const plan=client.planCards||[];
+  const pre=plan.filter(p=>!isDoneLive(p));
+  const fbTitle='['+client.name+'] 기획안 전체 피드백';
+  const fbBody='이번 달 기획안에 대한 의견/수정사항을 적어주세요.\n\n';
+  const mon=new Date(DATA.generatedAt).getMonth()+1;
+  h+='<div class="sect-h"><h2>🕓 '+mon+'월 발행 전 콘텐츠 ('+pre.length+')</h2><a class="btn fb" href="'+issue(fbTitle,fbBody)+'" target="_blank">✏️ 기획안 피드백</a></div>';
+  if(!pre.length){ h+='<div class="empty">발행 전 콘텐츠가 없습니다. 다음 사이클에 자동 생성됩니다.</div>'; }
+  else {
+    for(const chDef of DATA.channels){
+      const items=pre.filter(p=>(p.channels||[]).includes(chDef.key));
+      if(!items.length) continue;
+      const lab=chDef.icon+' '+chDef.label;
+      h+='<div class="chgrp"><div class="chgrp-h">'+lab+' <span class="muted">'+items.length+'건 · '+esc((items[0].format)||'')+'</span></div>'+
+         '<div class="cards">'+items.map(p=>planCard(client,chDef.label,p)).join('')+'</div></div>';
+    }
+  }
+  // 선택한 기간의 발행 게시물 (기획 발행분 + 사이클 발행분)
+  const planPub=plan.filter(p=>p.status==='published'&&inPeriod(p.publishedAt||p.scheduledFor))
+    .sort((a,b)=>String(b.publishedAt||'').localeCompare(String(a.publishedAt||'')));
+  const recent=[].concat(...client.channels.map(c=>c.published)).filter(p=>inPeriod(p.time))
+    .sort((a,b)=>(b.time||'').localeCompare(a.time||'')).slice(0,12);
+  h+='<div class="sect-h"><h2>✅ 발행된 게시물 · '+periodLabel()+' ('+(planPub.length+recent.length)+')</h2></div>';
+  const pubCards=planPub.map(p=>{
+    const chDef=DATA.channels.find(x=>x.key===((p.channels||[])[0]))||{label:''};
+    return planCard(client,chDef.label,p);
+  }).concat(recent.map(p=>publishedCard(p,'<span class="badge b-ok">발행</span>')));
+  h+= pubCards.length?'<div class="cards">'+pubCards.join('')+'</div>':'<div class="empty">이 기간에 발행된 게시물이 없습니다.</div>';
+  // 경쟁사
+  h+='<div class="panel" style="margin-top:16px"><h3>벤치마킹 경쟁사</h3><div>'+(client.competitors.length?client.competitors.map(x=>'<span class="tag">@'+esc(x)+'</span>').join(''):'<span class="muted">미설정</span>')+'</div></div>';
+  // 저중요 패널은 최하단 — 연결 상황 압축 칩 + 오픈 준비 체크리스트 (docs/06-대시보드 레이아웃 원칙)
+  h+=connChips(client);
+  h+=setupPanel();
+  return h;
+}
+function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
+// ── 리서치 탭 — research-brief.json이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
+function researchView(client){
+  const r=client.research;
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 데이터가 없습니다.</div>';
+  let h='<div class="sect-h"><h2>📊 '+esc(r.title||'브랜드 리서치')+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
+  if(r.note) h+='<div class="muted" style="margin:0 0 14px;line-height:1.6">'+esc(r.note)+'</div>';
+  for(const s of r.sections){
+    h+='<div class="panel"><h3>'+esc((s.icon?s.icon+' ':'')+s.title)+'</h3>';
+    if(s.desc) h+='<div class="muted" style="margin:-4px 0 10px;font-size:12.5px;line-height:1.65">'+esc(s.desc)+'</div>';
+    if(s.stats&&s.stats.length) h+='<div class="kpis">'+s.stats.map(x=>kpi(esc(x.v),esc(x.l),x.accent)).join('')+'</div>';
+    if(s.bars&&s.bars.items&&s.bars.items.length){
+      const mx=s.bars.max||Math.max.apply(null,s.bars.items.map(x=>x.value))||1;
+      if(s.bars.title) h+='<div style="font-weight:700;font-size:12.5px;margin:4px 0 6px">'+esc(s.bars.title)+'</div>';
+      h+=s.bars.items.map(x=>'<div class="rbarrow"><div class="rl" title="'+esc(x.label)+'">'+esc(x.label)+'</div><div class="rtrack"><div class="rfill" style="width:'+Math.max(2,Math.round(x.value/mx*100))+'%'+(x.color?';background:'+esc(x.color):'')+'"></div></div><div class="rv">'+esc(String(x.value))+(s.bars.unit?esc(s.bars.unit):'')+(x.note?' · '+esc(x.note):'')+'</div></div>').join('');
+    }
+    if(s.table&&s.table.head) h+='<div style="overflow-x:auto;margin-top:8px"><table><tr>'+s.table.head.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr>'+(s.table.rows||[]).map(row=>'<tr>'+row.map(cd=>'<td>'+esc(cd)+'</td>').join('')+'</tr>').join('')+'</table></div>';
+    if(s.list&&s.list.length) h+='<ul style="margin:8px 0 2px;padding-left:18px;font-size:13px;line-height:1.75">'+s.list.map(x=>'<li><b>'+esc(x.t)+'</b>'+(x.d?' — <span style="color:#4a5266">'+esc(x.d)+'</span>':'')+'</li>').join('')+'</ul>';
+    if(s.timeline&&s.timeline.length) h+='<div class="rtl" style="margin-top:10px">'+s.timeline.map(x=>'<div class="ri"><span class="rd">'+esc(x.date)+'</span> · '+esc(x.text)+(x.url?' <a href="'+esc(x.url)+'" target="_blank">확인↗</a>':'')+'</div>').join('')+'</div>';
+    if(s.tags&&s.tags.length) h+='<div style="margin-top:8px">'+s.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join('')+'</div>';
+    if(s.links&&s.links.length) h+='<div style="margin-top:10px">'+s.links.map(x=>'<a class="rlink" href="'+esc(x.url)+'" target="_blank">🔗 '+esc(x.label)+' ↗</a>'+(x.note?'<span class="muted" style="font-size:11.5px;margin-right:8px">'+esc(x.note)+'</span>':'')).join('')+'</div>';
+    h+='</div>';
+  }
+  return h;
+}
+function renderClients(){
+  // 헤더 로고는 제품명 "ALWAYS ON 콘텐츠 관제실" 고정 — 업체 식별은 클라이언트 칩으로 (docs/06-대시보드)
+  document.getElementById('clients').innerHTML = DATA.clients.map((c,i)=>'<button class="cbtn'+(i===ci?' on':'')+'" onclick="setClient('+i+')">'+esc(c.name)+'</button>').join('');
+  const c=DATA.clients[ci];
+  if(c){
+    document.getElementById('dashsub').textContent=(c.industry?c.industry+' · ':'')+'채널별 현황 · 발행/대기 · 반응도 · 기획안 피드백 · 5분 자동 새로고침';
+    document.documentElement.style.setProperty('--brand', c.themeColor||'#2b6fff');
+  }
+}
+function renderTabs(){
+  const c=DATA.clients[ci];
+  const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
+    .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
+    .concat(c.research?[{key:'research',label:'리서치',icon:'📊',active:true,noDot:true}]:[])
+    .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
+  document.getElementById('tabs').innerHTML = tabs.map(t=>{
+    // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
+    let req='';
+    if(t.key!=='all'){
+      const iss=channelIssues(t.key);
+      const openN=iss.filter(x=>x.state!=='closed').length;
+      req = openN ? '<span class="treq open" title="수정요청 처리중 '+openN+'건">🛠'+openN+'</span>'
+          : (iss.length ? '<span class="treq done" title="수정요청 전부 처리완료">✅</span>' : '');
+    }
+    return '<button class="tab'+(t.key===ch?' on':'')+'" onclick="setCh(\''+t.key+'\')">'+t.icon+' '+t.label+(t.key!=='all'&&!t.noDot?'<span class="dot '+(t.active?'live':'off')+'"></span>':'')+req+'</button>';
+  }).join('');
+}
+function renderView(){
+  const c=DATA.clients[ci];
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):channelDetail(c,c.channels.find(x=>x.key===ch))));
+  document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
+}
+function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
+function setCh(k){ch=k;renderTabs();renderView();window.scrollTo(0,0);}
+try {
+  renderClients(); renderTabs(); renderView(); loadIssues();
+} catch (e) {
+  var v = document.getElementById('view');
+  if (v) v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#b91c1c">표시 중 오류: '
+    + ((e && e.message) || e)
+    + '<br><br><button onclick="location.reload(true)" style="padding:10px 16px;border-radius:8px;border:0;background:#2b6fff;color:#fff;font-size:15px">새로고침</button></div>';
+}
+</script>
+</body>
+</html>
