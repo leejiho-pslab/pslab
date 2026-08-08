@@ -282,6 +282,7 @@ function buildClientData(
     brandBrief: guidanceStore?.loadBrief(client.id) ?? {},
     channelGuides: guidanceStore?.loadGuides(client.id) ?? {},
     research: guidanceStore?.loadResearch(client.id) ?? null,
+    opsPlan: guidanceStore?.loadOpsPlan(client.id) ?? null,
     weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
     referenceLinks: guidanceStore?.loadReferenceLinks(client.id) ?? null,
   };
@@ -1371,11 +1372,12 @@ function overview(client){
   return h;
 }
 function kpi(v,l,accent){return '<div class="kpi"><div class="v'+(accent?' accent':'')+'">'+v+'</div><div class="l">'+l+'</div></div>';}
-// ── 리서치 탭 — research-brief.json이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
-function researchView(client){
-  const r=client.research;
-  if(!r||!r.sections||!r.sections.length) return '<div class="empty">리서치 데이터가 없습니다.</div>';
-  let h='<div class="sect-h"><h2>📊 '+esc(r.title||'브랜드 리서치')+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
+// ── 리서치·운영플랜 탭 — research-brief.json / ops-plan.json 이 있으면 항목별 시각화(통계·막대·표·타임라인·링크) ──
+function researchView(client){ return briefView(client.research,'📊','브랜드 리서치'); }
+function opsPlanView(client){ return briefView(client.opsPlan,'📋','운영플랜'); }
+function briefView(r, icon, defTitle){
+  if(!r||!r.sections||!r.sections.length) return '<div class="empty">데이터가 없습니다.</div>';
+  let h='<div class="sect-h"><h2>'+icon+' '+esc(r.title||defTitle)+'</h2><span class="muted">'+(r.updatedAt?('업데이트 '+String(r.updatedAt).slice(0,10)):'')+'</span></div>';
   if(r.note) h+='<div class="muted" style="margin:0 0 14px;line-height:1.6">'+esc(r.note)+'</div>';
   for(const s of r.sections){
     h+='<div class="panel"><h3>'+esc((s.icon?s.icon+' ':'')+s.title)+'</h3>';
@@ -1409,6 +1411,7 @@ function renderTabs(){
   const tabs=[{key:'all',label:'전체',icon:'🏠',active:true}]
     .concat(DATA.channels.map(ch=>{const cc=c.channels.find(x=>x.key===ch.key);return {key:ch.key,label:ch.label,icon:ch.icon,active:cc&&cc.active};}))
     .concat(c.research?[{key:'research',label:'리서치',icon:'📊',active:true,noDot:true}]:[])
+    .concat(c.opsPlan?[{key:'opsplan',label:'운영플랜',icon:'📋',active:true,noDot:true}]:[])
     .concat([{key:'guide',label:'지침',icon:'🧭',active:true,noDot:true}]);
   document.getElementById('tabs').innerHTML = tabs.map(t=>{
     // 수정요청 진행상황 아이콘 — 🛠 처리중 n건 / ✅ 전부 처리완료
@@ -1424,7 +1427,7 @@ function renderTabs(){
 }
 function renderView(){
   const c=DATA.clients[ci];
-  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):channelDetail(c,c.channels.find(x=>x.key===ch))));
+  document.getElementById('view').innerHTML = ch==='all'?overview(c):(ch==='guide'?guideView(c):(ch==='research'?researchView(c):(ch==='opsplan'?opsPlanView(c):channelDetail(c,c.channels.find(x=>x.key===ch)))));
   document.getElementById('gen').textContent = ftime(DATA.generatedAt)+' (UTC)';
 }
 function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();window.scrollTo(0,0);}
