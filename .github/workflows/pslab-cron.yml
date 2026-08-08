@@ -184,6 +184,11 @@ jobs:
         continue-on-error: true
         run: node dist/cli.js dashboard --client dongsung --out docs/dongsung/index.html
 
+      # 디브릭(dbrick) 전용 대시보드 — 별도 URL (docs/dbrick/)
+      - name: 디브릭 대시보드 생성
+        continue-on-error: true
+        run: node dist/cli.js dashboard --client dbrick --out docs/dbrick/index.html
+
       # 주의: 커밋 메시지에 [skip ci]를 넣지 말 것!
       # docs/ 변경은 pages-build-deployment(자동)를 트리거해 실제 사이트에 배포된다.
       # [skip ci]를 붙이면 Pages 배포까지 막혀 대시보드가 라이브에 반영되지 않는다.
@@ -196,7 +201,7 @@ jobs:
           git config user.name "pslab-bot"
           git config user.email "actions@users.noreply.github.com"
           touch docs/.nojekyll
-          git add -f data/ docs/index.html docs/vittz docs/dongsung docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
+          git add -f data/ docs/index.html docs/vittz docs/dongsung docs/dbrick docs/.nojekyll docs/cards docs/blog docs/shorts docs/bg 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "변경 없음"; exit 0
           fi

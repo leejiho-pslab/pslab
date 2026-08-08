@@ -580,10 +580,16 @@ function loadIssues(){
         const cm=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
         return { chKey:m[1], planId:idm?idm[1]:null, clientId:cm?cm[1]:null, titleClean:m[2]||x.title, state:x.state, html_url:x.html_url, created_at:x.created_at, closed_at:x.closed_at };
       }).filter(Boolean);
-      // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시
+      // 레퍼런스 이슈 본문에서 링크를 즉시 수집 — 시스템 반영(커밋·배포) 전에도 '접수됨'으로 표시.
+      // 열린 이슈만(닫힘=이미 동기화 완료 → 저장된 링크로 보임), 본문 '업체:' 줄이 이 업체와 일치할 때만.
+      // 업체 줄이 없는 이슈는 미리보기하지 않는다 — 과거 무스코프 이슈가 신규 업체 대시보드에
+      // 남의 레퍼런스를 그대로 노출시킨 사고 방지(동기화 자체는 CI 기본 업체로 정상 처리됨).
       REF_ISSUES=[];
+      const refCid=(DATA.clients[ci]||{}).id;
       for(const x of list){
-        const m=REF_RE.exec(x.title||''); if(!m) continue;
+        const m=REF_RE.exec(x.title||''); if(!m||x.state!=='open') continue;
+        const rc=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
+        if(!rc||rc[1]!==refCid) continue;
         for(const line of String(x.body||'').split('\\n')){
           const t=line.replace(/^[-*·•\\s]+/,'').trim();
           const um=t.match(/^(https?:\\/\\/\\S+)\\s*(?:[—–-]\\s*)?(.*)$/);
@@ -609,6 +615,8 @@ function loadIssues(){
         }
         const dm=DELREF_RE.exec(x.title||'');
         if(dm){
+          const dc=/업체:\\s*([\\w-]+)/.exec(String(x.body||''));
+          if(dc&&dc[1]!==myId) continue; // 업체 스코프 (없으면 과거 이슈 호환 — 전 업체)
           for(const line of String(x.body||'').split('\\n')){
             const um=line.trim().match(/^(https?:\\/\\/\\S+)/);
             if(um) DELREF.add(refKey(dm[1],um[1]));
@@ -682,6 +690,9 @@ function submitGuidance(title, bodyPrefix, taId){
   const ta=document.getElementById(taId);
   const txt=(ta&&ta.value.trim())||'';
   if(!txt){ alert('내용을 먼저 적어주세요.'); return; }
+  // 레퍼런스 등록은 본문에 업체 스코프를 자동 포함 — 공유 저장소에서 타 업체 대시보드로
+  // 레퍼런스가 새는 것을 막는다(동기화·미리보기 모두 이 줄로 업체를 특정).
+  if(taId&&taId.indexOf('rl-')===0) bodyPrefix='업체: '+((DATA.clients[ci]||{}).id||'')+'\\n'+bodyPrefix;
   window.open(issue(title, bodyPrefix+txt), '_blank');
   if(ta) ta.value='';
 }

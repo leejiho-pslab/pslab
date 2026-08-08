@@ -85,9 +85,10 @@ jobs:
           node dist/cli.js dashboard --client pslab --out docs/index.html
           node dist/cli.js dashboard --client vittz --out docs/vittz/index.html
           node dist/cli.js dashboard --client dongsung --out docs/dongsung/index.html
+          node dist/cli.js dashboard --client dbrick --out docs/dbrick/index.html
           git config user.name pslab-bot
           git config user.email actions@users.noreply.github.com
-          git add -f data/clients docs/index.html docs/vittz/index.html docs/dongsung/index.html
+          git add -f data/clients docs/index.html docs/vittz/index.html docs/dongsung/index.html docs/dbrick/index.html
           git commit -m "chore(guidance): 운영자 지침 반영 — ${ISSUE_TITLE}" || { echo "변경 없음"; exit 0; }
           # ⚠️ 충돌한 작업트리를 절대 그대로 두지 않는다.
           #   rebase 가 충돌하면 docs/index.html 에 <<<<<<< 표시가 남는데, 예전 루프는
