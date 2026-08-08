@@ -1,0 +1,1403 @@
+{
+  "updatedAt": "2026-08-08T10:44:15.504Z",
+  "source": "네이버 검색광고 API keywordstool (광고주센터 키워드 도구와 동일 데이터)",
+  "requested": [
+    {
+      "keyword": "아일랜드식탁",
+      "pc": 5140,
+      "mobile": 24400,
+      "total": 29540,
+      "compIdx": "중간",
+      "avgPcClicks": 94.6,
+      "avgMobileClicks": 750.4,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "거실인테리어",
+      "pc": 1760,
+      "mobile": 14200,
+      "total": 15960,
+      "compIdx": "높음",
+      "avgPcClicks": 13.6,
+      "avgMobileClicks": 197.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "주방인테리어",
+      "pc": 2430,
+      "mobile": 11000,
+      "total": 13430,
+      "compIdx": "높음",
+      "avgPcClicks": 62.6,
+      "avgMobileClicks": 571.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "현관중문",
+      "pc": 1740,
+      "mobile": 9840,
+      "total": 11580,
+      "compIdx": "높음",
+      "avgPcClicks": 45.7,
+      "avgMobileClicks": 444.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실리모델링",
+      "pc": 1800,
+      "mobile": 9390,
+      "total": 11190,
+      "compIdx": "높음",
+      "avgPcClicks": 40.4,
+      "avgMobileClicks": 311.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실인테리어",
+      "pc": 1710,
+      "mobile": 6170,
+      "total": 7880,
+      "compIdx": "높음",
+      "avgPcClicks": 23.2,
+      "avgMobileClicks": 122,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "아트월",
+      "pc": 1650,
+      "mobile": 5010,
+      "total": 6660,
+      "compIdx": "중간",
+      "avgPcClicks": 9.9,
+      "avgMobileClicks": 63.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "아파트리모델링",
+      "pc": 1170,
+      "mobile": 3630,
+      "total": 4800,
+      "compIdx": "높음",
+      "avgPcClicks": 17.8,
+      "avgMobileClicks": 110,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "싱크대교체",
+      "pc": 910,
+      "mobile": 3890,
+      "total": 4800,
+      "compIdx": "중간",
+      "avgPcClicks": 21.9,
+      "avgMobileClicks": 93.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "현관인테리어",
+      "pc": 810,
+      "mobile": 3720,
+      "total": 4530,
+      "compIdx": "높음",
+      "avgPcClicks": 5.7,
+      "avgMobileClicks": 58.3,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "아파트인테리어",
+      "pc": 1550,
+      "mobile": 2700,
+      "total": 4250,
+      "compIdx": "높음",
+      "avgPcClicks": 37.1,
+      "avgMobileClicks": 127,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실타일",
+      "pc": 890,
+      "mobile": 3250,
+      "total": 4140,
+      "compIdx": "높음",
+      "avgPcClicks": 12.8,
+      "avgMobileClicks": 71,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "도배장판",
+      "pc": 600,
+      "mobile": 3330,
+      "total": 3930,
+      "compIdx": "높음",
+      "avgPcClicks": 12.5,
+      "avgMobileClicks": 94.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "샷시교체",
+      "pc": 800,
+      "mobile": 2950,
+      "total": 3750,
+      "compIdx": "높음",
+      "avgPcClicks": 13.9,
+      "avgMobileClicks": 141.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "히든도어",
+      "pc": 1110,
+      "mobile": 2190,
+      "total": 3300,
+      "compIdx": "중간",
+      "avgPcClicks": 5,
+      "avgMobileClicks": 28,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "주방리모델링",
+      "pc": 640,
+      "mobile": 2600,
+      "total": 3240,
+      "compIdx": "높음",
+      "avgPcClicks": 11.9,
+      "avgMobileClicks": 112.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "분당인테리어",
+      "pc": 550,
+      "mobile": 2180,
+      "total": 2730,
+      "compIdx": "높음",
+      "avgPcClicks": 3.9,
+      "avgMobileClicks": 14.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "조적욕조",
+      "pc": 450,
+      "mobile": 2080,
+      "total": 2530,
+      "compIdx": "높음",
+      "avgPcClicks": 0.4,
+      "avgMobileClicks": 38.3,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "주방수납",
+      "pc": 420,
+      "mobile": 1600,
+      "total": 2020,
+      "compIdx": "중간",
+      "avgPcClicks": 5.7,
+      "avgMobileClicks": 14.3,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "구축아파트리모델링",
+      "pc": 410,
+      "mobile": 1560,
+      "total": 1970,
+      "compIdx": "높음",
+      "avgPcClicks": 5,
+      "avgMobileClicks": 39.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "인테리어견적",
+      "pc": 750,
+      "mobile": 1170,
+      "total": 1920,
+      "compIdx": "높음",
+      "avgPcClicks": 21.3,
+      "avgMobileClicks": 65.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "용인인테리어",
+      "pc": 550,
+      "mobile": 390,
+      "total": 940,
+      "compIdx": "높음",
+      "avgPcClicks": 4.5,
+      "avgMobileClicks": 10.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "베란다확장",
+      "pc": 240,
+      "mobile": 560,
+      "total": 800,
+      "compIdx": "높음",
+      "avgPcClicks": 1.2,
+      "avgMobileClicks": 7.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실방수",
+      "pc": 180,
+      "mobile": 610,
+      "total": 790,
+      "compIdx": "중간",
+      "avgPcClicks": 0.2,
+      "avgMobileClicks": 10,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "30평대인테리어",
+      "pc": 170,
+      "mobile": 510,
+      "total": 680,
+      "compIdx": "높음",
+      "avgPcClicks": 2.7,
+      "avgMobileClicks": 19,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "판교인테리어",
+      "pc": 230,
+      "mobile": 390,
+      "total": 620,
+      "compIdx": "높음",
+      "avgPcClicks": 1.9,
+      "avgMobileClicks": 1.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "40평대인테리어",
+      "pc": 130,
+      "mobile": 350,
+      "total": 480,
+      "compIdx": "높음",
+      "avgPcClicks": 2,
+      "avgMobileClicks": 14.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "수지인테리어",
+      "pc": 140,
+      "mobile": 290,
+      "total": 430,
+      "compIdx": "높음",
+      "avgPcClicks": 1.5,
+      "avgMobileClicks": 4.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "단열공사",
+      "pc": 150,
+      "mobile": 240,
+      "total": 390,
+      "compIdx": "높음",
+      "avgPcClicks": 2,
+      "avgMobileClicks": 5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "성남인테리어",
+      "pc": 170,
+      "mobile": 190,
+      "total": 360,
+      "compIdx": "높음",
+      "avgPcClicks": 0.8,
+      "avgMobileClicks": 2.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "50평대인테리어",
+      "pc": 70,
+      "mobile": 240,
+      "total": 310,
+      "compIdx": "높음",
+      "avgPcClicks": 1,
+      "avgMobileClicks": 11,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "리모델링견적",
+      "pc": 60,
+      "mobile": 170,
+      "total": 230,
+      "compIdx": "높음",
+      "avgPcClicks": 1.1,
+      "avgMobileClicks": 8.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "디브릭",
+      "pc": 110,
+      "mobile": 110,
+      "total": 220,
+      "compIdx": "낮음",
+      "avgPcClicks": 10.6,
+      "avgMobileClicks": 22.7,
+      "plAvgDepth": 2
+    },
+    {
+      "keyword": "디브릭인테리어",
+      "pc": 20,
+      "mobile": 90,
+      "total": 110,
+      "compIdx": "낮음",
+      "avgPcClicks": 2.5,
+      "avgMobileClicks": 17.5,
+      "plAvgDepth": 2
+    },
+    {
+      "keyword": "분당인테리어업체",
+      "pc": 30,
+      "mobile": 60,
+      "total": 90,
+      "compIdx": "높음",
+      "avgPcClicks": 1.2,
+      "avgMobileClicks": 3.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "성남인테리어업체",
+      "pc": 20,
+      "mobile": 60,
+      "total": 80,
+      "compIdx": "높음",
+      "avgMobileClicks": 1.5,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "아파트올수리비용",
+      "pc": 10,
+      "mobile": 70,
+      "total": 80,
+      "compIdx": "중간",
+      "avgMobileClicks": 2.3,
+      "plAvgDepth": 6
+    },
+    {
+      "keyword": "아파트올수리",
+      "pc": 5,
+      "mobile": 50,
+      "total": 55,
+      "compIdx": "높음",
+      "avgMobileClicks": 2.9,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "결로해결",
+      "pc": 20,
+      "mobile": 30,
+      "total": 50,
+      "compIdx": "높음",
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "판교인테리어업체",
+      "pc": 10,
+      "mobile": 10,
+      "total": 20,
+      "compIdx": "높음",
+      "avgPcClicks": 0.1,
+      "avgMobileClicks": 0.9,
+      "plAvgDepth": 10
+    }
+  ],
+  "related": [
+    {
+      "keyword": "제습기",
+      "pc": 71300,
+      "mobile": 285600,
+      "total": 356900,
+      "compIdx": "중간",
+      "avgPcClicks": 396.3,
+      "avgMobileClicks": 2643.3,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울가볼만한곳",
+      "pc": 14100,
+      "mobile": 115500,
+      "total": 129600,
+      "compIdx": "높음",
+      "avgPcClicks": 41.2,
+      "avgMobileClicks": 837.3,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "서울전시회",
+      "pc": 17800,
+      "mobile": 86900,
+      "total": 104700,
+      "compIdx": "높음",
+      "avgPcClicks": 9.3,
+      "avgMobileClicks": 159.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "리바트",
+      "pc": 19400,
+      "mobile": 54500,
+      "total": 73900,
+      "compIdx": "높음",
+      "avgPcClicks": 24.5,
+      "avgMobileClicks": 166.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "성수팝업",
+      "pc": 9690,
+      "mobile": 57300,
+      "total": 66990,
+      "compIdx": "높음",
+      "avgPcClicks": 13.6,
+      "avgMobileClicks": 110.4,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "도어락",
+      "pc": 14000,
+      "mobile": 52100,
+      "total": 66100,
+      "compIdx": "중간",
+      "avgPcClicks": 51.3,
+      "avgMobileClicks": 548.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울놀거리",
+      "pc": 8160,
+      "mobile": 53900,
+      "total": 62060,
+      "compIdx": "높음",
+      "avgPcClicks": 11.7,
+      "avgMobileClicks": 180,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "삼성제습기",
+      "pc": 9140,
+      "mobile": 46600,
+      "total": 55740,
+      "compIdx": "중간",
+      "avgPcClicks": 35.4,
+      "avgMobileClicks": 616.5,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "조명",
+      "pc": 11100,
+      "mobile": 31700,
+      "total": 42800,
+      "compIdx": "높음",
+      "avgPcClicks": 379,
+      "avgMobileClicks": 1075,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "실내데이트",
+      "pc": 4950,
+      "mobile": 37800,
+      "total": 42750,
+      "compIdx": "높음",
+      "avgPcClicks": 12.9,
+      "avgMobileClicks": 182.5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "수납장",
+      "pc": 9430,
+      "mobile": 32800,
+      "total": 42230,
+      "compIdx": "중간",
+      "avgPcClicks": 41.8,
+      "avgMobileClicks": 391.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "엘지제습기",
+      "pc": 5500,
+      "mobile": 36600,
+      "total": 42100,
+      "compIdx": "중간",
+      "avgPcClicks": 27.4,
+      "avgMobileClicks": 759.4,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "코엑스전시회",
+      "pc": 6710,
+      "mobile": 34700,
+      "total": 41410,
+      "compIdx": "높음",
+      "avgPcClicks": 9.6,
+      "avgMobileClicks": 127.5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "방문손잡이",
+      "pc": 10900,
+      "mobile": 25400,
+      "total": 36300,
+      "compIdx": "중간",
+      "avgPcClicks": 36.7,
+      "avgMobileClicks": 406,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "붙박이장",
+      "pc": 7500,
+      "mobile": 27200,
+      "total": 34700,
+      "compIdx": "중간",
+      "avgPcClicks": 199.6,
+      "avgMobileClicks": 1092.8,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "현관문도어락",
+      "pc": 3730,
+      "mobile": 30400,
+      "total": 34130,
+      "compIdx": "중간",
+      "avgPcClicks": 57.2,
+      "avgMobileClicks": 911.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "마곡코엑스",
+      "pc": 6610,
+      "mobile": 27400,
+      "total": 34010,
+      "compIdx": "높음",
+      "avgPcClicks": 5.3,
+      "avgMobileClicks": 62.6,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "화장실",
+      "pc": 1980,
+      "mobile": 30300,
+      "total": 32280,
+      "compIdx": "높음",
+      "avgPcClicks": 7.2,
+      "avgMobileClicks": 60.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "중문",
+      "pc": 5900,
+      "mobile": 26300,
+      "total": 32200,
+      "compIdx": "중간",
+      "avgPcClicks": 103.3,
+      "avgMobileClicks": 729.8,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "몽유도원도",
+      "pc": 4080,
+      "mobile": 27400,
+      "total": 31480,
+      "compIdx": "높음",
+      "avgPcClicks": 0.7,
+      "avgMobileClicks": 13.3,
+      "plAvgDepth": 3
+    },
+    {
+      "keyword": "세면대",
+      "pc": 6870,
+      "mobile": 24000,
+      "total": 30870,
+      "compIdx": "중간",
+      "avgPcClicks": 17,
+      "avgMobileClicks": 212.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "주방후드",
+      "pc": 6140,
+      "mobile": 24000,
+      "total": 30140,
+      "compIdx": "중간",
+      "avgPcClicks": 14.1,
+      "avgMobileClicks": 163.6,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "코엑스놀거리",
+      "pc": 2570,
+      "mobile": 24600,
+      "total": 27170,
+      "compIdx": "중간",
+      "avgPcClicks": 4.7,
+      "avgMobileClicks": 58.6,
+      "plAvgDepth": 5
+    },
+    {
+      "keyword": "게이트맨도어락",
+      "pc": 3510,
+      "mobile": 22500,
+      "total": 26010,
+      "compIdx": "높음",
+      "avgPcClicks": 25.1,
+      "avgMobileClicks": 424.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "서울실내데이트",
+      "pc": 5050,
+      "mobile": 20100,
+      "total": 25150,
+      "compIdx": "높음",
+      "avgPcClicks": 6,
+      "avgMobileClicks": 47,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "미니제습기",
+      "pc": 5590,
+      "mobile": 19500,
+      "total": 25090,
+      "compIdx": "중간",
+      "avgPcClicks": 39,
+      "avgMobileClicks": 650.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "전신거울",
+      "pc": 4460,
+      "mobile": 19700,
+      "total": 24160,
+      "compIdx": "중간",
+      "avgPcClicks": 53.7,
+      "avgMobileClicks": 461.9,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울실내가볼만한곳",
+      "pc": 3110,
+      "mobile": 20900,
+      "total": 24010,
+      "compIdx": "높음",
+      "avgPcClicks": 8.4,
+      "avgMobileClicks": 179.3,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "철제선반",
+      "pc": 5490,
+      "mobile": 18500,
+      "total": 23990,
+      "compIdx": "중간",
+      "avgPcClicks": 65.8,
+      "avgMobileClicks": 315.1,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "성수동팝업",
+      "pc": 3370,
+      "mobile": 20500,
+      "total": 23870,
+      "compIdx": "높음",
+      "avgPcClicks": 10.6,
+      "avgMobileClicks": 102.6,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "사각싱크볼",
+      "pc": 4680,
+      "mobile": 18800,
+      "total": 23480,
+      "compIdx": "중간",
+      "avgPcClicks": 66,
+      "avgMobileClicks": 740.9,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "거실장",
+      "pc": 4280,
+      "mobile": 18300,
+      "total": 22580,
+      "compIdx": "중간",
+      "avgPcClicks": 77.6,
+      "avgMobileClicks": 478.1,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "곰팡이제거제",
+      "pc": 3800,
+      "mobile": 18500,
+      "total": 22300,
+      "compIdx": "높음",
+      "avgPcClicks": 19.4,
+      "avgMobileClicks": 332.3,
+      "plAvgDepth": 9
+    },
+    {
+      "keyword": "신발장",
+      "pc": 6280,
+      "mobile": 15900,
+      "total": 22180,
+      "compIdx": "중간",
+      "avgPcClicks": 47.2,
+      "avgMobileClicks": 135.9,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "시트지",
+      "pc": 6150,
+      "mobile": 15000,
+      "total": 21150,
+      "compIdx": "중간",
+      "avgPcClicks": 36.4,
+      "avgMobileClicks": 128.3,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "도어클로저",
+      "pc": 5860,
+      "mobile": 14600,
+      "total": 20460,
+      "compIdx": "중간",
+      "avgPcClicks": 20.2,
+      "avgMobileClicks": 132.3,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "거울",
+      "pc": 5950,
+      "mobile": 14000,
+      "total": 19950,
+      "compIdx": "중간",
+      "avgPcClicks": 19.7,
+      "avgMobileClicks": 190.6,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "화장실리모델링",
+      "pc": 2740,
+      "mobile": 16800,
+      "total": 19540,
+      "compIdx": "높음",
+      "avgPcClicks": 65.7,
+      "avgMobileClicks": 661.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "템바보드",
+      "pc": 5680,
+      "mobile": 12700,
+      "total": 18380,
+      "compIdx": "중간",
+      "avgPcClicks": 179.1,
+      "avgMobileClicks": 532.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "씽크대",
+      "pc": 2690,
+      "mobile": 15100,
+      "total": 17790,
+      "compIdx": "높음",
+      "avgPcClicks": 34.7,
+      "avgMobileClicks": 359.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "식탁등",
+      "pc": 3090,
+      "mobile": 14600,
+      "total": 17690,
+      "compIdx": "높음",
+      "avgPcClicks": 66.2,
+      "avgMobileClicks": 649.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "디지털도어락",
+      "pc": 3820,
+      "mobile": 13600,
+      "total": 17420,
+      "compIdx": "중간",
+      "avgPcClicks": 22.9,
+      "avgMobileClicks": 198.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "벽지곰팡이제거",
+      "pc": 1920,
+      "mobile": 15300,
+      "total": 17220,
+      "compIdx": "높음",
+      "avgPcClicks": 17.7,
+      "avgMobileClicks": 401.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "문고리",
+      "pc": 3540,
+      "mobile": 13200,
+      "total": 16740,
+      "compIdx": "중간",
+      "avgPcClicks": 11.9,
+      "avgMobileClicks": 225.5,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울여행",
+      "pc": 4430,
+      "mobile": 12200,
+      "total": 16630,
+      "compIdx": "높음",
+      "avgPcClicks": 6.3,
+      "avgMobileClicks": 51.5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "자재",
+      "pc": 6100,
+      "mobile": 9860,
+      "total": 15960,
+      "compIdx": "높음",
+      "avgPcClicks": 1.6,
+      "avgMobileClicks": 6.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "엘리베이터",
+      "pc": 4730,
+      "mobile": 11100,
+      "total": 15830,
+      "compIdx": "높음",
+      "avgPcClicks": 26.3,
+      "avgMobileClicks": 60,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실수납장",
+      "pc": 2650,
+      "mobile": 13100,
+      "total": 15750,
+      "compIdx": "중간",
+      "avgPcClicks": 40.9,
+      "avgMobileClicks": 423.4,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "벽지",
+      "pc": 3080,
+      "mobile": 12600,
+      "total": 15680,
+      "compIdx": "중간",
+      "avgPcClicks": 39.3,
+      "avgMobileClicks": 178,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "가구",
+      "pc": 4240,
+      "mobile": 11300,
+      "total": 15540,
+      "compIdx": "높음",
+      "avgPcClicks": 84.8,
+      "avgMobileClicks": 250.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "문손잡이",
+      "pc": 3410,
+      "mobile": 12100,
+      "total": 15510,
+      "compIdx": "높음",
+      "avgPcClicks": 15.9,
+      "avgMobileClicks": 203,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울데이트",
+      "pc": 3070,
+      "mobile": 12300,
+      "total": 15370,
+      "compIdx": "높음",
+      "avgPcClicks": 2.4,
+      "avgMobileClicks": 29.8,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "KCC글라스",
+      "pc": 4990,
+      "mobile": 10200,
+      "total": 15190,
+      "compIdx": "중간",
+      "avgPcClicks": 1.2,
+      "avgMobileClicks": 9.8,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "습기제거제",
+      "pc": 2340,
+      "mobile": 12600,
+      "total": 14940,
+      "compIdx": "높음",
+      "avgPcClicks": 17.2,
+      "avgMobileClicks": 272.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "양변기",
+      "pc": 4180,
+      "mobile": 10500,
+      "total": 14680,
+      "compIdx": "중간",
+      "avgPcClicks": 17.9,
+      "avgMobileClicks": 126,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "농막",
+      "pc": 3480,
+      "mobile": 11200,
+      "total": 14680,
+      "compIdx": "높음",
+      "avgPcClicks": 65.3,
+      "avgMobileClicks": 363,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "현관도어락",
+      "pc": 1730,
+      "mobile": 12800,
+      "total": 14530,
+      "compIdx": "높음",
+      "avgPcClicks": 20.6,
+      "avgMobileClicks": 309.2,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "거실LED등",
+      "pc": 2060,
+      "mobile": 12400,
+      "total": 14460,
+      "compIdx": "중간",
+      "avgPcClicks": 68,
+      "avgMobileClicks": 475.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "변기교체",
+      "pc": 1490,
+      "mobile": 12500,
+      "total": 13990,
+      "compIdx": "높음",
+      "avgPcClicks": 28.4,
+      "avgMobileClicks": 500.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "욕실화",
+      "pc": 2290,
+      "mobile": 11700,
+      "total": 13990,
+      "compIdx": "중간",
+      "avgPcClicks": 45.4,
+      "avgMobileClicks": 538,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "게이트맨",
+      "pc": 3990,
+      "mobile": 9730,
+      "total": 13720,
+      "compIdx": "높음",
+      "avgPcClicks": 9.9,
+      "avgMobileClicks": 64.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "싱크볼",
+      "pc": 4040,
+      "mobile": 9390,
+      "total": 13430,
+      "compIdx": "높음",
+      "avgPcClicks": 39,
+      "avgMobileClicks": 236,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "3연동중문",
+      "pc": 2390,
+      "mobile": 11000,
+      "total": 13390,
+      "compIdx": "높음",
+      "avgPcClicks": 46.1,
+      "avgMobileClicks": 329,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "거실등",
+      "pc": 2900,
+      "mobile": 10300,
+      "total": 13200,
+      "compIdx": "중간",
+      "avgPcClicks": 69.3,
+      "avgMobileClicks": 442.6,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "제습기공기청정기",
+      "pc": 1500,
+      "mobile": 11600,
+      "total": 13100,
+      "compIdx": "중간",
+      "avgPcClicks": 36.4,
+      "avgMobileClicks": 463.8,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "슬라이딩도어",
+      "pc": 3510,
+      "mobile": 9370,
+      "total": 12880,
+      "compIdx": "중간",
+      "avgPcClicks": 37,
+      "avgMobileClicks": 169,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "현관신발장",
+      "pc": 2030,
+      "mobile": 10800,
+      "total": 12830,
+      "compIdx": "중간",
+      "avgPcClicks": 30.7,
+      "avgMobileClicks": 409.9,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "수저통",
+      "pc": 1960,
+      "mobile": 10700,
+      "total": 12660,
+      "compIdx": "중간",
+      "avgPcClicks": 7.2,
+      "avgMobileClicks": 247,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "제습기추천",
+      "pc": 3120,
+      "mobile": 9350,
+      "total": 12470,
+      "compIdx": "중간",
+      "avgPcClicks": 22.4,
+      "avgMobileClicks": 158.1,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "화장실제습기",
+      "pc": 2110,
+      "mobile": 9880,
+      "total": 11990,
+      "compIdx": "중간",
+      "avgPcClicks": 23.8,
+      "avgMobileClicks": 391,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "미니멀라이프",
+      "pc": 2520,
+      "mobile": 9350,
+      "total": 11870,
+      "compIdx": "높음",
+      "avgPcClicks": 6.4,
+      "avgMobileClicks": 43.5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "샷시",
+      "pc": 2730,
+      "mobile": 9100,
+      "total": 11830,
+      "compIdx": "높음",
+      "avgPcClicks": 15.1,
+      "avgMobileClicks": 80.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "냉장고장",
+      "pc": 2570,
+      "mobile": 9040,
+      "total": 11610,
+      "compIdx": "높음",
+      "avgPcClicks": 58.5,
+      "avgMobileClicks": 398.9,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "사무실인테리어",
+      "pc": 3360,
+      "mobile": 7890,
+      "total": 11250,
+      "compIdx": "높음",
+      "avgPcClicks": 84.3,
+      "avgMobileClicks": 115.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "전원주택",
+      "pc": 3370,
+      "mobile": 7880,
+      "total": 11250,
+      "compIdx": "높음",
+      "avgPcClicks": 88.8,
+      "avgMobileClicks": 183.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "방화문",
+      "pc": 3900,
+      "mobile": 7150,
+      "total": 11050,
+      "compIdx": "높음",
+      "avgPcClicks": 64.9,
+      "avgMobileClicks": 160,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "방문",
+      "pc": 4600,
+      "mobile": 6420,
+      "total": 11020,
+      "compIdx": "중간",
+      "avgPcClicks": 25,
+      "avgMobileClicks": 116.3,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "현관문",
+      "pc": 2360,
+      "mobile": 8550,
+      "total": 10910,
+      "compIdx": "높음",
+      "avgPcClicks": 44.2,
+      "avgMobileClicks": 273.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "싱크대수전교체",
+      "pc": 1380,
+      "mobile": 9470,
+      "total": 10850,
+      "compIdx": "높음",
+      "avgPcClicks": 15,
+      "avgMobileClicks": 252.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "세면대수전교체",
+      "pc": 1410,
+      "mobile": 9020,
+      "total": 10430,
+      "compIdx": "중간",
+      "avgPcClicks": 14.7,
+      "avgMobileClicks": 216,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "서울갈만한곳",
+      "pc": 1300,
+      "mobile": 8990,
+      "total": 10290,
+      "compIdx": "높음",
+      "avgPcClicks": 3.5,
+      "avgMobileClicks": 35.5,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "전등",
+      "pc": 2250,
+      "mobile": 7970,
+      "total": 10220,
+      "compIdx": "높음",
+      "avgPcClicks": 25.9,
+      "avgMobileClicks": 135.4,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "인버터제습기",
+      "pc": 1880,
+      "mobile": 8210,
+      "total": 10090,
+      "compIdx": "중간",
+      "avgPcClicks": 17.3,
+      "avgMobileClicks": 200.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "일러스트페어",
+      "pc": 2740,
+      "mobile": 7340,
+      "total": 10080,
+      "compIdx": "높음",
+      "avgPcClicks": 4.3,
+      "avgMobileClicks": 57.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실장",
+      "pc": 2800,
+      "mobile": 7220,
+      "total": 10020,
+      "compIdx": "높음",
+      "avgPcClicks": 47.9,
+      "avgMobileClicks": 216.5,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "LED등",
+      "pc": 3060,
+      "mobile": 6960,
+      "total": 10020,
+      "compIdx": "높음",
+      "avgPcClicks": 16.7,
+      "avgMobileClicks": 58.4,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "제습기전기세",
+      "pc": 1080,
+      "mobile": 8920,
+      "total": 10000,
+      "compIdx": "높음",
+      "avgPcClicks": 5.5,
+      "avgMobileClicks": 172,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "첨단3지구제일풍경채",
+      "pc": 2270,
+      "mobile": 7590,
+      "total": 9860,
+      "compIdx": "높음",
+      "avgPcClicks": 31.7,
+      "avgMobileClicks": 155,
+      "plAvgDepth": 7
+    },
+    {
+      "keyword": "비데구입",
+      "pc": 1130,
+      "mobile": 8680,
+      "total": 9810,
+      "compIdx": "높음",
+      "avgPcClicks": 25,
+      "avgMobileClicks": 426,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "욕실수전",
+      "pc": 2100,
+      "mobile": 7700,
+      "total": 9800,
+      "compIdx": "중간",
+      "avgPcClicks": 10.7,
+      "avgMobileClicks": 92.1,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "식탁조명",
+      "pc": 1800,
+      "mobile": 7880,
+      "total": 9680,
+      "compIdx": "높음",
+      "avgPcClicks": 41.5,
+      "avgMobileClicks": 384,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "단독주택",
+      "pc": 2570,
+      "mobile": 7090,
+      "total": 9660,
+      "compIdx": "높음",
+      "avgPcClicks": 36.4,
+      "avgMobileClicks": 100.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "LED거실등",
+      "pc": 1810,
+      "mobile": 7840,
+      "total": 9650,
+      "compIdx": "중간",
+      "avgPcClicks": 32.3,
+      "avgMobileClicks": 296.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "제습기순위",
+      "pc": 1140,
+      "mobile": 8270,
+      "total": 9410,
+      "compIdx": "높음",
+      "avgPcClicks": 24.1,
+      "avgMobileClicks": 276.4,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "지문인식도어락",
+      "pc": 1900,
+      "mobile": 7360,
+      "total": 9260,
+      "compIdx": "중간",
+      "avgPcClicks": 10.2,
+      "avgMobileClicks": 111.2,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "미닫이문",
+      "pc": 2480,
+      "mobile": 6760,
+      "total": 9240,
+      "compIdx": "높음",
+      "avgPcClicks": 11.2,
+      "avgMobileClicks": 99.6,
+      "plAvgDepth": 10
+    },
+    {
+      "keyword": "주방싱크대",
+      "pc": 1300,
+      "mobile": 7930,
+      "total": 9230,
+      "compIdx": "높음",
+      "avgPcClicks": 37.4,
+      "avgMobileClicks": 329,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "화장실선반",
+      "pc": 1620,
+      "mobile": 7550,
+      "total": 9170,
+      "compIdx": "높음",
+      "avgPcClicks": 12,
+      "avgMobileClicks": 108.7,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "욕실슬리퍼",
+      "pc": 1510,
+      "mobile": 7640,
+      "total": 9150,
+      "compIdx": "중간",
+      "avgPcClicks": 29.3,
+      "avgMobileClicks": 338.5,
+      "plAvgDepth": 8
+    },
+    {
+      "keyword": "LED주방등",
+      "pc": 1550,
+      "mobile": 7490,
+      "total": 9040,
+      "compIdx": "중간",
+      "avgPcClicks": 22.8,
+      "avgMobileClicks": 216.1,
+      "plAvgDepth": 8
+    }
+  ]
+}
