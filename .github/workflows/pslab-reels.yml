@@ -106,6 +106,9 @@ jobs:
           git commit -m "chore(pslab): 릴스 영상 합성"
           for i in 1 2 3 4 5; do
             if git pull --rebase origin ${{ github.ref_name }}; then
+              if grep -rlE '^(<<<<<<< |>>>>>>> |=======$)' data docs 2>/dev/null | grep -vE '\.(mp4|png|jpg)$'; then
+                echo "::error::충돌 표시가 남은 파일이 있습니다 — push 를 중단합니다."; exit 1
+              fi
               git push && { echo "push 성공"; exit 0; }
             else
               git rebase --abort || true
