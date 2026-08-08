@@ -243,9 +243,10 @@
           "kicker": "HOOK",
           "text": "마케팅 직원,\n뽑을까 고민되세요?",
           "accent": "고민되세요?",
-          "clip": "",
+          "clip": "https://d8j0ntlcm91z4.cloudfront.net/user_3GObHnwJ1UMUu9vETRNq0YG4Q5L/hf_20260808_025926_c3bd46a5-e6f6-41a6-b898-017ac51a3483.mp4",
           "clipPrompt": "Late evening Korean small office, a business owner at a desk reviewing a stack of printed resumes under warm lamp light, thoughtful expression, cinematic 9:16, no text no letters no logos",
-          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)"
+          "clipPending": "힉스필드 충전 후 생성 (kling3_0_turbo · 9:16 · 5s)",
+          "clipModel": "seedance_2_5"
         },
         {
           "kicker": "COST",
@@ -422,5 +423,5 @@
       ]
     }
   },
-  "updatedAt": "2026-08-05T14:40:15.858829Z"
+  "updatedAt": "2026-08-08T03:05:17.615167Z"
 }
