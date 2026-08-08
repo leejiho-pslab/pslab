@@ -9,6 +9,7 @@
  * 렌더한다. 데이터는 인라인 JSON으로 박고, 채널 탭 전환은 클라이언트 JS로 처리.
  */
 import type { ClientConfig, ClientStore } from './client.js';
+import { existsSync, readFileSync } from 'node:fs';
 import type { CycleRecord } from './orchestrator.js';
 import type { DesignStore } from './design.js';
 import type { PlanStore } from './plan.js';
@@ -246,6 +247,24 @@ function buildClientData(
     .map(toCard)
     .sort((a, b) => (a.scheduledFor || '').localeCompare(b.scheduledFor || ''));
 
+  // 클립 생성 대기 큐 — 웹 무료 생성 루프용. 클립이 안 붙은 릴스 비트의 프롬프트를
+  // 대시보드에 복사 버튼과 함께 노출한다 (운영자: 복사 → 힉스필드 웹 무료 생성,
+  // 수거·연결은 세션의 일일 수거 루틴이 자동으로). 큐가 비면 패널은 숨는다.
+  const clipQueue: Array<{ reel: string; beat: number; text: string; prompt: string }> = [];
+  try {
+    const rsPath = `data/clients/${client.id}/reel-scenes.json`;
+    if (existsSync(rsPath)) {
+      const rs = JSON.parse(readFileSync(rsPath, 'utf8')) as { reels?: Record<string, { beats?: Array<{ clip?: string; clipPrompt?: string; scene?: string; text?: string }> }> };
+      for (const [rid, r] of Object.entries(rs.reels ?? {})) {
+        (r.beats ?? []).forEach((b, i) => {
+          if (!b.clip && (b.clipPrompt || b.scene)) {
+            clipQueue.push({ reel: rid, beat: i + 1, text: String(b.text ?? '').replace(/\n/g, ' / '), prompt: b.clipPrompt ?? b.scene ?? '' });
+          }
+        });
+      }
+    }
+  } catch { /* 큐는 보조 정보 — 읽기 실패해도 대시보드는 뜬다 */ }
+
   const blogChannel = channels.find((c) => c.key === 'naver-blog')!;
   const blog = buildBlog(client, blogChannel.published as ChannelPublished[], guidanceStore?.loadKeywordStats(client.id));
 
@@ -284,6 +303,7 @@ function buildClientData(
     research: guidanceStore?.loadResearch(client.id) ?? null,
     weekPlan: guidanceStore?.loadWeekPlan(client.id) ?? null,
     referenceLinks: guidanceStore?.loadReferenceLinks(client.id) ?? null,
+    clipQueue,
   };
 }
 
@@ -795,6 +815,27 @@ function refBadge(st){
        : '<span class="badge b-wait">학습대기</span>';
 }
 function refShort(u){ return esc(String(u).replace(/^https?:\\/\\/(www\\.)?/,'').slice(0,52)); }
+// 🎬 클립 생성 대기 — 웹 무료 생성 루프. 클립 없는 릴스 비트의 프롬프트를 복사 버튼과 함께
+// 노출한다. 운영자가 힉스필드 웹(무료)에서 생성해 두면 세션의 일일 수거 루틴이 자동 연결한다.
+function copyTxt(btn, txt){
+  const done=()=>{ const o=btn.textContent; btn.textContent='✅ 복사됨'; setTimeout(()=>{btn.textContent=o;},1500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done); return; }
+  const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+}
+function clipQueuePanel(client){
+  const q=client.clipQueue||[];
+  if(!q.length) return '';
+  const SET='9:16 세로 · 4초 · 720p · 오디오 끄기(무음)';
+  let h='<div class="panel" style="border-color:#cfe3f7;background:#f7fbff"><div class="sect-h" style="margin:0 0 8px"><h3>🎬 클립 생성 대기 · 웹 무료 생성용 ('+q.length+')</h3>'+
+    '<button class="btn" style="font-size:12px" data-p="'+encodeURIComponent(SET)+'" onclick="copyTxt(this,decodeURIComponent(this.dataset.p))">⚙️ 공통 설정 복사</button></div>'+
+    '<div class="muted" style="margin:0 0 10px">아래 프롬프트를 <b>복사 → 힉스필드 웹(Seedance 2.5, 무료)</b>에 붙여넣어 생성해 두시면, 매일 밤 시스템이 계정 자산에서 <b>자동으로 수거해 릴스에 연결</b>합니다. 설정: '+SET+'</div>'+
+    '<table><tr><th style="width:130px">릴스 / 비트</th><th>자막</th><th style="width:76px"></th></tr>'+
+    q.map(c=>'<tr><td class="muted" style="font-size:12px">'+esc(c.reel)+' · '+c.beat+'번</td>'+
+      '<td style="font-size:12.5px">'+esc(c.text)+'<div class="muted" style="font-size:11px;margin-top:2px">'+esc(c.prompt.slice(0,90))+'…</div></td>'+
+      '<td><button class="btn fb" style="padding:5px 10px;font-size:12px" data-p="'+encodeURIComponent(c.prompt)+'" onclick="copyTxt(this,decodeURIComponent(this.dataset.p))">📋 복사</button></td></tr>').join('')+'</table></div>';
+  return h;
+}
 function referencePanel(client, key){
   const all=refLinksFor(client, key);
   const pend=all.filter(l=>l.status==='pending'||l.status==='received').length;
@@ -1175,6 +1216,8 @@ function channelDetail(client, c){
   const waiting=c.pending.filter(it=>!isDoneLive(it));
   // 네이버 블로그 → blogdex 스타일
   if(c.key==='naver-blog'){ h+=blogSection(client); }
+  // 인스타그램 → 클립 생성 대기(웹 무료 생성 루프)
+  if(c.key==='instagram'){ h+=clipQueuePanel(client); }
   // 발행 대기 (발행 전 콘텐츠만)
   const heldN=waiting.filter(it=>openHolds(it).length>0).length;
   h+='<div class="sect-h"><h2>🕓 발행 대기 콘텐츠 ('+waiting.length+(heldN?' · ⛔ 보류 '+heldN:'')+')</h2></div>';
