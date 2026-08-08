@@ -29,6 +29,15 @@ const vol = JSON.parse(readFileSync(volPath, 'utf8'));
 if (!Array.isArray(vol.requested) || !vol.requested.length) { console.log('실측값 없음 — 병합 건너뜀'); process.exit(0); }
 
 const trend = existsSync(trendPath) ? JSON.parse(readFileSync(trendPath, 'utf8')) : null;
+
+// 연관 발굴은 업체 연관 필터(clients/<id>.json keywordPlan.relatedFilter)로 걸러 노이즈 제거
+// (keywordstool 연관은 '제습기' 같은 무관 대형 키워드를 함께 반환한다 — 2026-08-08 dbrick 실측 확인)
+let relFilter = null;
+try {
+  const cfg = JSON.parse(readFileSync(join('clients', `${clientId}.json`), 'utf8'));
+  if (cfg.keywordPlan && cfg.keywordPlan.relatedFilter) relFilter = new RegExp(cfg.keywordPlan.relatedFilter);
+} catch { /* 설정 없으면 필터 없이 진행 */ }
+if (relFilter && Array.isArray(vol.related)) vol.related = vol.related.filter((k) => relFilter.test(String(k.keyword || '')));
 const brief = existsSync(briefPath)
   ? JSON.parse(readFileSync(briefPath, 'utf8'))
   : { updatedAt: '', title: '브랜드 리서치', sections: [] };
