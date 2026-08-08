@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-08T03:23:39.650Z",
+  "updatedAt": "2026-08-08T04:09:06.940Z",
   "items": [
     {
       "id": "w1-mon",
@@ -2444,7 +2444,9 @@
       "slideImages": [
         "cards/pslab/reels-08-17-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-17-1.png"
+      "cardImage": "cards/pslab/reels-08-17-1.png",
+      "videoFile": "shorts/reels-08-17/reels-08-17.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-17",
@@ -2479,7 +2481,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-17-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-17-1.png"
+      "cardImage": "cards/pslab/youtube-08-17-1.png",
+      "videoFile": "shorts/reels-08-17/reels-08-17.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-17",
@@ -2680,7 +2684,9 @@
       "slideImages": [
         "cards/pslab/reels-08-21-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-21-1.png"
+      "cardImage": "cards/pslab/reels-08-21-1.png",
+      "videoFile": "shorts/reels-08-21/reels-08-21.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-21",
@@ -2715,7 +2721,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-21-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-21-1.png"
+      "cardImage": "cards/pslab/youtube-08-21-1.png",
+      "videoFile": "shorts/reels-08-21/reels-08-21.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-21",
@@ -2766,7 +2774,9 @@
       "slideImages": [
         "cards/pslab/reels-08-24-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-24-1.png"
+      "cardImage": "cards/pslab/reels-08-24-1.png",
+      "videoFile": "shorts/reels-08-24/reels-08-24.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-24",
@@ -2801,7 +2811,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-24-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-24-1.png"
+      "cardImage": "cards/pslab/youtube-08-24-1.png",
+      "videoFile": "shorts/reels-08-24/reels-08-24.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-24",
@@ -3002,7 +3014,9 @@
       "slideImages": [
         "cards/pslab/reels-08-28-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-28-1.png"
+      "cardImage": "cards/pslab/reels-08-28-1.png",
+      "videoFile": "shorts/reels-08-28/reels-08-28.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-28",
@@ -3037,7 +3051,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-28-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-28-1.png"
+      "cardImage": "cards/pslab/youtube-08-28-1.png",
+      "videoFile": "shorts/reels-08-28/reels-08-28.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-28",
@@ -3088,7 +3104,9 @@
       "slideImages": [
         "cards/pslab/reels-08-31-1.png"
       ],
-      "cardImage": "cards/pslab/reels-08-31-1.png"
+      "cardImage": "cards/pslab/reels-08-31-1.png",
+      "videoFile": "shorts/reels-08-31/reels-08-31.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "youtube-08-31",
@@ -3123,7 +3141,9 @@
       "slideImages": [
         "cards/pslab/youtube-08-31-1.png"
       ],
-      "cardImage": "cards/pslab/youtube-08-31-1.png"
+      "cardImage": "cards/pslab/youtube-08-31-1.png",
+      "videoFile": "shorts/reels-08-31/reels-08-31.mp4",
+      "videoSeconds": 13.1
     },
     {
       "id": "threads-08-31",
