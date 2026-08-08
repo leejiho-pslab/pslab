@@ -461,6 +461,17 @@ ${themeCss}</style>
 /* 안전장치: 아래 메인 스크립트가 (구형 브라우저 파싱오류 등으로) 깨져도
    빈 화면 대신 오류 내용과 새로고침 버튼을 보여준다. */
 window.onerror = function (m) {
+  // 1차: 자동 복구 — 배포 직후 브라우저가 낡은 캐시/반쪽 페이지를 물고 있는 경우가
+  // 대부분이라, 캐시를 우회한 새로고침 한 번으로 거의 다 낫는다. (무한 루프 방지 1회 한정,
+  // 정상 부팅 시 메인 스크립트 끝에서 플래그를 지워 다음 오류 때 다시 1회 복구 가능)
+  try {
+    if (!sessionStorage.getItem('psAutoReload')) {
+      sessionStorage.setItem('psAutoReload', '1');
+      location.replace(location.pathname + '?cb=' + Date.now());
+      return true;
+    }
+  } catch (e) {}
+  // 2차: 복구 후에도 오류면 빈 화면 대신 안내 배너
   try {
     var v = document.getElementById('view');
     if (v && !(v.innerHTML && v.innerHTML.replace(/\\s/g, ''))) {
@@ -1409,6 +1420,7 @@ function setClient(i){ci=i;ch='all';renderClients();renderTabs();renderView();wi
 function setCh(k){ch=k;renderTabs();renderView();window.scrollTo(0,0);}
 try {
   renderClients(); renderTabs(); renderView(); loadIssues();
+  try{ sessionStorage.removeItem('psAutoReload'); }catch(e){} // 정상 부팅 — 자동 복구 카운터 리셋
 } catch (e) {
   var v = document.getElementById('view');
   if (v) v.innerHTML = '<div style="padding:24px;line-height:1.7;color:#b91c1c">표시 중 오류: '

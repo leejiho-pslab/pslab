@@ -28,6 +28,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # 마지막 방어선 — 어떤 워크플로/세션이 깨진 docs 를 커밋했더라도 배포는 막는다.
+      # (2026-08-05 guidance-sync 충돌 트리 배포 사고의 재발 방지. 다른 배포 워크플로에는
+      #  같은 가드가 이미 있는데, docs push 를 무조건 배포하는 이 경로만 비어 있었다)
+      - name: 배포 전 충돌 표시 검사
+        run: |
+          if grep -rlE '^(<<<<<<< |>>>>>>> |=======$)' docs --include='*.html' --include='*.json'; then
+            echo "::error::위 파일에 병합 충돌 표시가 남아 있습니다 — Pages 배포를 중단합니다."
+            exit 1
+          fi
+          echo "충돌 표시 없음 — 배포 진행"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs
